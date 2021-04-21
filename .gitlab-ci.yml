@@ -207,7 +207,7 @@ build:mingw-w64:
   extends: .build
   image: $REGISTRY/$HOST:bullseye
   variables:
-    CONFIGURE_OPTIONS: --host=$HOST --disable-python
+    CONFIGURE_OPTIONS: --host=$HOST --disable-python --disable-tests # awaiting fix for tests
   parallel:
     matrix:
       - HOST: [i686-w64-mingw32, x86_64-w64-mingw32]
@@ -216,9 +216,6 @@ test:i686-w64-mingw32:
   extends: .test
   image: $REGISTRY/i686-w64-mingw32:bullseye
   needs: ["build:mingw-w64: [i686-w64-mingw32]"]
-  rules:
-    - when: manual  # awaiting fix
-      allow_failure: true
 
 test:x86_64-w64-mingw32:
   extends: .test

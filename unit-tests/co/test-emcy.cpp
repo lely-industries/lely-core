@@ -161,7 +161,7 @@ TEST(CO_EmcyCreate, CoEmcyAlignof_Nominal) {
 ///
 /// \Then if LELY_NO_MALLOC and !LELY_NO_CANFD: 3336 is returned;
 ///       else if LELY_NO_MALLOC: 2440 is returned;
-///       else if \__MINGW32__ and !__MINGW64__: 1368 is returned;
+///       else if \__MINGW32__ and !__MINGW64__: 1080 is returned;
 ///       else 2160 is returned
 TEST(CO_EmcyCreate, CoEmcySizeof_Nominal) {
   const auto size = co_emcy_sizeof();
@@ -174,7 +174,7 @@ TEST(CO_EmcyCreate, CoEmcySizeof_Nominal) {
 #endif
 #else
 #if defined(__MINGW32__) && !defined(__MINGW64__)
-  CHECK_EQUAL(1368u, size);
+  CHECK_EQUAL(1080u, size);
 #else
   CHECK_EQUAL(2160u, size);
 #endif

@@ -236,6 +236,138 @@ TEST_GROUP_BASE(CO_NmtCreate, CO_NmtBase) {
   }
 };
 
+/// @name co_nmt_es2str()
+///@{
+
+/// \Given an NMT boot error status
+///
+/// \When co_nmt_es2str() is called with the status
+///
+/// \Then a pointer to an appropriate string describing the status is returned
+TEST(CO_NmtCreate, CoNmtEs2Str_Nominal) {
+  STRCMP_EQUAL("The CANopen device is not listed in object 1F81.",
+               co_nmt_es2str('A'));
+  STRCMP_EQUAL("No response received for upload request of object 1000.",
+               co_nmt_es2str('B'));
+  STRCMP_EQUAL(
+      "Value of object 1000 from CANopen device is different to value in "
+      "object 1F84 (Device type).",
+      co_nmt_es2str('C'));
+  STRCMP_EQUAL(
+      "Value of object 1018 sub-index 01 from CANopen device is different to "
+      "value in object 1F85 (Vendor-ID).",
+      co_nmt_es2str('D'));
+  STRCMP_EQUAL(
+      "Heartbeat event. No heartbeat message received from CANopen device.",
+      co_nmt_es2str('E'));
+  STRCMP_EQUAL(
+      "Node guarding event. No confirmation for guarding request received from "
+      "CANopen device.",
+      co_nmt_es2str('F'));
+  STRCMP_EQUAL(
+      "Objects for program download are not configured or inconsistent.",
+      co_nmt_es2str('G'));
+  STRCMP_EQUAL(
+      "Software update is required, but not allowed because of configuration "
+      "or current status.",
+      co_nmt_es2str('H'));
+  STRCMP_EQUAL("Software update is required, but program download failed.",
+               co_nmt_es2str('I'));
+  STRCMP_EQUAL("Configuration download failed.", co_nmt_es2str('J'));
+  STRCMP_EQUAL(
+      "Heartbeat event during start error control service. No heartbeat "
+      "message received from CANopen device during start error control "
+      "service.",
+      co_nmt_es2str('K'));
+  STRCMP_EQUAL("NMT slave was initially operational.", co_nmt_es2str('L'));
+  STRCMP_EQUAL(
+      "Value of object 1018 sub-index 02 from CANopen device is different to "
+      "value in object 1F86 (Product code).",
+      co_nmt_es2str('M'));
+  STRCMP_EQUAL(
+      "Value of object 1018 sub-index 03 from CANopen device is different to "
+      "value in object 1F87 (Revision number).",
+      co_nmt_es2str('N'));
+  STRCMP_EQUAL(
+      "Value of object 1018 sub-index 04 from CANopen device is different to "
+      "value in object 1F88 (Serial number).",
+      co_nmt_es2str('O'));
+}
+
+/// \Given an unknown NMT boot error status
+///
+/// \When co_nmt_es2str() is called with the status
+///
+/// \Then a pointer to "Unknown error status" string is returned
+TEST(CO_NmtCreate, CoNmtEs2Str_Unknown) {
+  STRCMP_EQUAL("Unknown error status", co_nmt_es2str('Z'));
+}
+
+///@}
+
+/// @name co_nmt_sizeof()
+///@{
+
+/// \Given N/A
+///
+/// \When co_nmt_sizeof() is called
+///
+/// \Then the platform-dependent size of the NMT service object is returned
+TEST(CO_NmtCreate, CoNmtSizeof_Nominal) {
+  const auto ret = co_nmt_sizeof();
+
+#if defined(__MINGW32__)
+#if defined(__MINGW64__)
+  CHECK_EQUAL(10728u, ret);
+#else
+  CHECK_EQUAL(6420u, ret);
+#endif
+
+#elif LELY_NO_MALLOC
+#if LELY_NO_CO_NG && LELY_NO_CO_NMT_BOOT && LELY_NO_CO_NMT_CFG  // ECSS
+#if LELY_NO_CO_MASTER
+  CHECK_EQUAL(1360u, ret);
+#else
+  CHECK_EQUAL(4768u, ret);
+#endif
+#else
+  CHECK_EQUAL(11872u, ret);
+#endif
+
+#elif LELY_NO_HOSTED
+  CHECK_EQUAL(11872u, ret);
+
+#elif LELY_NO_CO_MASTER
+  CHECK_EQUAL(400u, ret);
+
+#else
+  CHECK_EQUAL(9712u, ret);
+#endif
+}
+
+///@}
+
+/// @name co_nmt_alignof()
+///@{
+
+/// \Given N/A
+///
+/// \When co_nmt_alignof() is called
+///
+/// \Then the platform-dependent alignment of the NMT service object is
+///       returned
+TEST(CO_NmtCreate, CoNmtAlignof_Nominal) {
+  const auto ret = co_nmt_alignof();
+
+#if defined(__MINGW32__) && !defined(__MINGW64__)
+  CHECK_EQUAL(4u, ret);
+#else
+  CHECK_EQUAL(8u, ret);
+#endif
+}
+
+///@}
+
 /// @name co_nmt_create()
 ///@{
 
@@ -1089,3 +1221,678 @@ TEST(CO_NmtAllocation, CoNmtCreate_ExactMemory_WithObj1016_MaxEntries) {
 #endif
 
 ///@}
+
+TEST_GROUP_BASE(CO_Nmt, CO_NmtBase) {
+  co_nmt_t* nmt = nullptr;
+
+  static void empty_cs_ind(co_nmt_t*, co_unsigned8_t, void*) {}
+  static void empty_hb_ind(co_nmt_t*, co_unsigned8_t, int, int, void*) {}
+  static void empty_st_ind(co_nmt_t*, co_unsigned8_t, co_unsigned8_t, void*) {}
+  static void empty_sdo_ind(co_nmt_t*, co_unsigned8_t, co_unsigned16_t,
+                            co_unsigned8_t, size_t, size_t, void*) {}
+  static void empty_sync_ind(co_nmt_t*, co_unsigned8_t, void*) {}
+  int data = 0;
+
+  void CreateNmt() {
+    nmt = co_nmt_create(net, dev);
+    CHECK(nmt != nullptr);
+  }
+
+  TEST_SETUP() { TEST_BASE_SETUP(); }
+
+  TEST_TEARDOWN() {
+    co_nmt_destroy(nmt);
+    TEST_BASE_TEARDOWN();
+  }
+};
+
+/// @name co_nmt_get_alloc()
+///@{
+
+/// \Given a pointer to an NMT service (co_nmt_t) created on a network with
+///        an allocator
+///
+/// \When co_nmt_get_alloc() is called
+///
+/// \Then a pointer to the allocator (alloc_t) is returned
+///       \Calls can_net_get_alloc()
+TEST(CO_Nmt, CoNmtGetAlloc_Nominal) {
+  CreateNmt();
+
+  POINTERS_EQUAL(allocator.ToAllocT(), co_nmt_get_alloc(nmt));
+}
+
+///@}
+
+/// @name co_nmt_get_net()
+///@{
+
+/// \Given a pointer to an NMT service (co_nmt_t) created on a network
+///
+/// \When co_nmt_get_net() is called
+///
+/// \Then a pointer to the network (can_net_t) is returned
+TEST(CO_Nmt, CoNmtGetNet_Nominal) {
+  CreateNmt();
+
+  POINTERS_EQUAL(net, co_nmt_get_net(nmt));
+}
+
+///@}
+
+/// @name co_nmt_get_dev()
+///@{
+
+/// \Given a pointer to an NMT service (co_nmt_t) created on a device
+///
+/// \When co_nmt_get_dev() is called
+///
+/// \Then a pointer to the device (co_dev_t) is returned
+TEST(CO_Nmt, CoNmtGetDev_Nominal) {
+  CreateNmt();
+
+  POINTERS_EQUAL(dev, co_nmt_get_dev(nmt));
+}
+
+///@}
+
+/// @name co_nmt_get_cs_ind()
+///@{
+
+/// \Given a pointer to an initialized NMT service (co_nmt_t)
+///
+/// \When co_nmt_get_cs_ind() is called with no addresses to store the
+///       indication function and user-specified data pointers at
+///
+/// \Then nothing is changed
+TEST(CO_Nmt, CoNmtGetCsInd_Null) {
+  CreateNmt();
+
+  co_nmt_get_cs_ind(nmt, nullptr, nullptr);
+}
+
+/// \Given a pointer to an initialized NMT service (co_nmt_t)
+///
+/// \When co_nmt_get_cs_ind() is called with an address to store the indication
+///       function pointer and an address to store user-specified data pointer
+///
+/// \Then both pointers are set to a null pointer
+TEST(CO_Nmt, CoNmtGetCsInd_Nominal) {
+  CreateNmt();
+
+  co_nmt_cs_ind_t* ind = &empty_cs_ind;
+  void* cs_data = &data;
+
+  co_nmt_get_cs_ind(nmt, &ind, &cs_data);
+
+  FUNCTIONPOINTERS_EQUAL(nullptr, ind);
+  POINTERS_EQUAL(nullptr, cs_data);
+}
+
+///@}
+
+/// @name co_nmt_set_cs_ind()
+///@{
+
+/// \Given a pointer to an initialized NMT service (co_nmt_t)
+///
+/// \When co_nmt_set_cs_ind() is called with a pointer to an indication
+///       function and a pointer to user-specified data
+///
+/// \Then the indication function and the user-specified data pointers are set
+///       in the NMT service
+TEST(CO_Nmt, CoNmtSetCsInd_Nominal) {
+  CreateNmt();
+
+  co_nmt_set_cs_ind(nmt, &empty_cs_ind, &data);
+
+  co_nmt_cs_ind_t* ind = nullptr;
+  void* cs_data = nullptr;
+  co_nmt_get_cs_ind(nmt, &ind, &cs_data);
+  FUNCTIONPOINTERS_EQUAL(&empty_cs_ind, ind);
+  POINTERS_EQUAL(&data, cs_data);
+}
+
+///@}
+
+/// @name co_nmt_get_hb_ind()
+///@{
+
+/// \Given a pointer to an initialized NMT service (co_nmt_t)
+///
+/// \When co_nmt_get_hb_ind() is called with no addresses to store the
+///       indication function and user-specified data pointers at
+///
+/// \Then nothing is changed
+TEST(CO_Nmt, CoNmtGetHbInd_Null) {
+  CreateNmt();
+
+  co_nmt_get_hb_ind(nmt, nullptr, nullptr);
+}
+
+/// \Given a pointer to an initialized NMT service (co_nmt_t)
+///
+/// \When co_nmt_get_hb_ind() is called with an address to store the indication
+///       function pointer and an address to store user-specified data pointer
+///
+/// \Then the indication function pointer is set to a non-null pointer and
+///       the user-specified data pointer is set to a null pointer
+TEST(CO_Nmt, CoNmtGetHbInd_Nominal) {
+  CreateNmt();
+
+  co_nmt_hb_ind_t* ind = nullptr;
+  void* hb_data = &data;
+
+  co_nmt_get_hb_ind(nmt, &ind, &hb_data);
+
+  CHECK(ind != nullptr);
+  POINTERS_EQUAL(nullptr, hb_data);
+}
+
+///@}
+
+/// @name co_nmt_set_hb_ind()
+///@{
+
+/// \Given a pointer to an initialized NMT service (co_nmt_t)
+///
+/// \When co_nmt_set_hb_ind() is called with a pointer to an indication
+///       function and a pointer to user-specified data
+///
+/// \Then the indication function and the user-specified data pointers are set
+///       in the NMT service
+TEST(CO_Nmt, CoNmtSetHbInd_Nominal) {
+  CreateNmt();
+
+  co_nmt_set_hb_ind(nmt, &empty_hb_ind, &data);
+
+  co_nmt_hb_ind_t* ind = nullptr;
+  void* hb_data = nullptr;
+  co_nmt_get_hb_ind(nmt, &ind, &hb_data);
+  FUNCTIONPOINTERS_EQUAL(&empty_hb_ind, ind);
+  POINTERS_EQUAL(&data, hb_data);
+}
+
+/// \Given a pointer to an initialized NMT service (co_nmt_t)
+///
+/// \When co_nmt_set_hb_ind() is called with a null indication function pointer
+///       and a null user-specified data pointer
+///
+/// \Then the indication function pointer is set to a non-null pointer and
+///       the user-specified data pointer is set to a null pointer
+TEST(CO_Nmt, CoNmtSetHbInd_Null) {
+  CreateNmt();
+  co_nmt_set_hb_ind(nmt, &empty_hb_ind, &data);
+
+  co_nmt_set_hb_ind(nmt, nullptr, nullptr);
+
+  co_nmt_hb_ind_t* ind = nullptr;
+  void* hb_data = nullptr;
+  co_nmt_get_hb_ind(nmt, &ind, &hb_data);
+  CHECK(ind != nullptr);
+  CHECK(ind != &empty_hb_ind);
+  POINTERS_EQUAL(nullptr, hb_data);
+}
+
+///@}
+
+/// @name co_nmt_get_st_ind()
+///@{
+
+/// \Given a pointer to an initialized NMT service (co_nmt_t)
+///
+/// \When co_nmt_get_st_ind() is called with no addresses to store the
+///       indication function and user-specified data pointers at
+///
+/// \Then nothing is changed
+TEST(CO_Nmt, CoNmtGetStInd_Null) {
+  CreateNmt();
+
+  co_nmt_get_st_ind(nmt, nullptr, nullptr);
+}
+
+/// \Given a pointer to an initialized NMT service (co_nmt_t)
+///
+/// \When co_nmt_get_st_ind() is called with an address to store the indication
+///       function pointer and an address to store user-specified data pointer
+///
+/// \Then the indication function pointer is set to a non-null pointer and
+///       the user-specified data pointer is set to a null pointer
+TEST(CO_Nmt, CoNmtGetStInd_Nominal) {
+  CreateNmt();
+
+  co_nmt_st_ind_t* ind = nullptr;
+  void* st_data = &data;
+
+  co_nmt_get_st_ind(nmt, &ind, &st_data);
+
+  CHECK(ind != nullptr);
+  POINTERS_EQUAL(nullptr, st_data);
+}
+
+///@}
+
+/// @name co_nmt_set_st_ind()
+///@{
+
+/// \Given a pointer to an initialized NMT service (co_nmt_t)
+///
+/// \When co_nmt_set_st_ind() is called with a pointer to an indication
+///       function and a pointer to user-specified data
+///
+/// \Then the indication function and the user-specified data pointers are set
+///       in the NMT service
+TEST(CO_Nmt, CoNmtSetStInd_Nominal) {
+  CreateNmt();
+
+  co_nmt_set_st_ind(nmt, &empty_st_ind, &data);
+
+  co_nmt_st_ind_t* ind = nullptr;
+  void* st_data = nullptr;
+  co_nmt_get_st_ind(nmt, &ind, &st_data);
+  FUNCTIONPOINTERS_EQUAL(&empty_st_ind, ind);
+  POINTERS_EQUAL(&data, st_data);
+}
+
+/// \Given a pointer to an initialized NMT service (co_nmt_t)
+///
+/// \When co_nmt_set_st_ind() is called with a null indication function pointer
+///       and a null user-specified data pointer
+///
+/// \Then the indication function pointer is set to a non-null pointer and
+///       the user-specified data pointer is set to a null pointer
+TEST(CO_Nmt, CoNmtSetStInd_Null) {
+  CreateNmt();
+  co_nmt_set_st_ind(nmt, &empty_st_ind, &data);
+
+  co_nmt_set_st_ind(nmt, nullptr, nullptr);
+
+  co_nmt_st_ind_t* ind = nullptr;
+  void* st_data = nullptr;
+  co_nmt_get_st_ind(nmt, &ind, &st_data);
+  CHECK(ind != nullptr);
+  POINTERS_EQUAL(nullptr, st_data);
+}
+
+///@}
+
+#if !LELY_NO_CO_MASTER
+
+/// @name co_nmt_get_dn_ind()
+///@{
+
+/// \Given a pointer to an initialized NMT service (co_nmt_t)
+///
+/// \When co_nmt_get_dn_ind() is called with no addresses to store the
+///       indication function and user-specified data pointers at
+///
+/// \Then nothing is changed
+TEST(CO_Nmt, CoNmtGetDnInd_Null) {
+  CreateNmt();
+
+  co_nmt_get_dn_ind(nmt, nullptr, nullptr);
+}
+
+/// \Given a pointer to an initialized NMT service (co_nmt_t)
+///
+/// \When co_nmt_get_dn_ind() is called with an address to store the indication
+///       function pointer and an address to store user-specified data pointer
+///
+/// \Then both pointers are set to a null pointer
+TEST(CO_Nmt, CoNmtGetDnInd_Nominal) {
+  CreateNmt();
+
+  co_nmt_sdo_ind_t* ind = &empty_sdo_ind;
+  void* dn_data = &data;
+
+  co_nmt_get_dn_ind(nmt, &ind, &dn_data);
+
+  FUNCTIONPOINTERS_EQUAL(nullptr, ind);
+  POINTERS_EQUAL(nullptr, dn_data);
+}
+
+///@}
+
+/// @name co_nmt_set_dn_ind()
+///@{
+
+/// \Given a pointer to an initialized NMT service (co_nmt_t)
+///
+/// \When co_nmt_set_dn_ind() is called with a pointer to an indication
+///       function and a pointer to user-specified data
+///
+/// \Then the indication function and the user-specified data pointers are set
+///       in the NMT service
+TEST(CO_Nmt, CoNmtSetDnInd_Nominal) {
+  CreateNmt();
+
+  co_nmt_set_dn_ind(nmt, &empty_sdo_ind, &data);
+
+  co_nmt_sdo_ind_t* ind = nullptr;
+  void* dn_data = nullptr;
+  co_nmt_get_dn_ind(nmt, &ind, &dn_data);
+  FUNCTIONPOINTERS_EQUAL(&empty_sdo_ind, ind);
+  POINTERS_EQUAL(&data, dn_data);
+}
+
+///@}
+
+/// @name co_nmt_get_up_ind()
+///@{
+
+/// \Given a pointer to an initialized NMT service (co_nmt_t)
+///
+/// \When co_nmt_get_up_ind() is called with no addresses to store the
+///       indication function and user-specified data pointers at
+///
+/// \Then nothing is changed
+TEST(CO_Nmt, CoNmtGetUpInd_Null) {
+  CreateNmt();
+
+  co_nmt_get_up_ind(nmt, nullptr, nullptr);
+}
+
+/// \Given a pointer to an initialized NMT service (co_nmt_t)
+///
+/// \When co_nmt_get_up_ind() is called with an address to store the indication
+///       function pointer and an address to store user-specified data pointer
+///
+/// \Then both pointers are set to a null pointer
+TEST(CO_Nmt, CoNmtGetUpInd_Nominal) {
+  CreateNmt();
+
+  co_nmt_sdo_ind_t* ind = &empty_sdo_ind;
+  void* up_data = &data;
+
+  co_nmt_get_up_ind(nmt, &ind, &up_data);
+
+  FUNCTIONPOINTERS_EQUAL(nullptr, ind);
+  POINTERS_EQUAL(nullptr, up_data);
+}
+
+///@}
+
+/// @name co_nmt_set_up_ind()
+///@{
+
+/// \Given a pointer to an initialized NMT service (co_nmt_t)
+///
+/// \When co_nmt_set_up_ind() is called with a pointer to an indication
+///       function and a pointer to user-specified data
+///
+/// \Then the indication function and the user-specified data pointers are set
+///       in the NMT service
+TEST(CO_Nmt, CoNmtSetUpInd_Nominal) {
+  CreateNmt();
+
+  co_nmt_set_up_ind(nmt, &empty_sdo_ind, &data);
+
+  co_nmt_sdo_ind_t* ind = nullptr;
+  void* up_data = nullptr;
+  co_nmt_get_up_ind(nmt, &ind, &up_data);
+  FUNCTIONPOINTERS_EQUAL(&empty_sdo_ind, ind);
+  POINTERS_EQUAL(&data, up_data);
+}
+
+///@}
+
+#endif  // !LELY_NO_CO_MASTER
+
+/// @name co_nmt_get_sync_ind()
+///@{
+
+/// \Given a pointer to an initialized NMT service (co_nmt_t)
+///
+/// \When co_nmt_get_sync_ind() is called with no addresses to store the
+///       indication function and user-specified data pointers at
+///
+/// \Then nothing is changed
+TEST(CO_Nmt, CoNmtGetSyncInd_Null) {
+  CreateNmt();
+
+  co_nmt_get_sync_ind(nmt, nullptr, nullptr);
+}
+
+/// \Given a pointer to an initialized NMT service (co_nmt_t)
+///
+/// \When co_nmt_get_sync_ind() is called with an address to store the
+///       indication function pointer and an address to store user-specified
+///       data pointer
+///
+/// \Then both pointers are set to a null pointer
+TEST(CO_Nmt, CoNmtGetSyncInd_Nominal) {
+  CreateNmt();
+
+  co_nmt_sync_ind_t* ind = &empty_sync_ind;
+  void* sync_data = &data;
+
+  co_nmt_get_sync_ind(nmt, &ind, &sync_data);
+
+  FUNCTIONPOINTERS_EQUAL(nullptr, ind);
+  POINTERS_EQUAL(nullptr, sync_data);
+}
+
+///@}
+
+/// @name co_nmt_set_sync_ind()
+///@{
+
+/// \Given a pointer to an initialized NMT service (co_nmt_t)
+///
+/// \When co_nmt_set_sync_ind() is called with a pointer to an indication
+///       function and a pointer to user-specified data
+///
+/// \Then the indication function and the user-specified data pointers are set
+///       in the NMT service
+TEST(CO_Nmt, CoNmtSetSyncInd_Nominal) {
+  CreateNmt();
+
+  co_nmt_set_sync_ind(nmt, &empty_sync_ind, &data);
+
+  co_nmt_sync_ind_t* ind = nullptr;
+  void* sync_data = nullptr;
+  co_nmt_get_sync_ind(nmt, &ind, &sync_data);
+  FUNCTIONPOINTERS_EQUAL(&empty_sync_ind, ind);
+  POINTERS_EQUAL(&data, sync_data);
+}
+
+///@}
+
+/// @name co_nmt_get_id()
+///@{
+
+/// \Given a pointer to an initialized NMT service (co_nmt_t)
+///
+/// \When co_nmt_get_id() is called
+///
+/// \Then the pending Node-ID is returned
+TEST(CO_Nmt, CoNmtGetId_Nominal) {
+  CreateNmt();
+
+  const auto ret = co_nmt_get_id(nmt);
+
+  CHECK_EQUAL(DEV_ID, ret);
+}
+
+///@}
+
+/// @name co_nmt_set_id()
+///@{
+
+/// \Given a pointer to an initialized NMT service (co_nmt_t)
+///
+/// \When co_nmt_set_id() is called with a Node-ID equal to `0`
+///
+/// \Then -1 is returned, the error number it set to ERRNUM_INVAL
+TEST(CO_Nmt, CoNmtSetId_ZeroId) {
+  CreateNmt();
+
+  const auto ret = co_nmt_set_id(nmt, 0);
+
+  CHECK_EQUAL(-1, ret);
+  CHECK_EQUAL(ERRNUM_INVAL, get_errnum());
+  CHECK_EQUAL(DEV_ID, co_nmt_get_id(nmt));
+}
+
+/// \Given a pointer to an initialized NMT service (co_nmt_t)
+///
+/// \When co_nmt_set_id() is called with a Node-ID over the maximum value
+///
+/// \Then -1 is returned, the error number it set to ERRNUM_INVAL
+TEST(CO_Nmt, CoNmtSetId_OverMax) {
+  CreateNmt();
+
+  const auto ret = co_nmt_set_id(nmt, CO_NUM_NODES + 1u);
+
+  CHECK_EQUAL(-1, ret);
+  CHECK_EQUAL(ERRNUM_INVAL, get_errnum());
+  CHECK_EQUAL(DEV_ID, co_nmt_get_id(nmt));
+}
+
+/// \Given a pointer to an initialized NMT service (co_nmt_t)
+///
+/// \When co_nmt_set_id() is called with the unconfigured Node-ID (`255`)
+///
+/// \Then 0 is returned, the pending Node-ID is set to the unconfigured Node-ID
+TEST(CO_Nmt, CoNmtSetId_Unconfigured) {
+  const co_unsigned8_t unconfNodeId = 255u;
+  CreateNmt();
+
+  const auto ret = co_nmt_set_id(nmt, unconfNodeId);
+
+  CHECK_EQUAL(0, ret);
+  CHECK_EQUAL(unconfNodeId, co_nmt_get_id(nmt));
+}
+
+/// \Given a pointer to an initialized NMT service (co_nmt_t)
+///
+/// \When co_nmt_set_id() is called with a Node-ID
+///
+/// \Then 0 is returned, the pending Node-ID is set
+TEST(CO_Nmt, CoNmtSetId_Nominal) {
+  const co_unsigned8_t nodeId = 0x05;
+  CreateNmt();
+
+  const auto ret = co_nmt_set_id(nmt, nodeId);
+
+  CHECK_EQUAL(0, ret);
+  CHECK_EQUAL(nodeId, co_nmt_get_id(nmt));
+}
+
+///@}
+
+/// @name co_nmt_get_st()
+///@{
+
+/// \Given a pointer to an initialized NMT service (co_nmt_t)
+///
+/// \When co_nmt_get_st() is called
+///
+/// \Then the current state of the NMT service is returned
+TEST(CO_Nmt, CoNmtGetSt_Nominal) {
+  CreateNmt();
+
+  const auto ret = co_nmt_get_st(nmt);
+
+  CHECK_EQUAL(CO_NMT_ST_BOOTUP, ret);
+}
+
+///@}
+
+/// @name co_nmt_is_master()
+///@{
+
+/// \Given a pointer to an initialized NMT service (co_nmt_t) before the
+///        initial reset
+///
+/// \When co_nmt_is_master() is called
+///
+/// \Then 0 is returned
+TEST(CO_Nmt, CoNmtIsMaster_BeforeInitialReset) {
+  CreateNmt();
+
+  const auto ret = co_nmt_is_master(nmt);
+
+  CHECK_EQUAL(0, ret);
+}
+
+/// \Given a pointer to an initialized NMT service (co_nmt_t) configured as
+///        a slave
+///
+/// \When co_nmt_is_master() is called
+///
+/// \Then 0 is returned
+TEST(CO_Nmt, CoNmtIsMaster_Slave) {
+  CreateObj1f80NmtStartup(0x00);
+  CreateNmt();
+  co_nmt_cs_ind(nmt, CO_NMT_CS_RESET_NODE);
+
+  const auto ret = co_nmt_is_master(nmt);
+
+  CHECK_EQUAL(0, ret);
+}
+
+#if !LELY_NO_CO_MASTER
+/// \Given a pointer to an initialized NMT service (co_nmt_t) configured as
+///        a master
+///
+/// \When co_nmt_is_master() is called
+///
+/// \Then 1 is returned
+TEST(CO_Nmt, CoNmtIsMaster_Master) {
+  CreateObj1f80NmtStartup(0x01);
+  CreateNmt();
+  co_nmt_cs_ind(nmt, CO_NMT_CS_RESET_NODE);
+
+  const auto ret = co_nmt_is_master(nmt);
+
+  CHECK_EQUAL(1, ret);
+}
+#endif
+
+///@}
+
+#if !LELY_NO_CO_MASTER
+
+/// @name co_nmt_get_timeout()
+///@{
+
+/// \Given a pointer to an initialized NMT service (co_nmt_t)
+///
+/// \When co_nmt_get_timeout() is called
+///
+/// \Then the default SDO timeout is returned
+TEST(CO_Nmt, CoNmtGetTimeout_Nominal) {
+  CreateNmt();
+
+  const auto ret = co_nmt_get_timeout(nmt);
+
+#if !LELY_NO_CO_NMT_BOOT || !LELY_NO_CO_NMT_CFG
+  CHECK_EQUAL(LELY_CO_NMT_TIMEOUT, ret);
+#else
+  CHECK_EQUAL(0, ret);
+#endif
+}
+
+///@}
+
+/// @name co_nmt_set_timeout()
+///@{
+
+/// \Given a pointer to an initialized NMT service (co_nmt_t)
+///
+/// \When co_nmt_set_timeout() is called with a timeout value
+///
+/// \Then the default SDO timeout is set
+TEST(CO_Nmt, CoNmtSetTimeout_Nominal) {
+  const int timeout = 500;
+  CreateNmt();
+
+  co_nmt_set_timeout(nmt, timeout);
+
+  CHECK_EQUAL(timeout, co_nmt_get_timeout(nmt));
+}
+
+///@}
+
+#endif  // !LELY_NO_CO_MASTER
