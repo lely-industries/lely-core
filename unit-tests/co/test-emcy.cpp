@@ -24,10 +24,15 @@
 #include <config.h>
 #endif
 
+#include <cstddef>
 #include <memory>
 
 #include <CppUTest/TestHarness.h>
 
+#include <lely/can/msg.h>
+#include <lely/can/net.h>
+
+#include <lely/co/dev.h>
 #include <lely/co/emcy.h>
 
 #include <libtest/allocators/default.hpp>
@@ -39,10 +44,16 @@
 #include "holder/obj.hpp"
 
 struct EmcyInd {
+  static std::size_t called;
+
   static void
   func(co_emcy_t*, co_unsigned8_t, co_unsigned16_t, co_unsigned8_t,
-       co_unsigned8_t*, void*) {}
+       co_unsigned8_t*, void*) {
+    ++called;
+  }
 };
+
+std::size_t EmcyInd::called = 0u;
 
 TEST_BASE(CO_EmcyBase) {
   TEST_BASE_SUPER(CO_EmcyBase);
@@ -109,6 +120,8 @@ TEST_BASE(CO_EmcyBase) {
 
     net = can_net_create(allocator.ToAllocT());
     CHECK(net != nullptr);
+
+    EmcyInd::called = 0u;
   }
 
   TEST_TEARDOWN() {
@@ -192,7 +205,7 @@ TEST(CO_EmcyCreate, CoEmcyCreate_NoObj1001) {
 }
 
 /// \Given pointers to initialized device (co_dev_t) and network (can_net_t),
-///        the Error Register object (0x1001) present in the object dictionary
+///        the object dictionary contains the Error Register object (0x1001)
 ///
 /// \When co_emcy_create() is called with the pointers to the network and the
 ///       device
@@ -219,9 +232,9 @@ TEST(CO_EmcyCreate, CoEmcyCreate_NoObj1003And1028) {
 }
 
 /// \Given pointers to initialized device (co_dev_t) and network (can_net_t),
-///        the Error Register object (0x1001), the Pre-defined Error Field
-///        object (0x1003) and the Emergency Consumer Object (0x1028) present in
-///        the object dictionary
+///        the object dictionary contains the Error Register object (0x1001),
+///        the Pre-defined Error Field object (0x1003) and the Emergency
+///        Consumer Object (0x1028)
 ///
 /// \When co_emcy_create() is called with the pointers to the network and the
 ///       device
@@ -377,6 +390,281 @@ TEST(CO_Emcy, CoEmcySetInd_Nominal) {
   co_emcy_get_ind(emcy, &ind, &user_data);
   POINTERS_EQUAL(&EmcyInd::func, ind);
   POINTERS_EQUAL(&data, user_data);
+}
+
+///@}
+
+/// @name co_emcy_start()
+///@{
+
+/// \Given a pointer to an EMCY service (co_emcy_t), the object dictionary does
+///        not contain the Pre-defined Error Field object (0x1003), the COB-ID
+///        EMCY object (0x1014) and the Emergency Consumer Object (0x1028)
+///
+/// \When co_emcy_start() is called
+///
+/// \Then 0 is returned, the EMCY service is started
+///       \Calls can_net_get_time()
+///       \Calls co_dev_find_obj()
+TEST(CO_Emcy, CoEmcyStart_NoObj1003_1014_1028) {
+  const int ret = co_emcy_start(emcy);
+
+  CHECK_EQUAL(0, ret);
+  CHECK_EQUAL(0, co_emcy_is_stopped(emcy));
+}
+
+/// \Given a pointer to an already started EMCY service (co_emcy_t)
+///
+/// \When co_emcy_start() is called
+///
+/// \Then 0 is returned, nothing is changed
+TEST(CO_Emcy, CoEmcyStart_AlreadyStarted) {
+  co_emcy_start(emcy);
+
+  const int ret = co_emcy_start(emcy);
+
+  CHECK_EQUAL(0, ret);
+  CHECK_EQUAL(0, co_emcy_is_stopped(emcy));
+}
+
+/// \Given a pointer to an EMCY service (co_emcy_t), the object dictionary
+///        contains the Emergency Consumer Object (0x1028) with at least one
+///        declared consumer COB-ID missing
+///
+/// \When co_emcy_start() is called
+///
+/// \Then 0 is returned, the EMCY service is started, missing consumer COB-IDs
+///       are ignored
+///       \Calls can_net_get_time()
+///       \Calls co_dev_find_obj()
+///       \Calls co_obj_set_dn_ind()
+///       \Calls co_obj_get_val_u8()
+///       \Calls co_obj_find_sub()
+///       \Calls co_obj_get_val_u32()
+///       \Calls can_recv_start()
+TEST(CO_EmcyCreate, CoEmcyStart_Obj1028_WithMissingSubObject) {
+  CreateObj1001ErrorRegister(0u);
+  CreateObjInDev(obj1028, 0x1028u);
+  co_obj_set_code(obj1028->Get(), CO_OBJECT_ARRAY);
+  obj1028->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t{2u});
+  obj1028->InsertAndSetSub(0x01u, CO_DEFTYPE_UNSIGNED32, co_unsigned32_t{0u});
+  // missing 0x02 sub-indx
+
+  auto* emcy = co_emcy_create(net, dev);
+  CHECK(emcy != nullptr);
+
+  const int ret = co_emcy_start(emcy);
+
+  CHECK_EQUAL(0, ret);
+  CHECK_EQUAL(0, co_emcy_is_stopped(emcy));
+
+  co_emcy_destroy(emcy);
+}
+
+/// \Given a pointer to an EMCY service (co_emcy_t), the object dictionary
+///        contains the Emergency Consumer Object (0x1028) set with more than
+///        127 consumer COB-IDs
+///
+/// \When co_emcy_start() is called
+///
+/// \Then 0 is returned, the EMCY service is started, excess consumer COB-IDs
+///       are ignored
+///       \Calls can_net_get_time()
+///       \Calls co_dev_find_obj()
+///       \Calls co_obj_set_dn_ind()
+///       \Calls co_obj_get_val_u8()
+///       \Calls co_obj_find_sub()
+///       \Calls co_obj_get_val_u32()
+///       \Calls can_recv_start()
+TEST(CO_EmcyCreate, CoEmcyStart_Obj1028_BiggerThanMaxNodes) {
+  CreateObj1001ErrorRegister(0u);
+  CreateObjInDev(obj1028, 0x1028u);
+  co_obj_set_code(obj1028->Get(), CO_OBJECT_ARRAY);
+  obj1028->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8,
+                           co_unsigned8_t{CO_NUM_NODES + 1u});
+  for (co_unsigned8_t i = 0; i < CO_NUM_NODES + 1u; ++i)
+    obj1028->InsertAndSetSub(i + 1u, CO_DEFTYPE_UNSIGNED32,
+                             co_unsigned32_t{i + 1u});
+
+  auto* emcy = co_emcy_create(net, dev);
+  CHECK(emcy != nullptr);
+  co_emcy_set_ind(emcy, &EmcyInd::func, nullptr);
+
+  const int ret = co_emcy_start(emcy);
+
+  CHECK_EQUAL(0, ret);
+  CHECK_EQUAL(0, co_emcy_is_stopped(emcy));
+
+  can_msg msg = CAN_MSG_INIT;
+  msg.id = CO_NUM_NODES + 1;
+  CHECK_EQUAL(0, can_net_recv(net, &msg));
+  CHECK_EQUAL(0u, EmcyInd::called);
+
+  msg.id = CO_NUM_NODES;
+  CHECK_EQUAL(0, can_net_recv(net, &msg));
+  CHECK_EQUAL(1u, EmcyInd::called);
+
+  co_emcy_destroy(emcy);
+}
+
+///@}
+
+/// @name co_emcy_stop()
+///@{
+
+/// \Given a pointer to a started EMCY service (co_emcy_t), the object
+///        dictionary does not contain the Pre-defined Error Field object
+///        (0x1003), the COB-ID EMCY object (0x1014) and the Emergency Consumer
+///        Object (0x1028)
+///
+/// \When co_emcy_stop() is called
+///
+/// \Then the EMCY service is stopped
+///       \Calls can_timer_stop()
+///       \Calls co_dev_find_obj()
+TEST(CO_Emcy, CoEmcyStop_NoObj1003_1028_1014) {
+  co_emcy_start(emcy);
+
+  co_emcy_stop(emcy);
+
+  CHECK_EQUAL(1, co_emcy_is_stopped(emcy));
+}
+
+/// \Given a pointer to a not started EMCY service (co_emcy_t)
+///
+/// \When co_emcy_stop() is called
+///
+/// \Then nothing is changed
+TEST(CO_Emcy, CoEmcyStop_NotStarted) {
+  co_emcy_stop(emcy);
+
+  CHECK_EQUAL(1, co_emcy_is_stopped(emcy));
+}
+
+///@}
+
+/// @name co_emcy_is_stopped()
+///@{
+
+/// \Given a pointer to a not started EMCY service (co_emcy_t)
+///
+/// \When co_emcy_is_stopped() is called
+///
+/// \Then 1 is returned
+TEST(CO_Emcy, CoEmcyIsStopped_NotStarted) {
+  CHECK_EQUAL(1, co_emcy_is_stopped(emcy));
+}
+
+/// \Given a pointer to a started EMCY service (co_emcy_t)
+///
+/// \When co_emcy_is_stopped() is called
+///
+/// \Then 0 is returned
+TEST(CO_Emcy, CoEmcyIsStopped_AfterStart) {
+  co_emcy_start(emcy);
+
+  CHECK_EQUAL(0, co_emcy_is_stopped(emcy));
+}
+
+/// \Given a pointer to a stopped EMCY service (co_emcy_t)
+///
+/// \When co_emcy_is_stopped() is called
+///
+/// \Then 1 is returned
+TEST(CO_Emcy, CoEmcyIsStopped_AfterStop) {
+  co_emcy_start(emcy);
+  co_emcy_stop(emcy);
+
+  CHECK_EQUAL(1, co_emcy_is_stopped(emcy));
+}
+
+///@}
+
+TEST_GROUP_BASE(CO_EmcyWithObjects, CO_EmcyBase) {
+  co_emcy_t* emcy = nullptr;
+
+  std::unique_ptr<CoObjTHolder> obj1014;
+
+  void CreateObj1014CobIdEmcy() {
+    CreateObjInDev(obj1014, 0x1014u);
+    obj1014->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED32,
+                             co_unsigned32_t{0x80u + DEV_ID});
+  }
+
+  TEST_SETUP() {
+    TEST_BASE_SETUP();
+
+    CreateObj1001ErrorRegister(0u);
+    CreateObj1003EmptyPredefinedErrorField();
+    CreateObj1014CobIdEmcy();
+    CreateObj1028EmcyConsumerObject();
+
+    emcy = co_emcy_create(net, dev);
+    CHECK(emcy != nullptr);
+  }
+
+  TEST_TEARDOWN() {
+    co_emcy_destroy(emcy);
+
+    TEST_BASE_TEARDOWN();
+  }
+};
+
+/// @name co_emcy_start()
+///@{
+
+/// \Given a pointer to an EMCY service (co_emcy_t), the object dictionary
+///        contains the Pre-defined Error Field object (0x1003), the COB-ID EMCY
+///        object (0x1014) and the Emergency Consumer Object (0x1028)
+///
+/// \When co_emcy_start() is called
+///
+/// \Then 0 is returned, the EMCY service is started and download indication
+///       functions for the 0x1003, 0x1014 and 0x1028 objects are set
+///       \Calls can_net_get_time()
+///       \Calls co_dev_find_obj()
+///       \Calls co_obj_set_dn_ind()
+///       \Calls co_obj_get_val_u8()
+///       \Calls co_obj_find_sub()
+///       \Calls can_recv_start()
+TEST(CO_EmcyWithObjects, CoEmcyStart_Nominal) {
+  const int ret = co_emcy_start(emcy);
+
+  CHECK_EQUAL(0, ret);
+  CHECK_EQUAL(0, co_emcy_is_stopped(emcy));
+  LelyUnitTest::CheckSubDnIndIsSet(dev, 0x1003u, emcy);
+  LelyUnitTest::CheckSubDnIndIsSet(dev, 0x1014u, emcy);
+  LelyUnitTest::CheckSubDnIndIsSet(dev, 0x1028u, emcy);
+}
+
+///@}
+
+/// @name co_emcy_stop()
+///@{
+
+/// \Given a pointer to a started EMCY service (co_emcy_t), the object
+///        dictionary contains the Pre-defined Error Field object (0x1003), the
+///        COB-ID EMCY object (0x1014) and the Emergency Consumer Object
+///        (0x1028)
+///
+/// \When co_emcy_stop() is called
+///
+/// \Then the EMCY service is stopped and download indication functions for the
+///       0x1003, 0x1014 and 0x1028 objects are set to default
+///       \Calls can_timer_stop()
+///       \Calls co_dev_find_obj()
+///       \Calls co_obj_find_sub()
+///       \Calls can_recv_stop()
+///       \Calls co_obj_set_dn_ind()
+TEST(CO_EmcyWithObjects, CoEmcyStop_Nominal) {
+  co_emcy_start(emcy);
+
+  co_emcy_stop(emcy);
+
+  CHECK_EQUAL(1, co_emcy_is_stopped(emcy));
+  LelyUnitTest::CheckSubDnIndIsDefault(dev, 0x1003u);
+  LelyUnitTest::CheckSubDnIndIsDefault(dev, 0x1014u);
+  LelyUnitTest::CheckSubDnIndIsDefault(dev, 0x1028u);
 }
 
 ///@}
