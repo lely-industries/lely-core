@@ -158,7 +158,7 @@ TEST(CO_SsdoInit, CoSsdoSizeof_Nominal) {
   CHECK_EQUAL(1088u, ret);
 #else
 #if defined(__MINGW32__) && !defined(__MINGW64__)
-  CHECK_EQUAL(108u, ret);
+  CHECK_EQUAL(104u, ret);
 #else
   CHECK_EQUAL(184u, ret);
 #endif
