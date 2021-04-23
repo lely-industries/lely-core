@@ -149,7 +149,7 @@ TEST(CO_SsdoInit, CoSsdoAlignof_Nominal) {
 /// \When co_ssdo_sizeof() is called
 ///
 /// \Then if LELY_NO_MALLOC: 1088 is returned;
-///       else if \__MINGW32__ and !__MINGW64__: 108 is returned;
+///       else if \__MINGW32__ and !__MINGW64__: 104 is returned;
 ///       else 184 is returned
 TEST(CO_SsdoInit, CoSsdoSizeof_Nominal) {
   const auto ret = co_ssdo_sizeof();
