@@ -149,7 +149,7 @@ TEST(CO_SsdoInit, CoSsdoAlignof_Nominal) {
 /// \When co_ssdo_sizeof() is called
 ///
 /// \Then if LELY_NO_MALLOC: 1088 is returned;
-///       else if \__MINGW32__ and !__MINGW64__: 104 is returned;
+///       else if \__MINGW32__ and !__MINGW64__: 108 is returned;
 ///       else 184 is returned
 TEST(CO_SsdoInit, CoSsdoSizeof_Nominal) {
   const auto ret = co_ssdo_sizeof();
@@ -158,7 +158,7 @@ TEST(CO_SsdoInit, CoSsdoSizeof_Nominal) {
   CHECK_EQUAL(1088u, ret);
 #else
 #if defined(__MINGW32__) && !defined(__MINGW64__)
-  CHECK_EQUAL(104u, ret);
+  CHECK_EQUAL(108u, ret);
 #else
   CHECK_EQUAL(184u, ret);
 #endif
@@ -876,7 +876,7 @@ TEST(CoSsdoWaitOnRecv, Abort) {
   msg.data[0] = CO_SDO_CS_ABORT;
   CHECK_EQUAL(0, can_net_recv(net, &msg));
 
-  CHECK(!CanSend::called());
+  CHECK(!CanSend::Called());
 }
 
 TEST(CoSsdoWaitOnRecv, InvalidCS) {
@@ -1740,7 +1740,7 @@ TEST(CoSsdoDnSegOnRecv, AbortCS) {
   const auto ret_abort = can_net_recv(net, &msg);
 
   CHECK_EQUAL(0, ret_abort);
-  CHECK(!CanSend::called());
+  CHECK(!CanSend::Called());
 }
 
 TEST(CoSsdoDnSegOnRecv, InvalidCS) {
@@ -1792,7 +1792,7 @@ TEST(CoSsdoDnSegOnRecv, NoToggle) {
   msg = CreateDnSegMsg(vals2dn + 4u, 1u, CO_SDO_SEG_LAST);
   CHECK_EQUAL(0, can_net_recv(net, &msg));
 
-  CHECK(!CanSend::called());
+  CHECK(!CanSend::Called());
 }
 
 TEST(CoSsdoDnSegOnRecv, MsgLenLessThanSegmentSize) {
@@ -2063,7 +2063,7 @@ TEST(CoSsdoUpSegOnRecv, CSAbort) {
   msg.data[0] = CO_SDO_CS_ABORT;
   CHECK_EQUAL(0, can_net_recv(net, &msg));
 
-  CHECK(!CanSend::called());
+  CHECK(!CanSend::Called());
 }
 
 TEST(CoSsdoUpSegOnRecv, InvalidCS) {
@@ -2399,7 +2399,7 @@ TEST_GROUP_BASE(CoSsdoBlkDn, CO_Ssdo) {
     msg_first_blk.data[7] = 0xcdu;
     CHECK_EQUAL(0, can_net_recv(net, &msg_first_blk));
 
-    CHECK(!CanSend::called());
+    CHECK(!CanSend::Called());
 
     can_msg msg_last_blk = CreateBlkDnSubReq(2u, CO_SDO_SEQ_LAST);
     msg_last_blk.data[1] = 0xefu;
@@ -2453,7 +2453,7 @@ TEST(CoSsdoBlkDn, Sub_CSAbort) {
   msg_first_blk.data[0] = CO_SDO_CS_ABORT;
   CHECK_EQUAL(0, can_net_recv(net, &msg_first_blk));
 
-  CHECK(!CanSend::called());
+  CHECK(!CanSend::Called());
 }
 
 TEST(CoSsdoBlkDn, Sub_SeqnoZero) {
@@ -2494,7 +2494,7 @@ TEST(CoSsdoBlkDn, Sub_NoCrc) {
   msg.data[7] = 0xcdu;
   CHECK_EQUAL(0, can_net_recv(net, &msg));
 
-  CHECK(!CanSend::called());
+  CHECK(!CanSend::Called());
 
   can_msg msg_last_blk = CreateBlkDnSubReq(2u, CO_SDO_SEQ_LAST);
   msg_last_blk.data[1] = 0xefu;
@@ -2583,7 +2583,7 @@ TEST(CoSsdoBlkDn, Sub_Nominal) {
   memcpy(msg_first_blk.data + 1u, val_buf, 7u);
   CHECK_EQUAL(0, can_net_recv(net, &msg_first_blk));
 
-  CHECK(!CanSend::called());
+  CHECK(!CanSend::Called());
 
   can_msg msg_last_blk = CreateBlkDnSubReq(2u, CO_SDO_SEQ_LAST);
   msg_last_blk.data[1] = val_buf[7];
@@ -2651,7 +2651,7 @@ TEST(CoSsdoBlkDn, Sub_CrcError) {
   msg_first_blk.data[7] = 0xcdu;
   CHECK_EQUAL(0, can_net_recv(net, &msg_first_blk));
 
-  CHECK(!CanSend::called());
+  CHECK(!CanSend::Called());
 
   can_msg msg_last_blk = CreateBlkDnSubReq(2u, CO_SDO_SEQ_LAST);
   msg_last_blk.data[1] = 0xefu;
@@ -2703,7 +2703,7 @@ TEST(CoSsdoBlkDn, Sub_TimeoutTriggered) {
   msg_first_blk.data[7] = 0xcdu;
   CHECK_EQUAL(0, can_net_recv(net, &msg_first_blk));
 
-  CHECK(!CanSend::called());
+  CHECK(!CanSend::Called());
 
   const timespec tp = {0L, 1000000L};  // 1 ms
   can_net_set_time(net, &tp);
@@ -2735,7 +2735,7 @@ TEST(CoSsdoBlkDn, EndAbort) {
   msg_first_blk.data[7] = 0xcdu;
   CHECK_EQUAL(0, can_net_recv(net, &msg_first_blk));
 
-  CHECK(!CanSend::called());
+  CHECK(!CanSend::Called());
 
   can_msg msg_last_blk = CreateBlkDnSubReq(1, CO_SDO_SEQ_LAST);
   msg_last_blk.data[1] = 0xefu;
@@ -2811,7 +2811,7 @@ TEST(CoSsdoBlkDn, EndRecv_CSAbort) {
   msg.data[0] = CO_SDO_CS_ABORT;
   CHECK_EQUAL(0, can_net_recv(net, &msg));
 
-  CHECK(!CanSend::called());
+  CHECK(!CanSend::Called());
 }
 
 TEST(CoSsdoBlkDn, EndRecv_InvalidCS) {
@@ -2874,7 +2874,7 @@ TEST(CoSsdoBlkDn, EndRecv_InvalidLen) {
   msg_first_blk.data[7] = 0xcdu;
   CHECK_EQUAL(0, can_net_recv(net, &msg_first_blk));
 
-  CHECK(!CanSend::called());
+  CHECK(!CanSend::Called());
 
   can_msg msg_last_blk = CreateBlkDnSubReq(1u, CO_SDO_SEQ_LAST);
   msg_last_blk.data[1] = 0xefu;
@@ -2980,7 +2980,7 @@ TEST(CoSsdoBlkDn, EndRecv_FailingDnInd) {
   memcpy(msg_first_blk.data + 1u, val_buf, 7u);
   CHECK_EQUAL(0, can_net_recv(net, &msg_first_blk));
 
-  CHECK(!CanSend::called());
+  CHECK(!CanSend::Called());
 
   can_msg msg_last_blk = CreateBlkDnSubReq(2u, CO_SDO_SEQ_LAST);
   msg_last_blk.data[1] = val_buf[7u];
@@ -3594,7 +3594,7 @@ TEST(CoSsdoBlkUp, Sub_CSAbort) {
   msg.len = 1u;
   CHECK_EQUAL(0, can_net_recv(net, &msg));
 
-  CHECK(!CanSend::called());
+  CHECK(!CanSend::Called());
 }
 
 TEST(CoSsdoBlkUp, Sub_InvalidSC) {

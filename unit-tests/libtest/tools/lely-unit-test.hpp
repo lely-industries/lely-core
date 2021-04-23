@@ -58,9 +58,8 @@ struct CoCsdoDnCon {
   static void func(co_csdo_t* sdo_, co_unsigned16_t idx_,
                    co_unsigned8_t subidx_, co_unsigned32_t ac_, void* data_);
 
-  // FIXME: should be named "Called()"
   static inline bool
-  called() {
+  Called() {
     return num_called > 0;
   }
 
@@ -83,9 +82,8 @@ struct CanSend {
 
   static int func(const can_msg* msg_, void* data_);
 
-  // FIXME: should be named "Called()"
   static inline bool
-  called() {
+  Called() {
     return num_called > 0;
   }
 

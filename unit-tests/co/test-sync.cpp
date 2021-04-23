@@ -588,7 +588,7 @@ TEST(CO_Sync, CoSyncStart_PeriodValueZero) {
 
   const timespec tp = {10L, 0L};
   CHECK_EQUAL(0, can_net_set_time(net, &tp));
-  CHECK(!CanSend::called());
+  CHECK(!CanSend::Called());
 }
 
 ///@}
@@ -874,7 +874,7 @@ TEST(CO_Sync, CoSyncTimer_ExtendedCANID) {
   POINTERS_EQUAL(nullptr, SyncInd::data);
   CHECK_EQUAL(0, SyncInd::cnt);
   POINTERS_EQUAL(sync, SyncInd::sync);
-  CHECK(CanSend::called());
+  CHECK(CanSend::Called());
   CHECK_EQUAL(DEV_ID, CanSend::msg.id);
   CHECK_EQUAL(CAN_FLAG_IDE, CanSend::msg.flags);
   CHECK_EQUAL(0u, CanSend::msg.len);
@@ -900,7 +900,7 @@ TEST(CO_Sync, CoSyncTimer_NoIndMaxCntNotSet) {
   const auto ret = can_net_set_time(net, &tp);
 
   CHECK_EQUAL(0, ret);
-  CHECK(CanSend::called());
+  CHECK(CanSend::Called());
   CHECK_EQUAL(DEV_ID, CanSend::msg.id);
   CHECK_EQUAL(0u, CanSend::msg.flags);
   CHECK_EQUAL(0u, CanSend::msg.len);
@@ -935,7 +935,7 @@ TEST(CO_Sync, CoSyncTimer_MaxCntSet) {
   POINTERS_EQUAL(nullptr, SyncInd::data);
   CHECK_EQUAL(1, SyncInd::cnt);
   POINTERS_EQUAL(sync, SyncInd::sync);
-  CHECK(CanSend::called());
+  CHECK(CanSend::Called());
   CHECK_EQUAL(DEV_ID, CanSend::msg.id);
   CHECK_EQUAL(0u, CanSend::msg.flags);
   CHECK_EQUAL(1u, CanSend::msg.len);
@@ -951,7 +951,7 @@ TEST(CO_Sync, CoSyncTimer_MaxCntSet) {
   POINTERS_EQUAL(nullptr, SyncInd::data);
   CHECK_EQUAL(2, SyncInd::cnt);
   POINTERS_EQUAL(sync, SyncInd::sync);
-  CHECK(CanSend::called());
+  CHECK(CanSend::Called());
   CHECK_EQUAL(DEV_ID, CanSend::msg.id);
   CHECK_EQUAL(0u, CanSend::msg.flags);
   CHECK_EQUAL(1u, CanSend::msg.len);
@@ -982,7 +982,7 @@ TEST(CO_Sync, CoSyncTimer) {
   POINTERS_EQUAL(nullptr, SyncInd::data);
   CHECK_EQUAL(0, SyncInd::cnt);
   POINTERS_EQUAL(sync, SyncInd::sync);
-  CHECK(CanSend::called());
+  CHECK(CanSend::Called());
   CHECK_EQUAL(DEV_ID, CanSend::msg.id);
   CHECK_EQUAL(0u, CanSend::msg.flags);
   CHECK_EQUAL(0u, CanSend::msg.len);
