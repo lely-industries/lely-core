@@ -93,10 +93,10 @@ can_msg_bits(const struct can_msg *msg, enum can_msg_bits_mode mode)
 		// data[12-14] |77777777 CCCCCCCC CCCCCCC. ........|
 		uint_least32_t id = msg->id & CAN_MASK_EID;
 		off = 1;
-		*bp++ = (id >> 23) & 0x3f; // SOF = 0, base (Indentifier)
+		*bp++ = (id >> 23) & 0x3f; // SOF = 0, base (Identifier)
 		bits += 8 - off;
 
-		*bp++ = ((id >> 15) & 0xf8) // base (Indentifier)
+		*bp++ = ((id >> 15) & 0xf8) // base (Identifier)
 				| (0x03 << 1) // SRR, IDE
 				| ((id >> 17) & 0x01); // Identifier (extension)
 		bits += 8;
@@ -121,13 +121,13 @@ can_msg_bits(const struct can_msg *msg, enum can_msg_bits_mode mode)
 		// data[12-14] |CCCCCCC. ........ ........ ........|
 		uint_least32_t id = msg->id & CAN_MASK_BID;
 		off = 5;
-		*bp++ = (id >> 9) & 0x03; // SOF = 0, base (Indentifier)
+		*bp++ = (id >> 9) & 0x03; // SOF = 0, base (Identifier)
 		bits += 8 - off;
 
-		*bp++ = (id >> 1) & 0xff; // base (Indentifier)
+		*bp++ = (id >> 1) & 0xff; // base (Identifier)
 		bits += 8;
 
-		*bp++ = ((id << 7) & 0x80u) // base (Indentifier)
+		*bp++ = ((id << 7) & 0x80u) // base (Identifier)
 				| (((msg->flags & CAN_FLAG_RTR) ? 1u : 0u)
 						<< 6) // RTR
 				| (msg->len & 0x0fu); // IDE = 0, R0 = 0, DLC

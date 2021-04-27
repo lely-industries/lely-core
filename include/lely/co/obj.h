@@ -150,7 +150,7 @@ typedef co_unsigned32_t co_sub_dn_ind_t(co_sub_t *sub, struct co_sdo_req *req,
  * The type of a CANopen sub-object upload indication function, invoked by an
  * SDO upload request or Transmit-PDO indication.
  *
- * @param sub  a pointer to a CANopen sub-object, containing the new value.
+ * @param sub  a pointer to a CANopen sub-object, containing the value.
  * @param req  a pointer to a CANopen SDO upload request. On the first
  *             invocation, the <b>size</b> member of *<b>req</b> is set to 0.
  *             All members MUST be initialized by the indication function.
