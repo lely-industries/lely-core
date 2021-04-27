@@ -27,10 +27,8 @@
 #include <lely/co/nmt.h>
 
 struct co_nmt_hb;
-#ifndef __cplusplus
 /// An opaque CANopen NMT heartbeat consumer type.
 typedef struct co_nmt_hb co_nmt_hb_t;
-#endif
 
 #ifdef __cplusplus
 extern "C" {

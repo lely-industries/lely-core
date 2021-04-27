@@ -41,19 +41,11 @@
 #include "holder/obj.hpp"
 #include "holder/sub.hpp"
 
-struct co_nmt_hb;
-typedef struct co_nmt_hb co_nmt_hb_t;
 #include <lib/co/nmt_hb.h>
-
 #if !LELY_NO_CO_NMT_BOOT
-struct co_nmt_boot;
-typedef struct co_nmt_boot co_nmt_boot_t;
 #include <lib/co/nmt_boot.h>
 #endif
-
 #if !LELY_NO_CO_NMT_CFG
-struct co_nmt_cfg;
-typedef struct co_nmt_cfg co_nmt_cfg_t;
 #include <lib/co/nmt_cfg.h>
 #endif
 
