@@ -189,7 +189,7 @@ TEST(CO_SdoRpdo1400, Co1400DnInd_TooLongData) {
                         nullptr, CoCsdoDnCon::func, nullptr);
 
   CHECK_EQUAL(0, ret);
-  CHECK(CoCsdoDnCon::called());
+  CHECK(CoCsdoDnCon::Called());
   CHECK_EQUAL(CO_SDO_AC_TYPE_LEN_HI, CoCsdoDnCon::ac);
 }
 
@@ -203,7 +203,7 @@ TEST(CO_SdoRpdo1400, Co1400DnInd_DownloadNumOfElements) {
                         &num_of_elems, nullptr, CoCsdoDnCon::func, nullptr);
 
   CHECK_EQUAL(0, ret);
-  CHECK(CoCsdoDnCon::called());
+  CHECK(CoCsdoDnCon::Called());
   CHECK_EQUAL(CO_SDO_AC_NO_WRITE, CoCsdoDnCon::ac);
 }
 
@@ -217,7 +217,7 @@ TEST(CO_SdoRpdo1400, Co1400DnInd_CobidSameAsPrevious) {
                         nullptr, CoCsdoDnCon::func, nullptr);
 
   CHECK_EQUAL(0, ret);
-  CHECK(CoCsdoDnCon::called());
+  CHECK(CoCsdoDnCon::Called());
   CHECK_EQUAL(0, CoCsdoDnCon::ac);
 }
 
@@ -234,7 +234,7 @@ TEST(CO_SdoRpdo1400, Co1400DnInd_CobidValidToValid_NewCanId) {
                         nullptr, CoCsdoDnCon::func, nullptr);
 
   CHECK_EQUAL(0, ret);
-  CHECK(CoCsdoDnCon::called());
+  CHECK(CoCsdoDnCon::Called());
   CHECK_EQUAL(CO_SDO_AC_PARAM_VAL, CoCsdoDnCon::ac);
 }
 
@@ -251,7 +251,7 @@ TEST(CO_SdoRpdo1400, Co1400DnInd_CobidInvalidToValid_NewCanId) {
                         nullptr, CoCsdoDnCon::func, nullptr);
 
   CHECK_EQUAL(0, ret);
-  CHECK(CoCsdoDnCon::called());
+  CHECK(CoCsdoDnCon::Called());
   CHECK_EQUAL(0, CoCsdoDnCon::ac);
 }
 
@@ -265,7 +265,7 @@ TEST(CO_SdoRpdo1400, Co1400DnInd_CobidValidToValid_FrameBit) {
                         nullptr, CoCsdoDnCon::func, nullptr);
 
   CHECK_EQUAL(0, ret);
-  CHECK(CoCsdoDnCon::called());
+  CHECK(CoCsdoDnCon::Called());
   CHECK_EQUAL(0, CoCsdoDnCon::ac);
 }
 
@@ -279,7 +279,7 @@ TEST(CO_SdoRpdo1400, Co1400DnInd_CobidValidToInvalid_ExtendedId_NoFrameBit) {
                         nullptr, CoCsdoDnCon::func, nullptr);
 
   CHECK_EQUAL(0, ret);
-  CHECK(CoCsdoDnCon::called());
+  CHECK(CoCsdoDnCon::Called());
   CHECK_EQUAL(CO_SDO_AC_PARAM_VAL, CoCsdoDnCon::ac);
 }
 
@@ -293,7 +293,7 @@ TEST(CO_SdoRpdo1400, Co1400DnInd_CobidValidToInvalid) {
                         nullptr, CoCsdoDnCon::func, nullptr);
 
   CHECK_EQUAL(0, ret);
-  CHECK(CoCsdoDnCon::called());
+  CHECK(CoCsdoDnCon::Called());
   CHECK_EQUAL(0, CoCsdoDnCon::ac);
 }
 
@@ -373,7 +373,7 @@ TEST(CO_SdoRpdo1400, Co1400DnInd_TransmissionTypeSameAsPrevious) {
                                      CoCsdoDnCon::func, nullptr);
 
   CHECK_EQUAL(0, ret);
-  CHECK(CoCsdoDnCon::called());
+  CHECK(CoCsdoDnCon::Called());
   CHECK_EQUAL(0, CoCsdoDnCon::ac);
 }
 
@@ -390,7 +390,7 @@ TEST(CO_SdoRpdo1400, Co1400DnInd_TransmissionTypeReserved) {
                                        nullptr, CoCsdoDnCon::func, nullptr);
 
     CHECK_EQUAL(0, ret);
-    CHECK(CoCsdoDnCon::called());
+    CHECK(CoCsdoDnCon::Called());
     CHECK_EQUAL(CO_SDO_AC_PARAM_VAL, CoCsdoDnCon::ac);
   }
 }
@@ -405,7 +405,7 @@ TEST(CO_SdoRpdo1400, Co1400DnInd_TransmissionTypeMax) {
                                      CoCsdoDnCon::func, nullptr);
 
   CHECK_EQUAL(0, ret);
-  CHECK(CoCsdoDnCon::called());
+  CHECK(CoCsdoDnCon::Called());
   CHECK_EQUAL(0, CoCsdoDnCon::ac);
 }
 
@@ -419,7 +419,7 @@ TEST(CO_SdoRpdo1400, Co1400DnInd_TransmissionType) {
                                      CoCsdoDnCon::func, nullptr);
 
   CHECK_EQUAL(0, ret);
-  CHECK(CoCsdoDnCon::called());
+  CHECK(CoCsdoDnCon::Called());
   CHECK_EQUAL(0, CoCsdoDnCon::ac);
 }
 
@@ -436,7 +436,7 @@ TEST(CO_SdoRpdo1400, Co1400DnInd_InhibitTimeSameAsPrevious) {
                         &inhibit_time, nullptr, CoCsdoDnCon::func, nullptr);
 
   CHECK_EQUAL(0, ret);
-  CHECK(CoCsdoDnCon::called());
+  CHECK(CoCsdoDnCon::Called());
   CHECK_EQUAL(0, CoCsdoDnCon::ac);
 }
 
@@ -450,7 +450,7 @@ TEST(CO_SdoRpdo1400, Co1400DnInd_InhibitTimeValidRPDO) {
                         &inhibit_time, nullptr, CoCsdoDnCon::func, nullptr);
 
   CHECK_EQUAL(0, ret);
-  CHECK(CoCsdoDnCon::called());
+  CHECK(CoCsdoDnCon::Called());
   CHECK_EQUAL(CO_SDO_AC_PARAM_VAL, CoCsdoDnCon::ac);
 }
 
@@ -467,7 +467,7 @@ TEST(CO_SdoRpdo1400, Co1400DnInd_InhibitTime) {
                         &inhibit_time, nullptr, CoCsdoDnCon::func, nullptr);
 
   CHECK_EQUAL(0, ret);
-  CHECK(CoCsdoDnCon::called());
+  CHECK(CoCsdoDnCon::Called());
   CHECK_EQUAL(0, CoCsdoDnCon::ac);
 }
 
@@ -481,7 +481,7 @@ TEST(CO_SdoRpdo1400, Co1400DnInd_CompatibilityEntry) {
                         nullptr, CoCsdoDnCon::func, nullptr);
 
   CHECK_EQUAL(0, ret);
-  CHECK(CoCsdoDnCon::called());
+  CHECK(CoCsdoDnCon::Called());
   CHECK_EQUAL(CO_SDO_AC_NO_SUB, CoCsdoDnCon::ac);
 }
 
@@ -495,7 +495,7 @@ TEST(CO_SdoRpdo1400, Co1400DnInd_EventTimerSameAsPrevious) {
                         &event_timer, nullptr, CoCsdoDnCon::func, nullptr);
 
   CHECK_EQUAL(0, ret);
-  CHECK(CoCsdoDnCon::called());
+  CHECK(CoCsdoDnCon::Called());
   CHECK_EQUAL(0, CoCsdoDnCon::ac);
 }
 
@@ -509,7 +509,7 @@ TEST(CO_SdoRpdo1400, Co1400DnInd_EventTimer) {
                         &event_timer, nullptr, CoCsdoDnCon::func, nullptr);
 
   CHECK_EQUAL(0, ret);
-  CHECK(CoCsdoDnCon::called());
+  CHECK(CoCsdoDnCon::Called());
   CHECK_EQUAL(0, CoCsdoDnCon::ac);
 }
 
@@ -641,7 +641,7 @@ TEST(CO_SdoRpdo1600, Co1600DnInd_NumOfMappingsLenGreaterThanMax) {
                         &num_of_mappings, nullptr, CoCsdoDnCon::func, nullptr);
 
   CHECK_EQUAL(0, ret);
-  CHECK(CoCsdoDnCon::called());
+  CHECK(CoCsdoDnCon::Called());
   CHECK_EQUAL(CO_SDO_AC_PDO_LEN, CoCsdoDnCon::ac);
 }
 
@@ -662,7 +662,7 @@ TEST(CO_SdoRpdo1600, Co1600DnInd_EmptyMapping) {
                         &num_of_mappings, nullptr, CoCsdoDnCon::func, nullptr);
 
   CHECK_EQUAL(0, ret);
-  CHECK(CoCsdoDnCon::called());
+  CHECK(CoCsdoDnCon::Called());
   CHECK_EQUAL(0, CoCsdoDnCon::ac);
 }
 
@@ -676,7 +676,7 @@ TEST(CO_SdoRpdo1600, Co1600DnInd_NumOfMappingsRequestFailed) {
                         nullptr, CoCsdoDnCon::func, nullptr);
 
   CHECK_EQUAL(0, ret);
-  CHECK(CoCsdoDnCon::called());
+  CHECK(CoCsdoDnCon::Called());
   CHECK_EQUAL(CO_SDO_AC_TYPE_LEN_HI, CoCsdoDnCon::ac);
 }
 
@@ -694,7 +694,7 @@ TEST(CO_SdoRpdo1600, Co1600DnInd_NumOfMappingsNonExistingObjMapping) {
                         &num_of_mappings, nullptr, CoCsdoDnCon::func, nullptr);
 
   CHECK_EQUAL(0, ret);
-  CHECK(CoCsdoDnCon::called());
+  CHECK(CoCsdoDnCon::Called());
   CHECK_EQUAL(CO_SDO_AC_NO_OBJ, CoCsdoDnCon::ac);
 }
 
@@ -711,7 +711,7 @@ TEST(CO_SdoRpdo1600, Co1600DnInd_NumOfMappingsSameAsPrevious) {
                         &num_of_mappings, nullptr, CoCsdoDnCon::func, nullptr);
 
   CHECK_EQUAL(0, ret);
-  CHECK(CoCsdoDnCon::called());
+  CHECK(CoCsdoDnCon::Called());
   CHECK_EQUAL(0, CoCsdoDnCon::ac);
 }
 
@@ -725,7 +725,7 @@ TEST(CO_SdoRpdo1600, Co1600DnInd_NumOfMappingsValidRPDO) {
                         &num_of_mappings, nullptr, CoCsdoDnCon::func, nullptr);
 
   CHECK_EQUAL(0, ret);
-  CHECK(CoCsdoDnCon::called());
+  CHECK(CoCsdoDnCon::Called());
   CHECK_EQUAL(CO_SDO_AC_PARAM_VAL, CoCsdoDnCon::ac);
 }
 
@@ -742,7 +742,7 @@ TEST(CO_SdoRpdo1600, Co1600DnInd_NumOfMappingsTooManyObjsToMap) {
                         &num_of_mappings, nullptr, CoCsdoDnCon::func, nullptr);
 
   CHECK_EQUAL(0, ret);
-  CHECK(CoCsdoDnCon::called());
+  CHECK(CoCsdoDnCon::Called());
   CHECK_EQUAL(CO_SDO_AC_PARAM_VAL, CoCsdoDnCon::ac);
 }
 
@@ -756,7 +756,7 @@ TEST(CO_SdoRpdo1600, Co1600DnInd_NumOfMappingsNoMappings) {
                         &num_of_mappings, nullptr, CoCsdoDnCon::func, nullptr);
 
   CHECK_EQUAL(0, ret);
-  CHECK(CoCsdoDnCon::called());
+  CHECK(CoCsdoDnCon::Called());
   CHECK_EQUAL(CO_SDO_AC_PARAM_VAL, CoCsdoDnCon::ac);
 }
 
@@ -777,7 +777,7 @@ TEST(CO_SdoRpdo1600, Co1600DnInd_NumOfMappings) {
                         &num_of_mappings, nullptr, CoCsdoDnCon::func, nullptr);
 
   CHECK_EQUAL(0, ret);
-  CHECK(CoCsdoDnCon::called());
+  CHECK(CoCsdoDnCon::Called());
   CHECK_EQUAL(0, CoCsdoDnCon::ac);
 }
 
@@ -795,7 +795,7 @@ TEST(CO_SdoRpdo1600, Co1600DnInd_MappingNonexisting) {
                         nullptr, CoCsdoDnCon::func, nullptr);
 
   CHECK_EQUAL(0, ret);
-  CHECK(CoCsdoDnCon::called());
+  CHECK(CoCsdoDnCon::Called());
   CHECK_EQUAL(CO_SDO_AC_NO_OBJ, CoCsdoDnCon::ac);
 }
 
@@ -816,7 +816,7 @@ TEST(CO_SdoRpdo1600, Co1600DnInd_MappingSameAsPrevious) {
                         nullptr, CoCsdoDnCon::func, nullptr);
 
   CHECK_EQUAL(0, ret);
-  CHECK(CoCsdoDnCon::called());
+  CHECK(CoCsdoDnCon::Called());
   CHECK_EQUAL(0, CoCsdoDnCon::ac);
 }
 
@@ -837,7 +837,7 @@ TEST(CO_SdoRpdo1600, Co1600DnInd_MappingNumOfMappingsNonzero) {
                         nullptr, CoCsdoDnCon::func, nullptr);
 
   CHECK_EQUAL(0, ret);
-  CHECK(CoCsdoDnCon::called());
+  CHECK(CoCsdoDnCon::Called());
   CHECK_EQUAL(CO_SDO_AC_PARAM_VAL, CoCsdoDnCon::ac);
 }
 
@@ -858,7 +858,7 @@ TEST(CO_SdoRpdo1600, Co1600DnInd_MappingValidRPDO) {
                         nullptr, CoCsdoDnCon::func, nullptr);
 
   CHECK_EQUAL(0, ret);
-  CHECK(CoCsdoDnCon::called());
+  CHECK(CoCsdoDnCon::Called());
   CHECK_EQUAL(CO_SDO_AC_PARAM_VAL, CoCsdoDnCon::ac);
 }
 
@@ -879,7 +879,7 @@ TEST(CO_SdoRpdo1600, Co1600DnInd_Mapping) {
                         nullptr, CoCsdoDnCon::func, nullptr);
 
   CHECK_EQUAL(0, ret);
-  CHECK(CoCsdoDnCon::called());
+  CHECK(CoCsdoDnCon::Called());
   CHECK_EQUAL(0, CoCsdoDnCon::ac);
 }
 
@@ -901,6 +901,6 @@ TEST(CO_SdoRpdo1600, Co1600DnInd_MappingZeros) {
                         nullptr, CoCsdoDnCon::func, nullptr);
 
   CHECK_EQUAL(0, ret);
-  CHECK(CoCsdoDnCon::called());
+  CHECK(CoCsdoDnCon::Called());
   CHECK_EQUAL(0, CoCsdoDnCon::ac);
 }

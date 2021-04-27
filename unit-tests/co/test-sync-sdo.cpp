@@ -129,7 +129,7 @@ TEST(CO_SyncSdo, Co1005Dn_TypeLenTooLow) {
                         &num_of_mappings, nullptr, CoCsdoDnCon::func, nullptr);
 
   CHECK_EQUAL(0, ret);
-  CHECK(CoCsdoDnCon::called());
+  CHECK(CoCsdoDnCon::Called());
   CHECK_EQUAL(CO_SDO_AC_TYPE_LEN_LO, CoCsdoDnCon::ac);
 }
 
@@ -155,7 +155,7 @@ TEST(CO_SyncSdo, Co1005Dn_InvalidSubobject) {
                         nullptr, CoCsdoDnCon::func, nullptr);
 
   CHECK_EQUAL(0, ret);
-  CHECK(CoCsdoDnCon::called());
+  CHECK(CoCsdoDnCon::Called());
   CHECK_EQUAL(CO_SDO_AC_NO_SUB, CoCsdoDnCon::ac);
 }
 
@@ -176,7 +176,7 @@ TEST(CO_SyncSdo, Co1005Dn_SameAsPrevious) {
                         nullptr, CoCsdoDnCon::func, nullptr);
 
   CHECK_EQUAL(0, ret);
-  CHECK(CoCsdoDnCon::called());
+  CHECK(CoCsdoDnCon::Called());
   CHECK_EQUAL(0, CoCsdoDnCon::ac);
 }
 
@@ -201,7 +201,7 @@ TEST(CO_SyncSdo, Co1005Dn_ProducerToProducer_NewCanId) {
                         nullptr, CoCsdoDnCon::func, nullptr);
 
   CHECK_EQUAL(0, ret);
-  CHECK(CoCsdoDnCon::called());
+  CHECK(CoCsdoDnCon::Called());
   CHECK_EQUAL(CO_SDO_AC_PARAM_VAL, CoCsdoDnCon::ac);
 }
 
@@ -226,7 +226,7 @@ TEST(CO_SyncSdo, Co1005Dn_ProducerToProducer_SameCanId_NewCobid) {
                         nullptr, CoCsdoDnCon::func, nullptr);
 
   CHECK_EQUAL(0, ret);
-  CHECK(CoCsdoDnCon::called());
+  CHECK(CoCsdoDnCon::Called());
   CHECK_EQUAL(0, CoCsdoDnCon::ac);
 
   CHECK_EQUAL(cobid, co_obj_get_val_u32(obj1005->Get(), 0x00u));
@@ -251,7 +251,7 @@ TEST(CO_SyncSdo, Co1005Dn_ConsumerToProducer_SameCanId) {
                         nullptr, CoCsdoDnCon::func, nullptr);
 
   CHECK_EQUAL(0, ret);
-  CHECK(CoCsdoDnCon::called());
+  CHECK(CoCsdoDnCon::Called());
   CHECK_EQUAL(0, CoCsdoDnCon::ac);
 
   CHECK_EQUAL(cobid, co_obj_get_val_u32(obj1005->Get(), 0x00u));
@@ -276,7 +276,7 @@ TEST(CO_SyncSdo, Co1005Dn_ExtendedId_NoFrameBit) {
                         nullptr, CoCsdoDnCon::func, nullptr);
 
   CHECK_EQUAL(0, ret);
-  CHECK(CoCsdoDnCon::called());
+  CHECK(CoCsdoDnCon::Called());
   CHECK_EQUAL(CO_SDO_AC_PARAM_VAL, CoCsdoDnCon::ac);
 }
 
@@ -299,7 +299,7 @@ TEST(CO_SyncSdo, Co1005Dn_FrameBit) {
                         nullptr, CoCsdoDnCon::func, nullptr);
 
   CHECK_EQUAL(0, ret);
-  CHECK(CoCsdoDnCon::called());
+  CHECK(CoCsdoDnCon::Called());
   CHECK_EQUAL(0, CoCsdoDnCon::ac);
 
   CHECK_EQUAL(cobid, co_obj_get_val_u32(obj1005->Get(), 0x00u));
@@ -326,7 +326,7 @@ TEST(CO_SyncSdo, Co1006Dn_TypeLenTooLow) {
                         nullptr, CoCsdoDnCon::func, nullptr);
 
   CHECK_EQUAL(0, ret);
-  CHECK(CoCsdoDnCon::called());
+  CHECK(CoCsdoDnCon::Called());
   CHECK_EQUAL(CO_SDO_AC_TYPE_LEN_LO, CoCsdoDnCon::ac);
 }
 
@@ -352,7 +352,7 @@ TEST(CO_SyncSdo, Co1006Dn_InvalidSubobject) {
                         nullptr, CoCsdoDnCon::func, nullptr);
 
   CHECK_EQUAL(0, ret);
-  CHECK(CoCsdoDnCon::called());
+  CHECK(CoCsdoDnCon::Called());
   CHECK_EQUAL(CO_SDO_AC_NO_SUB, CoCsdoDnCon::ac);
 }
 
@@ -373,7 +373,7 @@ TEST(CO_SyncSdo, Co1006Dn_SameAsPrevious) {
                         nullptr, CoCsdoDnCon::func, nullptr);
 
   CHECK_EQUAL(0, ret);
-  CHECK(CoCsdoDnCon::called());
+  CHECK(CoCsdoDnCon::Called());
   CHECK_EQUAL(0, CoCsdoDnCon::ac);
 }
 
@@ -396,7 +396,7 @@ TEST(CO_SyncSdo, Co1006Dn_Nominal) {
                         nullptr, CoCsdoDnCon::func, nullptr);
 
   CHECK_EQUAL(0, ret);
-  CHECK(CoCsdoDnCon::called());
+  CHECK(CoCsdoDnCon::Called());
   CHECK_EQUAL(0, CoCsdoDnCon::ac);
 
   CHECK_EQUAL(period, co_obj_get_val_u32(obj1006->Get(), 0x00u));
@@ -423,7 +423,7 @@ TEST(CO_SyncSdo, Co1019Dn_TypeLenTooHigh) {
                         nullptr, CoCsdoDnCon::func, nullptr);
 
   CHECK_EQUAL(0, ret);
-  CHECK(CoCsdoDnCon::called());
+  CHECK(CoCsdoDnCon::Called());
   CHECK_EQUAL(CO_SDO_AC_TYPE_LEN_HI, CoCsdoDnCon::ac);
 }
 
@@ -448,7 +448,7 @@ TEST(CO_SyncSdo, Co1019Dn_InvalidSubobject) {
                         nullptr, CoCsdoDnCon::func, nullptr);
 
   CHECK_EQUAL(0, ret);
-  CHECK(CoCsdoDnCon::called());
+  CHECK(CoCsdoDnCon::Called());
   CHECK_EQUAL(CO_SDO_AC_NO_SUB, CoCsdoDnCon::ac);
 }
 
@@ -468,7 +468,7 @@ TEST(CO_SyncSdo, Co1019Dn_SameAsPrevious) {
                                      &cnt, nullptr, CoCsdoDnCon::func, nullptr);
 
   CHECK_EQUAL(0, ret);
-  CHECK(CoCsdoDnCon::called());
+  CHECK(CoCsdoDnCon::Called());
   CHECK_EQUAL(0, CoCsdoDnCon::ac);
 }
 
@@ -494,7 +494,7 @@ TEST(CO_SyncSdo, Co1019Dn_CommCyclePeriodNotZero) {
                                      &cnt, nullptr, CoCsdoDnCon::func, nullptr);
 
   CHECK_EQUAL(0, ret);
-  CHECK(CoCsdoDnCon::called());
+  CHECK(CoCsdoDnCon::Called());
   CHECK_EQUAL(CO_SDO_AC_DATA_DEV, CoCsdoDnCon::ac);
 }
 
@@ -516,7 +516,7 @@ TEST(CO_SyncSdo, Co1019Dn_OverflowEveryTime) {
                                      &cnt, nullptr, CoCsdoDnCon::func, nullptr);
 
   CHECK_EQUAL(0, ret);
-  CHECK(CoCsdoDnCon::called());
+  CHECK(CoCsdoDnCon::Called());
   CHECK_EQUAL(CO_SDO_AC_PARAM_VAL, CoCsdoDnCon::ac);
 }
 
@@ -538,7 +538,7 @@ TEST(CO_SyncSdo, Co1019Dn_OverflowMoreThanMax) {
                                      &cnt, nullptr, CoCsdoDnCon::func, nullptr);
 
   CHECK_EQUAL(0, ret);
-  CHECK(CoCsdoDnCon::called());
+  CHECK(CoCsdoDnCon::Called());
   CHECK_EQUAL(CO_SDO_AC_PARAM_VAL, CoCsdoDnCon::ac);
 }
 
@@ -561,7 +561,7 @@ TEST(CO_SyncSdo, Co1019Dn_Nominal) {
                                      &cnt, nullptr, CoCsdoDnCon::func, nullptr);
 
   CHECK_EQUAL(0, ret);
-  CHECK(CoCsdoDnCon::called());
+  CHECK(CoCsdoDnCon::Called());
   CHECK_EQUAL(0, CoCsdoDnCon::ac);
 
   CHECK_EQUAL(cnt, co_obj_get_val_u8(obj1019->Get(), 0x00u));
