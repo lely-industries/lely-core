@@ -1452,9 +1452,14 @@ co_nmt_cs_req(co_nmt_t *nmt, co_unsigned8_t cs, co_unsigned8_t id)
 
 	// Add the frame to the buffer.
 	if (!can_buf_write(&nmt->buf, &msg, 1)) {
+#if LELY_NO_MALLOC
+		set_errnum(ERRNUM_NOMEM);
+		return -1;
+#else
 		if (!can_buf_reserve(&nmt->buf, 1))
 			return -1;
 		can_buf_write(&nmt->buf, &msg, 1);
+#endif
 	}
 
 	// Send the frame by triggering the inhibit timer.

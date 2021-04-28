@@ -87,6 +87,10 @@ struct CanSend {
     return num_called > 0;
   }
 
+  static void CheckMsg(uint_least32_t id, uint_least8_t flags,
+                       uint_least8_t len, const uint_least8_t* data);
+  static void Clear();
+
   /**
    * Set a message buffer.
    * 
@@ -98,8 +102,6 @@ struct CanSend {
     buf_size = size;
     msg_buf = buf;
   }
-
-  static void Clear();
 };
 
 #endif  // LELY_UNIT_TEST_HPP_

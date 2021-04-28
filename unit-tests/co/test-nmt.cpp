@@ -56,9 +56,9 @@
 TEST_BASE(CO_NmtBase) {
   TEST_BASE_SUPER(CO_NmtBase);
 
-  const co_unsigned8_t DEV_ID = 0x01u;
-  const co_unsigned8_t MASTER_DEV_ID = DEV_ID;
-  const co_unsigned8_t SLAVE_DEV_ID = 0x02u;
+  static const co_unsigned8_t DEV_ID = 0x01u;
+  static const co_unsigned8_t MASTER_DEV_ID = DEV_ID;
+  static const co_unsigned8_t SLAVE_DEV_ID = 0x02u;
 
   can_net_t* net = nullptr;
   co_dev_t* dev = nullptr;
@@ -1215,7 +1215,11 @@ TEST(CO_NmtAllocation, CoNmtCreate_ExactMemory_WithObj1016_MaxEntries) {
 ///@}
 
 TEST_GROUP_BASE(CO_Nmt, CO_NmtBase) {
+  static const size_t CO_NMT_CAN_BUF_SIZE = 16u;
+
   co_nmt_t* nmt = nullptr;
+
+  std::unique_ptr<CoObjTHolder> obj102a;
 
   static void empty_cs_ind(co_nmt_t*, co_unsigned8_t, void*) {}
   static void empty_hb_ind(co_nmt_t*, co_unsigned8_t, int, int, void*) {}
@@ -1230,9 +1234,29 @@ TEST_GROUP_BASE(CO_Nmt, CO_NmtBase) {
     CHECK(nmt != nullptr);
   }
 
-  TEST_SETUP() { TEST_BASE_SETUP(); }
+  void CreateObj102aNmtInhibitTime(const co_unsigned16_t inhibit_time) {
+    CreateObj(obj102a, 0x102au);
+    obj102a->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED16,
+                             co_unsigned16_t(inhibit_time));
+  }
+
+  can_msg CreateNmtBootupMsg(const co_unsigned8_t id) {
+    can_msg msg = CAN_MSG_INIT;
+    msg.id = CO_NMT_EC_CANID(id);
+    msg.len = 1u;
+    msg.data[0] = CO_NMT_ST_BOOTUP;
+
+    return msg;
+  }
+
+  TEST_SETUP() {
+    TEST_BASE_SETUP();
+
+    can_net_set_send_func(net, CanSend::func, nullptr);
+  }
 
   TEST_TEARDOWN() {
+    CanSend::Clear();
     co_nmt_destroy(nmt);
     TEST_BASE_TEARDOWN();
   }
@@ -1809,7 +1833,7 @@ TEST(CO_Nmt, CoNmtIsMaster_BeforeInitialReset) {
 }
 
 /// \Given a pointer to an initialized NMT service (co_nmt_t) configured as
-///        a slave
+///        NMT slave
 ///
 /// \When co_nmt_is_master() is called
 ///
@@ -1817,7 +1841,7 @@ TEST(CO_Nmt, CoNmtIsMaster_BeforeInitialReset) {
 TEST(CO_Nmt, CoNmtIsMaster_Slave) {
   CreateObj1f80NmtStartup(0x00);
   CreateNmt();
-  co_nmt_cs_ind(nmt, CO_NMT_CS_RESET_NODE);
+  CHECK_EQUAL(0, co_nmt_cs_ind(nmt, CO_NMT_CS_RESET_NODE));
 
   const auto ret = co_nmt_is_master(nmt);
 
@@ -1826,15 +1850,15 @@ TEST(CO_Nmt, CoNmtIsMaster_Slave) {
 
 #if !LELY_NO_CO_MASTER
 /// \Given a pointer to an initialized NMT service (co_nmt_t) configured as
-///        a master
+///        NMT master
 ///
 /// \When co_nmt_is_master() is called
 ///
 /// \Then 1 is returned
 TEST(CO_Nmt, CoNmtIsMaster_Master) {
-  CreateObj1f80NmtStartup(0x01);
+  CreateObj1f80NmtStartup(0x01u);
   CreateNmt();
-  co_nmt_cs_ind(nmt, CO_NMT_CS_RESET_NODE);
+  CHECK_EQUAL(0, co_nmt_cs_ind(nmt, CO_NMT_CS_RESET_NODE));
 
   const auto ret = co_nmt_is_master(nmt);
 
@@ -1883,6 +1907,413 @@ TEST(CO_Nmt, CoNmtSetTimeout_Nominal) {
   co_nmt_set_timeout(nmt, timeout);
 
   CHECK_EQUAL(timeout, co_nmt_get_timeout(nmt));
+}
+
+///@}
+
+#endif  // !LELY_NO_CO_MASTER
+
+/// @name co_nmt_on_st()
+///@{
+
+/// \Given a pointer to an initialized NMT service (co_nmt_t)
+///
+/// \When co_nmt_on_st() is called with a Node-ID equal to `0` and any NMT
+///       state
+///
+/// \Then nothing is changed
+TEST(CO_Nmt, CoNmtOnSt_ZeroId) {
+  CreateNmt();
+
+  co_nmt_on_st(nmt, 0, CO_NMT_ST_BOOTUP);
+}
+
+/// \Given a pointer to an initialized NMT service (co_nmt_t)
+///
+/// \When co_nmt_on_st() is called with a Node-ID over the maximum value and
+///       any NMT state
+///
+/// \Then nothing is changed
+TEST(CO_Nmt, CoNmtOnSt_OverMax) {
+  CreateNmt();
+
+  co_nmt_on_st(nmt, CO_NUM_NODES + 1u, CO_NMT_ST_BOOTUP);
+}
+
+/// \Given a pointer to an initialized NMT service (co_nmt_t)
+///
+/// \When co_nmt_on_st() is called with a Node-ID and any NMT state
+///
+/// \Then nothing is changed
+TEST(CO_Nmt, CoNmtOnSt_Nominal) {
+  CreateNmt();
+
+  co_nmt_on_st(nmt, DEV_ID, CO_NMT_ST_BOOTUP);
+}
+
+///@}
+
+#if !LELY_NO_CO_MASTER
+
+/// @name co_nmt_cs_req()
+///@{
+
+/// \Given a pointer to a booted NMT service (co_nmt_t) configured as
+///        NMT slave
+///
+/// \When co_nmt_cs_req() is called with any NMT command specifier and
+///       any Node-ID
+///
+/// \Then -1 is returned, the error number it set to ERRNUM_PERM, the request
+///       is not sent
+///       \Calls set_errnum()
+TEST(CO_Nmt, CoNmtCsReq_Slave) {
+  CreateNmt();
+  CHECK_EQUAL(0, co_nmt_cs_ind(nmt, CO_NMT_CS_RESET_NODE));
+  CanSend::Clear();
+
+  const auto ret = co_nmt_cs_req(nmt, CO_NMT_CS_START, 0);
+
+  CHECK_EQUAL(-1, ret);
+  CHECK_EQUAL(ERRNUM_PERM, get_errnum());
+  CHECK_EQUAL(false, CanSend::Called());
+}
+
+/// \Given a pointer to a booted NMT service (co_nmt_t) configured as
+///        NMT master
+///
+/// \When co_nmt_cs_req() is called with an invalid NMT command specifier and
+///       a Node-ID
+///
+/// \Then -1 is returned, the error number it set to ERRNUM_INVAL, the request
+///       is not sent
+///       \Calls set_errnum()
+TEST(CO_Nmt, CoNmtCsReq_InvalidCs) {
+  CreateObj1f80NmtStartup(0x01u);
+  CreateNmt();
+  CHECK_EQUAL(0, co_nmt_cs_ind(nmt, CO_NMT_CS_RESET_NODE));
+  CanSend::Clear();
+
+  const auto ret = co_nmt_cs_req(nmt, -1, SLAVE_DEV_ID);
+
+  CHECK_EQUAL(-1, ret);
+  CHECK_EQUAL(ERRNUM_INVAL, get_errnum());
+  CHECK_EQUAL(false, CanSend::Called());
+}
+
+/// \Given a pointer to a booted NMT service (co_nmt_t) configured as
+///        NMT master
+///
+/// \When co_nmt_cs_req() is called with an NMT command specifier and a Node-ID
+///       over the maximum value
+///
+/// \Then -1 is returned, the error number it set to ERRNUM_INVAL, the request
+///       is not sent
+///       \Calls set_errnum()
+TEST(CO_Nmt, CoNmtCsReq_NodeIdOverMax) {
+  CreateObj1f80NmtStartup(0x01u);
+  CreateNmt();
+  CHECK_EQUAL(0, co_nmt_cs_ind(nmt, CO_NMT_CS_RESET_NODE));
+  CanSend::Clear();
+
+  const auto ret = co_nmt_cs_req(nmt, CO_NMT_CS_START, CO_NUM_NODES + 1u);
+
+  CHECK_EQUAL(-1, ret);
+  CHECK_EQUAL(ERRNUM_INVAL, get_errnum());
+  CHECK_EQUAL(false, CanSend::Called());
+}
+
+/// \Given a pointer to a booted NMT service (co_nmt_t) configured as
+///        NMT master
+///
+/// \When co_nmt_cs_req() is called with an NMT command specifier and master's
+///       Node-ID
+///
+/// \Then 0 is returned, the local request is issued and master transitions to
+///       the state defined by the command
+///       \Calls co_dev_get_id()
+///       \Calls co_nmt_cs_ind()
+TEST(CO_Nmt, CoNmtCsReq_MasterId) {
+  CreateObj1f80NmtStartup(0x01u);
+  CreateNmt();
+  CHECK_EQUAL(0, co_nmt_cs_ind(nmt, CO_NMT_CS_RESET_NODE));
+  CanSend::Clear();
+
+  const auto ret = co_nmt_cs_req(nmt, CO_NMT_CS_START, MASTER_DEV_ID);
+
+  CHECK_EQUAL(0, ret);
+  CHECK_EQUAL(CO_NMT_ST_START, co_nmt_get_st(nmt));
+  CHECK_EQUAL(false, CanSend::Called());
+}
+
+#if LELY_NO_MALLOC
+/// \Given a pointer to a booted NMT service (co_nmt_t) configured as
+///        NMT master, the NMT service's CAN frame buffer is full
+///
+/// \When co_nmt_cs_req() is called with an NMT command specifier and
+///       a Node-ID
+///
+/// \Then -1 is returned, the error number is set to ERRNUM_NOMEM, the request
+///       is not sent
+///       \Calls co_dev_get_id()
+///       \Calls can_buf_write()
+TEST(CO_Nmt, CoNmtCsReq_FrameBufferOverflow) {
+  CreateObj102aNmtInhibitTime(1u);  // 100 usec
+  CreateObj1f80NmtStartup(0x01u);
+  CreateNmt();
+
+  unsigned int msg_counter = 0;
+  CHECK_EQUAL(0, co_nmt_cs_ind(nmt, CO_NMT_CS_RESET_NODE));
+  ++msg_counter;
+  while (msg_counter < CO_NMT_CAN_BUF_SIZE) {
+    CHECK_EQUAL(0, co_nmt_cs_req(nmt, CO_NMT_CS_ENTER_PREOP, SLAVE_DEV_ID));
+    ++msg_counter;
+  }
+  CanSend::Clear();
+
+  const auto ret = co_nmt_cs_req(nmt, CO_NMT_CS_START, SLAVE_DEV_ID);
+
+  CHECK_EQUAL(-1, ret);
+  CHECK_EQUAL(ERRNUM_NOMEM, get_errnum());
+  CHECK_EQUAL(false, CanSend::Called());
+}
+#endif
+
+/// \Given a pointer to a booted NMT service (co_nmt_t) configured as
+///        NMT master
+///
+/// \When co_nmt_cs_req() is called with an NMT command specifier and
+///       a Node-ID
+///
+/// \Then 0 is returned, the request is sent
+///       \Calls co_dev_get_id()
+///       \Calls can_buf_write()
+///       \Calls co_dev_get_val_u16()
+///       \Calls can_timer_stop()
+///       \Calls can_buf_peek()
+///       \Calls can_net_send()
+///       \Calls can_buf_read()
+///       \Calls can_net_get_time()
+///       \Calls timespec_add_usec()
+TEST(CO_Nmt, CoNmtCsReq_Nominal) {
+  CreateObj1f80NmtStartup(0x01u);
+  CreateNmt();
+  CHECK_EQUAL(0, co_nmt_cs_ind(nmt, CO_NMT_CS_RESET_NODE));
+  CanSend::Clear();
+
+  const auto ret = co_nmt_cs_req(nmt, CO_NMT_CS_START, SLAVE_DEV_ID);
+
+  CHECK_EQUAL(0, ret);
+  CHECK_EQUAL(1u, CanSend::num_called);
+  const size_t NMT_CS_MSG_SIZE = 2u;
+  const uint_least8_t data[NMT_CS_MSG_SIZE] = {CO_NMT_CS_START, SLAVE_DEV_ID};
+  CanSend::CheckMsg(CO_NMT_CS_CANID, 0, NMT_CS_MSG_SIZE, data);
+}
+
+///@}
+
+#endif  // !LELY_NO_CO_MASTER
+
+#if !LELY_NO_CO_MASTER
+
+/// @name co_nmt_chk_bootup()
+///@{
+
+/// \Given a pointer to an initialized NMT service (co_nmt_t) configured as
+///        NMT slave
+///
+/// \When co_nmt_chk_bootup() is called with any Node-ID
+///
+/// \Then -1 is returned, the error number it set to ERRNUM_PERM
+///       \Calls set_errnum()
+TEST(CO_Nmt, CoNmtChkBootup_Slave) {
+  CreateNmt();
+  CHECK_EQUAL(0, co_nmt_cs_ind(nmt, CO_NMT_CS_RESET_NODE));
+
+  const auto ret = co_nmt_chk_bootup(nmt, 0);
+
+  CHECK_EQUAL(-1, ret);
+  CHECK_EQUAL(ERRNUM_PERM, get_errnum());
+}
+
+/// \Given a pointer to a booted NMT service (co_nmt_t) configured as NMT
+///        master
+///
+/// \When co_nmt_chk_bootup() is called with a Node-ID over the maximum value
+///
+/// \Then -1 is returned, the error number it set to ERRNUM_INVAL
+///       \Calls set_errnum()
+TEST(CO_Nmt, CoNmtChkBootup_NodeIdOverMax) {
+  CreateObj1f80NmtStartup(0x01u);
+  CreateNmt();
+  CHECK_EQUAL(0, co_nmt_cs_ind(nmt, CO_NMT_CS_RESET_NODE));
+
+  const auto ret = co_nmt_chk_bootup(nmt, CO_NUM_NODES + 1u);
+
+  CHECK_EQUAL(-1, ret);
+  CHECK_EQUAL(ERRNUM_INVAL, get_errnum());
+}
+
+/// \Given a pointer to a booted NMT service (co_nmt_t) configured as NMT
+///        master
+///
+/// \When co_nmt_chk_bootup() is called with master's Node-ID
+///
+/// \Then 1 is returned
+///       \Calls co_dev_get_id()
+TEST(CO_Nmt, CoNmtChkBootup_MasterId_Booted) {
+  CreateObj1f80NmtStartup(0x01u);
+  CreateNmt();
+  CHECK_EQUAL(0, co_nmt_cs_ind(nmt, CO_NMT_CS_RESET_NODE));
+
+  const auto ret = co_nmt_chk_bootup(nmt, MASTER_DEV_ID);
+
+  CHECK_EQUAL(1u, ret);
+}
+
+/// \Given a pointer to an initialized NMT service (co_nmt_t) configured as NMT
+///        master, the NMT service hasn't finished the boot-up procedure
+///
+/// \When co_nmt_chk_bootup() is called with master's Node-ID
+///
+/// \Then 0 is returned
+///       \Calls co_dev_get_id()
+TEST(CO_Nmt, CoNmtChkBootup_MasterId_BeforeBoot) {
+  co_nmt_st_ind_t* const st_ind = [](co_nmt_t* nmt, co_unsigned8_t id,
+                                     co_unsigned8_t st, void*) {
+    static unsigned int bootup_cnt = 0;
+
+    CHECK_EQUAL(MASTER_DEV_ID, id);
+
+    if (st == CO_NMT_ST_BOOTUP) {
+      // on first state change node is not yet configured as master
+      if (bootup_cnt == 1u) {
+        const auto ret = co_nmt_chk_bootup(nmt, id);
+        CHECK_EQUAL(0, ret);
+      }
+      ++bootup_cnt;
+    }
+  };
+
+  CreateObj1f80NmtStartup(0x01u);
+  CreateNmt();
+  co_nmt_set_st_ind(nmt, st_ind, nullptr);
+  CHECK_EQUAL(0, co_nmt_cs_ind(nmt, CO_NMT_CS_RESET_NODE));
+}
+
+/// \Given a pointer to a booted NMT service (co_nmt_t) configured as NMT
+///        master without any slaves
+///
+/// \When co_nmt_chk_bootup() is called with Node-ID equal to `0`
+///
+/// \Then 1 is returned
+///       \Calls co_dev_get_id()
+TEST(CO_Nmt, CoNmtChkBootup_ZeroId_NoSlaves) {
+  CreateObj1f80NmtStartup(0x01u);
+  CreateNmt();
+  CHECK_EQUAL(0, co_nmt_cs_ind(nmt, CO_NMT_CS_RESET_NODE));
+
+  const auto ret = co_nmt_chk_bootup(nmt, 0);
+
+  CHECK_EQUAL(1, ret);
+}
+
+/// \Given a pointer to a booted NMT service (co_nmt_t) configured as NMT
+///        master with a non-mandatory slave
+///
+/// \When co_nmt_chk_bootup() is called with Node-ID equal to `0`
+///
+/// \Then 1 is returned
+///       \Calls co_dev_get_id()
+TEST(CO_Nmt, CoNmtChkBootup_ZeroId_NonMandatorySlave) {
+  CreateObj1f80NmtStartup(0x01u);
+  CreateObj1f81SlaveAssignmentN(2u);
+  CreateNmt();
+  CHECK_EQUAL(0, co_nmt_cs_ind(nmt, CO_NMT_CS_RESET_NODE));
+
+  const auto ret = co_nmt_chk_bootup(nmt, 0);
+
+  CHECK_EQUAL(1, ret);
+}
+
+/// \Given a pointer to a booted NMT service (co_nmt_t) configured as NMT
+///        master with at least one mandatory slave that hasn't booted
+///
+/// \When co_nmt_chk_bootup() is called with Node-ID equal to `0`
+///
+/// \Then 0 is returned
+///       \Calls co_dev_get_id()
+TEST(CO_Nmt, CoNmtChkBootup_ZeroId_NotBootedMandatorySlave) {
+  CreateObj1f80NmtStartup(0x01u);
+  CreateObj1f81SlaveAssignmentN(2u);
+  co_dev_set_val_u32(dev, 0x1f81, 0x02, 0x09);
+  CreateNmt();
+  CHECK_EQUAL(0, co_nmt_cs_ind(nmt, CO_NMT_CS_RESET_NODE));
+
+  const auto ret = co_nmt_chk_bootup(nmt, 0);
+
+  CHECK_EQUAL(0, ret);
+}
+
+/// \Given a pointer to a booted NMT service (co_nmt_t) configured as NMT
+///        master with a mandatory slave that has booted
+///
+/// \When co_nmt_chk_bootup() is called with Node-ID equal to `0`
+///
+/// \Then 1 is returned
+///       \Calls co_dev_get_id()
+TEST(CO_Nmt, CoNmtChkBootup_ZeroId_MandatorySlaveBooted) {
+  CreateObj1f80NmtStartup(0x01u);
+  CreateObj1f81SlaveAssignmentN(2u);
+  co_dev_set_val_u32(dev, 0x1f81, 0x02, 0x09);
+  CreateNmt();
+
+  CHECK_EQUAL(0, co_nmt_cs_ind(nmt, CO_NMT_CS_RESET_NODE));
+  can_msg msg = CreateNmtBootupMsg(SLAVE_DEV_ID);
+  can_net_recv(net, &msg);
+
+  const auto ret = co_nmt_chk_bootup(nmt, 0);
+
+  CHECK_EQUAL(1, ret);
+}
+
+/// \Given a pointer to a booted NMT service (co_nmt_t) configured as NMT
+///        master with a slave that hasn't booted
+///
+/// \When co_nmt_chk_bootup() is called with the slave's Node-ID
+///
+/// \Then 0 is returned
+///       \Calls co_dev_get_id()
+TEST(CO_Nmt, CoNmtChkBootup_SlaveId_NotBooted) {
+  CreateObj1f80NmtStartup(0x01u);
+  CreateNmt();
+  CHECK_EQUAL(0, co_nmt_cs_ind(nmt, CO_NMT_CS_RESET_NODE));
+
+  const auto ret = co_nmt_chk_bootup(nmt, SLAVE_DEV_ID);
+
+  CHECK_EQUAL(0, ret);
+}
+
+/// \Given a pointer to a booted NMT service (co_nmt_t) configured as NMT
+///        master with a slave that has booted
+///
+/// \When co_nmt_chk_bootup() is called with the slave's Node-ID
+///
+/// \Then 1 is returned
+///       \Calls co_dev_get_id()
+TEST(CO_Nmt, CoNmtChkBootup_SlaveId_Booted) {
+  CreateObj1f80NmtStartup(0x01u);
+  CreateObj1f81SlaveAssignmentN(2u);
+  co_dev_set_val_u32(dev, 0x1f81, 0x02, 0x09);
+  CreateNmt();
+
+  CHECK_EQUAL(0, co_nmt_cs_ind(nmt, CO_NMT_CS_RESET_NODE));
+  can_msg msg = CreateNmtBootupMsg(SLAVE_DEV_ID);
+  can_net_recv(net, &msg);
+
+  const auto ret = co_nmt_chk_bootup(nmt, SLAVE_DEV_ID);
+
+  CHECK_EQUAL(1, ret);
 }
 
 ///@}
