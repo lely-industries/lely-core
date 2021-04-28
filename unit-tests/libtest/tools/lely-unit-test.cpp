@@ -90,17 +90,29 @@ CoCsdoDnCon::Check(const co_csdo_t* sdo_, const co_unsigned16_t idx_,
 int
 CanSend::func(const can_msg* msg_, void* data_) {
   assert(msg_);
-  assert(num_called < buf_size);
 
   msg = *msg_;
   data = data_;
 
-  if (num_called < buf_size) {
+  if (msg_buf != &msg && num_called < buf_size) {
     msg_buf[num_called] = *msg_;
   }
   num_called++;
 
   return ret;
+}
+
+void
+CanSend::CheckMsg(const uint_least32_t id, const uint_least8_t flags,
+                  const uint_least8_t len, const uint_least8_t* const data) {
+  CHECK_EQUAL(id, msg.id);
+  CHECK_EQUAL(flags, msg.flags);
+  CHECK_EQUAL(len, msg.len);
+  if (data != nullptr) {
+    for (uint_least8_t i = 0; i < len; ++i) {
+      CHECK_EQUAL(data[i], msg.data[i]);
+    }
+  }
 }
 
 void
