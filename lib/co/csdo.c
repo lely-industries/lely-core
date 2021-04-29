@@ -4,7 +4,7 @@
  *
  * @see lely/co/csdo.h, lib/co/sdo.h
  *
- * @copyright 2021 Lely Industries N.V.
+ * @copyright 2020-2021 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -860,10 +860,10 @@ co_dev_up_req(const co_dev_t *dev, co_unsigned16_t idx, co_unsigned8_t subidx,
 	if ((ac = co_sub_up_ind(sub, &req, 0)))
 		goto done;
 
-	if (req.buf != buf) {
+	if (req.buf != membuf_begin(buf)) {
 		// If the upload indication function is using a different memory
 		// buffer we need to copy the bytes.
-		if (!ac && req.size && !membuf_reserve(buf, req.size)) {
+		if (req.size && !membuf_reserve(buf, req.size)) {
 			ac = CO_SDO_AC_NO_MEM;
 			co_sub_up_ind(sub, &req, ac);
 		}

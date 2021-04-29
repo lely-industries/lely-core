@@ -19,10 +19,13 @@ LELY_UNIT_TEST_LIBS = $(top_builddir)/unit-tests/libtest/tools/liblely-unit-test
 LELY_OVERRIDE_LIBS =
 LELY_OVERRIDE_CO_VAL_LIB =
 LELY_OVERRIDE_CO_VAL_LDFLGS =
+LELY_OVERRIDE_UTIL_MEMBUF_LIB =
+LELY_OVERRIDE_UTIL_MEMBUF_LDFLGS =
 
 if !PLATFORM_WIN32
 LELY_OVERRIDE_LIBS += $(top_srcdir)/unit-tests/libtest/override/liblely-override-plugin.la
 LELY_OVERRIDE_CO_VAL_LIB += $(top_srcdir)/unit-tests/libtest/override/liblelyco-val-override.la
+LELY_OVERRIDE_UTIL_MEMBUF_LIB += $(top_srcdir)/unit-tests/libtest/override/liblelyutil-membuf-override.la
 if !ENABLE_SHARED
 LELY_OVERRIDE_CO_VAL_LDFLGS += -Wl,--wrap=co_val_read
 LELY_OVERRIDE_CO_VAL_LDFLGS += -Wl,--wrap=co_val_write
@@ -30,6 +33,7 @@ LELY_OVERRIDE_CO_VAL_LDFLGS += -Wl,--wrap=co_val_make
 LELY_OVERRIDE_CO_VAL_LDFLGS += -Wl,--wrap=co_val_init_min
 LELY_OVERRIDE_CO_VAL_LDFLGS += -Wl,--wrap=co_val_init_max
 LELY_OVERRIDE_CO_VAL_LDFLGS += -Wl,--wrap=co_val_init
+LELY_OVERRIDE_UTIL_MEMBUF_LDFLGS += -Wl,--wrap=membuf_reserve
 endif
 endif
 
