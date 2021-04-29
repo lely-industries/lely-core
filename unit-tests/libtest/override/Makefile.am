@@ -36,6 +36,26 @@ endif
 liblelyco_val_override_la_SOURCES = $(liblelyco_val_override_src)
 endif
 
+# liblelyutil-membuf override
+
+if !PLATFORM_WIN32
+liblelyutil_membuf_override_src =
+liblelyutil_membuf_override_src += lelyutil-membuf.cpp
+
+lib_LTLIBRARIES += liblelyutil-membuf-override.la
+
+liblelyutil_membuf_override_la_LDFLAGS =
+liblelyutil_membuf_override_la_LDFLAGS += -Wl,--as-needed
+liblelyutil_membuf_override_la_LIBADD =
+liblelyutil_membuf_override_la_LIBADD += -ldl
+
+liblelyutil_membuf_override_la_CPPFLAGS = -I$(top_srcdir)/include
+if ENABLE_SHARED
+liblelyutil_membuf_override_la_CPPFLAGS += -DLELY_ENABLE_SHARED=1
+endif
+liblelyutil_membuf_override_la_SOURCES = $(liblelyutil_membuf_override_src)
+endif
+
 # Compilation flags
 
 AM_CPPFLAGS = -I$(top_srcdir)/include

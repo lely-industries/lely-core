@@ -27,7 +27,7 @@
 
 namespace LelyUnitTest {
 /**
- * Set empty handlers for all diagnostic messages from lely-core library.
+ * Sets empty handlers for all diagnostic messages from lely-core library.
  *
  * @see diag_set_handler(), diag_at_set_handler()
  */
@@ -57,16 +57,44 @@ struct CoCsdoDnCon {
 
   static void func(co_csdo_t* sdo_, co_unsigned16_t idx_,
                    co_unsigned8_t subidx_, co_unsigned32_t ac_, void* data_);
+  static void Check(const co_csdo_t* sdo_, co_unsigned16_t idx_,
+                    co_unsigned8_t subidx_, co_unsigned32_t ac_,
+                    const void* data_);
+  static void Clear();
 
   static inline bool
   Called() {
     return num_called > 0;
   }
+};
 
+struct CoCsdoUpCon {
+  static co_csdo_t* sdo;
+  static co_unsigned16_t idx;
+  static co_unsigned8_t subidx;
+  static co_unsigned32_t ac;
+  static const void* ptr;
+  static size_t n;
+  static void* data;
+  static unsigned int num_called;
+  static constexpr size_t BUFSIZE = 2u;
+  static uint_least8_t buf[BUFSIZE];
+
+  static void func(co_csdo_t* sdo_, co_unsigned16_t idx_,
+                   co_unsigned8_t subidx_, co_unsigned32_t ac_,
+                   const void* ptr_, size_t n_, void* data_);
+  static void Check(const co_csdo_t* sdo_, co_unsigned16_t idx_,
+                    co_unsigned8_t subidx_, co_unsigned32_t ac_,
+                    const void* ptr_, size_t n_, const void* data_);
+  static void CheckNonempty(const co_csdo_t* sdo_, co_unsigned16_t idx_,
+                            co_unsigned8_t subidx_, co_unsigned32_t ac_,
+                            size_t n_, const void* data_);
   static void Clear();
-  static void Check(const co_csdo_t* sdo_, const co_unsigned16_t idx_,
-                    const co_unsigned8_t subidx_, const co_unsigned32_t ac_,
-                    const void* data_);
+
+  static inline bool
+  Called() {
+    return num_called > 0;
+  }
 };
 
 struct CanSend {
@@ -81,20 +109,19 @@ struct CanSend {
   static can_msg* msg_buf;
 
   static int func(const can_msg* msg_, void* data_);
+  static void CheckMsg(uint_least32_t id, uint_least8_t flags,
+                       uint_least8_t len, const uint_least8_t* data);
+  static void Clear();
 
   static inline bool
   Called() {
     return num_called > 0;
   }
 
-  static void CheckMsg(uint_least32_t id, uint_least8_t flags,
-                       uint_least8_t len, const uint_least8_t* data);
-  static void Clear();
-
   /**
-   * Set a message buffer.
+   * Sets a message buffer.
    * 
-   * @param buf a pointer to a message buffer.
+   * @param buf a pointer to a CAN message buffer.
    * @param size the number of frames available at <b>buf</b>.
    */
   static void

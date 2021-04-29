@@ -41,6 +41,7 @@
 
 #include <libtest/override/lelyco-val.hpp>
 #include <libtest/tools/lely-cpputest-ext.hpp>
+#include <libtest/tools/lely-unit-test.hpp>
 
 #include "holder/dev.hpp"
 #include "holder/obj.hpp"
@@ -1371,6 +1372,8 @@ TEST_BASE(CO_DevTpdoBase) {
   }
 
   TEST_SETUP() {
+    LelyUnitTest::DisableDiagnosticMessages();
+
     dev_holder.reset(new CoDevTHolder(DEV_ID));
     dev = dev_holder->Get();
     CHECK(dev != nullptr);
