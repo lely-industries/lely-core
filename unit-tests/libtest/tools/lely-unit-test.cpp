@@ -210,8 +210,9 @@ CanSend::Clear() {
 void
 LelyUnitTest::DisableDiagnosticMessages() {
 #if LELY_NO_DIAG
-  // enforce coverage in NO_DIAG mode
+  // enforce coverage when LELY_NO_DIAG is defined and not equal 0
   diag(DIAG_DEBUG, 0, "Message suppressed");
+  diag_at(DIAG_DEBUG, 0, nullptr, "Message suppressed");
   diag_if(DIAG_DEBUG, 0, nullptr, "Message suppressed");
 #else
   diag_set_handler(nullptr, nullptr);
