@@ -24,6 +24,13 @@
 
 #include <lely/can/msg.h>
 #include <lely/co/type.h>
+#include <lely/util/endian.h>
+
+#define CHECK_SDO_CAN_MSG_CMD(res, msg) CHECK_EQUAL((res), (msg)[0])
+#define CHECK_SDO_CAN_MSG_IDX(idx, msg) CHECK_EQUAL((idx), ldle_u16((msg) + 1u))
+#define CHECK_SDO_CAN_MSG_SUBIDX(subidx, msg) CHECK_EQUAL((subidx), (msg)[3u])
+#define CHECK_SDO_CAN_MSG_AC(ac, msg) CHECK_EQUAL((ac), ldle_u32((msg) + 4u))
+#define CHECK_SDO_CAN_MSG_VAL(val, msg) CHECK_EQUAL((val), ldle_u32((msg) + 4u))
 
 namespace LelyUnitTest {
 /**
@@ -111,6 +118,10 @@ struct CanSend {
   static int func(const can_msg* msg_, void* data_);
   static void CheckMsg(uint_least32_t id, uint_least8_t flags,
                        uint_least8_t len, const uint_least8_t* data);
+  static void CheckSdoMsg(co_unsigned32_t id_, co_unsigned32_t flags_,
+                          uint_least8_t len_, co_unsigned8_t cs_,
+                          co_unsigned16_t idx_, co_unsigned8_t subidx_,
+                          co_unsigned32_t ac_);
   static void Clear();
 
   static inline bool
@@ -124,7 +135,7 @@ struct CanSend {
    * @param buf a pointer to a CAN message buffer.
    * @param size the number of frames available at <b>buf</b>.
    */
-  static void
+  static inline void
   SetMsgBuf(can_msg* const buf, const size_t size) {
     buf_size = size;
     msg_buf = buf;

@@ -34,8 +34,6 @@
 #include <lely/co/type.h>
 #include <lely/co/val.h>
 #include <lely/util/endian.h>
-#include <lely/util/error.h>
-#include <lely/util/membuf.h>
 
 #include <libtest/allocators/default.hpp>
 #include <libtest/allocators/limited.hpp>
