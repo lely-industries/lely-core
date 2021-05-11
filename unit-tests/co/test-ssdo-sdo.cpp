@@ -149,6 +149,23 @@ TEST_GROUP(CO_SsdoDnInd) {
 /// @name SSDO service: object 0x1200 modification using SDO
 ///@{
 
+/// \Given a pointer to a device (co_dev_t), the object dictionary
+///        contains the SDO Server Parameter object (0x1200)
+///
+/// \When the download indication function for the object 0x1200 is called with
+///       a non-zero abort code
+///
+/// \Then the same abort code value is returned, nothing is changed
+///       \Calls co_sub_get_type()
+TEST(CO_SsdoDnInd, NonZeroAbortCode) {
+  const co_unsigned32_t ac = CO_SDO_AC_ERROR;
+
+  const auto ret =
+      LelyUnitTest::CallDnIndWithAbortCode(dev, 0x1200u, 0x00u, ac);
+
+  CHECK_EQUAL(ac, ret);
+}
+
 /// \Given a pointer to the device (co_dev_t) with the SSDO service started and
 ///        the object 0x1200 inserted
 ///
