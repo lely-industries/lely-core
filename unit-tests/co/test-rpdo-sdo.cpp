@@ -1,7 +1,7 @@
 /**@file
  * This file is part of the CANopen Library Unit Test Suite.
  *
- * @copyright 2020 N7 Space Sp. z o.o.
+ * @copyright 2020-2021 N7 Space Sp. z o.o.
  *
  * Unit Test Suite was developed under a programme of,
  * and funded by, the European Space Agency.
@@ -178,6 +178,23 @@ TEST_GROUP_BASE(CO_SdoRpdo1400, CO_SdoRpdoBase) {
     TEST_BASE_TEARDOWN();
   }
 };
+
+/// \Given a pointer to a device (co_dev_t), the object dictionary
+///        contains the RPDO Communication Parameter object (0x1400)
+///
+/// \When the download indication function for the object 0x1400 is called with
+///       a non-zero abort code
+///
+/// \Then the same abort code value is returned, nothing is changed
+///       \Calls co_sub_get_type()
+TEST(CO_SdoRpdo1400, Co1400DnInd_NonZeroAbortCode) {
+  const co_unsigned32_t ac = CO_SDO_AC_ERROR;
+
+  const auto ret =
+      LelyUnitTest::CallDnIndWithAbortCode(dev, 0x1400u, 0x00u, ac);
+
+  CHECK_EQUAL(ac, ret);
+}
 
 // given: valid RPDO
 // when: co_1400_dn_ind(), co_val_read() fails
@@ -623,6 +640,23 @@ TEST_GROUP_BASE(CO_SdoRpdo1600, CO_SdoRpdoBase) {
     TEST_BASE_TEARDOWN();
   }
 };
+
+/// \Given a pointer to a device (co_dev_t), the object dictionary
+///        contains the RPDO Mapping Parameter object (0x1600)
+///
+/// \When the download indication function for the object 0x1600 is called with
+///       a non-zero abort code
+///
+/// \Then the same abort code value is returned, nothing is changed
+///       \Calls co_sub_get_type()
+TEST(CO_SdoRpdo1600, Co1600DnInd_NonZeroAbortCode) {
+  const co_unsigned32_t ac = CO_SDO_AC_ERROR;
+
+  const auto ret =
+      LelyUnitTest::CallDnIndWithAbortCode(dev, 0x1600u, 0x00u, ac);
+
+  CHECK_EQUAL(ac, ret);
+}
 
 // given: invalid RPDO
 // when: co_1600_dn_ind()

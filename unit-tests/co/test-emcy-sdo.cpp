@@ -93,23 +93,6 @@ TEST_GROUP(CO_EmcySdo) {
                              CONSUMER_COBID + 1);
   }
 
-  int CallDnIndWithAbortCode(co_unsigned16_t idx, co_unsigned8_t subidx,
-                             co_unsigned32_t ac) {
-    co_sub_t* const sub = co_dev_find_sub(dev, idx, subidx);
-    CHECK(sub != nullptr);
-
-    co_sub_dn_ind_t* ind = nullptr;
-    void* data = nullptr;
-    co_sub_get_dn_ind(sub, &ind, &data);
-    CHECK(ind != nullptr);
-    CHECK(data != nullptr);
-
-    co_sdo_req req;
-    co_sdo_req_init(&req, nullptr);
-
-    return ind(sub, &req, ac, data);
-  }
-
   void RestartEMCY() {
     co_emcy_stop(emcy);
     CHECK_EQUAL(0, co_emcy_start(emcy));
@@ -169,7 +152,8 @@ TEST_GROUP(CO_EmcySdo) {
 TEST(CO_EmcySdo, Co1003Dn_NonZeroAbortCode) {
   const co_unsigned32_t ac = CO_SDO_AC_ERROR;
 
-  const auto ret = CallDnIndWithAbortCode(0x1003u, 0x00u, ac);
+  const auto ret =
+      LelyUnitTest::CallDnIndWithAbortCode(dev, 0x1003u, 0x00u, ac);
 
   CHECK_EQUAL(ac, ret);
 }
@@ -285,7 +269,8 @@ TEST(CO_EmcySdo, Co1003Dn_ZeroResetsEmcyMessageStack) {
 TEST(CO_EmcySdo, Co1014Dn_NonZeroAbortCode) {
   const co_unsigned32_t ac = CO_SDO_AC_ERROR;
 
-  const auto ret = CallDnIndWithAbortCode(0x1014u, 0x00u, ac);
+  const auto ret =
+      LelyUnitTest::CallDnIndWithAbortCode(dev, 0x1014u, 0x00u, ac);
 
   CHECK_EQUAL(ac, ret);
 }
@@ -528,7 +513,8 @@ TEST(CO_EmcySdo, Co1014Dn_ExtendedIdWithFrameBitSet) {
 TEST(CO_EmcySdo, Co1028Dn_NonZeroAbortCode) {
   const co_unsigned32_t ac = CO_SDO_AC_ERROR;
 
-  const auto ret = CallDnIndWithAbortCode(0x1028u, 0x01u, ac);
+  const auto ret =
+      LelyUnitTest::CallDnIndWithAbortCode(dev, 0x1028u, 0x01u, ac);
 
   CHECK_EQUAL(ac, ret);
 }

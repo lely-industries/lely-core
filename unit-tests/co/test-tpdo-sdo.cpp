@@ -144,6 +144,23 @@ TEST_GROUP_BASE(CO_SdoTpdo1800, CO_SdoTpdoBase) {
   }
 };
 
+/// \Given a pointer to a device (co_dev_t), the object dictionary
+///        contains the TPDO Communication Parameter object (0x1800)
+///
+/// \When the download indication function for the object 0x1800 is called with
+///       a non-zero abort code
+///
+/// \Then the same abort code value is returned, nothing is changed
+///       \Calls co_sub_get_type()
+TEST(CO_SdoTpdo1800, Co1800DnInd_NonZeroAbortCode) {
+  co_unsigned32_t ac = CO_SDO_AC_ERROR;
+
+  const auto ret = LelyUnitTest::CallDnIndWithAbortCode(dev, 0x1800u, 0x00u,
+                                                        CO_SDO_AC_ERROR);
+
+  CHECK_EQUAL(ac, ret);
+}
+
 // given: valid TPDO
 // when: co_1800_dn_ind()
 // then: CO_SDO_AC_TYPE_LEN_HI abort code is returned
@@ -552,6 +569,23 @@ TEST_GROUP_BASE(CO_SdoTpdo1a00, CO_SdoTpdoBase) {
     TEST_BASE_TEARDOWN();
   }
 };
+
+/// \Given a pointer to a device (co_dev_t), the object dictionary
+///        contains the TPDO Mapping Parameter object (0x1a00)
+///
+/// \When the download indication function for the object 0x1a00 is called with
+///       a non-zero abort code
+///
+/// \Then the same abort code value is returned, nothing is changed
+///       \Calls co_sub_get_type()
+TEST(CO_SdoTpdo1a00, Co1a00DnInd_NonZeroAbortCode) {
+  co_unsigned32_t ac = CO_SDO_AC_ERROR;
+
+  const auto ret = LelyUnitTest::CallDnIndWithAbortCode(dev, 0x1a00u, 0x00u,
+                                                        CO_SDO_AC_ERROR);
+
+  CHECK_EQUAL(ac, ret);
+}
 
 // given: invalid TPDO
 // when: co_1a00_dn_ind()

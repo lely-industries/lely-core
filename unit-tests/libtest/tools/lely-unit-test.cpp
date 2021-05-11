@@ -31,6 +31,7 @@
 
 #include <lely/co/dev.h>
 #include <lely/co/obj.h>
+#include <lely/co/sdo.h>
 #include <lely/co/detail/obj.h>
 #include <lely/util/diag.h>
 
@@ -256,4 +257,24 @@ LelyUnitTest::CheckSubDnIndIsDefault(const co_dev_t* const dev,
 
                   POINTERS_EQUAL(nullptr, data);
                 });
+}
+
+co_unsigned32_t
+LelyUnitTest::CallDnIndWithAbortCode(const co_dev_t* const dev,
+                                     const co_unsigned16_t idx,
+                                     const co_unsigned8_t subidx,
+                                     const co_unsigned32_t ac) {
+  co_sub_t* const sub = co_dev_find_sub(dev, idx, subidx);
+  CHECK(sub != nullptr);
+
+  co_sub_dn_ind_t* ind = nullptr;
+  void* data = nullptr;
+  co_sub_get_dn_ind(sub, &ind, &data);
+  CHECK(ind != nullptr);
+  CHECK(data != nullptr);
+
+  co_sdo_req req;
+  co_sdo_req_init(&req, nullptr);
+
+  return ind(sub, &req, ac, data);
 }

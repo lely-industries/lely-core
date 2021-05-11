@@ -52,6 +52,14 @@ void CheckSubDnIndIsSet(const co_dev_t* dev, co_unsigned16_t idx,
  */
 void CheckSubDnIndIsDefault(const co_dev_t* dev, co_unsigned16_t idx);
 
+/**
+  * Calls the download indication function for the sub-object with the given
+  * abort code.
+  */
+co_unsigned32_t CallDnIndWithAbortCode(const co_dev_t* dev, co_unsigned16_t idx,
+                                       co_unsigned8_t subidx,
+                                       co_unsigned32_t ac);
+
 }  // namespace LelyUnitTest
 
 struct CoCsdoDnCon {
@@ -131,7 +139,7 @@ struct CanSend {
 
   /**
    * Sets a message buffer.
-   * 
+   *
    * @param buf a pointer to a CAN message buffer.
    * @param size the number of frames available at <b>buf</b>.
    */

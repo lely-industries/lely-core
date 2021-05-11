@@ -113,6 +113,23 @@ TEST_GROUP(CO_SyncSdo) {
 /// @name SYNC service: object 0x1005 modification using SDO
 ///@{
 
+/// \Given a pointer to a device (co_dev_t), the object dictionary
+///        contains the COB-ID SYNC Message object (0x1005)
+///
+/// \When the download indication function for the object 0x1005 is called with
+///       a non-zero abort code
+///
+/// \Then the same abort code value is returned, nothing is changed
+///       \Calls co_sub_get_type()
+TEST(CO_SyncSdo, Co1005Dn_NonZeroAbortCode) {
+  const co_unsigned32_t ac = CO_SDO_AC_ERROR;
+
+  const auto ret =
+      LelyUnitTest::CallDnIndWithAbortCode(dev, 0x1005u, 0x00u, ac);
+
+  CHECK_EQUAL(ac, ret);
+}
+
 /// \Given a pointer to started SYNC service (co_sync_t), object 0x1005 with
 ///        COB-ID SYNC value set
 ///
@@ -310,6 +327,23 @@ TEST(CO_SyncSdo, Co1005Dn_FrameBit) {
 /// @name SYNC service: object 0x1006 modification using SDO
 ///@{
 
+/// \Given a pointer to a device (co_dev_t), the object dictionary
+///        contains the Communication Cycle Period object (0x1006)
+///
+/// \When the download indication function for the object 0x1006 is called with
+///       a non-zero abort code
+///
+/// \Then the same abort code value is returned, nothing is changed
+///       \Calls co_sub_get_type()
+TEST(CO_SyncSdo, Co1006Dn_NonZeroAbortCode) {
+  const co_unsigned32_t ac = CO_SDO_AC_ERROR;
+
+  const auto ret =
+      LelyUnitTest::CallDnIndWithAbortCode(dev, 0x1006u, 0x00u, ac);
+
+  CHECK_EQUAL(ac, ret);
+}
+
 /// \Given a pointer to started SYNC service (co_sync_t), object 0x1006
 ///        with communication cycle period set to 0
 ///
@@ -406,6 +440,23 @@ TEST(CO_SyncSdo, Co1006Dn_Nominal) {
 
 /// @name SYNC service: object 0x1019 modification using SDO
 ///@{
+
+/// \Given a pointer to a device (co_dev_t), the object dictionary
+///        contains the Synchronous Counter Overflow object (0x1019)
+///
+/// \When the download indication function for the object 0x1019 is called with
+///       a non-zero abort code
+///
+/// \Then the same abort code value is returned, nothing is changed
+///       \Calls co_sub_get_type()
+TEST(CO_SyncSdo, Co1019Dn_NonZeroAbortCode) {
+  const co_unsigned32_t ac = CO_SDO_AC_ERROR;
+
+  const auto ret =
+      LelyUnitTest::CallDnIndWithAbortCode(dev, 0x1019u, 0x00u, ac);
+
+  CHECK_EQUAL(ac, ret);
+}
 
 /// \Given a pointer to started SYNC service (co_sync_t), object 0x1019 with
 ///        counter overflow value set to 0
