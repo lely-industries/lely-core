@@ -174,6 +174,9 @@ TEST(CO_SsdoDnInd, NonZeroAbortCode) {
 ///
 /// \Then 0 is returned, confirmation function is called once with
 ///       CO_SDO_AC_NO_WRITE abort code
+///       \Calls co_sub_get_type()
+///       \Calls co_sdo_req_dn_val()
+///       \Calls co_sub_get_subidx()
 TEST(CO_SsdoDnInd, DownloadHighestSubidx) {
   const int data = 0;
   const auto ret =
@@ -193,6 +196,8 @@ TEST(CO_SsdoDnInd, DownloadHighestSubidx) {
 ///
 /// \Then 0 is returned, confirmation function is called once with
 ///       CO_SDO_AC_TYPE_LEN_HI abort code, COB-ID is not changed
+///       \Calls co_sub_get_type()
+///       \Calls co_sdo_req_dn_val()
 TEST(CO_SsdoDnInd, DownloadReqCobid_TooManyBytes) {
   const uint_least64_t data = 0;
   const auto ret =
@@ -214,6 +219,10 @@ TEST(CO_SsdoDnInd, DownloadReqCobid_TooManyBytes) {
 ///
 /// \Then 0 is returned, confirmation function is called once with 0 abort code,
 ///       COB-ID is not changed
+///       \Calls co_sub_get_type()
+///       \Calls co_sdo_req_dn_val()
+///       \Calls co_sub_get_subidx()
+///       \Calls co_sub_get_val_u32()
 TEST(CO_SsdoDnInd, DownloadReqCobid_SameAsOld) {
   const co_unsigned32_t cobid = CAN_ID;
   const auto ret =
@@ -236,6 +245,10 @@ TEST(CO_SsdoDnInd, DownloadReqCobid_SameAsOld) {
 ///
 /// \Then 0 is returned, confirmation function is called once with
 ///       CO_SDO_AC_PARAM_VAL as abort code and the COB-ID is not changed
+///       \Calls co_sub_get_type()
+///       \Calls co_sdo_req_dn_val()
+///       \Calls co_sub_get_subidx()
+///       \Calls co_sub_get_val_u32()
 TEST(CO_SsdoDnInd, DownloadReqCobid_OldValidNewValidNewId) {
   const co_unsigned32_t cobid = CAN_ID + 1u;
   const auto ret =
@@ -258,6 +271,12 @@ TEST(CO_SsdoDnInd, DownloadReqCobid_OldValidNewValidNewId) {
 ///
 /// \Then 0 is returned, confirmation function is called once with 0 as abort
 ///       code and the COB-ID is changed
+///       \Calls co_sub_get_type()
+///       \Calls co_sdo_req_dn_val()
+///       \Calls co_sub_get_subidx()
+///       \Calls co_sub_get_val_u32()
+///       \Calls co_sub_dn()
+///       \Calls can_recv_stop()
 TEST(CO_SsdoDnInd, DownloadReqCobid_OldValidNewInvalidNewId) {
   const co_unsigned32_t cobid = (CAN_ID + 1u) | CO_SDO_COBID_VALID;
   const auto ret =
@@ -280,6 +299,12 @@ TEST(CO_SsdoDnInd, DownloadReqCobid_OldValidNewInvalidNewId) {
 ///
 /// \Then 0 is returned, confirmation function is called once with 0 as abort
 ///       code and the COB-ID is changed
+///       \Calls co_sub_get_type()
+///       \Calls co_sdo_req_dn_val()
+///       \Calls co_sub_get_subidx()
+///       \Calls co_sub_get_val_u32()
+///       \Calls co_sub_dn()
+///       \Calls can_recv_start()
 TEST(CO_SsdoDnInd, DownloadReqCobid_OldInvalidNewValidNewId) {
   SetSrv01CobidReq(CAN_ID | CO_SDO_COBID_VALID);
   RestartSSDO();
@@ -305,6 +330,12 @@ TEST(CO_SsdoDnInd, DownloadReqCobid_OldInvalidNewValidNewId) {
 ///
 /// \Then 0 is returned, confirmation function is called once with 0 as abort
 ///       code and the COB-ID is not changed
+///       \Calls co_sub_get_type()
+///       \Calls co_sdo_req_dn_val()
+///       \Calls co_sub_get_subidx()
+///       \Calls co_sub_get_val_u32()
+///       \Calls co_sub_dn()
+///       \Calls can_recv_start()
 TEST(CO_SsdoDnInd, DownloadReqCobid_OldValidNewValidOldId) {
   const co_unsigned32_t cobid = CAN_ID | CO_SDO_COBID_FRAME;
   const auto ret =
@@ -327,6 +358,9 @@ TEST(CO_SsdoDnInd, DownloadReqCobid_OldValidNewValidOldId) {
 ///
 /// \Then 0 is returned, confirmation function is called once with
 ///       CO_SDO_AC_PARAM_VAL as abort code and the COB-ID is not changed
+///       \Calls co_sub_get_type()
+///       \Calls co_sdo_req_dn_val()
+///       \Calls co_sub_get_subidx()
 TEST(CO_SsdoDnInd, DownloadReqCobid_OldValidNewInvalidNewIdExtended) {
   co_unsigned32_t cobid = CAN_ID_EXT | CO_SDO_COBID_VALID;
   const auto ret =
@@ -349,6 +383,12 @@ TEST(CO_SsdoDnInd, DownloadReqCobid_OldValidNewInvalidNewIdExtended) {
 ///
 /// \Then 0 is returned, confirmation function is called once with 0 as abort
 ///       code and requested COB-ID is set
+///       \Calls co_sub_get_type()
+///       \Calls co_sdo_req_dn_val()
+///       \Calls co_sub_get_subidx()
+///       \Calls co_sub_get_val_u32()
+///       \Calls co_sub_dn()
+///       \Calls can_recv_stop()
 TEST(CO_SsdoDnInd, DownloadReqCobid_OldValidNewInvalidOldIdExtended) {
   co_unsigned32_t cobid = CAN_ID | CO_SDO_COBID_VALID | CO_SDO_COBID_FRAME;
   const auto ret =
@@ -370,6 +410,10 @@ TEST(CO_SsdoDnInd, DownloadReqCobid_OldValidNewInvalidOldIdExtended) {
 ///
 /// \Then 0 is returned, confirmation function is called once with 0 as abort
 ///       code and the COB-ID is not changed
+///       \Calls co_sub_get_type()
+///       \Calls co_sdo_req_dn_val()
+///       \Calls co_sub_get_subidx()
+///       \Calls co_sub_get_val_u32()
 TEST(CO_SsdoDnInd, DownloadResCobid_SameAsOld) {
   const co_unsigned32_t cobid = CAN_ID;
   const auto ret =
@@ -392,6 +436,10 @@ TEST(CO_SsdoDnInd, DownloadResCobid_SameAsOld) {
 ///
 /// \Then 0 is returned, confirmation function is called once with
 ///       CO_SDO_AC_PARAM_VAL as abort code and the COB-ID is not changed
+///       \Calls co_sub_get_type()
+///       \Calls co_sdo_req_dn_val()
+///       \Calls co_sub_get_subidx()
+///       \Calls co_sub_get_val_u32()
 TEST(CO_SsdoDnInd, DownloadResCobid_OldValidNewValidNewId) {
   const co_unsigned32_t cobid = CAN_ID + 1u;
   const auto ret =
@@ -414,6 +462,12 @@ TEST(CO_SsdoDnInd, DownloadResCobid_OldValidNewValidNewId) {
 ///
 /// \Then 0 is returned, confirmation function is called once with 0 as abort
 ///       code and requested COB-ID is set
+///       \Calls co_sub_get_type()
+///       \Calls co_sdo_req_dn_val()
+///       \Calls co_sub_get_subidx()
+///       \Calls co_sub_get_val_u32()
+///       \Calls co_sub_dn()
+///       \Calls can_recv_stop()
 TEST(CO_SsdoDnInd, DownloadResCobid_OldValidNewInvalidNewId) {
   const co_unsigned32_t cobid = CAN_ID | CO_SDO_COBID_VALID;
   const auto ret =
@@ -436,6 +490,12 @@ TEST(CO_SsdoDnInd, DownloadResCobid_OldValidNewInvalidNewId) {
 ///
 /// \Then 0 is returned, confirmation function is called once with 0 as
 ///       abort code and requested COB-ID is set
+///       \Calls co_sub_get_type()
+///       \Calls co_sdo_req_dn_val()
+///       \Calls co_sub_get_subidx()
+///       \Calls co_sub_get_val_u32()
+///       \Calls co_sub_dn()
+///       \Calls can_recv_start()
 TEST(CO_SsdoDnInd, DownloadResCobid_OldInvalidNewValidNewId) {
   SetSrv02CobidRes(CAN_ID | CO_SDO_COBID_VALID);
   RestartSSDO();
@@ -461,6 +521,13 @@ TEST(CO_SsdoDnInd, DownloadResCobid_OldInvalidNewValidNewId) {
 ///
 /// \Then 0 is returned, confirmation function is called once with 0 as abort
 ///       code and requested COB-ID is set
+///       \Calls co_sub_get_type()
+///       \Calls co_sdo_req_dn_val()
+///       \Calls co_sub_get_subidx()
+///       \Calls co_sub_get_val_u32()
+///       \Calls co_sub_dn()
+///       \Calls co_ssdo_update()
+///       \Calls can_recv_start()
 TEST(CO_SsdoDnInd, DownloadResCobid_OldValidNewValidOldIdExtended) {
   const co_unsigned32_t cobid = CAN_ID | CO_SDO_COBID_FRAME;
   const auto ret =
@@ -483,6 +550,10 @@ TEST(CO_SsdoDnInd, DownloadResCobid_OldValidNewValidOldIdExtended) {
 ///
 /// \Then 0 is returned, confirmation function is called once with 0 as abort
 ///       code and requested COB-ID is set
+///       \Calls co_sub_get_type()
+///       \Calls co_sdo_req_dn_val()
+///       \Calls co_sub_get_subidx()
+///       \Calls co_sub_get_val_u32()
 TEST(CO_SsdoDnInd, DownloadResCobid_OldValidNewInvalidOldId) {
   co_unsigned32_t cobid = CAN_ID_EXT | CO_SDO_COBID_VALID;
   const auto ret =
@@ -505,6 +576,12 @@ TEST(CO_SsdoDnInd, DownloadResCobid_OldValidNewInvalidOldId) {
 ///
 /// \Then 0 is returned, confirmation function is called once with 0 as abort
 ///       code and requested COB-ID is set
+///       \Calls co_sub_get_type()
+///       \Calls co_sdo_req_dn_val()
+///       \Calls co_sub_get_subidx()
+///       \Calls co_sub_get_val_u32()
+///       \Calls co_sub_dn()
+///       \Calls can_recv_stop()
 TEST(CO_SsdoDnInd, DownloadResCobid_OldValidNewInvalidOldIdExtended) {
   co_unsigned32_t cobid = CAN_ID | CO_SDO_COBID_VALID | CO_SDO_COBID_FRAME;
   const auto ret =
@@ -526,6 +603,10 @@ TEST(CO_SsdoDnInd, DownloadResCobid_OldValidNewInvalidOldIdExtended) {
 ///
 /// \Then 0 is returned, confirmation function is called once with 0 as abort
 ///       code and the COB-ID is not changed
+///       \Calls co_sub_get_type()
+///       \Calls co_sdo_req_dn_val()
+///       \Calls co_sub_get_subidx()
+///       \Calls co_sub_get_val_u8()
 TEST(CO_SsdoDnInd, DownloadNodeId_SameAsOld) {
   const co_unsigned8_t new_id = 0x00u;
   const auto ret =
@@ -546,6 +627,12 @@ TEST(CO_SsdoDnInd, DownloadNodeId_SameAsOld) {
 ///
 /// \Then 0 is returned, confirmation function is called once with 0 as abort
 ///       code and the requested Node-ID value is set
+///       \Calls co_sub_get_type()
+///       \Calls co_sdo_req_dn_val()
+///       \Calls co_sub_get_subidx()
+///       \Calls co_sub_get_val_u8()
+///       \Calls co_sub_dn()
+///       \Calls can_recv_start()
 TEST(CO_SsdoDnInd, DownloadNodeId_Nominal) {
   const co_unsigned8_t new_id = 0x01u;
   const auto ret =
@@ -566,6 +653,9 @@ TEST(CO_SsdoDnInd, DownloadNodeId_Nominal) {
 ///
 /// \Then 0 is returned, confirmation function is called once with
 ///       CO_SDO_AC_NO_SUB as abort code
+///       \Calls co_sub_get_type()
+///       \Calls co_sdo_req_dn_val()
+///       \Calls co_sub_get_subidx()
 TEST(CO_SsdoDnInd, DownloadNodeId_InvalidSubidx) {
   obj1200->InsertAndSetSub(0x04u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(0x00u));
   RestartSSDO();

@@ -170,6 +170,12 @@ TEST(CO_SsdoInit, CoSsdoSizeof_Nominal) {
 ///       but SSDO service allocation fails
 ///
 /// \Then a null pointer is returned
+///       \Calls mem_alloc()
+///       \Calls can_net_get_alloc()
+///       \Calls co_ssdo_alignof()
+///       \Calls co_ssdo_sizeof()
+///       \Calls get_errc()
+///       \Calls set_errc()
 TEST(CO_SsdoInit, CoSsdoCreate_FailSsdoAlloc) {
   co_ssdo_t* const ssdo = co_ssdo_create(failing_net, dev, SDO_NUM);
 
@@ -182,6 +188,15 @@ TEST(CO_SsdoInit, CoSsdoCreate_FailSsdoAlloc) {
 ///       the pointer to the device and an SDO number equal zero
 ///
 /// \Then a null pointer is returned
+///       \Calls mem_alloc()
+///       \Calls can_net_get_alloc()
+///       \Calls co_ssdo_alignof()
+///       \Calls co_ssdo_sizeof()
+///       \Calls errnum2c()
+///       \Calls get_errc()
+///       \Calls mem_free()
+///       \Calls co_ssdo_get_alloc()
+///       \Calls set_errc()
 TEST(CO_SsdoInit, CoSsdoCreate_NumZero) {
   co_ssdo_t* const ssdo = co_ssdo_create(net, dev, 0x00u);
 
@@ -194,6 +209,15 @@ TEST(CO_SsdoInit, CoSsdoCreate_NumZero) {
 ///       the pointer to the device and an SDO number higher than CO_NUM_SDOS
 ///
 /// \Then a null pointer is returned
+///       \Calls mem_alloc()
+///       \Calls can_net_get_alloc()
+///       \Calls co_ssdo_alignof()
+///       \Calls co_ssdo_sizeof()
+///       \Calls errnum2c()
+///       \Calls get_errc()
+///       \Calls mem_free()
+///       \Calls co_ssdo_get_alloc()
+///       \Calls set_errc()
 TEST(CO_SsdoInit, CoSsdoCreate_NumTooHigh) {
   co_ssdo_t* const ssdo = co_ssdo_create(net, dev, CO_NUM_SDOS + 1u);
 
@@ -207,6 +231,16 @@ TEST(CO_SsdoInit, CoSsdoCreate_NumTooHigh) {
 ///       service
 ///
 /// \Then a null pointer is returned
+///       \Calls mem_alloc()
+///       \Calls can_net_get_alloc()
+///       \Calls co_ssdo_alignof()
+///       \Calls co_ssdo_sizeof()
+///       \Calls co_dev_find_obj()
+///       \Calls errnum2c()
+///       \Calls set_errc()
+///       \Calls get_errc()
+///       \Calls mem_free()
+///       \Calls co_ssdo_get_alloc()
 TEST(CO_SsdoInit, CoSsdoCreate_NoServerParameterObj) {
   co_ssdo_t* const ssdo = co_ssdo_create(net, dev, SDO_NUM + 1u);
 
@@ -220,6 +254,18 @@ TEST(CO_SsdoInit, CoSsdoCreate_NoServerParameterObj) {
 ///       but can_recv_create() fails
 ///
 /// \Then a null pointer is returned
+///       \Calls mem_alloc()
+///       \Calls can_net_get_alloc()
+///       \Calls co_ssdo_alignof()
+///       \Calls co_ssdo_sizeof()
+///       \Calls co_dev_find_obj()
+///       \Calls co_dev_get_id()
+///       \Calls can_recv_create()
+///       \Calls co_ssdo_get_alloc()
+///       \Calls get_errc()
+///       \Calls set_errc()
+///       \Calls mem_free()
+///       \Calls co_ssdo_get_alloc()
 TEST(CO_SsdoInit, CoSsdoCreate_RecvCreateFail) {
   limitedAllocator.LimitAllocationTo(co_ssdo_sizeof());
 
@@ -235,6 +281,22 @@ TEST(CO_SsdoInit, CoSsdoCreate_RecvCreateFail) {
 ///       but can_timer_create() fails
 ///
 /// \Then a null pointer is returned
+///       \Calls mem_alloc()
+///       \Calls can_net_get_alloc()
+///       \Calls co_ssdo_alignof()
+///       \Calls co_ssdo_sizeof()
+///       \Calls co_dev_find_obj()
+///       \Calls co_dev_get_id()
+///       \Calls can_recv_create()
+///       \Calls co_ssdo_get_alloc()
+///       \Calls can_recv_set_func()
+///       \Calls can_timer_create()
+///       \Calls co_ssdo_get_alloc()
+///       \Calls get_errc()
+///       \Calls can_recv_destroy()
+///       \Calls set_errc()
+///       \Calls mem_free()
+///       \Calls co_ssdo_get_alloc()
 TEST(CO_SsdoInit, CoSsdoCreate_TimerCreateFail) {
   limitedAllocator.LimitAllocationTo(co_ssdo_sizeof() + can_recv_sizeof());
 
@@ -251,6 +313,21 @@ TEST(CO_SsdoInit, CoSsdoCreate_TimerCreateFail) {
 ///
 /// \Then a pointer to the created SSDO service is returned, the service has
 ///       default values set
+///       \Calls mem_alloc()
+///       \Calls can_net_get_alloc()
+///       \Calls co_ssdo_alignof()
+///       \Calls co_ssdo_sizeof()
+///       \Calls co_dev_find_obj()
+///       \Calls co_dev_get_id()
+///       \Calls can_recv_create()
+///       \Calls co_ssdo_get_alloc()
+///       \Calls can_recv_set_func()
+///       \Calls can_timer_create()
+///       \Calls co_ssdo_get_alloc()
+///       \Calls can_timer_set_func()
+///       \Calls co_sdo_req_init()
+///       \Calls membuf_init()
+///       \IfCalls{LELY_NO_MALLOC, memset()}
 TEST(CO_SsdoInit, CoSsdoCreate_DefaultSsdo_NoObj1200) {
   co_ssdo_t* const ssdo = co_ssdo_create(net, dev, SDO_NUM);
 
@@ -277,6 +354,21 @@ TEST(CO_SsdoInit, CoSsdoCreate_DefaultSsdo_NoObj1200) {
 ///
 /// \Then a pointer to the created SSDO service is returned, the service has
 ///       default values set
+///       \Calls mem_alloc()
+///       \Calls can_net_get_alloc()
+///       \Calls co_ssdo_alignof()
+///       \Calls co_ssdo_sizeof()
+///       \Calls co_dev_find_obj()
+///       \Calls co_dev_get_id()
+///       \Calls can_recv_create()
+///       \Calls co_ssdo_get_alloc()
+///       \Calls can_recv_set_func()
+///       \Calls can_timer_create()
+///       \Calls co_ssdo_get_alloc()
+///       \Calls can_timer_set_func()
+///       \Calls co_sdo_req_init()
+///       \Calls membuf_init()
+///       \IfCalls{LELY_NO_MALLOC, memset()}
 TEST(CO_SsdoInit, CoSsdoCreate_DefaultSsdo_WithObj1200) {
   std::unique_ptr<CoObjTHolder> obj1200(new CoObjTHolder(0x1200u));
   co_dev_insert_obj(dev, obj1200->Take());
@@ -318,6 +410,13 @@ TEST(CO_SsdoInit, CoSsdoDestroy_Nullptr) {
 /// \When co_ssdo_destroy() is called
 ///
 /// \Then the SSDO service is destroyed
+///       \Calls co_ssdo_stop()
+///       \Calls membuf_fini()
+///       \Calls co_sdo_req_fini()
+///       \Calls can_timer_destroy()
+///       \Calls can_recv_destroy()
+///       \Calls mem_free()
+///       \Calls co_ssdo_get_alloc()
 TEST(CO_SsdoInit, CoSsdoDestroy_Nominal) {
   co_ssdo_t* const ssdo = co_ssdo_create(net, dev, SDO_NUM);
 
@@ -335,6 +434,9 @@ TEST(CO_SsdoInit, CoSsdoDestroy_Nominal) {
 /// \When co_ssdo_start() is called
 ///
 /// \Then 0 is returned, the service is not stopped
+///       \Calls co_ssdo_is_stopped()
+///       \Calls co_dev_find_obj()
+///       \Calls can_recv_start()
 TEST(CO_SsdoInit, CoSsdoStart_DefaultSsdo_NoObj1200) {
   co_ssdo_t* const ssdo = co_ssdo_create(net, dev, SDO_NUM);
 
@@ -351,6 +453,7 @@ TEST(CO_SsdoInit, CoSsdoStart_DefaultSsdo_NoObj1200) {
 /// \When co_ssdo_start() is called
 ///
 /// \Then 0 is returned, the service is not stopped
+///       \Calls co_ssdo_is_stopped()
 TEST(CO_SsdoInit, CoSsdoStart_AlreadyStarted) {
   std::unique_ptr<CoObjTHolder> obj1200(new CoObjTHolder(0x1200u));
   co_dev_insert_obj(dev, obj1200->Take());
@@ -371,6 +474,13 @@ TEST(CO_SsdoInit, CoSsdoStart_AlreadyStarted) {
 /// \When co_ssdo_start() is called
 ///
 /// \Then 0 is returned, the service is not stopped
+///       \Calls co_ssdo_is_stopped()
+///       \Calls co_dev_find_obj()
+///       \Calls co_obj_sizeof_val()
+///       \Calls memcpy()
+///       \Calls co_obj_addressof_val()
+///       \Calls co_obj_set_dn_ind()
+///       \Calls can_recv_start()
 TEST(CO_SsdoInit, CoSsdoStart_DefaultSsdo_WithObj1200) {
   std::unique_ptr<CoObjTHolder> obj1200(new CoObjTHolder(0x1200u));
   co_dev_insert_obj(dev, obj1200->Take());
@@ -389,18 +499,17 @@ TEST(CO_SsdoInit, CoSsdoStart_DefaultSsdo_WithObj1200) {
 /// @name co_ssdo_stop()
 ///@{
 
-/// \Given a pointer to the SSDO service (co_ssdo_t) with 0x1200 object
-///        inserted
+/// \Given a pointer to the SSDO service (co_ssdo_t)
 ///
 /// \When co_ssdo_stop() is called
 ///
 /// \Then the service is stopped
+///       \Calls co_ssdo_is_stopped()
 TEST(CO_SsdoInit, CoSsdoStop_OnCreated) {
-  std::unique_ptr<CoObjTHolder> obj1200(new CoObjTHolder(0x1200u));
-  co_dev_insert_obj(dev, obj1200->Take());
   co_ssdo_t* const ssdo = co_ssdo_create(net, dev, SDO_NUM);
 
   co_ssdo_stop(ssdo);
+
   CHECK_EQUAL(1, co_ssdo_is_stopped(ssdo));
 
   co_ssdo_destroy(ssdo);
@@ -411,11 +520,16 @@ TEST(CO_SsdoInit, CoSsdoStop_OnCreated) {
 /// \When co_ssdo_stop() is called
 ///
 /// \Then the service is stopped
+///       \Calls co_ssdo_is_stopped()
+///       \Calls can_timer_stop()
+///       \Calls can_recv_stop()
+///       \Calls co_dev_find_obj()
 TEST(CO_SsdoInit, CoSsdoStop_OnStarted) {
   co_ssdo_t* const ssdo = co_ssdo_create(net, dev, SDO_NUM);
   co_ssdo_start(ssdo);
 
   co_ssdo_stop(ssdo);
+
   CHECK_EQUAL(1, co_ssdo_is_stopped(ssdo));
 
   co_ssdo_destroy(ssdo);
@@ -664,6 +778,7 @@ TEST(CoSsdoSetGet, CoSsdoSetTimeout_InvalidTimeout) {
 /// \When co_ssdo_set_timeout() is called with a zero timeout value
 ///
 /// \Then the timeout is disabled
+///       \Calls can_timer_stop()
 TEST(CoSsdoSetGet, CoSsdoSetTimeout_DisableTimeout) {
   co_ssdo_set_timeout(ssdo, 1);
 
@@ -698,6 +813,13 @@ TEST_GROUP_BASE(CoSsdoUpdate, CO_Ssdo){};
 /// \When the SSDO service is updated (co_ssdo_start())
 ///
 /// \Then the SSDO service's CAN frame receiver is deactivated
+///       \Calls co_ssdo_is_stopped()
+///       \Calls co_dev_find_obj()
+///       \Calls co_obj_sizeof_val()
+///       \Calls memcpy()
+///       \Calls co_obj_addressof_val()
+///       \Calls co_obj_set_dn_ind()
+///       \Calls can_recv_stop()
 TEST(CoSsdoUpdate, ReqCobidValid_ResCobidInvalid) {
   const co_unsigned32_t new_cobid_res = CAN_ID | CO_SDO_COBID_VALID;
   SetSrv02CobidRes(new_cobid_res);
@@ -716,6 +838,13 @@ TEST(CoSsdoUpdate, ReqCobidValid_ResCobidInvalid) {
 /// \When the SSDO service is updated (co_ssdo_start())
 ///
 /// \Then the SSDO service's CAN frame receiver is deactivated
+///       \Calls co_ssdo_is_stopped()
+///       \Calls co_dev_find_obj()
+///       \Calls co_obj_sizeof_val()
+///       \Calls memcpy()
+///       \Calls co_obj_addressof_val()
+///       \Calls co_obj_set_dn_ind()
+///       \Calls can_recv_stop()
 TEST(CoSsdoUpdate, ReqCobidInvalid_ResCobidValid) {
   const co_unsigned32_t new_cobid_req = CAN_ID | CO_SDO_COBID_VALID;
   SetSrv01CobidReq(new_cobid_req);
@@ -734,6 +863,13 @@ TEST(CoSsdoUpdate, ReqCobidInvalid_ResCobidValid) {
 /// \When the SSDO service is updated (co_ssdo_start())
 ///
 /// \Then the SSDO service's CAN frame receiver is deactivated
+///       \Calls co_ssdo_is_stopped()
+///       \Calls co_dev_find_obj()
+///       \Calls co_obj_sizeof_val()
+///       \Calls memcpy()
+///       \Calls co_obj_addressof_val()
+///       \Calls co_obj_set_dn_ind()
+///       \Calls can_recv_stop()
 TEST(CoSsdoUpdate, ReqResCobidsInvalid) {
   const co_unsigned32_t new_cobid_req = CAN_ID | CO_SDO_COBID_VALID;
   const co_unsigned32_t new_cobid_res = CAN_ID | CO_SDO_COBID_VALID;
@@ -754,6 +890,13 @@ TEST(CoSsdoUpdate, ReqResCobidsInvalid) {
 /// \When the SSDO service is updated (co_ssdo_start())
 ///
 /// \Then the SSDO service's CAN frame receiver is activated
+///       \Calls co_ssdo_is_stopped()
+///       \Calls co_dev_find_obj()
+///       \Calls co_obj_sizeof_val()
+///       \Calls memcpy()
+///       \Calls co_obj_addressof_val()
+///       \Calls co_obj_set_dn_ind()
+///       \Calls can_recv_start()
 TEST(CoSsdoUpdate, ReqResCobidsValid) {
   const co_unsigned32_t new_cobid_req = CAN_ID;
   const co_unsigned32_t NEW_CAN_ID = CAN_ID + 1u;
@@ -779,6 +922,13 @@ TEST(CoSsdoUpdate, ReqResCobidsValid) {
 /// \When the SSDO service is updated (co_ssdo_start())
 ///
 /// \Then the SSDO service's CAN frame receiver is activated
+///       \Calls co_ssdo_is_stopped()
+///       \Calls co_dev_find_obj()
+///       \Calls co_obj_sizeof_val()
+///       \Calls memcpy()
+///       \Calls co_obj_addressof_val()
+///       \Calls co_obj_set_dn_ind()
+///       \Calls can_recv_start()
 TEST(CoSsdoUpdate, ReqResCobidsValid_CobidFrameSet) {
   const co_unsigned32_t new_cobid_req = CAN_ID | CO_SDO_COBID_FRAME;
   const co_unsigned32_t new_cobid_res = CAN_ID;
@@ -807,11 +957,14 @@ TEST_GROUP_BASE(CoSsdoTimer, CO_Ssdo){};
 /// \Given a pointer to the SSDO service (co_ssdo_t) in 'download segment' state
 ///        with a timeout set
 ///
-/// \When can_net_set_time() is called with a time value equal or exceeding
-///       the timeout
+/// \When the timeout has expired (can_net_set_time())
 ///
 /// \Then the SSDO service sends an SDO abort transfer message for the active
 ///       download transfer
+///       \IfCalls{!LELY_NO_STDIO && !NDEBUG && !LELY_NO_DIAG, diag_at()}
+///       \Calls stle_u16()
+///       \Calls stle_u32()
+///       \Calls can_net_send()
 TEST(CoSsdoTimer, Timeout) {
   co_ssdo_set_timeout(ssdo, 1u);  // 1 ms
   StartSSDO();
