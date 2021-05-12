@@ -164,7 +164,7 @@ typedef void co_nmt_hb_ind_t(co_nmt_t *nmt, co_unsigned8_t id, int state,
  * co_nmt_on_st().
  *
  * This indication function is also invoked by an NMT master/slave service to
- * notify the user of its own state changes. It that case it is NOT safe to
+ * notify the user of its own state changes. In that case it is NOT safe to
  * invoke co_nmt_cs_ind() (or co_nmt_cs_req() with the node-ID of the master)
  * from this function.
  *

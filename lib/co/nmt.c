@@ -550,8 +550,6 @@ struct co_nmt_state {
 	co_nmt_state_t *(*on_boot)(co_nmt_t *nmt, co_unsigned8_t id,
 			co_unsigned8_t st, char es);
 #endif
-	/// A pointer to the function invoked when the current state is left.
-	void (*on_leave)(co_nmt_t *nmt);
 };
 
 #define LELY_CO_DEFINE_STATE(name, ...) \
@@ -586,19 +584,27 @@ LELY_CO_DEFINE_STATE(co_nmt_reset_node_state,
 /// The entry function of the 'reset communication' state.
 static co_nmt_state_t *co_nmt_reset_comm_on_enter(co_nmt_t *nmt);
 
+#if !LELY_NO_CO_MASTER && !LELY_NO_CO_LSS
 /**
  * The 'NMT command received' transition function of the 'reset communication'
  * state.
  */
 static co_nmt_state_t *co_nmt_reset_comm_on_cs(
 		co_nmt_t *nmt, co_unsigned8_t cs);
+#endif
 
 /// The NMT 'reset communication' state.
 // clang-format off
+#if !LELY_NO_CO_MASTER && !LELY_NO_CO_LSS
 LELY_CO_DEFINE_STATE(co_nmt_reset_comm_state,
 	.on_enter = &co_nmt_reset_comm_on_enter,
 	.on_cs = &co_nmt_reset_comm_on_cs
 )
+#else
+LELY_CO_DEFINE_STATE(co_nmt_reset_comm_state,
+	.on_enter = &co_nmt_reset_comm_on_enter,
+)
+#endif
 // clang-format on
 
 /// The entry function of the 'boot-up' state.
@@ -2849,11 +2855,7 @@ co_nmt_enter(co_nmt_t *nmt, co_nmt_state_t *next)
 	assert(nmt);
 
 	while (next) {
-		co_nmt_state_t *prev = nmt->state;
 		nmt->state = next;
-
-		if (prev && prev->on_leave)
-			prev->on_leave(nmt);
 
 		next = next->on_enter ? next->on_enter(nmt) : NULL;
 	}
@@ -2943,7 +2945,7 @@ co_nmt_reset_node_on_enter(co_nmt_t *nmt)
 #endif
 
 	nmt->st = CO_NMT_ST_RESET_NODE;
-	co_nmt_st_ind(nmt, co_dev_get_id(nmt->dev), 0);
+	co_nmt_st_ind(nmt, co_dev_get_id(nmt->dev), CO_NMT_ST_BOOTUP);
 
 	if (nmt->cs_ind)
 		nmt->cs_ind(nmt, CO_NMT_CS_RESET_NODE, nmt->cs_data);
@@ -3007,7 +3009,7 @@ co_nmt_reset_comm_on_enter(co_nmt_t *nmt)
 			co_nmt_is_master(nmt) ? "master" : "slave");
 
 	nmt->st = CO_NMT_ST_RESET_COMM;
-	co_nmt_st_ind(nmt, co_dev_get_id(nmt->dev), 0);
+	co_nmt_st_ind(nmt, co_dev_get_id(nmt->dev), CO_NMT_ST_BOOTUP);
 
 	// Start receiving NMT commands.
 	if (!co_nmt_is_master(nmt))
@@ -3031,6 +3033,7 @@ co_nmt_reset_comm_on_enter(co_nmt_t *nmt)
 	return co_nmt_bootup_state;
 }
 
+#if !LELY_NO_CO_MASTER && !LELY_NO_CO_LSS
 static co_nmt_state_t *
 co_nmt_reset_comm_on_cs(co_nmt_t *nmt, co_unsigned8_t cs)
 {
@@ -3042,6 +3045,7 @@ co_nmt_reset_comm_on_cs(co_nmt_t *nmt, co_unsigned8_t cs)
 	default: return NULL;
 	}
 }
+#endif
 
 static co_nmt_state_t *
 co_nmt_bootup_on_enter(co_nmt_t *nmt)
