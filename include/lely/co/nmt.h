@@ -34,43 +34,43 @@
 #endif
 
 /// The CAN identifier used for NMT commands.
-#define CO_NMT_CS_CANID 0x000
+#define CO_NMT_CS_CANID 0x000u
 
 /// The NMT command specifier 'start'.
-#define CO_NMT_CS_START 0x01
+#define CO_NMT_CS_START 0x01u
 
 /// The NMT command specifier 'stop'.
-#define CO_NMT_CS_STOP 0x02
+#define CO_NMT_CS_STOP 0x02u
 
 /// The NMT command specifier 'enter pre-operational'.
-#define CO_NMT_CS_ENTER_PREOP 0x80
+#define CO_NMT_CS_ENTER_PREOP 0x80u
 
 /// The NMT command specifier 'reset node'.
-#define CO_NMT_CS_RESET_NODE 0x81
+#define CO_NMT_CS_RESET_NODE 0x81u
 
 /// The NMT command specifier 'reset communication'.
-#define CO_NMT_CS_RESET_COMM 0x82
+#define CO_NMT_CS_RESET_COMM 0x82u
 
 /// The NMT state 'boot-up'.
-#define CO_NMT_ST_BOOTUP 0x00
+#define CO_NMT_ST_BOOTUP 0x00u
 
 /// The NMT state 'stopped'.
-#define CO_NMT_ST_STOP 0x04
+#define CO_NMT_ST_STOP 0x04u
 
 /// The NMT state 'operational'.
-#define CO_NMT_ST_START 0x05
+#define CO_NMT_ST_START 0x05u
 
 /// The NMT sub-state 'reset application'.
-#define CO_NMT_ST_RESET_NODE 0x06
+#define CO_NMT_ST_RESET_NODE 0x06u
 
 /// The NMT sub-state 'reset communication'.
-#define CO_NMT_ST_RESET_COMM 0x07
+#define CO_NMT_ST_RESET_COMM 0x07u
 
 /// The NMT state 'pre-operational'.
-#define CO_NMT_ST_PREOP 0x7f
+#define CO_NMT_ST_PREOP 0x7fu
 
 /// The mask to get/set the toggle bit from an NMT state.
-#define CO_NMT_ST_TOGGLE 0x80
+#define CO_NMT_ST_TOGGLE 0x80u
 
 /// The CAN identifier used for both node guarding and heartbeat monitoring.
 #define CO_NMT_EC_CANID(id) (0x700 + ((id)&0x7f))
