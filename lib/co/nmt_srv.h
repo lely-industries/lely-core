@@ -35,7 +35,7 @@ struct co_nmt_srv {
 	 * #CO_NMT_SRV_PDO, #CO_NMT_SRV_SDO, #CO_NMT_SRV_SYNC, #CO_NMT_SRV_TIME
 	 * and #CO_NMT_SRV_EMCY).
 	 */
-	int set;
+	uint_least8_t set;
 #if !LELY_NO_CO_RPDO
 	/// An array of pointers to the Receive-PDO services.
 	co_rpdo_t **rpdos;
@@ -77,22 +77,22 @@ struct co_nmt_srv {
 };
 
 /// The Receive/Transmit-PDO services.
-#define CO_NMT_SRV_PDO 0x01
+#define CO_NMT_SRV_PDO 0x01u
 
 /// The Server/Client-SDO services.
-#define CO_NMT_SRV_SDO 0x02
+#define CO_NMT_SRV_SDO 0x02u
 
 /// The SYNC producer/consumer service
-#define CO_NMT_SRV_SYNC 0x04
+#define CO_NMT_SRV_SYNC 0x04u
 
 /// The TIME producer/consumer service.
-#define CO_NMT_SRV_TIME 0x08
+#define CO_NMT_SRV_TIME 0x08u
 
 /// The EMCY producer/consumer service.
-#define CO_NMT_SRV_EMCY 0x10
+#define CO_NMT_SRV_EMCY 0x10u
 
 /// The LSS master/slave service.
-#define CO_NMT_SRV_LSS 0x20
+#define CO_NMT_SRV_LSS 0x20u
 
 #ifdef __cplusplus
 extern "C" {
@@ -120,7 +120,7 @@ void co_nmt_srv_fini(struct co_nmt_srv *srv);
  *            #CO_NMT_SRV_EMCY). Services not part of <b>set</b> will be
  *            disabled.
  */
-void co_nmt_srv_set(struct co_nmt_srv *srv, int set);
+void co_nmt_srv_set(struct co_nmt_srv *srv, uint_least8_t set);
 
 #ifdef __cplusplus
 }
