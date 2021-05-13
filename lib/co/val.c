@@ -591,8 +591,10 @@ co_val_read(co_unsigned16_t type, void *val, const uint_least8_t *begin,
 					u24 |= (co_unsigned24_t)*begin++
 							<< 8 * i;
 				u->i24 = u24 > CO_INTEGER24_MAX
-						? -(CO_UNSIGNED24_MAX + 1 - u24)
-						: u24;
+						? -(co_integer24_t)(
+								CO_UNSIGNED24_MAX
+								+ 1 - u24)
+						: (co_integer24_t)u24;
 			}
 			return 3;
 		case CO_DEFTYPE_REAL64:
@@ -610,8 +612,10 @@ co_val_read(co_unsigned16_t type, void *val, const uint_least8_t *begin,
 					u40 |= (co_unsigned40_t)*begin++
 							<< 8 * i;
 				u->i40 = u40 > CO_INTEGER40_MAX
-						? -(CO_UNSIGNED40_MAX + 1 - u40)
-						: u40;
+						? -(co_integer40_t)(
+								CO_UNSIGNED40_MAX
+								+ 1 - u40)
+						: (co_integer40_t)u40;
 			}
 			return 5;
 		case CO_DEFTYPE_INTEGER48:
@@ -623,8 +627,10 @@ co_val_read(co_unsigned16_t type, void *val, const uint_least8_t *begin,
 					u48 |= (co_unsigned48_t)*begin++
 							<< 8 * i;
 				u->i48 = u48 > CO_INTEGER48_MAX
-						? -(CO_UNSIGNED48_MAX + 1 - u48)
-						: u48;
+						? -(co_integer48_t)(
+								CO_UNSIGNED48_MAX
+								+ 1 - u48)
+						: (co_integer48_t)u48;
 			}
 			return 6;
 		case CO_DEFTYPE_INTEGER56:
@@ -636,8 +642,10 @@ co_val_read(co_unsigned16_t type, void *val, const uint_least8_t *begin,
 					u56 |= (co_unsigned56_t)*begin++
 							<< 8 * i;
 				u->i56 = u56 > CO_INTEGER56_MAX
-						? -(CO_UNSIGNED56_MAX + 1 - u56)
-						: u56;
+						? -(co_integer56_t)(
+								CO_UNSIGNED56_MAX
+								+ 1 - u56)
+						: (co_integer56_t)u56;
 			}
 			return 7;
 		case CO_DEFTYPE_INTEGER64:
