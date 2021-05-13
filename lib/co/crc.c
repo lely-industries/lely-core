@@ -80,8 +80,15 @@ co_crc(uint_least16_t crc, const uint_least8_t *bp, size_t n)
 	// clang-format on
 
 	if (bp && n) {
-		while (n--)
-			crc = tab[*bp++ ^ (crc >> 8)] ^ (crc << 8);
+		while (n--) {
+			// explicit casts to satisfy SonarCloud rules
+			const uint_least8_t index =
+					*bp ^ (uint_least8_t)(crc >> 8);
+			const uint_least16_t lookup = tab[index];
+			crc = (uint_least16_t)(
+					lookup ^ (uint_least16_t)(crc << 8));
+			bp++;
+		}
 	}
 	return crc;
 }
