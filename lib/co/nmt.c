@@ -1298,8 +1298,8 @@ co_nmt_on_tpdo_event(co_nmt_t *nmt, co_unsigned16_t n)
 		co_tpdo_t *pdo = co_nmt_get_tpdo(nmt, n);
 		if (pdo) {
 			if (nmt->tpdo_event_wait)
-				nmt->tpdo_event_mask[(n - 1) / LONG_BIT] |= 1ul
-						<< ((n - 1) % LONG_BIT);
+				nmt->tpdo_event_mask[(n - 1u) / LONG_BIT] |= 1uL
+						<< ((n - 1u) % LONG_BIT);
 			else
 				co_tpdo_event(pdo);
 		}
@@ -1309,8 +1309,8 @@ co_nmt_on_tpdo_event(co_nmt_t *nmt, co_unsigned16_t n)
 			if (!pdo)
 				continue;
 			if (nmt->tpdo_event_wait)
-				nmt->tpdo_event_mask[(n - 1) / LONG_BIT] |= 1ul
-						<< ((n - 1) % LONG_BIT);
+				nmt->tpdo_event_mask[(n - 1) / LONG_BIT] |= 1uL
+						<< ((n - 1u) % LONG_BIT);
 			else
 				co_tpdo_event(pdo);
 		}
@@ -1337,15 +1337,15 @@ co_nmt_on_tpdo_event_unlock(co_nmt_t *nmt)
 
 	// Issue an indication for every postponed Transmit-PDO event.
 	int errsv = get_errc();
-	for (int i = 0; i < CO_NUM_PDOS / LONG_BIT; i++) {
+	for (unsigned i = 0; i < CO_NUM_PDOS / LONG_BIT; i++) {
 		if (nmt->tpdo_event_mask[i]) {
 			co_unsigned16_t n = i * LONG_BIT + 1;
-			for (int j = 0; j < LONG_BIT && n <= nmt->srv.ntpdo
+			for (unsigned j = 0; j < LONG_BIT && n <= nmt->srv.ntpdo
 					&& nmt->tpdo_event_mask[i];
 					j++, n++) {
-				if (!(nmt->tpdo_event_mask[i] & (1ul << j)))
+				if (!(nmt->tpdo_event_mask[i] & (1uL << j)))
 					continue;
-				nmt->tpdo_event_mask[i] &= ~(1ul << j);
+				nmt->tpdo_event_mask[i] &= ~(1uL << j);
 				co_tpdo_t *pdo = co_nmt_get_tpdo(nmt, n);
 				if (pdo)
 					co_tpdo_event(pdo);
