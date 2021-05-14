@@ -2725,21 +2725,28 @@ TEST_GROUP_BASE(CO_DevTpdoEvent, CO_DevTpdoBase) {
 /// @name co_dev_tpdo_event()
 ///@{
 
-/// \Given TODO
+/// \Given a pointer to a device (co_dev_t) with a custom TPDO event indication
+///        function set
 ///
-/// \When TODO
+/// \When co_dev_tpdo_event() is called with an index and a sub-index of a
+///       non-existing sub-object
 ///
-/// \Then TODO
+/// \Then the indication function was not called
 ///       \Calls co_dev_chk_tpdo()
 TEST(CO_DevTpdoEvent, CoDevTpdoEvent_InvalidIndices) {
   co_dev_tpdo_event(dev, 0x0000u, 0x00u);
+
+  CHECK_EQUAL(0, CO_DevTPDO_Static::tpdo_event_ind_counter);
 }
 
-/// \Given TODO
+/// \Given a pointer to a device (co_dev_t) with a custom TPDO event indication
+///        function set, the object dictionary contains an entry with disabled
+///        PDO mapping
 ///
-/// \When TODO
+/// \When co_dev_tpdo_event() is called with the index and sub-index of the
+///       entry
 ///
-/// \Then TODO
+/// \Then the indication function was not called
 ///       \Calls co_dev_chk_tpdo()
 TEST(CO_DevTpdoEvent, CoDevTpdoEvent_OnlySubNoMapping) {
   co_sub_set_pdo_mapping(sub, 0);
@@ -2749,11 +2756,15 @@ TEST(CO_DevTpdoEvent, CoDevTpdoEvent_OnlySubNoMapping) {
   CHECK_EQUAL(0, CO_DevTPDO_Static::tpdo_event_ind_counter);
 }
 
-/// \Given TODO
+/// \Given a pointer to a device (co_dev_t) with a custom TPDO event indication
+///        function set, the object dictionary contains an entry with enabled
+///        PDO mapping and does not contain any TPDO Communication Parameter
+///        objects (0x1800-0x19ff)
 ///
-/// \When TODO
+/// \When co_dev_tpdo_event() is called with the index and sub-index of the
+///       entry
 ///
-/// \Then TODO
+/// \Then the indication function was not called
 ///       \Calls co_dev_chk_tpdo()
 ///       \Calls co_dev_find_obj()
 ///       \Calls co_obj_next()
@@ -2765,11 +2776,16 @@ TEST(CO_DevTpdoEvent, CoDevTpdoEvent_MappingPossibleButNoMapping) {
   CHECK_EQUAL(0, CO_DevTPDO_Static::tpdo_event_ind_counter);
 }
 
-/// \Given TODO
+/// \Given a pointer to a device (co_dev_t) with a custom TPDO event indication
+///        function set, the object dictionary contains an entry with enabled
+///        PDO mapping and a TPDO Communication Parameter object (0x1800) with
+///        the Highest Sub-index Supported sub-object (0x00) outside allowed
+///        value range
 ///
-/// \When TODO
+/// \When co_dev_tpdo_event() is called with the index and sub-index of the
+///       entry
 ///
-/// \Then TODO
+/// \Then the indication function was not called
 ///       \Calls co_dev_chk_tpdo()
 ///       \Calls co_dev_find_obj()
 ///       \Calls co_obj_next()
@@ -2781,18 +2797,21 @@ TEST(CO_DevTpdoEvent, CoDevTpdoEvent_InvalidTpdoMaxSubIndex) {
       0x00u, CO_DEFTYPE_UNSIGNED8,
       co_unsigned8_t(0x00u));  // highest sub-index supported
   CHECK_EQUAL(0, co_dev_insert_obj(dev, obj1800.Take()));
-  CreateSingleEntryMapping(EncodeMapping(OBJ_IDX, SUB_IDX, SUB_SIZE));
 
   co_dev_tpdo_event(dev, OBJ_IDX, SUB_IDX);
 
   CHECK_EQUAL(0, CO_DevTPDO_Static::tpdo_event_ind_counter);
 }
 
-/// \Given TODO
+/// \Given a pointer to a device (co_dev_t) with a custom TPDO event indication
+///        function set, the object dictionary contains an entry with enabled
+///        PDO mapping and a TPDO Communication Parameter object (0x1800) with
+///        an invalid COB-ID of the TPDO
 ///
-/// \When TODO
+/// \When co_dev_tpdo_event() is called with the index and sub-index of the
+///       entry
 ///
-/// \Then TODO
+/// \Then the indication function was not called
 ///       \Calls co_dev_chk_tpdo()
 ///       \Calls co_dev_find_obj()
 ///       \Calls co_obj_next()
@@ -2800,18 +2819,21 @@ TEST(CO_DevTpdoEvent, CoDevTpdoEvent_InvalidTpdoMaxSubIndex) {
 ///       \Calls co_obj_addressof_val()
 TEST(CO_DevTpdoEvent, CoDevTpdoEvent_InvalidTpdoCobId) {
   CreateTpdoCommObject(DEV_ID | CO_PDO_COBID_VALID, 0x00u);
-  CreateSingleEntryMapping(EncodeMapping(OBJ_IDX, SUB_IDX, SUB_SIZE));
 
   co_dev_tpdo_event(dev, OBJ_IDX, SUB_IDX);
 
   CHECK_EQUAL(0, CO_DevTPDO_Static::tpdo_event_ind_counter);
 }
 
-/// \Given TODO
+/// \Given a pointer to a device (co_dev_t) with a custom TPDO event indication
+///        function set, the object dictionary contains an entry with enabled
+///        PDO mapping and a TPDO Communication Parameter object (0x1800) with a
+///        reserved TPDO transmission type
 ///
-/// \When TODO
+/// \When co_dev_tpdo_event() is called with the index and sub-index of the
+///       entry
 ///
-/// \Then TODO
+/// \Then the indication function was not called
 ///       \Calls co_dev_chk_tpdo()
 ///       \Calls co_dev_find_obj()
 ///       \Calls co_obj_next()
@@ -2819,18 +2841,22 @@ TEST(CO_DevTpdoEvent, CoDevTpdoEvent_InvalidTpdoCobId) {
 ///       \Calls co_obj_addressof_val()
 TEST(CO_DevTpdoEvent, CoDevTpdoEvent_ReservedTransmissionType) {
   CreateTpdoCommObject(DEV_ID, 0xf1u);
-  CreateSingleEntryMapping(EncodeMapping(OBJ_IDX, SUB_IDX, SUB_SIZE));
 
   co_dev_tpdo_event(dev, OBJ_IDX, SUB_IDX);
 
   CHECK_EQUAL(0, CO_DevTPDO_Static::tpdo_event_ind_counter);
 }
 
-/// \Given TODO
+/// \Given a pointer to a device (co_dev_t) with a custom TPDO event indication
+///        function set, the object dictionary contains an entry with enabled
+///        PDO mapping and a TPDO Communication Parameter object (0x1800) with
+///        acyclic TPDO transmission type but does not contain the matching TPDO
+///        Mapping Parameter object (0x1a00)
 ///
-/// \When TODO
+/// \When co_dev_tpdo_event() is called with the index and sub-index of the
+///       entry
 ///
-/// \Then TODO
+/// \Then the indication function was not called
 ///       \Calls co_dev_chk_tpdo()
 ///       \Calls co_dev_find_obj()
 ///       \Calls co_obj_next()
@@ -2844,11 +2870,17 @@ TEST(CO_DevTpdoEvent, CoDevTpdoEvent_NoTpdoMapping) {
   CHECK_EQUAL(0, CO_DevTPDO_Static::tpdo_event_ind_counter);
 }
 
-/// \Given TODO
+/// \Given a pointer to a device (co_dev_t) with a custom TPDO event indication
+///        function set, the object dictionary contains an entry with enabled
+///        PDO mapping, a TPDO Communication Parameter object (0x1800) with
+///        acyclic TPDO transmission type and the matching TPDO Mapping
+///        Parameter object (0x1a00) with a mapping using a different object
+///        index
 ///
-/// \When TODO
+/// \When co_dev_tpdo_event() is called with the index and sub-index of the
+///       entry
 ///
-/// \Then TODO
+/// \Then the indication function was not called
 ///       \Calls co_dev_chk_tpdo()
 ///       \Calls co_dev_find_obj()
 ///       \Calls co_obj_next()
@@ -2863,11 +2895,16 @@ TEST(CO_DevTpdoEvent, CoDevTpdoEvent_DifferentObjectIndexInMapping) {
   CHECK_EQUAL(0, CO_DevTPDO_Static::tpdo_event_ind_counter);
 }
 
-/// \Given TODO
+/// \Given a pointer to a device (co_dev_t) with a custom TPDO event indication
+///        function set, the object dictionary contains an entry with enabled
+///        PDO mapping, a TPDO Communication Parameter object (0x1800) with
+///        acyclic TPDO transmission type and the matching TPDO Mapping
+///        Parameter object (0x1a00) with a mapping using a different sub-index
 ///
-/// \When TODO
+/// \When co_dev_tpdo_event() is called with the index and sub-index of the
+///       entry
 ///
-/// \Then TODO
+/// \Then the indication function was not called
 ///       \Calls co_dev_chk_tpdo()
 ///       \Calls co_dev_find_obj()
 ///       \Calls co_obj_next()
@@ -2882,11 +2919,16 @@ TEST(CO_DevTpdoEvent, CoDevTpdoEvent_DifferentSubIndexInMapping) {
   CHECK_EQUAL(0, CO_DevTPDO_Static::tpdo_event_ind_counter);
 }
 
-/// \Given TODO
+/// \Given a pointer to a device (co_dev_t) with no custom TPDO event indication
+///        function set, the object dictionary contains an entry with enabled
+///        PDO mapping, a TPDO Communication Parameter object (0x1800) with
+///        acyclic TPDO transmission type and the matching TPDO Mapping
+///        Parameter object (0x1a00) with the entry mapped
 ///
-/// \When TODO
+/// \When co_dev_tpdo_event() is called with the index and sub-index of the
+///       entry
 ///
-/// \Then TODO
+/// \Then nothing is changed
 ///       \Calls co_dev_chk_tpdo()
 ///       \Calls co_dev_find_obj()
 ///       \Calls co_obj_next()
@@ -2902,11 +2944,16 @@ TEST(CO_DevTpdoEvent, CoDevTpdoEvent_NoIndicationFunction) {
   CHECK_EQUAL(0, CO_DevTPDO_Static::tpdo_event_ind_counter);
 }
 
-/// \Given TODO
+/// \Given a pointer to a device (co_dev_t) with a custom TPDO event indication
+///        function set, the object dictionary contains an entry with enabled
+///        PDO mapping, a TPDO Communication Parameter object (0x1800) with
+///        acyclic TPDO transmission type and the matching TPDO Mapping
+///        Parameter object (0x1a00) with the entry mapped
 ///
-/// \When TODO
+/// \When co_dev_tpdo_event() is called with the index and sub-index of the
+///       entry
 ///
-/// \Then TODO
+/// \Then the indication function was called once
 ///       \Calls co_dev_chk_tpdo()
 ///       \Calls co_dev_find_obj()
 ///       \Calls co_obj_next()
@@ -2921,11 +2968,16 @@ TEST(CO_DevTpdoEvent, CoDevTpdoEvent_ValidAcyclicTpdo) {
   CHECK_EQUAL(1, CO_DevTPDO_Static::tpdo_event_ind_counter);
 }
 
-/// \Given TODO
+/// \Given a pointer to a device (co_dev_t) with a custom TPDO event indication
+///        function set, the object dictionary contains an entry with enabled
+///        PDO mapping, a TPDO Communication Parameter object (0x1800) with an
+///        event-driven TPDO transmission type and the matching TPDO Mapping
+///        Parameter object (0x1a00) with the entry mapped
 ///
-/// \When TODO
+/// \When co_dev_tpdo_event() is called with the index and sub-index of the
+///       entry
 ///
-/// \Then TODO
+/// \Then the indication function was called once
 ///       \Calls co_dev_chk_tpdo()
 ///       \Calls co_dev_find_obj()
 ///       \Calls co_obj_next()
@@ -2940,11 +2992,18 @@ TEST(CO_DevTpdoEvent, CoDevTpdoEvent_ValidEventDrivenTpdo) {
   CHECK_EQUAL(1, CO_DevTPDO_Static::tpdo_event_ind_counter);
 }
 
-/// \Given TODO
+/// \Given a pointer to a device (co_dev_t) with a custom TPDO event indication
+///        function set, the object dictionary contains an entry with enabled
+///        PDO mapping, multiple TPDO Communication Parameter objects
+///        (0x1800-0x19ff) with acyclic TPDO transmission types and matching
+///        TPDO Mapping Parameter objects (0x1a00-0x1bff), the entry is mapped
+///        in at least one of them
 ///
-/// \When TODO
+/// \When co_dev_tpdo_event() is called with the index and sub-index of the
+///       entry
 ///
-/// \Then TODO
+/// \Then the indication function was called once for every matched TPDO in
+///       order of increasing PDO numbers
 ///       \Calls co_dev_chk_tpdo()
 ///       \Calls co_dev_find_obj()
 ///       \Calls co_obj_next()
