@@ -60,7 +60,7 @@ static const size_t CO_TIME_SCET_SIZE = 7u;
 static const size_t CO_TIME_SUTC_SIZE = 8u;
 #endif
 
-static inline struct co_array_hdr *co_array_get_hdr(const void *val);
+static inline struct co_array_hdr *co_array_get_hdr(void *val);
 
 static int co_array_alloc(void *val, size_t size);
 static void co_array_free(void *val);
@@ -1619,7 +1619,7 @@ co_val_print(co_unsigned16_t type, const void *val, char **pbegin, char *end)
 #endif // !LELY_NO_STDIO
 
 static inline struct co_array_hdr *
-co_array_get_hdr(const void *val)
+co_array_get_hdr(void *val)
 {
 	assert(val);
 
@@ -1697,7 +1697,7 @@ co_array_fini(void *val)
 static size_t
 co_array_sizeof(const void *val)
 {
-	const struct co_array_hdr *hdr = co_array_get_hdr(val);
+	const struct co_array_hdr *hdr = co_array_get_hdr((void *)val);
 
 	return hdr ? hdr->size : 0;
 }
