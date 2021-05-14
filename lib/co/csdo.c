@@ -824,14 +824,14 @@ co_dev_up_req(const co_dev_t *dev, co_unsigned16_t idx, co_unsigned8_t subidx,
 	int errc = get_errc();
 
 #if LELY_NO_MALLOC
-	char _begin[CO_CSDO_MEMBUF_SIZE] = { 0 };
-	struct membuf _buf;
-	membuf_init(&_buf, _begin, CO_CSDO_MEMBUF_SIZE);
+	char memory_[CO_CSDO_MEMBUF_SIZE] = { 0 };
+	struct membuf buf_;
+	membuf_init(&buf_, memory_, CO_CSDO_MEMBUF_SIZE);
 #else
-	struct membuf _buf = MEMBUF_INIT;
+	struct membuf buf_ = MEMBUF_INIT;
 #endif
 	if (!buf)
-		buf = &_buf;
+		buf = &buf_;
 
 	struct co_sdo_req req;
 	co_sdo_req_init(&req, buf);
@@ -885,7 +885,7 @@ done:
 				ac ? 0 : membuf_size(buf), data);
 
 	co_sdo_req_fini(&req);
-	membuf_fini(&_buf);
+	membuf_fini(&buf_);
 	set_errc(errc);
 	return 0;
 }
