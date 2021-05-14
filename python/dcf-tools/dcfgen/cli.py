@@ -354,8 +354,8 @@ class Master:
 
     def write_dcf(self, directory: str, remote_pdo: bool = False):
         with open(os.path.join(directory, "master.dcf"), "w") as output:
-            globals = {"master": self, "slaves": self.slaves, "remote_pdo": remote_pdo}
-            interpreter = em.Interpreter(output=output, globals=globals)
+            params = {"master": self, "slaves": self.slaves, "remote_pdo": remote_pdo}
+            interpreter = em.Interpreter(output=output, globals=params)
             try:
                 filename = pkg_resources.resource_filename(
                     __name__, "data/master.dcf.em"
