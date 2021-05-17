@@ -680,9 +680,10 @@ rol8(uint_least8_t x, unsigned int n)
 #ifdef _MSC_VER
 	return _rotl8(x, n);
 #else
-	return (n != 0) ? ((uint_least8_t)(x << n)
-			       | (uint_least8_t)(x >> (8u - n)))
-			: x;
+	if (n != 0)
+		return ((uint_least8_t)(x << n)
+				| (uint_least8_t)(x >> (8u - n)));
+	return x;
 #endif
 }
 
@@ -694,9 +695,10 @@ ror8(uint_least8_t x, unsigned int n)
 #ifdef _MSC_VER
 	return _rotr8(x, n);
 #else
-	return (n != 0) ? ((uint_least8_t)(x >> n)
-			       | (uint_least8_t)(x << (8u - n)))
-			: x;
+	if (n != 0)
+		return ((uint_least8_t)(x >> n)
+				| (uint_least8_t)(x << (8u - n)));
+	return x;
 #endif
 }
 
@@ -708,9 +710,10 @@ rol16(uint_least16_t x, unsigned int n)
 #ifdef _MSC_VER
 	return _rotl16(x, n);
 #else
-	return (n != 0) ? ((uint_least16_t)(x << n)
-			       | (uint_least16_t)(x >> (16u - n)))
-			: x;
+	if (n != 0)
+		return ((uint_least16_t)(x << n)
+				| (uint_least16_t)(x >> (16u - n)));
+	return x;
 #endif
 }
 
@@ -722,9 +725,10 @@ ror16(uint_least16_t x, unsigned int n)
 #ifdef _MSC_VER
 	return _rotr16(x, n);
 #else
-	return (n != 0) ? ((uint_least16_t)(x >> n)
-			       | (uint_least16_t)(x << (16u - n)))
-			: x;
+	if (n != 0)
+		return ((uint_least16_t)(x >> n)
+				| (uint_least16_t)(x << (16u - n)));
+	return x;
 #endif
 }
 
@@ -736,9 +740,10 @@ rol32(uint_least32_t x, unsigned int n)
 #ifdef _MSC_VER
 	return _rotl(x, n);
 #else
-	return (n != 0) ? ((uint_least32_t)(x << n)
-			       | (uint_least32_t)(x >> (32u - n)))
-			: x;
+	if (n != 0)
+		return ((uint_least32_t)(x << n)
+				| (uint_least32_t)(x >> (32u - n)));
+	return x;
 #endif
 }
 
@@ -750,9 +755,10 @@ ror32(uint_least32_t x, unsigned int n)
 #ifdef _MSC_VER
 	return _rotr(x, n);
 #else
-	return (n != 0) ? ((uint_least32_t)(x >> n)
-			       | (uint_least32_t)(x << (32u - n)))
-			: x;
+	if (n != 0)
+		return ((uint_least32_t)(x >> n)
+				| (uint_least32_t)(x << (32u - n)));
+	return x;
 #endif
 }
 
@@ -764,9 +770,10 @@ rol64(uint_least64_t x, unsigned int n)
 #ifdef _MSC_VER
 	return _rotl64(x, n);
 #else
-	return (n != 0) ? ((uint_least64_t)(x << n)
-			       | (uint_least64_t)(x >> (64u - n)))
-			: x;
+	if (n != 0)
+		return ((uint_least64_t)(x << n)
+				| (uint_least64_t)(x >> (64u - n)));
+	return x;
 #endif
 }
 
@@ -778,9 +785,10 @@ ror64(uint_least64_t x, unsigned int n)
 #ifdef _MSC_VER
 	return _rotr64(x, n);
 #else
-	return (n != 0) ? ((uint_least64_t)(x >> n)
-			       | (uint_least64_t)(x << (64u - n)))
-			: x;
+	if (n != 0)
+		return ((uint_least64_t)(x >> n)
+				| (uint_least64_t)(x << (64u - n)));
+	return x;
 #endif
 }
 
