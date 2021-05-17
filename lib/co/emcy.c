@@ -510,15 +510,12 @@ static int
 co_emcy_node_recv(const struct can_msg *msg, void *data)
 {
 	assert(msg);
+	assert(!(msg->flags & CAN_FLAG_RTR));
 	struct co_emcy_node *node = data;
 	assert(node);
 	assert(node->id > 0 && node->id <= CO_NUM_NODES);
 	co_emcy_t *emcy = structof(node, co_emcy_t, nodes[node->id - 1]);
 	assert(emcy);
-
-	// Ignore remote frames.
-	if (msg->flags & CAN_FLAG_RTR)
-		return 0;
 
 #if !LELY_NO_CANFD
 	// Ignore CAN FD format frames.
@@ -534,7 +531,7 @@ co_emcy_node_recv(const struct can_msg *msg, void *data)
 	co_unsigned8_t msef[5] = { 0 };
 	if (msg->len >= 4)
 		memcpy(msef, msg->data + 3,
-				MAX((uint_least8_t)(msg->len - 3), 5));
+				MIN((uint_least8_t)(msg->len - 3), 5));
 
 	// Notify the user.
 	trace("EMCY: received %04X %02X", eec, er);
@@ -772,9 +769,14 @@ co_emcy_send(co_emcy_t *emcy, co_unsigned16_t eec, co_unsigned8_t er,
 
 	// Add the frame to the buffer.
 	if (!can_buf_write(&emcy->buf, &msg, 1)) {
+#if LELY_NO_MALLOC
+		set_errnum(ERRNUM_NOMEM);
+		return -1;
+#else
 		if (!can_buf_reserve(&emcy->buf, 1))
 			return -1;
 		can_buf_write(&emcy->buf, &msg, 1);
+#endif
 	}
 
 	co_emcy_flush(emcy);
@@ -802,8 +804,10 @@ co_emcy_flush(co_emcy_t *emcy)
 		timespec_add_usec(&emcy->inhibit, inhibit * 100);
 		// Send the frame.
 		struct can_msg msg;
-		if (can_buf_read(&emcy->buf, &msg, 1))
-			can_net_send(emcy->net, &msg);
+		const size_t n = can_buf_read(&emcy->buf, &msg, 1);
+		assert(n == 1);
+		(void)n;
+		can_net_send(emcy->net, &msg);
 	}
 }
 
