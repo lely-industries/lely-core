@@ -1,7 +1,7 @@
 /**@file
  * This file is part of the CANopen Library Unit Test Suite.
  *
- * @copyright 2020 N7 Space Sp. z o.o.
+ * @copyright 2020-2021 N7 Space Sp. z o.o.
  *
  * Unit Test Suite was developed under a programme of,
  * and funded by, the European Space Agency.
@@ -30,6 +30,14 @@
 
 TEST_GROUP(Util_Bits){};
 
+/// @name bswap16()
+///@{
+
+/// \Given N/A
+///
+/// \When bswap16() is called with a 16-bit unsigned integer value
+///
+/// \Then a copy of the input value with its bytes in reversed order is returned
 TEST(Util_Bits, BSwap16) {
   // clang-format off
   static uint_least16_t test16[] = {
@@ -60,6 +68,16 @@ TEST(Util_Bits, BSwap16) {
   }
 }
 
+///@}
+
+/// @name bswap32()
+///@{
+
+/// \Given N/A
+///
+/// \When bswap32() is called with a 32-bit unsigned integer value
+///
+/// \Then a copy of the input value with its bytes in reversed order is returned
 TEST(Util_Bits, BSwap32) {
   // clang-format off
   static uint_least32_t test32[] = {
@@ -90,6 +108,16 @@ TEST(Util_Bits, BSwap32) {
   }
 }
 
+///@}
+
+/// @name bswap64()
+///@{
+
+/// \Given N/A
+///
+/// \When bswap64() is called with a 64-bit unsigned integer value
+///
+/// \Then a copy of the input value with its bytes in reversed order is returned
 TEST(Util_Bits, BSwap64) {
   // clang-format off
   static uint_least64_t test64[] = {
@@ -120,6 +148,17 @@ TEST(Util_Bits, BSwap64) {
   }
 }
 
+///@}
+
+/// @name cls8() and clz8()
+///@{
+
+/// \Given N/A
+///
+/// \When cls8() and clz8() are called with an 8-bit unsigned integer value
+///
+/// \Then a call to cls8() returns the number of leading set bits and a call to
+///       clz8() returns the number of leading zero bits in the requested value
 TEST(Util_Bits, ClsClz8) {
   // clang-format off
   static uint_least8_t test8[] = {
@@ -142,6 +181,17 @@ TEST(Util_Bits, ClsClz8) {
   }
 }
 
+///@}
+
+/// @name cls16() and clz16()
+///@{
+
+/// \Given N/A
+///
+/// \When cls16() and clz16() are called with a 16-bit unsigned integer value
+///
+/// \Then a call to cls16() returns the number of leading set bits and a call to
+///       clz16() returns the number of leading zero bits in the requested value
 TEST(Util_Bits, ClsClz16) {
   // clang-format off
   static uint_least16_t test16[] = {
@@ -171,6 +221,17 @@ TEST(Util_Bits, ClsClz16) {
   }
 }
 
+///@}
+
+/// @name cls32() and clz32()
+///@{
+
+/// \Given N/A
+///
+/// \When cls32() and clz32() are called with a 32-bit unsigned integer value
+///
+/// \Then a call to cls32() returns the number of leading set bits and a call to
+///       clz32() returns the number of leading zero bits in the requested value
 TEST(Util_Bits, ClsClz32) {
   // clang-format off
   static uint_least32_t test32[] = {
@@ -209,6 +270,17 @@ TEST(Util_Bits, ClsClz32) {
   }
 }
 
+///@}
+
+/// @name cls64() and clz64()
+///@{
+
+/// \Given N/A
+///
+/// \When cls64() and clz64() are called with a 64-bit unsigned integer value
+///
+/// \Then a call to cls64() returns the number of leading set bits and a call to
+///       clz64() returns the number of leading zero bits in the requested value
 TEST(Util_Bits, ClsClz64) {
   // clang-format off
   static uint_least64_t test64[] = {
@@ -262,6 +334,17 @@ TEST(Util_Bits, ClsClz64) {
   }
 }
 
+///@}
+
+/// @name cts8() and ctz8()
+///@{
+
+/// \Given N/A
+///
+/// \When cts8() and ctz8() are called with an 8-bit unsigned integer value
+///
+/// \Then a call to cts8() returns the number of trailing set bits and a call to
+///       ctz8() returns the number of trailing zero bits in the requested value
 TEST(Util_Bits, CtsCtz8) {
   // clang-format off
   static uint_least8_t test8[] = {
@@ -284,6 +367,18 @@ TEST(Util_Bits, CtsCtz8) {
   }
 }
 
+///@}
+
+/// @name cts16() and ctz16()
+///@{
+
+/// \Given N/A
+///
+/// \When cts16() and ctz16() are called with a 16-bit unsigned integer value
+///
+/// \Then a call to cts16() returns the number of trailing set bits and a call
+///       to ctz16() returns the number of trailing zero bits in the requested
+///       value
 TEST(Util_Bits, CtsCtz16) {
   // clang-format off
   static uint_least16_t test16[] = {
@@ -313,6 +408,18 @@ TEST(Util_Bits, CtsCtz16) {
   }
 }
 
+///@}
+
+/// @name cts32() and ctz32()
+///@{
+
+/// \Given N/A
+///
+/// \When cts32() and ctz32() are called with a 32-bit unsigned integer value
+///
+/// \Then a call to cts32() returns the number of trailing set bits and a call
+///       to ctz32() returns the number of trailing zero bits in the requested
+///       value
 TEST(Util_Bits, CtsCtz32) {
   // clang-format off
   static uint_least32_t test32[] = {
@@ -350,6 +457,18 @@ TEST(Util_Bits, CtsCtz32) {
   }
 }
 
+///@}
+
+/// @name cts64() and ctz64()
+///@{
+
+/// \Given N/A
+///
+/// \When cts64() and ctz64() are called with a 64-bit unsigned integer value
+///
+/// \Then a call to cts64() returns the number of trailing set bits and a call
+///       to ctz64() returns the number of trailing zero bits in the requested
+///       value
 TEST(Util_Bits, CtsCtz64) {
   // clang-format off
   static uint_least64_t test64[] = {
@@ -403,25 +522,72 @@ TEST(Util_Bits, CtsCtz64) {
   }
 }
 
-TEST(Util_Bits, Ffs8) {
-  CHECK_EQUAL(0, ffs8(0x00));
+///@}
 
+/// @name ffs8()
+///@{
+
+/// \Given N/A
+///
+/// \When ffs8() is called with a zero 8-bit unsigned integer value
+///
+/// \Then 0 is returned
+TEST(Util_Bits, Ffs8_Zero) { CHECK_EQUAL(0, ffs8(0x00)); }
+
+/// \Given N/A
+///
+/// \When ffs8() is called with a non-zero 8-bit unsigned integer value
+///
+/// \Then the index of the first set bit in the requested value is returned
+TEST(Util_Bits, Ffs8_NonZero) {
   CHECK_EQUAL(1, ffs8(0x01));
   CHECK_EQUAL(2, ffs8(0xF2));
   CHECK_EQUAL(8, ffs8(0x80));
 }
 
-TEST(Util_Bits, Ffz8) {
-  CHECK_EQUAL(0, ffz8(0xFF));
+///@}
 
+/// @name ffz8()
+///@{
+
+/// \Given N/A
+///
+/// \When ffz8() is called with an 8-bit unsigned integer value with all bits
+///       set
+///
+/// \Then 0 is returned
+TEST(Util_Bits, Ffz8_AllBitsSet) { CHECK_EQUAL(0, ffz8(0xFF)); }
+
+/// \Given N/A
+///
+/// \When ffz8() is called with an 8-bit unsigned integer value with at least
+///       one zero bit
+///
+/// \Then the index of the first zero bit in the requested value is returned
+TEST(Util_Bits, Ffz8_WithZeroBits) {
   CHECK_EQUAL(1, ffz8(0x00));
   CHECK_EQUAL(2, ffz8(0xE1));
   CHECK_EQUAL(8, ffz8(0x7F));
 }
 
-TEST(Util_Bits, Ffs16) {
-  CHECK_EQUAL(0, ffs16(0x0000));
+///@}
 
+/// @name ffs16()
+///@{
+
+/// \Given N/A
+///
+/// \When ffs16() is called with a zero 16-bit unsigned integer value
+///
+/// \Then 0 is returned
+TEST(Util_Bits, Ffs16_Zero) { CHECK_EQUAL(0, ffs16(0x0000)); }
+
+/// \Given N/A
+///
+/// \When ffs16() is called with a non-zero 16-bit unsigned integer value
+///
+/// \Then the index of the first set bit in the requested value is returned
+TEST(Util_Bits, Ffs16_NonZero) {
   CHECK_EQUAL(1, ffs16(0x0001));
   CHECK_EQUAL(2, ffs16(0x0002));
   CHECK_EQUAL(8, ffs16(0x0080));
@@ -430,9 +596,26 @@ TEST(Util_Bits, Ffs16) {
   CHECK_EQUAL(16, ffs16(0x8000));
 }
 
-TEST(Util_Bits, Ffz16) {
-  CHECK_EQUAL(0, ffz16(0xFFFF));
+///@}
 
+/// @name ffz16()
+///@{
+
+/// \Given N/A
+///
+/// \When ffz16() is called with a 16-bit unsigned integer value with all bits
+///       set
+///
+/// \Then 0 is returned
+TEST(Util_Bits, Ffz16_AllBitsSet) { CHECK_EQUAL(0, ffz16(0xFFFF)); }
+
+/// \Given N/A
+///
+/// \When ffz16() is called with a 16-bit unsigned integer value with at least
+///       one zero bit
+///
+/// \Then the index of the first zero bit in the requested value is returned
+TEST(Util_Bits, Ffz16_WithZeroBits) {
   CHECK_EQUAL(1, ffz16(0x0000));
   CHECK_EQUAL(2, ffz16(0x0001));
   CHECK_EQUAL(8, ffz16(0x007F));
@@ -441,9 +624,24 @@ TEST(Util_Bits, Ffz16) {
   CHECK_EQUAL(16, ffz16(0x7FFF));
 }
 
-TEST(Util_Bits, Ffs32) {
-  CHECK_EQUAL(0, ffs32(0x00000000));
+///@}
 
+/// @name ffs32()
+///@{
+
+/// \Given N/A
+///
+/// \When ffs32() is called with a zero 32-bit unsigned integer value
+///
+/// \Then 0 is returned
+TEST(Util_Bits, Ffs32_Zero) { CHECK_EQUAL(0, ffs32(0x00000000)); }
+
+/// \Given N/A
+///
+/// \When ffs32() is called with a non-zero 32-bit unsigned integer value
+///
+/// \Then the index of the first set bit in the requested value is returned
+TEST(Util_Bits, Ffs32_NonZero) {
   CHECK_EQUAL(1, ffs32(0x00000001));
   CHECK_EQUAL(2, ffs32(0x00000002));
   CHECK_EQUAL(8, ffs32(0x00000080));
@@ -458,9 +656,26 @@ TEST(Util_Bits, Ffs32) {
   CHECK_EQUAL(32, ffs32(0x80000000));
 }
 
-TEST(Util_Bits, Ffz32) {
-  CHECK_EQUAL(0, ffz32(0xFFFFFFFF));
+///@}
 
+/// @name ffz32()
+///@{
+
+/// \Given N/A
+///
+/// \When ffz32() is called with a 32-bit unsigned integer value with all bits
+///       set
+///
+/// \Then 0 is returned
+TEST(Util_Bits, Ffz32_AllBitsSet) { CHECK_EQUAL(0, ffz32(0xFFFFFFFF)); }
+
+/// \Given N/A
+///
+/// \When ffz32() is called with a 32-bit unsigned integer value with at least
+///       one zero bit
+///
+/// \Then the index of the first zero bit in the requested value is returned
+TEST(Util_Bits, Ffz32_WithZeroBits) {
   CHECK_EQUAL(1, ffz32(0x00000002));
   CHECK_EQUAL(2, ffz32(0x00000001));
   CHECK_EQUAL(8, ffz32(0x0000007F));
@@ -475,9 +690,24 @@ TEST(Util_Bits, Ffz32) {
   CHECK_EQUAL(32, ffz32(0x7FFFFFFF));
 }
 
-TEST(Util_Bits, Ffs64) {
-  CHECK_EQUAL(0, ffs64(0x0000000000000000));
+///@}
 
+/// @name ffs64()
+///@{
+
+/// \Given N/A
+///
+/// \When ffs64() is called with a zero 64-bit unsigned integer value
+///
+/// \Then 0 is returned
+TEST(Util_Bits, Ffs64_Zero) { CHECK_EQUAL(0, ffs64(0x0000000000000000)); }
+
+/// \Given N/A
+///
+/// \When ffs64() is called with a non-zero 64-bit unsigned integer value
+///
+/// \Then the index of the first set bit in the requested value is returned
+TEST(Util_Bits, Ffs64_NonZero) {
   CHECK_EQUAL(1, ffs64(0x0000000000000001));
   CHECK_EQUAL(2, ffs64(0x0000000000000002));
   CHECK_EQUAL(8, ffs64(0x0000000000000080));
@@ -504,9 +734,26 @@ TEST(Util_Bits, Ffs64) {
   CHECK_EQUAL(64, ffs64(0x8000000000000000));
 }
 
-TEST(Util_Bits, Ffz64) {
-  CHECK_EQUAL(0, ffz64(0xFFFFFFFFFFFFFFFF));
+///@}
 
+/// @name ffz64()
+///@{
+
+/// \Given N/A
+///
+/// \When ffz64() is called with a 64-bit unsigned integer value with all bits
+///       set
+///
+/// \Then 0 is returned
+TEST(Util_Bits, Ffz64_AllBitsSet) { CHECK_EQUAL(0, ffz64(0xFFFFFFFFFFFFFFFF)); }
+
+/// \Given N/A
+///
+/// \When ffz64() is called with a 64-bit unsigned integer value with at least
+///       one zero bit
+///
+/// \Then the index of the first zero bit in the requested value is returned
+TEST(Util_Bits, Ffz64_WithZeroBits) {
   CHECK_EQUAL(1, ffz64(0xFFFFFFFF00000002));
   CHECK_EQUAL(2, ffz64(0xFFFFFFFF00000001));
   CHECK_EQUAL(8, ffz64(0xFFFFFFFF0000007F));
@@ -533,6 +780,17 @@ TEST(Util_Bits, Ffz64) {
   CHECK_EQUAL(64, ffz64(0x7FFFFFFFFFFFFFFF));
 }
 
+///@}
+
+/// @name parity8()
+///@{
+
+/// \Given N/A
+///
+/// \When parity8() is called with an 8-bit unsigned integer value
+///
+/// \Then 0 is returned if the number of set bits in the requested value is
+///       even, 1 is returned otherwise
 TEST(Util_Bits, Parity8) {
   CHECK_EQUAL(0, parity8(0x00));
   CHECK_EQUAL(1, parity8(0x01));
@@ -541,6 +799,17 @@ TEST(Util_Bits, Parity8) {
   CHECK_EQUAL(1, parity8(0xF1));
 }
 
+///@}
+
+/// @name parity16()
+///@{
+
+/// \Given N/A
+///
+/// \When parity16() is called with a 16-bit unsigned integer value
+///
+/// \Then 0 is returned if the number of set bits in the requested value is
+///       even, 1 is returned otherwise
 TEST(Util_Bits, Parity16) {
   CHECK_EQUAL(0, parity16(0x0000));
   CHECK_EQUAL(1, parity16(0x0001));
@@ -552,6 +821,17 @@ TEST(Util_Bits, Parity16) {
   CHECK_EQUAL(1, parity16(0x0FF1));
 }
 
+///@}
+
+/// @name parity32()
+///@{
+
+/// \Given N/A
+///
+/// \When parity32() is called with a 32-bit unsigned integer value
+///
+/// \Then 0 is returned if the number of set bits in the requested value is
+///       even, 1 is returned otherwise
 TEST(Util_Bits, Parity32) {
   CHECK_EQUAL(0, parity32(0x00000000));
   CHECK_EQUAL(1, parity32(0x00000001));
@@ -566,6 +846,17 @@ TEST(Util_Bits, Parity32) {
   CHECK_EQUAL(1, parity32(0xF0FFCFF1));
 }
 
+///@}
+
+/// @name parity64()
+///@{
+
+/// \Given N/A
+///
+/// \When parity64() is called with a 64-bit unsigned integer value
+///
+/// \Then 0 is returned if the number of set bits in the requested value is
+///       even, 1 is returned otherwise
 TEST(Util_Bits, Parity64) {
   CHECK_EQUAL(0, parity64(0x0000000000000000));
   CHECK_EQUAL(1, parity64(0x0000000000000001));
@@ -583,6 +874,16 @@ TEST(Util_Bits, Parity64) {
   CHECK_EQUAL(1, parity64(0x0FFFFFFFFFFFFFF1));
 }
 
+///@}
+
+/// @name popcount8()
+///@{
+
+/// \Given N/A
+///
+/// \When popcount8() is called with an 8-bit unsigned integer value
+///
+/// \Then the number of set bits in the requested value is returned
 TEST(Util_Bits, Popcount8) {
   CHECK_EQUAL(0, popcount8(0x00));
   CHECK_EQUAL(1, popcount8(0x01));
@@ -590,6 +891,16 @@ TEST(Util_Bits, Popcount8) {
   CHECK_EQUAL(8, popcount8(0xFF));
 }
 
+///@}
+
+/// @name popcount16()
+///@{
+
+/// \Given N/A
+///
+/// \When popcount16() is called with a 16-bit unsigned integer value
+///
+/// \Then the number of set bits in the requested value is returned
 TEST(Util_Bits, Popcount16) {
   CHECK_EQUAL(0, popcount16(0x0000));
   CHECK_EQUAL(1, popcount16(0x0001));
@@ -597,6 +908,16 @@ TEST(Util_Bits, Popcount16) {
   CHECK_EQUAL(8, popcount16(0xF00F));
 }
 
+///@}
+
+/// @name popcount32()
+///@{
+
+/// \Given N/A
+///
+/// \When popcount32() is called with a 32-bit unsigned integer value
+///
+/// \Then the number of set bits in the requested value is returned
 TEST(Util_Bits, Popcount32) {
   CHECK_EQUAL(0, popcount32(0x00000000));
   CHECK_EQUAL(1, popcount32(0x00000001));
@@ -606,6 +927,16 @@ TEST(Util_Bits, Popcount32) {
   CHECK_EQUAL(15, popcount32(0x33E0F00F));
 }
 
+///@}
+
+/// @name popcount64()
+///@{
+
+/// \Given N/A
+///
+/// \When popcount64() is called with a 64-bit unsigned integer value
+///
+/// \Then the number of set bits in the requested value is returned
 TEST(Util_Bits, Popcount64) {
   CHECK_EQUAL(0, popcount64(0x0000000000000000));
   CHECK_EQUAL(1, popcount64(0x0000000000000001));
@@ -621,6 +952,18 @@ TEST(Util_Bits, Popcount64) {
   CHECK_EQUAL(16, popcount64(0x550000560000F00F));
 }
 
+///@}
+
+/// @name rol8()
+///@{
+
+/// \Given N/A
+///
+/// \When rol8() is called with an 8-bit unsigned integer value and a number of
+///       bits
+///
+/// \Then a copy of the input value rotated left by the requested number of bits
+///       is returned
 TEST(Util_Bits, Rol8) {
   CHECK_EQUAL(0x00, rol8(0x00, 0));
   CHECK_EQUAL(0x00, rol8(0x00, 1));
@@ -638,6 +981,18 @@ TEST(Util_Bits, Rol8) {
   CHECK_EQUAL(0x98, rol8(0x89, 68));
 }
 
+///@}
+
+/// @name ror8()
+///@{
+
+/// \Given N/A
+///
+/// \When ror8() is called with an 8-bit unsigned integer value and a number of
+///       bits
+///
+/// \Then a copy of the input value rotated right by the requested number of
+///       bits is returned
 TEST(Util_Bits, Ror8) {
   CHECK_EQUAL(0x00, ror8(0x00, 0));
   CHECK_EQUAL(0x00, ror8(0x00, 1));
@@ -655,6 +1010,18 @@ TEST(Util_Bits, Ror8) {
   CHECK_EQUAL(0x98, ror8(0x89, 68));
 }
 
+///@}
+
+/// @name rol16()
+///@{
+
+/// \Given N/A
+///
+/// \When rol16() is called with a 16-bit unsigned integer value and a number of
+///       bits
+///
+/// \Then a copy of the input value rotated left by the requested number of bits
+///       is returned
 TEST(Util_Bits, Rol16) {
   CHECK_EQUAL(0x0000, rol16(0x0000, 0));
   CHECK_EQUAL(0x0000, rol16(0x0000, 1));
@@ -677,6 +1044,18 @@ TEST(Util_Bits, Rol16) {
   CHECK_EQUAL(0x7896, rol16(0x6789, 68));
 }
 
+///@}
+
+/// @name ror16()
+///@{
+
+/// \Given N/A
+///
+/// \When ror16() is called with a 16-bit unsigned integer value and a number of
+///       bits
+///
+/// \Then a copy of the input value rotated right by the requested number of
+///       bits is returned
 TEST(Util_Bits, Ror16) {
   CHECK_EQUAL(0x0000, ror16(0x0000, 0));
   CHECK_EQUAL(0x0000, ror16(0x0000, 1));
@@ -699,6 +1078,18 @@ TEST(Util_Bits, Ror16) {
   CHECK_EQUAL(0x9678, ror16(0x6789, 68));
 }
 
+///@}
+
+/// @name rol32()
+///@{
+
+/// \Given N/A
+///
+/// \When rol32() is called with a 32-bit unsigned integer value and a number of
+///       bits
+///
+/// \Then a copy of the input value rotated left by the requested number of bits
+///       is returned
 TEST(Util_Bits, Rol32) {
   CHECK_EQUAL(0x00000000, rol32(0x00000000, 0));
   CHECK_EQUAL(0x00000000, rol32(0x00000000, 1));
@@ -725,6 +1116,18 @@ TEST(Util_Bits, Rol32) {
   CHECK_EQUAL(0x34567892, rol32(0x23456789, 68));
 }
 
+///@}
+
+/// @name ror32()
+///@{
+
+/// \Given N/A
+///
+/// \When ror32() is called with a 32-bit unsigned integer value and a number of
+///       bits
+///
+/// \Then a copy of the input value rotated right by the requested number of
+///       bits is returned
 TEST(Util_Bits, Ror32) {
   CHECK_EQUAL(0x00000000, ror32(0x00000000, 0));
   CHECK_EQUAL(0x00000000, ror32(0x00000000, 1));
@@ -751,6 +1154,18 @@ TEST(Util_Bits, Ror32) {
   CHECK_EQUAL(0x92345678, ror32(0x23456789, 68));
 }
 
+///@}
+
+/// @name rol64()
+///@{
+
+/// \Given N/A
+///
+/// \When rol64() is called with a 64-bit unsigned integer value and a number of
+///       bits
+///
+/// \Then a copy of the input value rotated left by the requested number of bits
+///       is returned
 TEST(Util_Bits, Rol64) {
   CHECK_EQUAL(0x0000000000000000, rol64(0x0000000000000000, 0));
   CHECK_EQUAL(0x0000000000000000, rol64(0x0000000000000000, 1));
@@ -789,6 +1204,18 @@ TEST(Util_Bits, Rol64) {
   CHECK_EQUAL(0xFFFF0F123456789F, rol64(0xFFFFF0F123456789, 68));
 }
 
+///@}
+
+/// @name ror64()
+///@{
+
+/// \Given N/A
+///
+/// \When ror64() is called with a 64-bit unsigned integer value and a number of
+///       bits
+///
+/// \Then a copy of the input value rotated right by the requested number of
+///       bits is returned
 TEST(Util_Bits, Ror64) {
   CHECK_EQUAL(0x0000000000000000, ror64(0x0000000000000000, 0));
   CHECK_EQUAL(0x0000000000000000, ror64(0x0000000000000000, 1));
@@ -826,3 +1253,5 @@ TEST(Util_Bits, Ror64) {
   CHECK_EQUAL(0x7FFFFC3C48D159E2, ror64(0xFFFFF0F123456789, 66));
   CHECK_EQUAL(0x9FFFFF0F12345678, ror64(0xFFFFF0F123456789, 68));
 }
+
+///@}
