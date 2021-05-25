@@ -249,7 +249,7 @@ co_nmt_srv_fini(struct co_nmt_srv *srv)
 }
 
 void
-co_nmt_srv_set(struct co_nmt_srv *srv, int set)
+co_nmt_srv_set(struct co_nmt_srv *srv, uint_least8_t set)
 {
 	assert(srv);
 

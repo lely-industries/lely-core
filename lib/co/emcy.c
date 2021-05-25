@@ -653,15 +653,15 @@ co_emcy_set_1028(co_emcy_t *emcy, co_unsigned8_t id, co_unsigned32_t cobid)
 
 	if (!(cobid & CO_EMCY_COBID_VALID)) {
 		// Register the receiver under the specified CAN-ID.
-		uint_least32_t id = cobid;
+		uint_least32_t recv_id = cobid;
 		uint_least8_t flags = 0;
-		if (id & CO_EMCY_COBID_FRAME) {
-			id &= CAN_MASK_EID;
+		if (recv_id & CO_EMCY_COBID_FRAME) {
+			recv_id &= CAN_MASK_EID;
 			flags |= CAN_FLAG_IDE;
 		} else {
-			id &= CAN_MASK_BID;
+			recv_id &= CAN_MASK_BID;
 		}
-		can_recv_start(node->recv, emcy->net, id, flags);
+		can_recv_start(node->recv, emcy->net, recv_id, flags);
 	} else {
 		// Stop the receiver unless the EMCY COB-ID is valid.
 		can_recv_stop(node->recv);

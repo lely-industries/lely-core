@@ -49,7 +49,7 @@ co_dev_chk_rpdo(const co_dev_t *dev, co_unsigned16_t idx, co_unsigned8_t subidx)
 
 	if (co_type_is_basic(idx) && !subidx) {
 		// If the object is a dummy entry, check if it is enabled.
-		if (!(co_dev_get_dummy(dev) & (1 << idx)))
+		if (!(co_dev_get_dummy(dev) & (1u << idx)))
 			return CO_SDO_AC_NO_OBJ;
 	} else {
 		co_obj_t *obj = co_dev_find_obj(dev, idx);

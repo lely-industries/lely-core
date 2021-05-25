@@ -1722,8 +1722,10 @@ co_ssdo_up_buf(co_ssdo_t *sdo, size_t nbyte)
 
 	while (nbyte) {
 		if (sdo->nbyte >= sdo->req.nbyte) {
-			if (co_sdo_req_last(&sdo->req)
-					|| (ac = co_ssdo_up_ind(sdo, 0)))
+			if (co_sdo_req_last(&sdo->req))
+				break;
+			ac = co_ssdo_up_ind(sdo, 0);
+			if (ac)
 				break;
 			sdo->nbyte = 0;
 		}

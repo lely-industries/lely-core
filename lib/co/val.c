@@ -60,7 +60,11 @@ static const size_t CO_TIME_SCET_SIZE = 7u;
 static const size_t CO_TIME_SUTC_SIZE = 8u;
 #endif
 
-static inline struct co_array_hdr *co_array_get_hdr(const void *val);
+static inline struct co_array_hdr *co_array_get_hdr(void *val);
+
+static inline co_unsigned40_t ldle_u40(const uint_least8_t src[5]);
+static inline co_unsigned48_t ldle_u48(const uint_least8_t src[6]);
+static inline co_unsigned56_t ldle_u56(const uint_least8_t src[7]);
 
 static int co_array_alloc(void *val, size_t size);
 static void co_array_free(void *val);
@@ -586,13 +590,12 @@ co_val_read(co_unsigned16_t type, void *val, const uint_least8_t *begin,
 			if (n < 3)
 				return 0;
 			if (u) {
-				co_unsigned24_t u24 = 0;
-				for (size_t i = 0; i < 3; i++)
-					u24 |= (co_unsigned24_t)*begin++
-							<< 8 * i;
+				const co_unsigned24_t u24 = ldle_u24(begin);
 				u->i24 = u24 > CO_INTEGER24_MAX
-						? -(CO_UNSIGNED24_MAX + 1 - u24)
-						: u24;
+						? -(co_integer24_t)(
+								CO_UNSIGNED24_MAX
+								+ 1 - u24)
+						: (co_integer24_t)u24;
 			}
 			return 3;
 		case CO_DEFTYPE_REAL64:
@@ -605,39 +608,36 @@ co_val_read(co_unsigned16_t type, void *val, const uint_least8_t *begin,
 			if (n < 5)
 				return 0;
 			if (u) {
-				co_unsigned40_t u40 = 0;
-				for (size_t i = 0; i < 5; i++)
-					u40 |= (co_unsigned40_t)*begin++
-							<< 8 * i;
+				const co_unsigned40_t u40 = ldle_u40(begin);
 				u->i40 = u40 > CO_INTEGER40_MAX
-						? -(CO_UNSIGNED40_MAX + 1 - u40)
-						: u40;
+						? -(co_integer40_t)(
+								CO_UNSIGNED40_MAX
+								+ 1 - u40)
+						: (co_integer40_t)u40;
 			}
 			return 5;
 		case CO_DEFTYPE_INTEGER48:
 			if (n < 6)
 				return 0;
 			if (u) {
-				co_unsigned48_t u48 = 0;
-				for (size_t i = 0; i < 6; i++)
-					u48 |= (co_unsigned48_t)*begin++
-							<< 8 * i;
+				const co_unsigned48_t u48 = ldle_u48(begin);
 				u->i48 = u48 > CO_INTEGER48_MAX
-						? -(CO_UNSIGNED48_MAX + 1 - u48)
-						: u48;
+						? -(co_integer48_t)(
+								CO_UNSIGNED48_MAX
+								+ 1 - u48)
+						: (co_integer48_t)u48;
 			}
 			return 6;
 		case CO_DEFTYPE_INTEGER56:
 			if (n < 7)
 				return 0;
 			if (u) {
-				co_unsigned56_t u56 = 0;
-				for (size_t i = 0; i < 7; i++)
-					u56 |= (co_unsigned56_t)*begin++
-							<< 8 * i;
+				const co_unsigned56_t u56 = ldle_u56(begin);
 				u->i56 = u56 > CO_INTEGER56_MAX
-						? -(CO_UNSIGNED56_MAX + 1 - u56)
-						: u56;
+						? -(co_integer56_t)(
+								CO_UNSIGNED56_MAX
+								+ 1 - u56)
+						: (co_integer56_t)u56;
 			}
 			return 7;
 		case CO_DEFTYPE_INTEGER64:
@@ -656,30 +656,21 @@ co_val_read(co_unsigned16_t type, void *val, const uint_least8_t *begin,
 			if (n < 5)
 				return 0;
 			if (u) {
-				u->u40 = 0;
-				for (size_t i = 0; i < 5; i++)
-					u->u40 |= (co_unsigned40_t)*begin++
-							<< 8 * i;
+				u->u40 = ldle_u40(begin);
 			}
 			return 5;
 		case CO_DEFTYPE_UNSIGNED48:
 			if (n < 6)
 				return 0;
 			if (u) {
-				u->u48 = 0;
-				for (size_t i = 0; i < 6; i++)
-					u->u48 |= (co_unsigned48_t)*begin++
-							<< 8 * i;
+				u->u48 = ldle_u48(begin);
 			}
 			return 6;
 		case CO_DEFTYPE_UNSIGNED56:
 			if (n < 7)
 				return 0;
 			if (u) {
-				u->u56 = 0;
-				for (size_t i = 0; i < 7; i++)
-					u->u56 |= (co_unsigned56_t)*begin++
-							<< 8 * i;
+				u->u56 = ldle_u56(begin);
 			}
 			return 7;
 		case CO_DEFTYPE_UNSIGNED64:
@@ -1619,12 +1610,39 @@ co_val_print(co_unsigned16_t type, const void *val, char **pbegin, char *end)
 #endif // !LELY_NO_STDIO
 
 static inline struct co_array_hdr *
-co_array_get_hdr(const void *val)
+co_array_get_hdr(void *val)
 {
 	assert(val);
 
 	char *ptr = *(char **)val;
 	return ptr ? (void *)(ptr - CO_ARRAY_HDR_OFFSET) : NULL;
+}
+
+static inline co_unsigned40_t
+ldle_u40(const uint_least8_t begin[5])
+{
+	co_unsigned40_t v = 0;
+	for (unsigned i = 0; i < 5; ++i)
+		v |= ((co_unsigned40_t)begin[i] & 0xffu) << (8u * i);
+	return v;
+}
+
+static inline co_unsigned48_t
+ldle_u48(const uint_least8_t begin[6])
+{
+	co_unsigned48_t v = 0;
+	for (unsigned i = 0; i < 6; ++i)
+		v |= ((co_unsigned48_t)begin[i] & 0xffu) << (8u * i);
+	return v;
+}
+
+static inline co_unsigned56_t
+ldle_u56(const uint_least8_t begin[7])
+{
+	co_unsigned56_t v = 0;
+	for (unsigned i = 0; i < 7; ++i)
+		v |= ((co_unsigned56_t)begin[i] & 0xffu) << (8u * i);
+	return v;
 }
 
 static int
@@ -1697,7 +1715,7 @@ co_array_fini(void *val)
 static size_t
 co_array_sizeof(const void *val)
 {
-	const struct co_array_hdr *hdr = co_array_get_hdr(val);
+	const struct co_array_hdr *hdr = co_array_get_hdr((void *)val);
 
 	return hdr ? hdr->size : 0;
 }
