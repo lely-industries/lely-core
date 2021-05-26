@@ -25,6 +25,7 @@
 #endif
 
 #include <memory>
+#include <vector>
 
 #include <CppUTest/TestHarness.h>
 
@@ -38,8 +39,8 @@
 #include <libtest/allocators/default.hpp>
 #include <libtest/allocators/limited.hpp>
 #include <libtest/override/lelyco-val.hpp>
-#include <libtest/tools/lely-unit-test.hpp>
 #include <libtest/tools/lely-cpputest-ext.hpp>
+#include <libtest/tools/lely-unit-test.hpp>
 
 #include "holder/dev.hpp"
 #include "holder/obj.hpp"
@@ -570,6 +571,8 @@ TEST_BASE(CO_CsdoBase) {
 
     dev_holder.reset();
     can_net_destroy(net);
+
+    set_errnum(ERRNUM_SUCCESS);
   }
 };
 
@@ -876,6 +879,8 @@ TEST_GROUP_BASE(CO_Csdo, CO_CsdoBase) {
 #endif
   }
 
+  void StartCSDO() { CHECK_EQUAL(0, co_csdo_start(csdo)); }
+
   static co_unsigned32_t co_sub_failing_dn_ind(co_sub_t*, co_sdo_req*,
                                                co_unsigned32_t, void*) {
     return CO_SDO_AC_ERROR;
@@ -888,6 +893,7 @@ TEST_GROUP_BASE(CO_Csdo, CO_CsdoBase) {
     obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE, sub_type(0));
 
     CoCsdoUpCon::Clear();
+    CanSend::Clear();
   }
 
   TEST_TEARDOWN() {
@@ -899,6 +905,53 @@ TEST_GROUP_BASE(CO_Csdo, CO_CsdoBase) {
 };
 membuf TEST_GROUP_CppUTestGroupCO_Csdo::ind_mbuf = MEMBUF_INIT;
 size_t TEST_GROUP_CppUTestGroupCO_Csdo::num_called = 0;
+
+/// @name co_csdo_is_valid()
+///@{
+
+/// \Given a pointer to the CSDO service (co_csdo_t) with valid COB-ID
+///        client -> server and valid COB-ID server -> client set
+///
+/// \When co_csdo_is_valid() is called
+///
+/// \Then 1 is returned
+TEST(CO_Csdo, CoCsdoIsValid_ReqResValid) {
+  const auto ret = co_csdo_is_valid(csdo);
+
+  CHECK_EQUAL(1, ret);
+}
+
+/// \Given a pointer to the CSDO service (co_csdo_t) with invalid COB-ID
+///        client -> server and valid COB-ID server -> client set
+///
+/// \When co_csdo_is_valid() is called
+///
+/// \Then 0 is returned
+TEST(CO_Csdo, CoCsdoIsValid_ReqInvalid) {
+  SetCli01CobidReq((0x600u + DEV_ID) | CO_SDO_COBID_VALID);
+  StartCSDO();
+
+  const auto ret = co_csdo_is_valid(csdo);
+
+  CHECK_EQUAL(0, ret);
+}
+
+/// \Given a pointer to the CSDO service (co_csdo_t) with valid COB-ID
+///        client -> server and invalid COB-ID server -> client set
+///
+/// \When co_csdo_is_valid() is called
+///
+/// \Then 0 is returned
+TEST(CO_Csdo, CoCsdoIsValid_ResInvalid) {
+  SetCli02CobidRes((0x580u + DEV_ID) | CO_SDO_COBID_VALID);
+  StartCSDO();
+
+  const auto ret = co_csdo_is_valid(csdo);
+
+  CHECK_EQUAL(0, ret);
+}
+
+///@}
 
 /// @name co_dev_dn_req()
 ///@{
@@ -2122,6 +2175,203 @@ TEST(CO_Csdo, CoDevUpReq_Nominal) {
   CHECK_EQUAL(0x1234u, LoadLE_U16(&mbuf));
 
   membuf_fini(&mbuf);
+}
+
+///@}
+
+/// @name co_csdo_dn_req()
+///@{
+
+namespace CoCsdoDnReq {
+std::vector<uint_least8_t>
+InitExpectedU16Data(const uint_least8_t cs, const co_unsigned16_t idx,
+                    const co_unsigned8_t subidx, const co_unsigned16_t val) {
+  std::vector<uint_least8_t> buffer(CO_SDO_MSG_SIZE);
+  buffer[0] = cs;
+  stle_u16(&buffer[1u], idx);
+  buffer[3] = subidx;
+  stle_u16(&buffer[4u], val);
+
+  return buffer;
+}
+
+void
+SetOneSecOnNet(can_net_t* const net) {
+  timespec ts = {1u, 0u};
+  can_net_set_time(net, &ts);
+}
+
+void
+AbortTransfer(can_net_t* const net, const co_unsigned32_t can_id) {
+  can_msg msg = CAN_MSG_INIT;
+  msg.id = can_id;
+  msg.data[0] = CO_SDO_CS_ABORT;
+  can_net_recv(net, &msg);
+}
+}  // namespace CoCsdoDnReq
+
+/// \Given a pointer to the CSDO service (co_csdo_t) which is not idle,
+///        the object dictionary contains an entry
+///
+/// \When co_csdo_dn_req() is called with an index and a sub-index of the entry,
+///       a pointer to the bytes to be downloaded, a size of the entry,
+///       a download confirmation function and a null user-specified data
+///       pointer
+///
+/// \Then -1 is returned, ERRNUM_INVAL is set as the error number, CAN message
+///       is not sent
+TEST(CO_Csdo, CoCsdoDnReq_ServiceIsBusy) {
+  CHECK_EQUAL(0, co_csdo_is_idle(csdo));
+  uint_least8_t buffer[sizeof(sub_type)] = {0};
+
+  const auto ret = co_csdo_dn_req(csdo, IDX, SUBIDX, buffer, sizeof(sub_type),
+                                  CoCsdoDnCon::func, nullptr);
+
+  CHECK_EQUAL(-1, ret);
+  CHECK_EQUAL(ERRNUM_INVAL, get_errnum());
+  CHECK_EQUAL(0u, CanSend::num_called);
+}
+
+/// \Given a pointer to the CSDO service (co_csdo_t) with a timeout set,
+///        the object dictionary contains an entry
+///
+/// \When co_csdo_dn_req() is called with an index and a sub-index of the entry,
+///       a pointer to the bytes to be downloaded, a size of the entry,
+///       a download confirmation function and a null user-specified data
+///       pointer
+///
+/// \Then 0 is returned, the error number is not changed, expedited download
+///       initiate request is sent to the server;
+///       after the timeout value elapses and no response from the server
+///       is received - the timeout message is sent;
+///       when the abort transfer message is received the download confirmation
+///       function is called
+TEST(CO_Csdo, CoCsdoDnReq_TimeoutSet) {
+  StartCSDO();
+  co_csdo_set_timeout(csdo, 999);  // 999 ms
+
+  uint_least8_t buffer[sizeof(sub_type)] = {0};
+  stle_u16(buffer, 0x1234u);
+
+  const auto ret = co_csdo_dn_req(csdo, IDX, SUBIDX, buffer, sizeof(sub_type),
+                                  CoCsdoDnCon::func, nullptr);
+
+  CHECK_EQUAL(0, ret);
+  CHECK_EQUAL(ERRNUM_SUCCESS, get_errnum());
+
+  CHECK_EQUAL(1u, CanSend::num_called);
+  std::vector<uint_least8_t> expected;
+  expected = CoCsdoDnReq::InitExpectedU16Data(
+      CO_SDO_CCS_DN_INI_REQ | CO_SDO_INI_SIZE_EXP_SET(sizeof(sub_type)), IDX,
+      SUBIDX, 0x1234u);
+  CanSend::CheckMsg(0x600u + DEV_ID, 0, CO_SDO_MSG_SIZE, expected.data());
+
+  CoCsdoDnReq::SetOneSecOnNet(net);
+
+  CHECK_EQUAL(2u, CanSend::num_called);
+  CanSend::CheckSdoMsg(0x600u + DEV_ID, 0, CO_SDO_MSG_SIZE, CO_SDO_CS_ABORT,
+                       IDX, SUBIDX, CO_SDO_AC_TIMEOUT);
+
+  CoCsdoDnReq::AbortTransfer(net, 0x580u + DEV_ID);
+  CHECK_EQUAL(1u, CoCsdoDnCon::num_called);
+}
+
+/// \Given a pointer to the CSDO service (co_csdo_t), the object dictionary
+///        contains an entry
+///
+/// \When co_csdo_dn_req() is called with an index and a sub-index of the entry,
+///       a pointer to the bytes to be downloaded, a size equal to zero,
+///       a download confirmation function and a null user-specified data
+///       pointer
+///
+/// \Then 0 is returned, the error number is not changed, download initiate
+///       request is sent to the server, when the abort transfer message is
+///       received the download confirmation function is called
+TEST(CO_Csdo, CoCsdoDnReq_SizeZero) {
+  StartCSDO();
+
+  const uint_least8_t buffer_size = 0;
+  uint_least8_t* buffer = nullptr;
+
+  const auto ret = co_csdo_dn_req(csdo, IDX, SUBIDX, buffer, buffer_size,
+                                  CoCsdoDnCon::func, nullptr);
+
+  CHECK_EQUAL(0, ret);
+  CHECK_EQUAL(ERRNUM_SUCCESS, get_errnum());
+  CHECK_EQUAL(1u, CanSend::num_called);
+
+  std::vector<uint_least8_t> expected;
+  expected = CoCsdoDnReq::InitExpectedU16Data(
+      CO_SDO_CCS_DN_INI_REQ | CO_SDO_INI_SIZE_IND, IDX, SUBIDX, buffer_size);
+  CanSend::CheckMsg(0x600u + DEV_ID, 0, CO_SDO_MSG_SIZE, expected.data());
+
+  CoCsdoDnReq::AbortTransfer(net, 0x580u + DEV_ID);
+  CHECK_EQUAL(1u, CoCsdoDnCon::num_called);
+}
+
+/// \Given a pointer to the CSDO service (co_csdo_t), the object dictionary
+///        contains an entry
+///
+/// \When co_csdo_dn_req() is called with an index and a sub-index of the entry,
+///       a pointer to the bytes to be downloaded, a size of the entry greater
+///       than the expedited transfer maximum size, a download confirmation
+///       function and a null user-specified data pointer
+///
+/// \Then 0 is returned, the error number is not changed, download initiate
+///       request is sent to the server, when the abort transfer message
+///       is received the download confirmation function is called
+TEST(CO_Csdo, CoCsdoDnReq_DownloadInitiate) {
+  StartCSDO();
+
+  const uint_least8_t buffer_size = 10u;
+  uint_least8_t buffer[buffer_size] = {0};
+  const auto ret = co_csdo_dn_req(csdo, IDX, SUBIDX, buffer, buffer_size,
+                                  CoCsdoDnCon::func, nullptr);
+
+  CHECK_EQUAL(0, ret);
+  CHECK_EQUAL(ERRNUM_SUCCESS, get_errnum());
+  CHECK_EQUAL(1u, CanSend::num_called);
+
+  std::vector<uint_least8_t> expected;
+  expected = CoCsdoDnReq::InitExpectedU16Data(
+      CO_SDO_CCS_DN_INI_REQ | CO_SDO_INI_SIZE_IND, IDX, SUBIDX, buffer_size);
+  CanSend::CheckMsg(0x600u + DEV_ID, 0, CO_SDO_MSG_SIZE, expected.data());
+
+  CoCsdoDnReq::AbortTransfer(net, 0x580u + DEV_ID);
+  CHECK_EQUAL(1u, CoCsdoDnCon::num_called);
+}
+
+/// \Given a pointer to the CSDO service (co_csdo_t), the object dictionary
+///        contains an entry
+///
+/// \When co_csdo_dn_req() is called with an index and a sub-index of the entry,
+///       a pointer to the bytes to be downloaded, a size of the entry,
+///       a download confirmation function and a null user-specified data
+///       pointer
+///
+/// \Then 0 is returned, the error number is not changed, expedited download
+///       initiate request is sent to the server, when the abort transfer
+///       message is received the download confirmation function is called
+TEST(CO_Csdo, CoCsdoDnReq_Expedited) {
+  StartCSDO();
+
+  uint_least8_t buffer[sizeof(sub_type)] = {0};
+  stle_u16(buffer, 0x1234u);
+  const auto ret = co_csdo_dn_req(csdo, IDX, SUBIDX, buffer, sizeof(sub_type),
+                                  CoCsdoDnCon::func, nullptr);
+
+  CHECK_EQUAL(0, ret);
+  CHECK_EQUAL(ERRNUM_SUCCESS, get_errnum());
+  CHECK_EQUAL(1u, CanSend::num_called);
+
+  std::vector<uint_least8_t> expected;
+  expected = CoCsdoDnReq::InitExpectedU16Data(
+      CO_SDO_CCS_DN_INI_REQ | CO_SDO_INI_SIZE_EXP_SET(sizeof(sub_type)), IDX,
+      SUBIDX, 0x1234u);
+  CanSend::CheckMsg(0x600u + DEV_ID, 0, CO_SDO_MSG_SIZE, expected.data());
+
+  CoCsdoDnReq::AbortTransfer(net, 0x580u + DEV_ID);
+  CHECK_EQUAL(1u, CoCsdoDnCon::num_called);
 }
 
 ///@}
