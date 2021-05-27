@@ -23,6 +23,7 @@
 #define LELY_UNIT_TEST_HPP_
 
 #include <lely/can/msg.h>
+#include <lely/co/sdo.h>
 #include <lely/co/type.h>
 #include <lely/util/endian.h>
 
@@ -190,6 +191,23 @@ struct CanSend {
   SetMsgBuf(can_msg* const buf, const size_t size) {
     buf_size = size;
     msg_buf = buf;
+  }
+};
+
+struct CoSubDnInd {
+  static unsigned int num_called;
+  static co_sub_t* sub;
+  static co_sdo_req* req;
+  static co_unsigned32_t ac;
+  static void* data;
+
+  static co_unsigned32_t func(co_sub_t* sub_, co_sdo_req* req_,
+                              co_unsigned32_t ac_, void* data_);
+  static void Clear();
+
+  static inline bool
+  Called() {
+    return num_called > 0;
   }
 };
 

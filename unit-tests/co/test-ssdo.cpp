@@ -32,6 +32,7 @@
 #include <lely/can/net.h>
 #include <lely/co/crc.h>
 #include <lely/co/csdo.h>
+#include <lely/co/obj.h>
 #include <lely/co/sdo.h>
 #include <lely/co/ssdo.h>
 
@@ -613,6 +614,7 @@ TEST_BASE(CO_Ssdo) {
 
   TEST_TEARDOWN() {
     CanSend::Clear();
+    CoSubDnInd::Clear();
 
     co_ssdo_destroy(ssdo);
 
@@ -1696,6 +1698,14 @@ TEST_GROUP_BASE(CoSsdoDnSegOnRecv, CO_Ssdo) {
     return msg;
   }
 
+  can_msg CreateAbortMsg(const co_unsigned32_t ac) {
+    can_msg msg = CreateDefaultCanMsg();
+    msg.data[0] = CO_SDO_CS_ABORT;
+    stle_u32(msg.data + 4u, ac);
+
+    return msg;
+  }
+
   // send segmented download initiate request to SSDO (0x2020, 0x00)
   void DownloadInitiateReq(const size_t size) {
     co_unsigned8_t size_buf[4] = {0};
@@ -1752,6 +1762,78 @@ TEST(CoSsdoDnSegOnRecv, AbortCS) {
 
   CHECK_EQUAL(0, ret_abort);
   CHECK(!CanSend::Called());
+}
+
+/// \Given a pointer to the SSDO service (co_ssdo_t) with an object dictionary
+///        containing an entry which is at least 8 bytes long; block download
+///        transfer is in progress
+///
+/// \When a message with CO_SDO_CS_ABORT command specifier is received
+///
+/// \Then CAN message is not sent, download indication function is called with
+///       the requested abort code, the requested entry is not changed
+TEST(CoSsdoDnSegOnRecv, AbortAfterFirstSegment) {
+  CreateObjInDev(obj2020, IDX);
+  obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE64, sub_type64(0));
+  StartSSDO();
+  co_obj_t* const obj = co_dev_find_obj(dev, IDX);
+  co_obj_set_dn_ind(obj, CoSubDnInd::func, nullptr);
+
+  DownloadInitiateReq(sizeof(sub_type64));
+
+  const size_t bytes_per_segment = 4u;
+  uint_least8_t val2dn[sizeof(sub_type64)] = {0x12u, 0x34u, 0x56u, 0x78u,
+                                              0x90u, 0xabu, 0xcdu, 0xefu};
+
+  can_msg first_segment = CreateDnSegMsg(val2dn, bytes_per_segment);
+  CHECK_EQUAL(0u, can_net_recv(net, &first_segment));
+  CanSend::Clear();
+  CoSubDnInd::Clear();
+
+  can_msg abort_transfer = CreateAbortMsg(CO_SDO_AC_NO_DATA);
+  CHECK_EQUAL(0, can_net_recv(net, &abort_transfer));
+  CHECK(!CanSend::Called());
+  CHECK(CoSubDnInd::Called());
+  CHECK_EQUAL(CO_SDO_AC_NO_DATA, CoSubDnInd::ac);
+
+  CHECK_EQUAL(0u, co_dev_get_val_u64(dev, IDX, SUBIDX));
+}
+
+/// \Given a pointer to the SSDO service (co_ssdo_t) with an object dictionary
+///        containing an entry which is at least 8 bytes long; block download
+///        transfer is in progress
+///
+/// \When a message with CO_SDO_CS_ABORT command specifier is received;
+///       the message's length is less than 8 bytes
+///
+/// \Then CAN message is not sent, download indication function is called with
+///       CO_SDO_AC_ERROR abort code, the requested entry is not changed
+TEST(CoSsdoDnSegOnRecv, AbortAfterFirstSegment_MsgTooShort) {
+  CreateObjInDev(obj2020, IDX);
+  obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE64, sub_type64(0));
+  StartSSDO();
+  co_obj_t* const obj = co_dev_find_obj(dev, IDX);
+  co_obj_set_dn_ind(obj, CoSubDnInd::func, nullptr);
+
+  DownloadInitiateReq(sizeof(sub_type64));
+
+  const size_t bytes_per_segment = 4u;
+  uint_least8_t val2dn[sizeof(sub_type64)] = {0x12u, 0x34u, 0x56u, 0x78u,
+                                              0x90u, 0xabu, 0xcdu, 0xefu};
+
+  can_msg first_segment = CreateDnSegMsg(val2dn, bytes_per_segment);
+  CHECK_EQUAL(0u, can_net_recv(net, &first_segment));
+  CanSend::Clear();
+  CoSubDnInd::Clear();
+
+  can_msg abort_transfer = CreateAbortMsg(CO_SDO_AC_NO_DATA);
+  abort_transfer.len -= 1u;
+  CHECK_EQUAL(0, can_net_recv(net, &abort_transfer));
+  CHECK(!CanSend::Called());
+  CHECK(CoSubDnInd::Called());
+  CHECK_EQUAL(CO_SDO_AC_ERROR, CoSubDnInd::ac);
+
+  CHECK_EQUAL(0u, co_dev_get_val_u64(dev, IDX, SUBIDX));
 }
 
 TEST(CoSsdoDnSegOnRecv, InvalidCS) {
