@@ -278,3 +278,32 @@ LelyUnitTest::CallDnIndWithAbortCode(const co_dev_t* const dev,
 
   return ind(sub, &req, ac, data);
 }
+
+unsigned int CoSubDnInd::num_called = 0u;
+co_sub_t* CoSubDnInd::sub = nullptr;
+co_sdo_req* CoSubDnInd::req = nullptr;
+co_unsigned32_t CoSubDnInd::ac = 0u;
+void* CoSubDnInd::data = nullptr;
+
+co_unsigned32_t
+CoSubDnInd::func(co_sub_t* sub_, co_sdo_req* req_, co_unsigned32_t ac_,
+                 void* data_) {
+  num_called++;
+
+  sub = sub_;
+  req = req_;
+  ac = ac_;
+  data = data_;
+
+  return 0;
+}
+
+void
+CoSubDnInd::Clear() {
+  num_called = 0;
+
+  sub = nullptr;
+  req = nullptr;
+  ac = 0;
+  data = nullptr;
+}
