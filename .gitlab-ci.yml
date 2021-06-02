@@ -385,6 +385,7 @@ valgrind:
     paths:
       - test/test-*.log
       - unit-tests/*/test-*.log
+      - unit-tests/*/unit-test-*.log
     expire_in: 1 week
   rules:
     - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
@@ -411,6 +412,53 @@ valgrind:ecss:
     paths:
       - test/test-*.log
       - unit-tests/*/test-*.log
+      - unit-tests/*/unit-test-*.log
+    expire_in: 1 week
+
+asan:
+  stage: test
+  tags:
+    - docker
+    - linux
+  image: $REGISTRY/build:bullseye
+  needs: []
+  variables:
+    CFLAGS: "-O0 -g -fsanitize=address"
+    CXXFLAGS: "-O0 -g -fsanitize=address"
+  script:
+    - autoreconf -i
+    - ./configure --disable-python --disable-shared
+    - make
+    - make check
+  artifacts:
+    when: on_failure
+    paths:
+      - test/test-*.log
+      - unit-tests/*/test-*.log
+      - unit-tests/*/unit-test-*.log
+    expire_in: 1 week
+
+asan:ecss:
+  stage: test
+  tags:
+    - docker
+    - linux
+  image: $REGISTRY/build:bullseye
+  needs: []
+  variables:
+    CFLAGS: "-O0 -g -fsanitize=address"
+    CXXFLAGS: "-O0 -g -fsanitize=address"
+  script:
+    - autoreconf -i
+    - ./configure --disable-python --disable-shared --enable-ecss-compliance
+    - make
+    - make check
+  artifacts:
+    when: on_failure
+    paths:
+      - test/test-*.log
+      - unit-tests/*/test-*.log
+      - unit-tests/*/unit-test-*.log
     expire_in: 1 week
 
 docker:lcov:
