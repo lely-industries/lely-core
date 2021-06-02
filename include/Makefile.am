@@ -30,7 +30,9 @@ if !NO_CXX
 inc += lely/compat/utility.hpp
 endif
 
+if !ECSS_COMPLIANCE
 inc += lely/tap/tap.h
+endif
 
 if !ECSS_COMPLIANCE
 inc += lely/util/bimap.h
@@ -82,6 +84,7 @@ inc += lely/util/lex.h
 endif
 inc += lely/util/membuf.h
 inc += lely/util/memory.h
+inc += lely/util/mempool.h
 if !NO_HOSTED
 inc += lely/util/mkjmp.h
 endif
@@ -291,6 +294,7 @@ inc += lely/co/def/array.def
 inc += lely/co/def/basic.def
 inc += lely/co/def/time.def
 inc += lely/co/def/type.def
+inc += lely/co/def/ecss.def
 inc += lely/co/detail/dev.h
 inc += lely/co/detail/obj.h
 inc += lely/co/co.h
