@@ -354,7 +354,7 @@ TEST(CO_SsdoInit, CoSsdoCreate_DefaultSsdo_WithObj1200) {
 /// @name co_ssdo_destroy()
 ///@{
 
-/// \Given a null pointer to an SSDO service (co_ssdo_t)
+/// \Given a null pointer to an SDO service (co_ssdo_t)
 ///
 /// \When co_ssdo_destroy() is called
 ///
@@ -969,6 +969,13 @@ TEST_GROUP_BASE(CoSsdoWaitOnRecv, CO_Ssdo){};
 /// @name SSDO wait on receive
 ///@{
 
+/// \Given a pointer to the SSDO service (co_ssdo_t) with no ongoing requests
+///
+/// \When an SDO request with an expedited download initiate client command
+///       specifier is received
+///
+/// \Then an SDO response with a download initiate server command specifier
+///       is sent, requested entry is modified
 TEST(CoSsdoWaitOnRecv, DnIniReq) {
   CreateObjInDev(obj2020, IDX);
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE, sub_type(0u));
@@ -984,10 +991,18 @@ TEST(CoSsdoWaitOnRecv, DnIniReq) {
   const auto expected =
       CoSsdo::InitExpectedU32Data(CO_SDO_SCS_DN_INI_RES, IDX, SUBIDX, 0u);
   CanSend::CheckMsg(0x580u + DEV_ID, 0, CO_SDO_MSG_SIZE, expected.data());
+
   co_sub_t* const sub = co_dev_find_sub(dev, IDX, SUBIDX);
   CHECK_EQUAL(0x3214u, co_sub_get_val_u16(sub));
 }
 
+/// \Given a pointer to the SSDO service (co_ssdo_t) with no ongoing requests
+///
+/// \When an SDO request with an upload initiate client command specifier
+///       is received
+///
+/// \Then an SDO response with an expedited upload server command specifier
+///       initiate and the requested data is sent
 TEST(CoSsdoWaitOnRecv, UpIniReq) {
   CreateObjInDev(obj2020, IDX);
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE, sub_type(0xabcdu));
@@ -1004,6 +1019,13 @@ TEST(CoSsdoWaitOnRecv, UpIniReq) {
   CanSend::CheckMsg(0x580u + DEV_ID, 0, CO_SDO_MSG_SIZE, expected.data());
 }
 
+/// \Given a pointer to the SSDO service (co_ssdo_t) with no ongoing requests
+///
+/// \When an SDO request with a block download client command specifier
+///       is received
+///
+/// \Then an SDO response with a block download server command specifier
+///       is sent
 TEST(CoSsdoWaitOnRecv, BlkDnIniReq) {
   CreateObjInDev(obj2020, IDX);
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE, sub_type(0));
@@ -1019,6 +1041,13 @@ TEST(CoSsdoWaitOnRecv, BlkDnIniReq) {
   CanSend::CheckMsg(0x580u + DEV_ID, 0, CO_SDO_MSG_SIZE, expected.data());
 }
 
+/// \Given a pointer to the SSDO service (co_ssdo_t) with no ongoing requests
+///
+/// \When an SDO request with a block upload client command specifier
+///       is received
+///
+/// \Then an SDO response with a block upload initiate server command specifier
+///       is sent
 TEST(CoSsdoWaitOnRecv, BlkUpIniReq) {
   CreateObjInDev(obj2020, IDX);
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE, sub_type(0xabcdu));
@@ -1037,6 +1066,11 @@ TEST(CoSsdoWaitOnRecv, BlkUpIniReq) {
   CanSend::CheckMsg(0x580u + DEV_ID, 0, CO_SDO_MSG_SIZE, expected.data());
 }
 
+/// \Given a pointer to the SSDO service (co_ssdo_t) with no ongoing requests
+///
+/// \When an SDO message with an abort command specifier is received
+///
+/// \Then an SDO response is not sent
 TEST(CoSsdoWaitOnRecv, Abort) {
   StartSSDO();
 
@@ -1047,6 +1081,12 @@ TEST(CoSsdoWaitOnRecv, Abort) {
   CHECK(!CanSend::Called());
 }
 
+/// \Given a pointer to the SSDO service (co_ssdo_t) with no ongoing requests
+///
+/// \When an SDO message with an invalid client command specifier is received
+///
+/// \Then an SDO response with an abort transfer command specifier and
+///       CO_SDO_AC_NO_CS abort code is sent
 TEST(CoSsdoWaitOnRecv, InvalidCS) {
   StartSSDO();
 
@@ -1060,6 +1100,12 @@ TEST(CoSsdoWaitOnRecv, InvalidCS) {
   CanSend::CheckMsg(0x580u + DEV_ID, 0, CO_SDO_MSG_SIZE, expected.data());
 }
 
+/// \Given a pointer to the SSDO service (co_ssdo_t) with no ongoing requests
+///
+/// \When an SDO message with no command specifier is received
+///
+/// \Then an SDO response with an abort transfer command specifier and
+///       CO_SDO_AC_NO_CS abort code is sent
 TEST(CoSsdoWaitOnRecv, NoCS) {
   StartSSDO();
 
@@ -2023,6 +2069,8 @@ TEST(CoSsdoDnSegOnRecv, Nominal) {
 TEST_GROUP_BASE(CoSsdoUpSegOnRecv, CO_Ssdo) {
   int ignore = 0;  // clang-format fix
 
+  static const size_t INVALID_REQSIZE = 10u;
+
   static co_unsigned32_t up_ind_failing(const co_sub_t* sub, co_sdo_req* req,
                                         co_unsigned32_t ac, void* data) {
     (void)data;
@@ -2030,7 +2078,7 @@ TEST_GROUP_BASE(CoSsdoUpSegOnRecv, CO_Ssdo) {
     if (ac) return ac;
 
     co_sub_on_up(sub, req, &ac);
-    req->size = 10u;
+    req->size = INVALID_REQSIZE;
 
     static int called = 0;
     if (called == 1u) ac = CO_SDO_AC_ERROR;
@@ -2290,8 +2338,7 @@ TEST(CoSsdoUpSegOnRecv, IndError) {
   co_obj_set_up_ind(obj2020->Get(), up_ind_failing, nullptr);
   StartSSDO();
 
-  UploadInitiateReq(10u);
-  // UploadInitiateReq(8u);
+  UploadInitiateReq(INVALID_REQSIZE);
 
   can_msg msg = CreateDefaultCanMsg();
   msg.data[0] = CO_SDO_CCS_UP_SEG_REQ;
@@ -2327,7 +2374,7 @@ TEST(CoSsdoUpSegOnRecv, IndReqSizeLonger) {
   co_obj_set_up_ind(obj2020->Get(), up_ind_size_longer, nullptr);
   StartSSDO();
 
-  UploadInitiateReq(10u);
+  UploadInitiateReq(INVALID_REQSIZE);
 
   can_msg msg = CreateDefaultCanMsg();
   msg.data[0] = CO_SDO_CCS_UP_SEG_REQ;
