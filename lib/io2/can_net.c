@@ -182,7 +182,8 @@ static void io_can_net_read_func(struct ev_task *task);
 static void io_can_net_write_func(struct ev_task *task);
 
 static int io_can_net_next_func(const struct timespec *tp, void *data);
-static int io_can_net_send_func(const struct can_msg *msg, void *data);
+static int io_can_net_send_func(
+		const struct can_msg *msg, int bus_id, void *data);
 
 static void io_can_net_c_wait_func(struct spscring *ring, void *arg);
 
@@ -301,7 +302,7 @@ io_can_net_init(io_can_net_t *net, ev_exec_t *exec, io_timer_t *timer,
 	net->read_submitted = 0;
 	net->write_submitted = 0;
 
-	if (!(net->net = can_net_create(NULL))) {
+	if (!(net->net = can_net_create(NULL, 0))) {
 		errc = get_errc();
 		goto error_create_net;
 	}
@@ -795,7 +796,7 @@ io_can_net_read_func(struct ev_task *task)
 		// Update the internal clock before processing the incoming CAN
 		// frame.
 		io_can_net_set_time(net);
-		can_net_recv(net->net, &net->read_msg);
+		can_net_recv(net->net, &net->read_msg, 0);
 	} else if (read->r.result == 0) {
 		if (net->read_err.state != net->state) {
 			int new_state = net->read_err.state;
@@ -918,9 +919,10 @@ io_can_net_next_func(const struct timespec *tp, void *data)
 }
 
 static int
-io_can_net_send_func(const struct can_msg *msg, void *data)
+io_can_net_send_func(const struct can_msg *msg, int bus_id, void *data)
 {
 	assert(msg);
+	(void)bus_id;
 	io_can_net_t *net = data;
 	assert(net);
 

@@ -117,7 +117,7 @@ TEST_GROUP(CO_SsdoDnInd) {
 
   TEST_SETUP() {
     LelyUnitTest::DisableDiagnosticMessages();
-    net = can_net_create(allocator.ToAllocT());
+    net = can_net_create(allocator.ToAllocT(), 0);
     assert(net);
 
     dev_holder.reset(new CoDevTHolder(DEV_ID));

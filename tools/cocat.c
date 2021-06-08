@@ -181,7 +181,7 @@ main(int argc, char *argv[])
 		goto error_watch_can;
 	}
 
-	net = can_net_create(NULL);
+	net = can_net_create(NULL, 0);
 	if (!net) {
 		diag(DIAG_ERROR, get_errc(), "unable to create CAN network");
 		goto error_create_net;
@@ -358,7 +358,7 @@ io_thrd_start(void *arg)
 		} else if (event.events & IO_EVENT_READ) {
 			struct can_msg msg = CAN_MSG_INIT;
 			while (io_can_read(event.u.handle, &msg) == 1)
-				can_net_recv(net, &msg);
+				can_net_recv(net, &msg, 0);
 		}
 	}
 

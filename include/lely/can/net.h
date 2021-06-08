@@ -2,7 +2,7 @@
  * This header file is part of the CAN library; it contains the CAN network
  * interface declarations.
  *
- * @copyright 2015-2020 Lely Industries N.V.
+ * @copyright 2015-2021 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -71,13 +71,14 @@ typedef int can_recv_func_t(const struct can_msg *msg, void *data);
  * The type of a CAN send callback function, invoked by a CAN network interface
  * when a frame needs to be sent.
  *
- * @param msg  a pointer to the CAN frame to be sent.
- * @param data a pointer to user-specified data.
+ * @param msg    a pointer to the CAN frame to be sent.
+ * @param bus_id a CAN bus identifier.
+ * @param data   a pointer to user-specified data.
  *
  * @returns 0 on success, or -1 on error. In the latter case, implementations
  * SHOULD set the error number with `set_errnum()`.
  */
-typedef int can_send_func_t(const struct can_msg *msg, void *data);
+typedef int can_send_func_t(const struct can_msg *msg, int bus_id, void *data);
 
 /// Returns the alignment (in bytes) of the #can_net_t structure.
 size_t can_net_alignof(void);
@@ -85,8 +86,16 @@ size_t can_net_alignof(void);
 /// Returns the size (in bytes) of the #can_net_t structure.
 size_t can_net_sizeof(void);
 
-/// Creates a new CAN network interface. @see can_net_destroy()
-can_net_t *can_net_create(alloc_t *alloc);
+/**
+ * Creates a new CAN network interface.
+ *
+ * @param alloc  a pointer to a memory allocator. If <b>alloc</b> is NULL, the
+ *               default memory allocator is used.
+ * @param bus_id the active CAN bus identifier.
+ *
+ * @see can_net_destroy()
+ */
+can_net_t *can_net_create(alloc_t *alloc, int bus_id);
 
 /// Destroys a CAN network interface. @see can_net_create()
 void can_net_destroy(can_net_t *net);
@@ -151,18 +160,20 @@ void can_net_get_next_func(
 void can_net_set_next_func(can_net_t *net, can_timer_func_t *func, void *data);
 
 /**
- * Receives a CAN frame with a network interface and processes it with the
- * corresponding receiver(s). This function MAY invoke on or more CAN frame
- * receiver callback functions.
+ * Receives a CAN frame with a network interface on the given bus. If the frame
+ * is received on the active bus, it is processed with the corresponding
+ * receiver(s). Otherwise, the frame is ignored. This function MAY invoke one
+ * or more CAN frame receiver callback functions.
  *
- * @param net a pointer to a CAN network interface.
- * @param msg a pointer to the CAN frame to be processed.
+ * @param net    a pointer to a CAN network interface.
+ * @param msg    a pointer to the CAN frame to be processed.
+ * @param bus_id a CAN bus identifier.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * set by the first failed CAN frame receiver callback function can be obtained
- * with get_errc().
+ * @returns the number of processed frames, or -1 on error. In the latter case,
+ * the error number set by the first failed CAN frame receiver callback
+ * function can be obtained with get_errc().
  */
-int can_net_recv(can_net_t *net, const struct can_msg *msg);
+int can_net_recv(can_net_t *net, const struct can_msg *msg, int bus_id);
 
 /**
  * Sends a CAN frame from a network interface. This function invokes the
@@ -202,6 +213,17 @@ void can_net_get_send_func(
  * @see can_net_get_send_func()
  */
 void can_net_set_send_func(can_net_t *net, can_send_func_t *func, void *data);
+
+/// Returns the active CAN bus identifier of the network interface.
+int can_net_get_active_bus(const can_net_t *net);
+
+/**
+ * Sets the active CAN bus of the network interface.
+ *
+ * @param net    a pointer to a CAN network interface.
+ * @param bus_id a CAN bus identifier.
+ */
+void can_net_set_active_bus(can_net_t *net, int bus_id);
 
 /// Returns the alignment (in bytes) of the #can_timer_t structure.
 size_t can_timer_alignof(void);

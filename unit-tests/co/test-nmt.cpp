@@ -158,7 +158,7 @@ TEST_BASE(CO_NmtBase) {
 
   TEST_SETUP() {
     LelyUnitTest::DisableDiagnosticMessages();
-    net = can_net_create(allocator.ToAllocT());
+    net = can_net_create(allocator.ToAllocT(), 0);
     CHECK(net != nullptr);
 
     dev_holder.reset(new CoDevTHolder(DEV_ID));
@@ -783,7 +783,7 @@ TEST_GROUP_BASE(CO_NmtAllocation, CO_NmtBase) {
 
   TEST_SETUP() {
     LelyUnitTest::DisableDiagnosticMessages();
-    net = can_net_create(limitedAllocator.ToAllocT());
+    net = can_net_create(limitedAllocator.ToAllocT(), 0);
     CHECK(net != nullptr);
 
     dev_holder.reset(new CoDevTHolder(DEV_ID));
@@ -2483,7 +2483,7 @@ TEST(CO_Nmt, CoNmtChkBootup_ZeroId_MandatorySlaveBooted) {
 
   CHECK_EQUAL(0, co_nmt_cs_ind(nmt, CO_NMT_CS_RESET_NODE));
   can_msg msg = CreateNmtBootupMsg(SLAVE_DEV_ID);
-  can_net_recv(net, &msg);
+  CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
   const auto ret = co_nmt_chk_bootup(nmt, 0);
 
@@ -2522,7 +2522,7 @@ TEST(CO_Nmt, CoNmtChkBootup_SlaveId_Booted) {
 
   CHECK_EQUAL(0, co_nmt_cs_ind(nmt, CO_NMT_CS_RESET_NODE));
   can_msg msg = CreateNmtBootupMsg(SLAVE_DEV_ID);
-  can_net_recv(net, &msg);
+  CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
   const auto ret = co_nmt_chk_bootup(nmt, SLAVE_DEV_ID);
 

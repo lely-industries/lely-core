@@ -197,7 +197,7 @@ TEST_BASE(CO_TpdoBase) {
   TEST_SETUP() {
     LelyUnitTest::DisableDiagnosticMessages();
 
-    net = can_net_create(allocator.ToAllocT());
+    net = can_net_create(allocator.ToAllocT(), 0);
     CHECK(net != nullptr);
 
     dev_holder.reset(new CoDevTHolder(DEV_ID));
@@ -1247,9 +1247,9 @@ TEST(CO_Tpdo, CoTpdoRecv_SyncRTR_NoBufferedFrame_ExtendedFrame) {
   msg.flags |= CAN_FLAG_RTR;
   msg.flags |= CAN_FLAG_IDE;
 
-  const auto ret = can_net_recv(net, &msg);
+  const auto ret = can_net_recv(net, &msg, 0);
 
-  CHECK_EQUAL(0, ret);
+  CHECK_EQUAL(1, ret);
   CHECK(!CoTpdoSampleInd::called);
 }
 
@@ -1267,9 +1267,9 @@ TEST(CO_Tpdo, CoTpdoRecv_SynchRTR_NoInd) {
   msg.id = DEV_ID;
   msg.flags |= CAN_FLAG_RTR;
 
-  const auto ret = can_net_recv(net, &msg);
+  const auto ret = can_net_recv(net, &msg, 0);
 
-  CHECK_EQUAL(0, ret);
+  CHECK_EQUAL(1, ret);
 
   CHECK(CanSend::Called());
   POINTERS_EQUAL(&can_data, CanSend::data);
@@ -1292,9 +1292,9 @@ TEST(CO_Tpdo, CoTpdoRecv_EventDrivenRTR) {
   msg.id = DEV_ID;
   msg.flags |= CAN_FLAG_RTR;
 
-  const auto ret = can_net_recv(net, &msg);
+  const auto ret = can_net_recv(net, &msg, 0);
 
-  CHECK_EQUAL(0, ret);
+  CHECK_EQUAL(1, ret);
 
   CHECK(CanSend::Called());
   POINTERS_EQUAL(&can_data, CanSend::data);
@@ -1327,9 +1327,9 @@ TEST(CO_Tpdo, CoTpdoRecv_EventDrivenRTR_InitFrameFail_NoInd) {
   msg.id = DEV_ID;
   msg.flags |= CAN_FLAG_RTR;
 
-  const auto ret = can_net_recv(net, &msg);
+  const auto ret = can_net_recv(net, &msg, 0);
 
-  CHECK_EQUAL(0, ret);
+  CHECK_EQUAL(1, ret);
   CHECK(!CoTpdoInd::called);
   CHECK(!CanSend::Called());
 }
@@ -1348,9 +1348,9 @@ TEST(CO_Tpdo, CoTpdoRecv_EventDrivenRTR_InitFrameFail) {
   msg.id = DEV_ID;
   msg.flags |= CAN_FLAG_RTR;
 
-  const auto ret = can_net_recv(net, &msg);
+  const auto ret = can_net_recv(net, &msg, 0);
 
-  CHECK_EQUAL(0, ret);
+  CHECK_EQUAL(1, ret);
   CHECK(!CanSend::Called());
 
   CHECK(CoTpdoInd::called);
@@ -1375,9 +1375,9 @@ TEST(CO_Tpdo, CoTpdoRecv_NoRTRTransmission) {
   msg.id = DEV_ID;
   msg.flags |= CAN_FLAG_RTR;
 
-  const auto ret = can_net_recv(net, &msg);
+  const auto ret = can_net_recv(net, &msg, 0);
 
-  CHECK_EQUAL(0, ret);
+  CHECK_EQUAL(1, ret);
   CHECK(!CoTpdoInd::called);
   CHECK(!CanSend::Called());
 }
@@ -1403,7 +1403,7 @@ TEST_GROUP_BASE(CO_TpdoAllocation, CO_TpdoBase) {
     TEST_BASE_SETUP();
 
     can_net_destroy(net);
-    net = can_net_create(limitedAllocator.ToAllocT());
+    net = can_net_create(limitedAllocator.ToAllocT(), 0);
 
     CompleteConfiguration();
   }

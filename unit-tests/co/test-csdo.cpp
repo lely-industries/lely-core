@@ -67,11 +67,11 @@ TEST_GROUP(CO_CsdoInit) {
 
   TEST_SETUP() {
     LelyUnitTest::DisableDiagnosticMessages();
-    net = can_net_create(defaultAllocator.ToAllocT());
+    net = can_net_create(defaultAllocator.ToAllocT(), 0);
     CHECK(net != nullptr);
 
     limitedAllocator.LimitAllocationTo(can_net_sizeof());
-    failing_net = can_net_create(limitedAllocator.ToAllocT());
+    failing_net = can_net_create(limitedAllocator.ToAllocT(), 0);
     CHECK(failing_net != nullptr);
 
     dev_holder.reset(new CoDevTHolder(DEV_ID));
@@ -547,7 +547,7 @@ TEST_BASE(CO_CsdoBase) {
 
   TEST_SETUP() {
     LelyUnitTest::DisableDiagnosticMessages();
-    net = can_net_create(defaultAllocator.ToAllocT());
+    net = can_net_create(defaultAllocator.ToAllocT(), 0);
     CHECK(net != nullptr);
 
     dev_holder.reset(new CoDevTHolder(DEV_ID));
@@ -2206,7 +2206,7 @@ AbortTransfer(can_net_t* const net, const co_unsigned32_t can_id) {
   can_msg msg = CAN_MSG_INIT;
   msg.id = can_id;
   msg.data[0] = CO_SDO_CS_ABORT;
-  can_net_recv(net, &msg);
+  can_net_recv(net, &msg, 0);
 }
 }  // namespace CoCsdoDnReq
 

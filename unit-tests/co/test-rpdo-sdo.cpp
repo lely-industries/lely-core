@@ -75,7 +75,7 @@ TEST_BASE(CO_SdoRpdoBase) {
 
   TEST_SETUP() {
     LelyUnitTest::DisableDiagnosticMessages();
-    net = can_net_create(allocator.ToAllocT());
+    net = can_net_create(allocator.ToAllocT(), 0);
     CHECK(net != nullptr);
 
     dev_holder.reset(new CoDevTHolder(DEV_ID));
@@ -134,7 +134,7 @@ TEST_GROUP_BASE(CO_SdoRpdo1400, CO_SdoRpdoBase) {
   void ReceiveMessage() {
     can_msg msg = CAN_MSG_INIT;
     msg.id = DEV_ID;
-    CHECK_EQUAL(0, can_net_recv(net, &msg));
+    CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
   }
 
   void SetCurrentTimeMs(uint_least64_t ms) {

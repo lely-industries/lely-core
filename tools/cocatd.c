@@ -64,7 +64,7 @@ void daemon_main();
 void daemon_fini();
 void daemon_handler(int sig, void *handle);
 
-int can_send(const struct can_msg *msg, void *data);
+int can_send(const struct can_msg *msg, int bus_id, void *data);
 int can_next(const struct timespec *tp, void *data);
 int can_timer(const struct timespec *tp, void *data);
 
@@ -250,7 +250,7 @@ daemon_init(int argc, char *argv[])
 		goto error_watch_can;
 	}
 
-	net = can_net_create(NULL);
+	net = can_net_create(NULL, 0);
 	if (!net) {
 		diag(DIAG_ERROR, get_errc(), "unable to create CAN network");
 		goto error_create_net;
@@ -539,7 +539,7 @@ daemon_main()
 				int result;
 				struct can_msg msg = CAN_MSG_INIT;
 				while ((result = io_can_read(hcan, &msg)) == 1)
-					can_net_recv(net, &msg);
+					can_net_recv(net, &msg, 0);
 				// Treat the reception of an error frame, or any
 				// error other than an empty receive buffer, as
 				// an error event.
@@ -620,8 +620,10 @@ daemon_handler(int sig, void *handle)
 }
 
 int
-can_send(const struct can_msg *msg, void *data)
+can_send(const struct can_msg *msg, int bus_id, void *data)
 {
+	(void)bus_id;
+
 	io_handle_t handle = (io_handle_t)data;
 
 	return io_can_write(handle, msg) == 1 ? 0 : -1;

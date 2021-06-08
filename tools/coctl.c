@@ -234,7 +234,7 @@ main(int argc, char *argv[])
 		}
 		net[id - 1].st = io_can_get_state(net[id - 1].handle);
 		// Create a CAN network object.
-		net[id - 1].net = can_net_create(NULL);
+		net[id - 1].net = can_net_create(NULL, 0);
 		if (!net[id - 1].net) {
 			diag(DIAG_ERROR, get_errc(),
 					"unable to create CAN network interface");
@@ -685,7 +685,7 @@ io_thrd_start(void *arg)
 			int result;
 			struct can_msg msg = CAN_MSG_INIT;
 			while ((result = io_can_read(net->handle, &msg)) == 1)
-				can_net_recv(net->net, &msg);
+				can_net_recv(net->net, &msg, 0);
 			// Treat the reception of an error frame, or any error
 			// other than an empty receive buffer, as an error
 			// event.

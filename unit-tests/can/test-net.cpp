@@ -32,11 +32,11 @@
 #include <libtest/allocators/limited.hpp>
 
 namespace CAN_Net_Static {
-static unsigned int tfunc_empty_counter = 0;
-static unsigned int tfunc_err_counter = 0;
-static unsigned int rfunc_empty_counter = 0;
-static unsigned int rfunc_err_counter = 0;
-static unsigned int sfunc_empty_counter = 0;
+static unsigned tfunc_empty_counter = 0;
+static unsigned tfunc_err_counter = 0;
+static unsigned rfunc_empty_counter = 0;
+static unsigned rfunc_err_counter = 0;
+static unsigned sfunc_empty_counter = 0;
 }  // namespace CAN_Net_Static
 
 TEST_GROUP(CAN_NetAllocation) {
@@ -56,7 +56,7 @@ TEST_GROUP(CAN_NetAllocation) {
 /// \Then a null pointer is returned
 TEST(CAN_NetAllocation, CanNetCreate_NoMemoryAvailable) {
   allocator.LimitAllocationTo(0u);
-  net = can_net_create(allocator.ToAllocT());
+  net = can_net_create(allocator.ToAllocT(), 0);
 
   POINTERS_EQUAL(nullptr, net);
 }
@@ -69,7 +69,7 @@ TEST(CAN_NetAllocation, CanNetCreate_NoMemoryAvailable) {
 ///       default parameters are set
 TEST(CAN_NetAllocation, CanNetCreate_Nominal) {
   allocator.LimitAllocationTo(can_net_sizeof());
-  net = can_net_create(allocator.ToAllocT());
+  net = can_net_create(allocator.ToAllocT(), 0);
 
   CHECK(net != nullptr);
   timespec tp;
@@ -88,6 +88,8 @@ TEST(CAN_NetAllocation, CanNetCreate_Nominal) {
   can_net_get_send_func(net, &sfunc, &sdata);
   POINTERS_EQUAL(nullptr, sfunc);
   POINTERS_EQUAL(nullptr, sdata);
+
+  CHECK_EQUAL(0, can_net_get_active_bus(net));
 }
 
 TEST_GROUP(CAN_Net) {
@@ -112,18 +114,21 @@ TEST_GROUP(CAN_Net) {
     return -1;
   }
 
-  static int send_func_empty(const can_msg*, void*) {
+  static int send_func_empty(const can_msg*, int, void*) {
     ++CAN_Net_Static::sfunc_empty_counter;
     return 0;
   }
-  static int send_func_err(const can_msg*, void*) { return -1; }
+  static int send_func_err(const can_msg*, int, void*) { return -1; }
 
   TEST_SETUP() {
-    net = can_net_create(allocator.ToAllocT());
+    net = can_net_create(allocator.ToAllocT(), 0);
     CHECK(net != nullptr);
 
     CAN_Net_Static::tfunc_empty_counter = 0;
     CAN_Net_Static::tfunc_err_counter = 0;
+    CAN_Net_Static::rfunc_empty_counter = 0;
+    CAN_Net_Static::rfunc_err_counter = 0;
+    CAN_Net_Static::sfunc_empty_counter = 0;
   }
 
   TEST_TEARDOWN() { can_net_destroy(net); }
@@ -503,7 +508,7 @@ TEST(CAN_Net, CanNetGetSendFunc_Null) {
 
 ///@}
 
-/// @name can_net_set_func()
+/// @name can_net_set_send_func()
 ///@{
 
 /// \Given a pointer to the network (can_net_t)
@@ -511,8 +516,8 @@ TEST(CAN_Net, CanNetGetSendFunc_Null) {
 /// \When can_net_set_send_func() is called with pointers to the send function
 ///       and a user-specified data
 ///
-/// \Then requested pointers are set
-TEST(CAN_Net, CanNetSetSendFunc) {
+/// \Then the requested pointers are set
+TEST(CAN_Net, CanNetSetSendFunc_Nominal) {
   int data = 512;
 
   can_net_set_send_func(net, send_func_empty, &data);
@@ -527,65 +532,99 @@ TEST(CAN_Net, CanNetSetSendFunc) {
 
 ///@}
 
+/// @name can_net_get_active_bus()
+///@{
+
+/// \Given a pointer to the network (can_net_t)
+///
+/// \When can_net_get_active_bus() is called
+///
+/// \Then the active bus ID is returned
+TEST(CAN_Net, CanNetGetActiveBus_Nominal) {
+  const auto ret = can_net_get_active_bus(net);
+
+  CHECK_EQUAL(0, ret);
+}
+
+///@}
+
+/// @name can_net_set_active_bus()
+///@{
+
+/// \Given a pointer to the network (can_net_t)
+///
+/// \When can_net_set_active_bus() is called with a bus ID
+///
+/// \Then the active bus ID is set
+TEST(CAN_Net, CanNetSetActiveBus_Nominal) {
+  can_net_set_active_bus(net, 7);
+
+  CHECK_EQUAL(7, can_net_get_active_bus(net));
+}
+
+///@}
+
 /// @name can_net_recv()
 ///@{
 
 /// \Given a pointer to the network (can_net_t) with one receiver
 ///
-/// \When can_net_recv() is called with a pointer to a CAN message
+/// \When can_net_recv() is called with a pointer to a CAN message and a bus ID
+///       of the active bus
 ///
-/// \Then 0 is returned, the receiver callback is called once
+/// \Then 1 is returned, the receiver callback is called once
 TEST(CAN_Net, CanNetRecv_Nominal) {
   can_msg msg = CAN_MSG_INIT;
   msg.id = 0x01u;
 
   can_recv_t* const recv = can_recv_create(allocator.ToAllocT());
   can_recv_set_func(recv, recv_func_empty, nullptr);
-  can_recv_start(recv, net, 0x01, 0);
+  can_recv_start(recv, net, msg.id, 0);
 
-  const auto ret = can_net_recv(net, &msg);
+  const auto ret = can_net_recv(net, &msg, 0);
 
-  CHECK_EQUAL(0, ret);
-  CHECK_EQUAL(1, CAN_Net_Static::rfunc_empty_counter);
+  CHECK_EQUAL(1, ret);
+  CHECK_EQUAL(1u, CAN_Net_Static::rfunc_empty_counter);
 
   can_recv_destroy(recv);
 }
 
 /// \Given a pointer to the network (can_net_t) with no receivers
 ///
-/// \When can_net_recv() is called with a pointer to a CAN message
+/// \When can_net_recv() is called with a pointer to a CAN message and a bus ID
+///       of the active bus
 ///
-/// \Then 0 is returned
+/// \Then 1 is returned
 TEST(CAN_Net, CanNetRecv_RecvListEmpty) {
   can_msg msg = CAN_MSG_INIT;
   msg.id = 0x01u;
 
-  const auto ret = can_net_recv(net, &msg);
+  const auto ret = can_net_recv(net, &msg, 0);
 
-  CHECK_EQUAL(0, ret);
+  CHECK_EQUAL(1, ret);
 }
 
 /// \Given a pointer to the network (can_net_t) with three receivers - two with
 ///        a callback function returning an error and one with no callback
 ///
-/// \When can_net_recv() is called with a pointer to a CAN message
+/// \When can_net_recv() is called with a pointer to a CAN message and a bus ID
+///       of the active bus
 ///
 /// \Then -1 is returned, the timer callback is called twice
 TEST(CAN_Net, CanNetRecv_RecvFuncError) {
   can_msg msg = CAN_MSG_INIT;
-  const uint_least32_t can_id = 0x00000001u;
-  msg.id = can_id;
+  msg.id = 0x01u;
 
   can_recv_t* const recv1 = can_recv_create(allocator.ToAllocT());
   can_recv_t* const recv2 = can_recv_create(allocator.ToAllocT());
   can_recv_t* const recv3 = can_recv_create(allocator.ToAllocT());
   can_recv_set_func(recv1, recv_func_err, nullptr);
   can_recv_set_func(recv2, recv_func_err, nullptr);
-  can_recv_start(recv1, net, can_id, 0);
-  can_recv_start(recv2, net, can_id, 0);
-  can_recv_start(recv3, net, can_id, 0);
+  can_recv_start(recv1, net, msg.id, 0);
+  can_recv_start(recv2, net, msg.id, 0);
+  can_recv_start(recv3, net, msg.id, 0);
 
-  const auto ret = can_net_recv(net, &msg);
+  const auto ret = can_net_recv(net, &msg, 0);
 
   CHECK_EQUAL(-1, ret);
   CHECK_EQUAL(2u, CAN_Net_Static::rfunc_err_counter);
@@ -593,6 +632,30 @@ TEST(CAN_Net, CanNetRecv_RecvFuncError) {
   can_recv_destroy(recv1);
   can_recv_destroy(recv2);
   can_recv_destroy(recv3);
+}
+
+/// \Given a pointer to the network (can_net_t) with one receiver
+///
+/// \When can_net_recv() is called with a pointer to a CAN message and a bus ID
+///       of an inactive bus
+///
+/// \Then 0 is returned, the receiver callback is not called
+TEST(CAN_Net, CanNetRecv_InactiveBus) {
+  can_msg msg = CAN_MSG_INIT;
+  msg.id = 0x01u;
+
+  can_recv_t* const recv = can_recv_create(allocator.ToAllocT());
+  can_recv_set_func(recv, recv_func_empty, nullptr);
+  can_recv_start(recv, net, msg.id, 0);
+
+  can_net_set_active_bus(net, 0);
+
+  const auto ret = can_net_recv(net, &msg, 5);
+
+  CHECK_EQUAL(0, ret);
+  CHECK_EQUAL(0, CAN_Net_Static::rfunc_empty_counter);
+
+  can_recv_destroy(recv);
 }
 
 ///@}
@@ -633,7 +696,7 @@ TEST(CAN_Net, CanNetSend_Err) {
 ///@}
 
 namespace CAN_NetTimer_Static {
-static unsigned int timer_func_counter = 0;
+static unsigned timer_func_counter = 0;
 }
 
 TEST_GROUP(CAN_NetTimer) {
@@ -739,7 +802,7 @@ TEST(CAN_NetTimer, CanTimerSetFunc_Nominal) {
 /// \Then nothing is changed
 ///       \Calls can_timer_stop()
 TEST(CAN_NetTimer, CanTimerStart_Null) {
-  can_net_t* const net = can_net_create(allocator.ToAllocT());
+  can_net_t* const net = can_net_create(allocator.ToAllocT(), 0);
 
   can_timer_start(timer, net, nullptr, nullptr);
 
@@ -760,7 +823,7 @@ TEST(CAN_NetTimer, CanTimerStart_Null) {
 ///       \Calls can_net_get_time()
 ///       \Calls can_timer_start()
 TEST(CAN_NetTimer, CanTimerTimeout_Nominal) {
-  can_net_t* const net = can_net_create(allocator.ToAllocT());
+  can_net_t* const net = can_net_create(allocator.ToAllocT(), 0);
   can_timer_set_func(timer, timer_func, nullptr);
 
   can_timer_timeout(timer, net, 500);
@@ -781,7 +844,7 @@ TEST(CAN_NetTimer, CanTimerTimeout_Nominal) {
 /// \Then 0 is returned, the timer is not started
 ///       \Calls can_timer_stop()
 TEST(CAN_NetTimer, CanTimerTimeout_Negative) {
-  can_net_t* const net = can_net_create(allocator.ToAllocT());
+  can_net_t* const net = can_net_create(allocator.ToAllocT(), 0);
   can_timer_set_func(timer, timer_func, nullptr);
 
   can_timer_timeout(timer, net, -1);
