@@ -3525,7 +3525,7 @@ TEST(CO_Val, CoValWrite_DOMAIN_SizeZeroArray) {
 ///       \Calls co_type_is_array()
 ///       \Calls set_errnum()
 TEST(CO_Val, CoValWrite_INVALID_TYPE) {
-  co_integer16_t val;
+  co_integer16_t val = 0x1234;
   uint_least8_t buffer[CO_MAX_VAL_SIZE] = {0x00};
 
   const auto ret = co_val_write(INVALID_TYPE, &val, buffer, buffer);
