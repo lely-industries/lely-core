@@ -135,7 +135,7 @@ TEST_BASE(CO_SyncBase) {
     dev = dev_holder->Get();
     CHECK(dev != nullptr);
 
-    net = can_net_create(allocator.ToAllocT());
+    net = can_net_create(allocator.ToAllocT(), 0);
     CHECK(net != nullptr);
   }
 
@@ -688,9 +688,9 @@ TEST(CO_Sync, CoSyncRecv_NoErrFuncNoIndFunc) {
   msg.flags = 0u;
   msg.len = 0u;
 
-  const auto ret = can_net_recv(net, &msg);
+  const auto ret = can_net_recv(net, &msg, 0);
 
-  CHECK_EQUAL(0, ret);
+  CHECK_EQUAL(1, ret);
 }
 
 /// \Given a pointer to started SYNC service (co_sync_t), configured without
@@ -711,9 +711,9 @@ TEST(CO_Sync, CoSyncRecv_ErrHandlerOnly_NoIndFunc) {
   msg.flags = 0u;
   msg.len = 1u;
 
-  const auto ret = can_net_recv(net, &msg);
+  const auto ret = can_net_recv(net, &msg, 0);
 
-  CHECK_EQUAL(0, ret);
+  CHECK_EQUAL(1, ret);
   CHECK(SyncErr::called);
   POINTERS_EQUAL(nullptr, SyncErr::data);
   CHECK_EQUAL(0x8240u, SyncErr::eec);
@@ -739,9 +739,9 @@ TEST(CO_Sync, CoSyncRecv_IndFuncOnly_NoErrHandler) {
   msg.flags = 0u;
   msg.len = 1u;
 
-  const auto ret = can_net_recv(net, &msg);
+  const auto ret = can_net_recv(net, &msg, 0);
 
-  CHECK_EQUAL(0, ret);
+  CHECK_EQUAL(1, ret);
   CHECK(SyncInd::called);
   POINTERS_EQUAL(nullptr, SyncInd::data);
   CHECK_EQUAL(0, SyncInd::cnt);
@@ -769,9 +769,9 @@ TEST(CO_Sync, CoSyncRecv_OverflowSetToOne) {
   msg.flags = 0u;
   msg.len = 0u;
 
-  const auto ret = can_net_recv(net, &msg);
+  const auto ret = can_net_recv(net, &msg, 0);
 
-  CHECK_EQUAL(0, ret);
+  CHECK_EQUAL(1, ret);
   CHECK(SyncErr::called);
   POINTERS_EQUAL(nullptr, SyncErr::data);
   CHECK_EQUAL(0x8240u, SyncErr::eec);
@@ -804,9 +804,9 @@ TEST(CO_Sync, CoSyncRecv_OverflowSetToOneEqualToMsgLen) {
   msg.len = 1u;
   msg.data[0] = 0x42u;
 
-  const auto ret = can_net_recv(net, &msg);
+  const auto ret = can_net_recv(net, &msg, 0);
 
-  CHECK_EQUAL(0, ret);
+  CHECK_EQUAL(1, ret);
   CHECK(!SyncErr::called);
   CHECK(SyncInd::called);
   POINTERS_EQUAL(nullptr, SyncInd::data);
@@ -833,9 +833,9 @@ TEST(CO_Sync, CoSyncRecv_Nominal) {
   msg.flags = 0u;
   msg.len = 0u;
 
-  const auto ret = can_net_recv(net, &msg);
+  const auto ret = can_net_recv(net, &msg, 0);
 
-  CHECK_EQUAL(0, ret);
+  CHECK_EQUAL(1, ret);
   CHECK(!SyncErr::called);
   CHECK(SyncInd::called);
   POINTERS_EQUAL(nullptr, SyncInd::data);
@@ -999,7 +999,7 @@ TEST_GROUP_BASE(Co_SyncAllocation, CO_SyncBase) {
     TEST_BASE_SETUP();
 
     can_net_destroy(net);
-    net = can_net_create(limitedAllocator.ToAllocT());
+    net = can_net_create(limitedAllocator.ToAllocT(), 0);
 
     CreateObjInDev(obj1005, 0x1005u);
   }

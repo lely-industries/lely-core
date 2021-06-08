@@ -50,7 +50,7 @@ main(void)
 	diag_at_set_handler(&co_test_diag_at_handler, NULL);
 #endif
 
-	can_net_t *net = can_net_create(NULL);
+	can_net_t *net = can_net_create(NULL, 0);
 	tap_assert(net);
 
 	struct co_test test;

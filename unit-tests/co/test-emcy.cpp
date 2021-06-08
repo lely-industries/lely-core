@@ -175,7 +175,7 @@ TEST_BASE(CO_EmcyBase) {
     dev = dev_holder->Get();
     CHECK(dev != nullptr);
 
-    net = can_net_create(allocator.ToAllocT());
+    net = can_net_create(allocator.ToAllocT(), 0);
     CHECK(net != nullptr);
 
     EmcyInd::Clear();
@@ -557,11 +557,11 @@ TEST(CO_EmcyCreate, CoEmcyStart_Obj1028_BiggerThanMaxNodes) {
 
   can_msg msg = CAN_MSG_INIT;
   msg.id = CO_NUM_NODES + 1;
-  CHECK_EQUAL(0, can_net_recv(net, &msg));
+  CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
   CHECK_FALSE(EmcyInd::called);
 
   msg.id = CO_NUM_NODES;
-  CHECK_EQUAL(0, can_net_recv(net, &msg));
+  CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
   CHECK_TRUE(EmcyInd::called);
 
   co_emcy_destroy(emcy);
@@ -1779,7 +1779,7 @@ TEST(CO_EmcyReceiver, CoEmcyNodeRecv_EmptyMessageData) {
   can_msg msg = CAN_MSG_INIT;
   msg.id = CONSUMER_CANID;
 
-  CHECK_EQUAL(0, can_net_recv(net, &msg));
+  CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
   CheckEmcyIndCall(0u, 0u, {0u, 0u, 0u, 0u, 0u});
 }
@@ -1797,7 +1797,7 @@ TEST(CO_EmcyReceiver, CoEmcyNodeRecv_NoIndFunc) {
   can_msg msg = CAN_MSG_INIT;
   msg.id = CONSUMER_CANID;
 
-  CHECK_EQUAL(0, can_net_recv(net, &msg));
+  CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 }
 
 /// \Given a pointer to a started EMCY service (co_emcy_t) with an indication
@@ -1824,7 +1824,7 @@ TEST(CO_EmcyReceiver, CoEmcyNodeRecv_Nominal) {
   msg.data[6] = 0x07;
   msg.data[7] = 0x08;
 
-  CHECK_EQUAL(0, can_net_recv(net, &msg));
+  CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
   CheckEmcyIndCall(0x0201u, 0x03u, {0x04u, 0x05u, 0x06u, 0x07u, 0x08u});
 }
@@ -1853,7 +1853,7 @@ TEST(CO_EmcyReceiver, CoEmcyNodeRecv_TooLargeMessageLength) {
   msg.data[6] = 0x07;
   msg.data[7] = 0x08;
 
-  CHECK_EQUAL(0, can_net_recv(net, &msg));
+  CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
   CheckEmcyIndCall(0x0201u, 0x03u, {0x04u, 0x05u, 0x06u, 0x07u, 0x08u});
 }
@@ -1867,7 +1867,7 @@ TEST_GROUP_BASE(CO_EmcyAllocation, CO_EmcyBase) {
     TEST_BASE_SETUP();
 
     can_net_destroy(net);
-    net = can_net_create(allocator.ToAllocT());
+    net = can_net_create(allocator.ToAllocT(), 0);
 
     CreateObj1001ErrorRegister(0u);
   }

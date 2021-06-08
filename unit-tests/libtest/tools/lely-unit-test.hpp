@@ -167,7 +167,7 @@ struct CanSend {
   static can_msg msg;
   static can_msg* msg_buf;
 
-  static int func(const can_msg* msg_, void* data_);
+  static int func(const can_msg* msg_, int bus_id_, void* data_);
   static void CheckMsg(uint_least32_t id, uint_least8_t flags,
                        uint_least8_t len, const uint_least8_t* data);
   static void CheckSdoMsg(co_unsigned32_t id_, co_unsigned32_t flags_,

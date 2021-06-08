@@ -108,7 +108,7 @@ TEST_BASE(CO_RpdoBase) {
 
   TEST_SETUP() {
     LelyUnitTest::DisableDiagnosticMessages();
-    net = can_net_create(allocator.ToAllocT());
+    net = can_net_create(allocator.ToAllocT(), 0);
     CHECK(net != nullptr);
 
     dev_holder.reset(new CoDevTHolder(DEV_ID));
@@ -485,7 +485,7 @@ TEST_GROUP_BASE(CO_Rpdo, CO_RpdoBase) {
     CO_RpdoStatic::rpdo_err_args.data = data;
   }
 
-  static int can_send_func(const struct can_msg* msg, void*) {
+  static int can_send_func(const struct can_msg* msg, int, void*) {
     CO_RpdoStatic::can_send_func_called = true;
     CO_RpdoStatic::sent_msg = *msg;
     return 0;
@@ -675,8 +675,8 @@ TEST(CO_Rpdo, CoRpdoSync_NoCallbacks) {
 
   can_msg msg = CAN_MSG_INIT;
   msg.id = DEV_ID;
-  const auto recv = can_net_recv(net, &msg);
-  CHECK_EQUAL(0, recv);
+  const auto recv = can_net_recv(net, &msg, 0);
+  CHECK_EQUAL(1, recv);
 
   const auto ret = co_rpdo_sync(rpdo, 0x00u);
 
@@ -696,8 +696,8 @@ TEST(CO_Rpdo, CoRpdoSync_WithCallbacks) {
 
   can_msg msg = CAN_MSG_INIT;
   msg.id = DEV_ID;
-  const auto recv = can_net_recv(net, &msg);
-  CHECK_EQUAL(0, recv);
+  const auto recv = can_net_recv(net, &msg, 0);
+  CHECK_EQUAL(1, recv);
 
   const auto ret = co_rpdo_sync(rpdo, 0x00u);
 
@@ -734,8 +734,8 @@ TEST(CO_Rpdo, CoRpdoSync_BadMapping) {
 
   can_msg msg = CAN_MSG_INIT;
   msg.id = DEV_ID;
-  const auto recv = can_net_recv(net, &msg);
-  CHECK_EQUAL(0, recv);
+  const auto recv = can_net_recv(net, &msg, 0);
+  CHECK_EQUAL(1, recv);
 
   const auto ret = co_rpdo_sync(rpdo, 0x00u);
 
@@ -778,8 +778,8 @@ TEST(CO_Rpdo, CoRpdoSync_BadMappingLength) {
 
   can_msg msg = CAN_MSG_INIT;
   msg.id = DEV_ID;
-  const auto recv = can_net_recv(net, &msg);
-  CHECK_EQUAL(0, recv);
+  const auto recv = can_net_recv(net, &msg, 0);
+  CHECK_EQUAL(1, recv);
 
   const auto ret = co_rpdo_sync(rpdo, 0x00u);
 
@@ -827,8 +827,8 @@ TEST(CO_Rpdo, CoRpdoSync_RPDOLengthExceedsMapping) {
   can_msg msg = CAN_MSG_INIT;
   msg.id = DEV_ID;
   msg.len = CAN_MAX_LEN;
-  const auto recv = can_net_recv(net, &msg);
-  CHECK_EQUAL(0, recv);
+  const auto recv = can_net_recv(net, &msg, 0);
+  CHECK_EQUAL(1, recv);
 
   const auto ret = co_rpdo_sync(rpdo, 0x00u);
 
@@ -861,9 +861,9 @@ TEST(CO_Rpdo, CoRpdoRecv_ReservedTransmissionRPDO) {
   can_msg msg = CAN_MSG_INIT;
   msg.id = DEV_ID;
 
-  const auto recv = can_net_recv(net, &msg);
+  const auto recv = can_net_recv(net, &msg, 0);
 
-  CHECK_EQUAL(0, recv);
+  CHECK_EQUAL(1, recv);
   CHECK(!CO_RpdoStatic::rpdo_ind_func_called);
   CHECK(!CO_RpdoStatic::rpdo_err_func_called);
 }
@@ -882,9 +882,9 @@ TEST(CO_Rpdo, CoRpdoRecv_EventDrivenRPDO) {
   can_msg msg = CAN_MSG_INIT;
   msg.id = DEV_ID;
 
-  const auto recv = can_net_recv(net, &msg);
+  const auto recv = can_net_recv(net, &msg, 0);
 
-  CHECK_EQUAL(0, recv);
+  CHECK_EQUAL(1, recv);
 
   CHECK(CO_RpdoStatic::rpdo_ind_func_called);
   POINTERS_EQUAL(rpdo, CO_RpdoStatic::rpdo_ind_args.rpdo);
@@ -921,8 +921,8 @@ TEST(CO_Rpdo, CoRpdoRecv_ExpiredSyncWindow) {
 
   can_msg msg = CAN_MSG_INIT;
   msg.id = DEV_ID;
-  const auto recv = can_net_recv(net, &msg);
-  CHECK_EQUAL(0, recv);
+  const auto recv = can_net_recv(net, &msg, 0);
+  CHECK_EQUAL(1, recv);
 
   CHECK_EQUAL(0, co_rpdo_sync(rpdo, 0x00u));
 
@@ -955,9 +955,9 @@ TEST(CO_Rpdo, CoRpdoRecv_NoPDOInSyncWindow_NoErrFunc) {
   can_msg msg = CAN_MSG_INIT;
   msg.id = DEV_ID;
 
-  const auto recv = can_net_recv(net, &msg);
+  const auto recv = can_net_recv(net, &msg, 0);
 
-  CHECK_EQUAL(0, recv);
+  CHECK_EQUAL(1, recv);
   CHECK(!CO_RpdoStatic::rpdo_ind_func_called);
 
   const timespec tp2 = {0, 2000000u};  // 2 ms
@@ -991,9 +991,9 @@ TEST(CO_Rpdo, CoRpdoRecv_NoPDOInSyncWindow) {
   can_msg msg = CAN_MSG_INIT;
   msg.id = DEV_ID;
 
-  const auto recv = can_net_recv(net, &msg);
+  const auto recv = can_net_recv(net, &msg, 0);
 
-  CHECK_EQUAL(0, recv);
+  CHECK_EQUAL(1, recv);
   CHECK(!CO_RpdoStatic::rpdo_ind_func_called);
   CHECK(!CO_RpdoStatic::rpdo_err_func_called);
 
@@ -1021,7 +1021,7 @@ TEST_GROUP_BASE(CO_RpdoAllocation, CO_RpdoBase) {
     TEST_BASE_SETUP();
 
     can_net_destroy(net);
-    net = can_net_create(limitedAllocator.ToAllocT());
+    net = can_net_create(limitedAllocator.ToAllocT(), 0);
 
     BasicConfiguration();
   }

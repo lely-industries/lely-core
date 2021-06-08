@@ -155,7 +155,7 @@ CoCsdoUpCon::CheckNonempty(const co_csdo_t* sdo_, const co_unsigned16_t idx_,
 }
 
 int
-CanSend::func(const can_msg* msg_, void* data_) {
+CanSend::func(const can_msg* msg_, int, void* data_) {
   assert(msg_);
 
   msg = *msg_;

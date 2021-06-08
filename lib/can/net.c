@@ -4,7 +4,7 @@
  *
  * @see lely/can/net.h
  *
- * @copyright 2015-2020 Lely Industries N.V.
+ * @copyright 2015-2021 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -52,6 +52,8 @@ struct can_net {
 	can_send_func_t *send_func;
 	/// A pointer to the user-specified data for #send_func.
 	void *send_data;
+	/// The active CAN bus identifier.
+	int active_bus;
 };
 
 /**
@@ -68,7 +70,7 @@ static can_net_t *can_net_alloc(alloc_t *alloc);
 static void can_net_free(can_net_t *net);
 
 /// Initializes the #can_net_t structure.
-static void can_net_init(can_net_t *net);
+static void can_net_init(can_net_t *net, int bus_id);
 
 /// Finalizes the #can_net_t structure.
 static void can_net_fini(can_net_t *net);
@@ -171,13 +173,13 @@ can_net_sizeof(void)
 }
 
 can_net_t *
-can_net_create(alloc_t *alloc)
+can_net_create(alloc_t *alloc, const int bus_id)
 {
 	can_net_t *net = can_net_alloc(alloc);
 	if (!net)
 		return NULL;
 
-	can_net_init(net);
+	can_net_init(net, bus_id);
 
 	return net;
 }
@@ -274,13 +276,16 @@ can_net_set_next_func(can_net_t *net, can_timer_func_t *func, void *data)
 }
 
 int
-can_net_recv(can_net_t *net, const struct can_msg *msg)
+can_net_recv(can_net_t *net, const struct can_msg *msg, const int bus_id)
 {
 	assert(net);
 	assert(msg);
 
+	if (bus_id != net->active_bus)
+		return 0;
+
 	int errc = get_errc();
-	int result = 0;
+	int result = 1;
 
 	can_recv_key_t key = can_recv_key(msg->id, msg->flags);
 	struct rbnode *node = rbtree_find(&net->recv_tree, &key);
@@ -291,7 +296,7 @@ can_net_recv(can_net_t *net, const struct can_msg *msg)
 			recv = structof(node, can_recv_t, list);
 			// Invoke the callback function and check the result.
 			if (recv->func && recv->func(msg, recv->data)
-					&& !result) {
+					&& (result != -1)) {
 				// Store the first error that occurs.
 				errc = get_errc();
 				result = -1;
@@ -314,7 +319,7 @@ can_net_send(can_net_t *net, const struct can_msg *msg)
 		return -1;
 	}
 
-	return net->send_func(msg, net->send_data);
+	return net->send_func(msg, net->active_bus, net->send_data);
 }
 
 void
@@ -336,6 +341,18 @@ can_net_set_send_func(can_net_t *net, can_send_func_t *func, void *data)
 
 	net->send_func = func;
 	net->send_data = data;
+}
+
+int
+can_net_get_active_bus(const can_net_t *net)
+{
+	return net->active_bus;
+}
+
+void
+can_net_set_active_bus(can_net_t *net, const int bus_id)
+{
+	net->active_bus = bus_id;
 }
 
 size_t
@@ -620,7 +637,7 @@ can_net_free(can_net_t *net)
 }
 
 static void
-can_net_init(can_net_t *net)
+can_net_init(can_net_t *net, const int bus_id)
 {
 	assert(net);
 
@@ -636,6 +653,8 @@ can_net_init(can_net_t *net)
 
 	net->send_func = NULL;
 	net->send_data = NULL;
+
+	net->active_bus = bus_id;
 }
 
 static void
