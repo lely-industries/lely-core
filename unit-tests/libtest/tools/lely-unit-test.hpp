@@ -19,6 +19,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #ifndef LELY_UNIT_TEST_HPP_
 #define LELY_UNIT_TEST_HPP_
 
@@ -27,54 +28,10 @@
 #include <lely/co/type.h>
 #include <lely/util/endian.h>
 
-// values described in CiA 301, section 7.2.4.3 SDO protocols
-#define CO_SDO_CCS_DN_SEG_REQ 0x00u
-#define CO_SDO_CCS_DN_INI_REQ 0x20u
-#define CO_SDO_CCS_UP_INI_REQ 0x40u
-#define CO_SDO_CCS_UP_SEG_REQ 0x60u
-#define CO_SDO_CCS_BLK_UP_REQ 0xa0u
-#define CO_SDO_CCS_BLK_DN_REQ 0xc0u
-
-#define CO_SDO_CS_ABORT 0x80u
-
-#define CO_SDO_SCS_DN_SEG_RES 0x20u
-#define CO_SDO_SCS_UP_INI_RES 0x40u
-#define CO_SDO_SCS_DN_INI_RES 0x60u
-#define CO_SDO_SCS_BLK_DN_RES 0xa0u
-#define CO_SDO_SCS_BLK_UP_RES 0xc0u
-
-#define CO_SDO_SC_END_BLK 0x01
-#define CO_SDO_SC_BLK_RES 0x02
-#define CO_SDO_SC_START_UP 0x03
-
-#define CO_SDO_SEG_LAST 0x01u
-#define CO_SDO_SEG_TOGGLE 0x10u
-#define CO_SDO_SEG_SIZE_SET(n) (((7 - (n)) << 1) & CO_SDO_SEG_SIZE_MASK)
-#define CO_SDO_SEQ_LAST 0x80u
-#define CO_SDO_SEG_SIZE_MASK 0x0eu
-#define CO_SDO_SC_MASK 0x03u
-
-#define CO_SDO_BLK_CRC 0x04u
-#define CO_SDO_BLK_SIZE_IND 0x02u
-#define CO_SDO_BLK_SIZE_MASK 0x1cu
-#define CO_SDO_BLK_SIZE_SET(n) (((7 - (n)) << 2) & CO_SDO_BLK_SIZE_MASK)
-
-#define CO_SDO_INI_SIZE_IND 0x01u
-#define CO_SDO_INI_SIZE_EXP 0x02u
-#define CO_SDO_INI_SIZE_MASK 0x0fu
-#define CO_SDO_INI_SIZE_EXP_SET(n) \
-  ((((4 - n) << 2) | 0x03u) & CO_SDO_INI_SIZE_MASK)
-
-#define CO_SDO_MAX_SEQNO 127u
-
-#define CO_SDO_MSG_SIZE 8u
-#define CO_SDO_INI_DATA_SIZE 4u
-
-#define CHECK_SDO_CAN_MSG_CMD(res, msg) CHECK_EQUAL((res), (msg)[0])
-#define CHECK_SDO_CAN_MSG_IDX(idx, msg) CHECK_EQUAL((idx), ldle_u16((msg) + 1u))
-#define CHECK_SDO_CAN_MSG_SUBIDX(subidx, msg) CHECK_EQUAL((subidx), (msg)[3u])
-#define CHECK_SDO_CAN_MSG_AC(ac, msg) CHECK_EQUAL((ac), ldle_u32((msg) + 4u))
-#define CHECK_SDO_CAN_MSG_VAL(val, msg) CHECK_EQUAL((val), ldle_u32((msg) + 4u))
+#include "co-csdo-dn-con.hpp"
+#include "co-csdo-up-con.hpp"
+#include "co-sub-dn-ind.hpp"
+#include "sdo-defines.hpp"
 
 namespace LelyUnitTest {
 /**
@@ -83,78 +40,7 @@ namespace LelyUnitTest {
  * @see diag_set_handler(), diag_at_set_handler()
  */
 void DisableDiagnosticMessages();
-
-/**
- * Checks if a download indication function is set (not null) for
- * a sub-object with the given user-specifed data pointer.
- */
-void CheckSubDnIndIsSet(const co_dev_t* dev, co_unsigned16_t idx,
-                        const void* data);
-/**
- * Checks if sub-object has a default download indication function and
- * user-specified data set.
- */
-void CheckSubDnIndIsDefault(const co_dev_t* dev, co_unsigned16_t idx);
-
-/**
-  * Calls the download indication function for the sub-object with the given
-  * abort code.
-  */
-co_unsigned32_t CallDnIndWithAbortCode(const co_dev_t* dev, co_unsigned16_t idx,
-                                       co_unsigned8_t subidx,
-                                       co_unsigned32_t ac);
-
 }  // namespace LelyUnitTest
-
-struct CoCsdoDnCon {
-  static co_csdo_t* sdo;
-  static co_unsigned16_t idx;
-  static co_unsigned8_t subidx;
-  static co_unsigned32_t ac;
-  static void* data;
-  static unsigned int num_called;
-
-  static void func(co_csdo_t* sdo_, co_unsigned16_t idx_,
-                   co_unsigned8_t subidx_, co_unsigned32_t ac_, void* data_);
-  static void Check(const co_csdo_t* sdo_, co_unsigned16_t idx_,
-                    co_unsigned8_t subidx_, co_unsigned32_t ac_,
-                    const void* data_);
-  static void Clear();
-
-  static inline bool
-  Called() {
-    return num_called > 0;
-  }
-};
-
-struct CoCsdoUpCon {
-  static co_csdo_t* sdo;
-  static co_unsigned16_t idx;
-  static co_unsigned8_t subidx;
-  static co_unsigned32_t ac;
-  static const void* ptr;
-  static size_t n;
-  static void* data;
-  static unsigned int num_called;
-  static constexpr size_t BUFSIZE = 2u;
-  static uint_least8_t buf[BUFSIZE];
-
-  static void func(co_csdo_t* sdo_, co_unsigned16_t idx_,
-                   co_unsigned8_t subidx_, co_unsigned32_t ac_,
-                   const void* ptr_, size_t n_, void* data_);
-  static void Check(const co_csdo_t* sdo_, co_unsigned16_t idx_,
-                    co_unsigned8_t subidx_, co_unsigned32_t ac_,
-                    const void* ptr_, size_t n_, const void* data_);
-  static void CheckNonempty(const co_csdo_t* sdo_, co_unsigned16_t idx_,
-                            co_unsigned8_t subidx_, co_unsigned32_t ac_,
-                            size_t n_, const void* data_);
-  static void Clear();
-
-  static inline bool
-  Called() {
-    return num_called > 0;
-  }
-};
 
 struct CanSend {
  private:
@@ -191,23 +77,6 @@ struct CanSend {
   SetMsgBuf(can_msg* const buf, const size_t size) {
     buf_size = size;
     msg_buf = buf;
-  }
-};
-
-struct CoSubDnInd {
-  static unsigned int num_called;
-  static co_sub_t* sub;
-  static co_sdo_req* req;
-  static co_unsigned32_t ac;
-  static void* data;
-
-  static co_unsigned32_t func(co_sub_t* sub_, co_sdo_req* req_,
-                              co_unsigned32_t ac_, void* data_);
-  static void Clear();
-
-  static inline bool
-  Called() {
-    return num_called > 0;
   }
 };
 
