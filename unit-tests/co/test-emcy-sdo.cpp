@@ -58,32 +58,25 @@ TEST_GROUP(CO_EmcySdo) {
   std::unique_ptr<CoObjTHolder> obj1014;
   std::unique_ptr<CoObjTHolder> obj1028;
 
-  void CreateObjInDev(std::unique_ptr<CoObjTHolder> & obj_holder,
-                      co_unsigned16_t idx) {
-    obj_holder.reset(new CoObjTHolder(idx));
-    CHECK(obj_holder->Get() != nullptr);
-    CHECK_EQUAL(0, co_dev_insert_obj(dev, obj_holder->Take()));
-  }
-
   void CreateObj1001ErrorRegister() {
-    CreateObjInDev(obj1001, 0x1001u);
+    dev_holder->CreateAndInsertObj(obj1001, 0x1001u);
     obj1001->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t{0u});
   }
 
   void CreateObj1003PredefinedErrorField() {
-    CreateObjInDev(obj1003, 0x1003u);
+    dev_holder->CreateAndInsertObj(obj1003, 0x1003u);
     co_obj_set_code(obj1003->Get(), CO_OBJECT_ARRAY);
     obj1003->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t{0u});
     obj1003->InsertAndSetSub(0x01u, CO_DEFTYPE_UNSIGNED32, co_unsigned32_t{0u});
   }
 
   void CreateObj1014CobIdEmcy() {
-    CreateObjInDev(obj1014, 0x1014u);
+    dev_holder->CreateAndInsertObj(obj1014, 0x1014u);
     obj1014->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED32, EMCY_CANID);
   }
 
   void CreateObj1028EmcyConsumerObject() {
-    CreateObjInDev(obj1028, 0x1028u);
+    dev_holder->CreateAndInsertObj(obj1028, 0x1028u);
     co_obj_set_code(obj1028->Get(), CO_OBJECT_ARRAY);
     obj1028->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t{1u});
     obj1028->InsertAndSetSub(0x01u, CO_DEFTYPE_UNSIGNED32, CONSUMER_COBID);

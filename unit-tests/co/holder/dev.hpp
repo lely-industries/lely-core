@@ -1,7 +1,7 @@
 /**@file
  * This file is part of the CANopen Library Unit Test Suite.
  *
- * @copyright 2020 N7 Space Sp. z o.o.
+ * @copyright 2020-2021 N7 Space Sp. z o.o.
  *
  * Unit Test Suite was developed under a programme of,
  * and funded by, the European Space Agency.
@@ -23,6 +23,10 @@
 #ifndef LELY_UNIT_TESTS_CO_DEV_HOLDER_HPP_
 #define LELY_UNIT_TESTS_CO_DEV_HOLDER_HPP_
 
+#include <memory>
+
+#include <CppUTest/TestHarness.h>
+
 #include <lely/co/dev.h>
 
 #if LELY_NO_MALLOC
@@ -30,13 +34,13 @@
 #endif
 
 #include "holder.hpp"
+#include "obj.hpp"
 
 class CoDevTHolder : public Holder<co_dev_t> {
-#if LELY_NO_MALLOC
  public:
+#if LELY_NO_MALLOC
   explicit CoDevTHolder(co_unsigned8_t id) { co_dev_init(Get(), id); }
 #else   // !LELY_NO_MALLOC
- public:
   explicit CoDevTHolder(co_unsigned8_t id)
       : Holder<co_dev_t>(co_dev_create(id)) {}
 
@@ -44,6 +48,14 @@ class CoDevTHolder : public Holder<co_dev_t> {
     if (!taken) co_dev_destroy(Get());
   }
 #endif  // LELY_NO_MALLOC
-};      // class CoDevTHolder
+
+  void
+  CreateAndInsertObj(std::unique_ptr<CoObjTHolder>& obj_holder,
+                     const co_unsigned16_t idx) {
+    obj_holder.reset(new CoObjTHolder(idx));
+    CHECK(obj_holder->Get() != nullptr);
+    CHECK_EQUAL(0, co_dev_insert_obj(Get(), obj_holder->Take()));
+  }
+};  // class CoDevTHolder
 
 #endif  // LELY_UNIT_TESTS_CO_DEV_HOLDER_HPP_

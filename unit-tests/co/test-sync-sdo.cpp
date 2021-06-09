@@ -53,13 +53,6 @@ TEST_GROUP(CO_SyncSdo) {
   std::unique_ptr<CoObjTHolder> obj1006;
   std::unique_ptr<CoObjTHolder> obj1019;
 
-  void CreateObjInDev(std::unique_ptr<CoObjTHolder> & obj_holder,
-                      co_unsigned16_t idx) {
-    obj_holder.reset(new CoObjTHolder(idx));
-    CHECK(obj_holder->Get() != nullptr);
-    CHECK_EQUAL(0, co_dev_insert_obj(dev, obj_holder->Take()));
-  }
-
   void SetCobid(const co_unsigned32_t cobid) {
     co_sub_t* const sub_comm_cobid = co_dev_find_sub(dev, 0x1005u, 0x00u);
     CHECK(sub_comm_cobid != nullptr);
@@ -80,9 +73,9 @@ TEST_GROUP(CO_SyncSdo) {
     dev = dev_holder->Get();
     CHECK(dev != nullptr);
 
-    CreateObjInDev(obj1005, 0x1005u);
-    CreateObjInDev(obj1006, 0x1006u);
-    CreateObjInDev(obj1019, 0x1019u);
+    dev_holder->CreateAndInsertObj(obj1005, 0x1005u);
+    dev_holder->CreateAndInsertObj(obj1006, 0x1006u);
+    dev_holder->CreateAndInsertObj(obj1019, 0x1019u);
 
     // 0x1005 - COB-ID
     obj1005->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED32,

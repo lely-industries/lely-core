@@ -53,13 +53,6 @@ TEST_BASE(CO_SdoTpdoBase) {
   std::unique_ptr<CoObjTHolder> obj1800;
   std::unique_ptr<CoObjTHolder> obj1a00;
 
-  void CreateObjInDev(std::unique_ptr<CoObjTHolder> & obj_holder,
-                      co_unsigned16_t idx) {
-    obj_holder.reset(new CoObjTHolder(idx));
-    CHECK(obj_holder->Get() != nullptr);
-    CHECK_EQUAL(0, co_dev_insert_obj(dev, obj_holder->Take()));
-  }
-
   void SetPdoCommCobid(const co_unsigned32_t cobid) {
     co_sub_t* const sub_comm_cobid = co_dev_find_sub(dev, 0x1800u, 0x01u);
     CHECK(sub_comm_cobid != nullptr);
@@ -80,8 +73,8 @@ TEST_BASE(CO_SdoTpdoBase) {
     dev = dev_holder->Get();
     CHECK(dev != nullptr);
 
-    CreateObjInDev(obj1800, 0x1800u);
-    CreateObjInDev(obj1a00, 0x1a00u);
+    dev_holder->CreateAndInsertObj(obj1800, 0x1800u);
+    dev_holder->CreateAndInsertObj(obj1a00, 0x1a00u);
 
     // 0x00 - highest sub-index supported
     obj1800->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8,
@@ -595,7 +588,7 @@ TEST(CO_SdoTpdo1a00, Co1a00DnInd_NumOfMappingsLenGreaterThanMax) {
   Set1a00Sub1Mapping(0x202100ffu);
   RestartTPDO();
   // object which could be mapped
-  CreateObjInDev(obj2021, 0x2021u);
+  dev_holder->CreateAndInsertObj(obj2021, 0x2021u);
   Insert2021Values();
 
   const co_unsigned8_t num_of_mappings = 1u;
@@ -616,7 +609,7 @@ TEST(CO_SdoTpdo1a00, Co1a00DnInd_EmptyMapping) {
   Set1a00Sub1Mapping(0x00000000u);
   RestartTPDO();
   // object which could be mapped
-  CreateObjInDev(obj2021, 0x2021u);
+  dev_holder->CreateAndInsertObj(obj2021, 0x2021u);
   Insert2021Values();
 
   const co_unsigned8_t num_of_mappings = 1u;
@@ -731,7 +724,7 @@ TEST(CO_SdoTpdo1a00, Co1a00DnInd_NumOfMappings) {
   Set1a00Sub1Mapping(0x20210020u);
   RestartTPDO();
   // object which could be mapped
-  CreateObjInDev(obj2021, 0x2021u);
+  dev_holder->CreateAndInsertObj(obj2021, 0x2021u);
   Insert2021Values();
 
   const co_unsigned8_t num_of_mappings = 1u;
@@ -770,7 +763,7 @@ TEST(CO_SdoTpdo1a00, Co1a00DnInd_MappingSameAsPrevious) {
   Set1a00Sub1Mapping(0x20210020u);
   RestartTPDO();
   // object which could be mapped
-  CreateObjInDev(obj2021, 0x2021u);
+  dev_holder->CreateAndInsertObj(obj2021, 0x2021u);
   Insert2021Values();
 
   const co_unsigned32_t mapping = 0x20210020u;
@@ -791,7 +784,7 @@ TEST(CO_SdoTpdo1a00, Co1a00DnInd_MappingNumOfMappingsNonzero) {
   SetNumOfMappings(0x01u);
   RestartTPDO();
   // object which could be mapped
-  CreateObjInDev(obj2021, 0x2021u);
+  dev_holder->CreateAndInsertObj(obj2021, 0x2021u);
   Insert2021Values();
 
   const co_unsigned32_t mapping = 0x20210020u;
@@ -812,7 +805,7 @@ TEST(CO_SdoTpdo1a00, Co1a00DnInd_MappingValidTPDO) {
   SetNumOfMappings(0x01u);
   RestartTPDO();
   // object which could be mapped
-  CreateObjInDev(obj2021, 0x2021u);
+  dev_holder->CreateAndInsertObj(obj2021, 0x2021u);
   Insert2021Values();
 
   const co_unsigned32_t mapping = 0x20210020u;
@@ -833,7 +826,7 @@ TEST(CO_SdoTpdo1a00, Co1a00DnInd_Mapping) {
   SetNumOfMappings(0x00);
   RestartTPDO();
   // object which could be mapped
-  CreateObjInDev(obj2021, 0x2021u);
+  dev_holder->CreateAndInsertObj(obj2021, 0x2021u);
   Insert2021Values();
 
   const co_unsigned32_t mapping = 0x20210020u;
@@ -855,7 +848,7 @@ TEST(CO_SdoTpdo1a00, Co1a00DnInd_MappingZeros) {
   Set1a00Sub1Mapping(0x20210020u);
   RestartTPDO();
   // object which could be mapped
-  CreateObjInDev(obj2021, 0x2021u);
+  dev_holder->CreateAndInsertObj(obj2021, 0x2021u);
   Insert2021Values();
 
   const co_unsigned32_t mapping = 0x00000000u;

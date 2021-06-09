@@ -116,13 +116,6 @@ TEST_BASE(CO_SyncBase) {
   std::unique_ptr<CoDevTHolder> dev_holder;
   std::unique_ptr<CoObjTHolder> obj1005;
 
-  void CreateObjInDev(std::unique_ptr<CoObjTHolder> & obj_holder,
-                      co_unsigned16_t idx) {
-    obj_holder.reset(new CoObjTHolder(idx));
-    CHECK(obj_holder->Get() != nullptr);
-    CHECK_EQUAL(0, co_dev_insert_obj(dev, obj_holder->Take()));
-  }
-
   // obj 0x1005, sub 0x00 contains COB-ID
   void SetCobid(co_unsigned32_t cobid) {
     obj1005->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED32, cobid);
@@ -179,7 +172,7 @@ TEST(CO_SyncCreate, CoSyncCreate_NoObj1005) {
 ///       \Calls can_timer_create()
 ///       \Calls can_timer_set_func()
 TEST(CO_SyncCreate, CoSyncCreate_Nominal) {
-  CreateObjInDev(obj1005, 0x1005u);
+  dev_holder->CreateAndInsertObj(obj1005, 0x1005u);
   SetCobid(DEV_ID);
 
   const auto sync = co_sync_create(net, dev);
@@ -215,7 +208,7 @@ TEST(CO_SyncCreate, CoSyncDestroy_DestroyNull) { co_sync_destroy(nullptr); }
 ///
 /// \Then the SYNC service is destroyed
 TEST(CO_SyncCreate, CoSyncDestroy_Nominal) {
-  CreateObjInDev(obj1005, 0x1005u);
+  dev_holder->CreateAndInsertObj(obj1005, 0x1005u);
   const auto sync = co_sync_create(net, dev);
 
   co_sync_destroy(sync);
@@ -230,13 +223,13 @@ TEST_GROUP_BASE(CO_Sync, CO_SyncBase) {
 
   // obj 0x1006, sub 0x00 contains communication cycle period in us
   void CreateObj1006AndSetPeriod(co_unsigned32_t period) {
-    CreateObjInDev(obj1006, 0x1006u);
+    dev_holder->CreateAndInsertObj(obj1006, 0x1006u);
     obj1006->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED32, period);
   }
 
   // obj 0x1019u, sub 0x00 contains synchronous counter overflow value
   void CreateObj1019AndSetCntOverflow(co_unsigned8_t overflow) {
-    CreateObjInDev(obj1019, 0x1019u);
+    dev_holder->CreateAndInsertObj(obj1019, 0x1019u);
     obj1019->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, overflow);
   }
 
@@ -279,7 +272,7 @@ TEST_GROUP_BASE(CO_Sync, CO_SyncBase) {
   TEST_SETUP() {
     TEST_BASE_SETUP();
 
-    CreateObjInDev(obj1005, 0x1005u);
+    dev_holder->CreateAndInsertObj(obj1005, 0x1005u);
 
     SyncErr::Clear();
     SyncInd::Clear();
@@ -1001,7 +994,7 @@ TEST_GROUP_BASE(Co_SyncAllocation, CO_SyncBase) {
     can_net_destroy(net);
     net = can_net_create(limitedAllocator.ToAllocT(), 0);
 
-    CreateObjInDev(obj1005, 0x1005u);
+    dev_holder->CreateAndInsertObj(obj1005, 0x1005u);
   }
 
   TEST_TEARDOWN() {
