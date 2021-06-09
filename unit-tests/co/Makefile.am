@@ -65,6 +65,11 @@ unit_test_co_csdo_SOURCES = $(src_common) test-csdo.cpp
 unit_test_co_csdo_LDADD = $(LELY_UNIT_TEST_CO_COMMON_LIBS)
 unit_test_co_csdo_LDFLAGS = $(LELY_UNIT_TEST_CO_LDFLGS)
 
+bin += unit-test-co-csdo-sdo
+unit_test_co_csdo_sdo_SOURCES = $(src_common) test-csdo-sdo.cpp
+unit_test_co_csdo_sdo_LDADD = $(LELY_UNIT_TEST_CO_COMMON_LIBS)
+unit_test_co_csdo_sdo_LDFLAGS = $(LELY_UNIT_TEST_CO_LDFLGS)
+
 bin += unit-test-co-dev
 unit_test_co_dev_SOURCES = $(src_common) test-dev.cpp
 unit_test_co_dev_LDADD = $(LELY_OVERRIDE_CO_VAL_LIB) $(LELY_UNIT_TEST_CO_COMMON_LIBS)
