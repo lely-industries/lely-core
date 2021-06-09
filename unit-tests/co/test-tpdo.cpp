@@ -135,13 +135,6 @@ TEST_BASE(CO_TpdoBase) {
   std::unique_ptr<CoObjTHolder> obj1a00;
   std::unique_ptr<CoObjTHolder> obj2000;
 
-  void CreateObjInDev(std::unique_ptr<CoObjTHolder> & obj_holder,
-                      co_unsigned16_t idx) {
-    obj_holder.reset(new CoObjTHolder(idx));
-    CHECK(obj_holder->Get() != nullptr);
-    CHECK_EQUAL(0, co_dev_insert_obj(dev, obj_holder->Take()));
-  }
-
   // PDO communication parameter record
   // obj 0x1800, sub 0x00 - highest sub-index supported
   void SetComm00HighestSubidxSupported(co_unsigned8_t subidx) {
@@ -250,7 +243,7 @@ TEST(CO_TpdoCreate, CoTpdoCreate_NoTPDOParameters) {
 }
 
 TEST(CO_TpdoCreate, CoTpdoCreate_NoTPDOMappingParamRecord) {
-  CreateObjInDev(obj1800, 0x1800u);
+  dev_holder->CreateAndInsertObj(obj1800, 0x1800u);
 
   tpdo = co_tpdo_create(net, dev, TPDO_NUM);
 
@@ -259,7 +252,7 @@ TEST(CO_TpdoCreate, CoTpdoCreate_NoTPDOMappingParamRecord) {
 }
 
 TEST(CO_TpdoCreate, CoTpdoCreate_NoTPDOCommParamRecord) {
-  CreateObjInDev(obj1a00, 0x1a00u);
+  dev_holder->CreateAndInsertObj(obj1a00, 0x1a00u);
 
   tpdo = co_tpdo_create(net, dev, TPDO_NUM);
 
@@ -268,8 +261,8 @@ TEST(CO_TpdoCreate, CoTpdoCreate_NoTPDOCommParamRecord) {
 }
 
 TEST(CO_TpdoCreate, CoTpdoCreate_MinimalTPDO) {
-  CreateObjInDev(obj1800, 0x1800u);
-  CreateObjInDev(obj1a00, 0x1a00u);
+  dev_holder->CreateAndInsertObj(obj1800, 0x1800u);
+  dev_holder->CreateAndInsertObj(obj1a00, 0x1a00u);
 
   tpdo = co_tpdo_create(net, dev, TPDO_NUM);
 
@@ -327,12 +320,12 @@ TEST(CO_TpdoCreate, CoTpdoCreate_MinimalTPDOMaxNum) {
 }
 
 TEST(CO_TpdoCreate, CoTpdoStart_ExtendedFrame) {
-  CreateObjInDev(obj1800, 0x1800u);
+  dev_holder->CreateAndInsertObj(obj1800, 0x1800u);
   SetComm00HighestSubidxSupported(0x02u);
   SetComm01CobId(DEV_ID | CO_PDO_COBID_FRAME);
   SetComm02TransmissionType(0x00u);
 
-  CreateObjInDev(obj1a00, 0x1a00u);
+  dev_holder->CreateAndInsertObj(obj1a00, 0x1a00u);
 
   tpdo = co_tpdo_create(net, dev, TPDO_NUM);
 
@@ -353,12 +346,12 @@ TEST(CO_TpdoCreate, CoTpdoStart_ExtendedFrame) {
 }
 
 TEST(CO_TpdoCreate, CoTpdoStart_InvalidBit) {
-  CreateObjInDev(obj1800, 0x1800u);
+  dev_holder->CreateAndInsertObj(obj1800, 0x1800u);
   SetComm00HighestSubidxSupported(0x02u);
   SetComm01CobId(DEV_ID | CO_PDO_COBID_VALID);
   SetComm02TransmissionType(0x00u);
 
-  CreateObjInDev(obj1a00, 0x1a00u);
+  dev_holder->CreateAndInsertObj(obj1a00, 0x1a00u);
 
   tpdo = co_tpdo_create(net, dev, TPDO_NUM);
 
@@ -379,7 +372,7 @@ TEST(CO_TpdoCreate, CoTpdoStart_InvalidBit) {
 }
 
 TEST(CO_TpdoCreate, CoTpdoStart_FullTPDOCommParamRecord) {
-  CreateObjInDev(obj1800, 0x1800u);
+  dev_holder->CreateAndInsertObj(obj1800, 0x1800u);
   SetComm00HighestSubidxSupported(0x06u);
   SetComm01CobId(DEV_ID);
   SetComm02TransmissionType(0x01u);
@@ -388,7 +381,7 @@ TEST(CO_TpdoCreate, CoTpdoStart_FullTPDOCommParamRecord) {
   SetComm05EventTimer(0x0004u);
   SetComm06SyncStartValue(0x05u);
 
-  CreateObjInDev(obj1a00, 0x1a00u);
+  dev_holder->CreateAndInsertObj(obj1a00, 0x1a00u);
 
   tpdo = co_tpdo_create(net, dev, TPDO_NUM);
 
@@ -411,9 +404,9 @@ TEST(CO_TpdoCreate, CoTpdoStart_FullTPDOCommParamRecord) {
 }
 
 TEST(CO_TpdoCreate, CoTpdoStart_FullTPDOMappingParamRecord) {
-  CreateObjInDev(obj1800, 0x1800u);
+  dev_holder->CreateAndInsertObj(obj1800, 0x1800u);
 
-  CreateObjInDev(obj1a00, 0x1a00u);
+  dev_holder->CreateAndInsertObj(obj1a00, 0x1a00u);
   SetMapp00NumOfMappedAppObjs(CO_PDO_NUM_MAPS);
   // 0x01-0x40 - application objects
   for (co_unsigned8_t i = 0x01u; i <= CO_PDO_NUM_MAPS; ++i) {
@@ -433,7 +426,7 @@ TEST(CO_TpdoCreate, CoTpdoStart_FullTPDOMappingParamRecord) {
 }
 
 TEST(CO_TpdoCreate, CoTpdoStart_OversizedTPDOCommParamRecord) {
-  CreateObjInDev(obj1800, 0x1800u);
+  dev_holder->CreateAndInsertObj(obj1800, 0x1800u);
   SetComm00HighestSubidxSupported(0x07u);
   SetComm01CobId(DEV_ID);
   SetComm02TransmissionType(0x01u);
@@ -445,7 +438,7 @@ TEST(CO_TpdoCreate, CoTpdoStart_OversizedTPDOCommParamRecord) {
   // sub 0x07 - illegal sub-object
   obj1800->InsertAndSetSub(0x07u, CO_DEFTYPE_UNSIGNED32, co_unsigned32_t(0));
 
-  CreateObjInDev(obj1a00, 0x1a00u);
+  dev_holder->CreateAndInsertObj(obj1a00, 0x1a00u);
 
   tpdo = co_tpdo_create(net, dev, TPDO_NUM);
   CHECK(tpdo != nullptr);
@@ -465,12 +458,12 @@ TEST(CO_TpdoCreate, CoTpdoStart_OversizedTPDOCommParamRecord) {
 }
 
 TEST(CO_TpdoCreate, CoTpdoStart_EventDrivenTransmission) {
-  CreateObjInDev(obj1800, 0x1800u);
+  dev_holder->CreateAndInsertObj(obj1800, 0x1800u);
   SetComm00HighestSubidxSupported(0x02u);
   SetComm01CobId(DEV_ID);
   SetComm02TransmissionType(0xfeu);
 
-  CreateObjInDev(obj1a00, 0x1a00u);
+  dev_holder->CreateAndInsertObj(obj1a00, 0x1a00u);
 
   tpdo = co_tpdo_create(net, dev, TPDO_NUM);
   CHECK(tpdo != nullptr);
@@ -490,7 +483,7 @@ TEST(CO_TpdoCreate, CoTpdoStart_EventDrivenTransmission) {
 }
 
 TEST(CO_TpdoCreate, CoTpdoStart_AlreadyStarted) {
-  CreateObjInDev(obj1800, 0x1800u);
+  dev_holder->CreateAndInsertObj(obj1800, 0x1800u);
   SetComm00HighestSubidxSupported(0x06u);
   SetComm01CobId(DEV_ID);
   SetComm02TransmissionType(0x01u);
@@ -498,7 +491,7 @@ TEST(CO_TpdoCreate, CoTpdoStart_AlreadyStarted) {
   SetComm04CompatibilityEntry();
   SetComm05EventTimer(0x0004u);
   SetComm06SyncStartValue(0x05u);
-  CreateObjInDev(obj1a00, 0x1a00u);
+  dev_holder->CreateAndInsertObj(obj1a00, 0x1a00u);
 
   tpdo = co_tpdo_create(net, dev, TPDO_NUM);
   co_tpdo_start(tpdo);
@@ -508,14 +501,14 @@ TEST(CO_TpdoCreate, CoTpdoStart_AlreadyStarted) {
 }
 
 TEST(CO_TpdoCreate, CoTpdoStart_TimerSet) {
-  CreateObjInDev(obj1800, 0x1800u);
+  dev_holder->CreateAndInsertObj(obj1800, 0x1800u);
   SetComm00HighestSubidxSupported(0x02u);
   SetComm01CobId(DEV_ID);
   SetComm02TransmissionType(0x00u);
 
-  CreateObjInDev(obj1a00, 0x1a00u);
+  dev_holder->CreateAndInsertObj(obj1a00, 0x1a00u);
 
-  CreateObjInDev(obj1007, 0x1007u);
+  dev_holder->CreateAndInsertObj(obj1007, 0x1007u);
   // 0x00 - synchronous window length
   obj1007->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED32,
                            co_unsigned32_t(0x00000001u));
@@ -554,8 +547,8 @@ TEST_GROUP_BASE(CO_Tpdo, CO_TpdoBase) {
   TEST_SETUP() {
     TEST_BASE_SETUP();
 
-    CreateObjInDev(obj1800, 0x1800u);
-    CreateObjInDev(obj1a00, 0x1a00u);
+    dev_holder->CreateAndInsertObj(obj1800, 0x1800u);
+    dev_holder->CreateAndInsertObj(obj1a00, 0x1a00u);
 
     CanSend::Clear();
     CoTpdoInd::Clear();
@@ -1387,7 +1380,7 @@ TEST_GROUP_BASE(CO_TpdoAllocation, CO_TpdoBase) {
   co_tpdo_t* tpdo = nullptr;
 
   void CompleteConfiguration() {
-    CreateObjInDev(obj1800, 0x1800u);
+    dev_holder->CreateAndInsertObj(obj1800, 0x1800u);
     SetComm00HighestSubidxSupported(0x06u);
     SetComm01CobId(DEV_ID);
     SetComm02TransmissionType(0x01u);
@@ -1396,7 +1389,7 @@ TEST_GROUP_BASE(CO_TpdoAllocation, CO_TpdoBase) {
     SetComm05EventTimer(0x0004u);
     SetComm06SyncStartValue(0x05u);
 
-    CreateObjInDev(obj1a00, 0x1a00u);
+    dev_holder->CreateAndInsertObj(obj1a00, 0x1a00u);
   }
 
   TEST_SETUP() {

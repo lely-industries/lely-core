@@ -575,13 +575,6 @@ TEST_BASE(CO_Ssdo) {
     return CO_SDO_AC_NO_READ;
   }
 
-  void CreateObjInDev(std::unique_ptr<CoObjTHolder> & obj_holder,
-                      co_unsigned16_t idx) {
-    obj_holder.reset(new CoObjTHolder(idx));
-    CHECK(obj_holder->Get() != nullptr);
-    CHECK_EQUAL(0, co_dev_insert_obj(dev, obj_holder->Take()));
-  }
-
   can_msg CreateDefaultSdoMsg(const co_unsigned16_t idx = IDX,
                               const co_unsigned8_t subidx = SUBIDX) {
     can_msg msg = CAN_MSG_INIT;
@@ -1024,7 +1017,7 @@ TEST_GROUP_BASE(CoSsdoWaitOnRecv, CO_Ssdo){};
 /// \Then an SDO response with a download initiate server command specifier
 ///       is sent, requested entry is modified
 TEST(CoSsdoWaitOnRecv, DnIniReq) {
-  CreateObjInDev(obj2020, IDX);
+  dev_holder->CreateAndInsertObj(obj2020, IDX);
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE, sub_type(0u));
   StartSSDO();
 
@@ -1051,7 +1044,7 @@ TEST(CoSsdoWaitOnRecv, DnIniReq) {
 /// \Then an SDO response with an expedited upload server command specifier
 ///       initiate and the requested data is sent
 TEST(CoSsdoWaitOnRecv, UpIniReq) {
-  CreateObjInDev(obj2020, IDX);
+  dev_holder->CreateAndInsertObj(obj2020, IDX);
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE, sub_type(0xabcdu));
   StartSSDO();
 
@@ -1074,7 +1067,7 @@ TEST(CoSsdoWaitOnRecv, UpIniReq) {
 /// \Then an SDO response with a block download server command specifier
 ///       is sent
 TEST(CoSsdoWaitOnRecv, BlkDnIniReq) {
-  CreateObjInDev(obj2020, IDX);
+  dev_holder->CreateAndInsertObj(obj2020, IDX);
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE, sub_type(0));
   StartSSDO();
 
@@ -1096,7 +1089,7 @@ TEST(CoSsdoWaitOnRecv, BlkDnIniReq) {
 /// \Then an SDO response with a block upload initiate server command specifier
 ///       is sent
 TEST(CoSsdoWaitOnRecv, BlkUpIniReq) {
-  CreateObjInDev(obj2020, IDX);
+  dev_holder->CreateAndInsertObj(obj2020, IDX);
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE, sub_type(0xabcdu));
   StartSSDO();
 
@@ -1216,7 +1209,7 @@ TEST(CoSsdoDnIniOnRecv, NoSubidxSpecified) {
 }
 
 TEST(CoSsdoDnIniOnRecv, TimeoutTriggered) {
-  CreateObjInDev(obj2020, IDX);
+  dev_holder->CreateAndInsertObj(obj2020, IDX);
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE64, sub_type64(0));
   co_ssdo_set_timeout(ssdo, 1u);  // 1 ms
   StartSSDO();
@@ -1256,7 +1249,7 @@ TEST(CoSsdoDnIniOnRecv, Expedited_NoObject) {
 }
 
 TEST(CoSsdoDnIniOnRecv, Expedited) {
-  CreateObjInDev(obj2020, IDX);
+  dev_holder->CreateAndInsertObj(obj2020, IDX);
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE, sub_type(0));
   StartSSDO();
 
@@ -1334,7 +1327,7 @@ TEST(CoSsdoUpIniOnRecv, NoSubidxSpecified) {
 }
 
 TEST(CoSsdoUpIniOnRecv, NoAccess) {
-  CreateObjInDev(obj2020, IDX);
+  dev_holder->CreateAndInsertObj(obj2020, IDX);
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE, sub_type(0));
   co_sub_set_access(obj2020->GetLastSub(), CO_ACCESS_WO);
   StartSSDO();
@@ -1349,7 +1342,7 @@ TEST(CoSsdoUpIniOnRecv, NoAccess) {
 }
 
 TEST(CoSsdoUpIniOnRecv, UploadToSubWithSizeZero) {
-  CreateObjInDev(obj2020, IDX);
+  dev_holder->CreateAndInsertObj(obj2020, IDX);
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE, sub_type(0x1234u));
   co_sub_set_up_ind(obj2020->GetLastSub(), up_ind_size_zero, nullptr);
   StartSSDO();
@@ -1364,7 +1357,7 @@ TEST(CoSsdoUpIniOnRecv, UploadToSubWithSizeZero) {
 }
 
 TEST(CoSsdoUpIniOnRecv, TimeoutTriggered) {
-  CreateObjInDev(obj2020, IDX);
+  dev_holder->CreateAndInsertObj(obj2020, IDX);
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE64, sub_type64(0x0123456789abcdefu));
   co_ssdo_set_timeout(ssdo, 1u);  // 1 ms
   StartSSDO();
@@ -1390,7 +1383,7 @@ TEST(CoSsdoUpIniOnRecv, TimeoutTriggered) {
 }
 
 TEST(CoSsdoUpIniOnRecv, Expedited) {
-  CreateObjInDev(obj2020, IDX);
+  dev_holder->CreateAndInsertObj(obj2020, IDX);
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE, sub_type(0xabcdu));
   StartSSDO();
 
@@ -1455,7 +1448,7 @@ TEST(CoSsdoBlkDnIniOnRecv, NoSubidxSpecified) {
 }
 
 TEST(CoSsdoBlkDnIniOnRecv, InvalidCS) {
-  CreateObjInDev(obj2020, IDX);
+  dev_holder->CreateAndInsertObj(obj2020, IDX);
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE, sub_type(0xabcdu));
   StartSSDO();
 
@@ -1469,7 +1462,7 @@ TEST(CoSsdoBlkDnIniOnRecv, InvalidCS) {
 }
 
 TEST(CoSsdoBlkDnIniOnRecv, BlkSizeSpecified) {
-  CreateObjInDev(obj2020, IDX);
+  dev_holder->CreateAndInsertObj(obj2020, IDX);
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE, sub_type(0));
   StartSSDO();
 
@@ -1483,7 +1476,7 @@ TEST(CoSsdoBlkDnIniOnRecv, BlkSizeSpecified) {
 }
 
 TEST(CoSsdoBlkDnIniOnRecv, TimeoutTriggered) {
-  CreateObjInDev(obj2020, IDX);
+  dev_holder->CreateAndInsertObj(obj2020, IDX);
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE, sub_type(0));
   co_ssdo_set_timeout(ssdo, 1u);  // 1 ms
   StartSSDO();
@@ -1508,7 +1501,7 @@ TEST(CoSsdoBlkDnIniOnRecv, TimeoutTriggered) {
 }
 
 TEST(CoSsdoBlkDnIniOnRecv, Nominal) {
-  CreateObjInDev(obj2020, IDX);
+  dev_holder->CreateAndInsertObj(obj2020, IDX);
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE, sub_type(0));
   StartSSDO();
 
@@ -1543,7 +1536,7 @@ TEST_GROUP_BASE(CoSsdoBlkUpIniOnRecv, CO_Ssdo) {
 ///@{
 
 TEST(CoSsdoBlkUpIniOnRecv, InvalidSC) {
-  CreateObjInDev(obj2020, IDX);
+  dev_holder->CreateAndInsertObj(obj2020, IDX);
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE, sub_type(0xabcdu));
   StartSSDO();
 
@@ -1584,7 +1577,7 @@ TEST(CoSsdoBlkUpIniOnRecv, NoSubidxSpecified) {
 }
 
 TEST(CoSsdoBlkUpIniOnRecv, BlocksizeNotSpecified) {
-  CreateObjInDev(obj2020, IDX);
+  dev_holder->CreateAndInsertObj(obj2020, IDX);
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE, sub_type(0xabcdu));
   StartSSDO();
 
@@ -1599,7 +1592,7 @@ TEST(CoSsdoBlkUpIniOnRecv, BlocksizeNotSpecified) {
 }
 
 TEST(CoSsdoBlkUpIniOnRecv, BlocksizeMoreThanMaxSeqNum) {
-  CreateObjInDev(obj2020, IDX);
+  dev_holder->CreateAndInsertObj(obj2020, IDX);
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE, sub_type(0xabcdu));
   StartSSDO();
 
@@ -1613,7 +1606,7 @@ TEST(CoSsdoBlkUpIniOnRecv, BlocksizeMoreThanMaxSeqNum) {
 }
 
 TEST(CoSsdoBlkUpIniOnRecv, BlocksizeZero) {
-  CreateObjInDev(obj2020, IDX);
+  dev_holder->CreateAndInsertObj(obj2020, IDX);
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE, sub_type(0xabcdu));
   StartSSDO();
 
@@ -1627,7 +1620,7 @@ TEST(CoSsdoBlkUpIniOnRecv, BlocksizeZero) {
 }
 
 TEST(CoSsdoBlkUpIniOnRecv, ProtocolSwitch) {
-  CreateObjInDev(obj2020, IDX);
+  dev_holder->CreateAndInsertObj(obj2020, IDX);
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE, sub_type(0xabcdu));
   StartSSDO();
 
@@ -1655,7 +1648,7 @@ TEST(CoSsdoBlkUpIniOnRecv, NoObjPresent) {
 }
 
 TEST(CoSsdoBlkUpIniOnRecv, NoSubPresent) {
-  CreateObjInDev(obj2020, IDX);
+  dev_holder->CreateAndInsertObj(obj2020, IDX);
   StartSSDO();
 
   can_msg msg = CreateBlkUp2020IniReqMsg();
@@ -1668,7 +1661,7 @@ TEST(CoSsdoBlkUpIniOnRecv, NoSubPresent) {
 }
 
 TEST(CoSsdoBlkUpIniOnRecv, BlksizeMoreThanPst) {
-  CreateObjInDev(obj2020, IDX);
+  dev_holder->CreateAndInsertObj(obj2020, IDX);
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE64, sub_type64(0x0123456789abcdefu));
   StartSSDO();
 
@@ -1683,7 +1676,7 @@ TEST(CoSsdoBlkUpIniOnRecv, BlksizeMoreThanPst) {
 }
 
 TEST(CoSsdoBlkUpIniOnRecv, TimeoutTriggered) {
-  CreateObjInDev(obj2020, IDX);
+  dev_holder->CreateAndInsertObj(obj2020, IDX);
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE64, sub_type64(0));
   co_ssdo_set_timeout(ssdo, 1u);  // 1 ms
   StartSSDO();
@@ -1711,7 +1704,7 @@ TEST(CoSsdoBlkUpIniOnRecv, TimeoutTriggered) {
 }
 
 TEST(CoSsdoBlkUpIniOnRecv, ReqSizeEqualToPst) {
-  CreateObjInDev(obj2020, IDX);
+  dev_holder->CreateAndInsertObj(obj2020, IDX);
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE64, sub_type64(0));
   StartSSDO();
 
@@ -1727,7 +1720,7 @@ TEST(CoSsdoBlkUpIniOnRecv, ReqSizeEqualToPst) {
 }
 
 TEST(CoSsdoBlkUpIniOnRecv, ReqSizeEqualToPst_MoreFrames_TimeoutSet) {
-  CreateObjInDev(obj2020, IDX);
+  dev_holder->CreateAndInsertObj(obj2020, IDX);
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE64, sub_type64(0));
   co_ssdo_set_timeout(ssdo, 1u);  // 1 ms
   StartSSDO();
@@ -1744,7 +1737,7 @@ TEST(CoSsdoBlkUpIniOnRecv, ReqSizeEqualToPst_MoreFrames_TimeoutSet) {
 }
 
 TEST(CoSsdoBlkUpIniOnRecv, ReqSizeMoreThanPst) {
-  CreateObjInDev(obj2020, IDX);
+  dev_holder->CreateAndInsertObj(obj2020, IDX);
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE64, sub_type64(0));
   StartSSDO();
 
@@ -1760,7 +1753,7 @@ TEST(CoSsdoBlkUpIniOnRecv, ReqSizeMoreThanPst) {
 }
 
 TEST(CoSsdoBlkUpIniOnRecv, Nominal) {
-  CreateObjInDev(obj2020, IDX);
+  dev_holder->CreateAndInsertObj(obj2020, IDX);
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE, sub_type(0xabcdu));
   StartSSDO();
 
@@ -1825,7 +1818,7 @@ TEST_GROUP_BASE(CoSsdoDnSegOnRecv, CO_Ssdo) {
 ///@{
 
 TEST(CoSsdoDnSegOnRecv, NoCS) {
-  CreateObjInDev(obj2020, IDX);
+  dev_holder->CreateAndInsertObj(obj2020, IDX);
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE64, sub_type64(0));
   StartSSDO();
 
@@ -1843,7 +1836,7 @@ TEST(CoSsdoDnSegOnRecv, NoCS) {
 }
 
 TEST(CoSsdoDnSegOnRecv, AbortCS) {
-  CreateObjInDev(obj2020, IDX);
+  dev_holder->CreateAndInsertObj(obj2020, IDX);
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE64, sub_type64(0));
   StartSSDO();
 
@@ -1866,7 +1859,7 @@ TEST(CoSsdoDnSegOnRecv, AbortCS) {
 /// \Then CAN message is not sent, download indication function is called with
 ///       the requested abort code, the requested entry is not changed
 TEST(CoSsdoDnSegOnRecv, AbortAfterFirstSegment) {
-  CreateObjInDev(obj2020, IDX);
+  dev_holder->CreateAndInsertObj(obj2020, IDX);
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE64, sub_type64(0));
   StartSSDO();
   co_obj_t* const obj = co_dev_find_obj(dev, IDX);
@@ -1902,7 +1895,7 @@ TEST(CoSsdoDnSegOnRecv, AbortAfterFirstSegment) {
 /// \Then CAN message is not sent, download indication function is called with
 ///       CO_SDO_AC_ERROR abort code, the requested entry is not changed
 TEST(CoSsdoDnSegOnRecv, AbortAfterFirstSegment_MsgTooShort) {
-  CreateObjInDev(obj2020, IDX);
+  dev_holder->CreateAndInsertObj(obj2020, IDX);
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE64, sub_type64(0));
   StartSSDO();
   co_obj_t* const obj = co_dev_find_obj(dev, IDX);
@@ -1930,7 +1923,7 @@ TEST(CoSsdoDnSegOnRecv, AbortAfterFirstSegment_MsgTooShort) {
 }
 
 TEST(CoSsdoDnSegOnRecv, InvalidCS) {
-  CreateObjInDev(obj2020, IDX);
+  dev_holder->CreateAndInsertObj(obj2020, IDX);
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE64, sub_type64(0));
   StartSSDO();
 
@@ -1948,7 +1941,7 @@ TEST(CoSsdoDnSegOnRecv, InvalidCS) {
 }
 
 TEST(CoSsdoDnSegOnRecv, NoToggle) {
-  CreateObjInDev(obj2020, IDX);
+  dev_holder->CreateAndInsertObj(obj2020, IDX);
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE64, sub_type64(0));
   StartSSDO();
 
@@ -1974,7 +1967,7 @@ TEST(CoSsdoDnSegOnRecv, NoToggle) {
 }
 
 TEST(CoSsdoDnSegOnRecv, MsgLenLessThanSegmentSize) {
-  CreateObjInDev(obj2020, IDX);
+  dev_holder->CreateAndInsertObj(obj2020, IDX);
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE64, sub_type64(0));
   StartSSDO();
 
@@ -1992,7 +1985,7 @@ TEST(CoSsdoDnSegOnRecv, MsgLenLessThanSegmentSize) {
 }
 
 TEST(CoSsdoDnSegOnRecv, SegmentTooBig) {
-  CreateObjInDev(obj2020, IDX);
+  dev_holder->CreateAndInsertObj(obj2020, IDX);
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE, sub_type(0));
   StartSSDO();
 
@@ -2009,7 +2002,7 @@ TEST(CoSsdoDnSegOnRecv, SegmentTooBig) {
 }
 
 TEST(CoSsdoDnSegOnRecv, SegmentTooSmall) {
-  CreateObjInDev(obj2020, IDX);
+  dev_holder->CreateAndInsertObj(obj2020, IDX);
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE64, sub_type64(0));
   StartSSDO();
 
@@ -2027,7 +2020,7 @@ TEST(CoSsdoDnSegOnRecv, SegmentTooSmall) {
 }
 
 TEST(CoSsdoDnSegOnRecv, FailDnInd) {
-  CreateObjInDev(obj2020, IDX);
+  dev_holder->CreateAndInsertObj(obj2020, IDX);
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE64, sub_type64(0));
   co_sub_t* const sub = co_dev_find_sub(dev, IDX, SUBIDX);
   co_sub_set_dn_ind(sub, sub_dn_failing_ind, nullptr);
@@ -2046,7 +2039,7 @@ TEST(CoSsdoDnSegOnRecv, FailDnInd) {
 }
 
 TEST(CoSsdoDnSegOnRecv, TimeoutTriggered) {
-  CreateObjInDev(obj2020, IDX);
+  dev_holder->CreateAndInsertObj(obj2020, IDX);
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE64, sub_type64(0));
   co_ssdo_set_timeout(ssdo, 1);
   StartSSDO();
@@ -2076,7 +2069,7 @@ TEST(CoSsdoDnSegOnRecv, TimeoutTriggered) {
 }
 
 TEST(CoSsdoDnSegOnRecv, Nominal) {
-  CreateObjInDev(obj2020, IDX);
+  dev_holder->CreateAndInsertObj(obj2020, IDX);
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE64, sub_type64(0));
   StartSSDO();
 
@@ -2180,7 +2173,7 @@ TEST_GROUP_BASE(CoSsdoUpSegOnRecv, CO_Ssdo) {
 ///@{
 
 TEST(CoSsdoUpSegOnRecv, NoCS) {
-  CreateObjInDev(obj2020, IDX);
+  dev_holder->CreateAndInsertObj(obj2020, IDX);
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE64, sub_type64(0));
   StartSSDO();
 
@@ -2198,7 +2191,7 @@ TEST(CoSsdoUpSegOnRecv, NoCS) {
 }
 
 TEST(CoSsdoUpSegOnRecv, CSAbort) {
-  CreateObjInDev(obj2020, IDX);
+  dev_holder->CreateAndInsertObj(obj2020, IDX);
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE64, sub_type64(0));
   StartSSDO();
 
@@ -2212,7 +2205,7 @@ TEST(CoSsdoUpSegOnRecv, CSAbort) {
 }
 
 TEST(CoSsdoUpSegOnRecv, InvalidCS) {
-  CreateObjInDev(obj2020, IDX);
+  dev_holder->CreateAndInsertObj(obj2020, IDX);
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE64, sub_type64(0));
   StartSSDO();
 
@@ -2229,7 +2222,7 @@ TEST(CoSsdoUpSegOnRecv, InvalidCS) {
 }
 
 TEST(CoSsdoUpSegOnRecv, NoToggle) {
-  CreateObjInDev(obj2020, IDX);
+  dev_holder->CreateAndInsertObj(obj2020, IDX);
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE64, sub_type64(0x9876543210abcdefu));
   StartSSDO();
 
@@ -2264,7 +2257,7 @@ TEST(CoSsdoUpSegOnRecv, NoToggle) {
 }
 
 TEST(CoSsdoUpSegOnRecv, TimeoutTriggered) {
-  CreateObjInDev(obj2020, IDX);
+  dev_holder->CreateAndInsertObj(obj2020, IDX);
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE64, sub_type64(0x9876543210abcdefu));
   co_ssdo_set_timeout(ssdo, 1u);  // 1 ms
   StartSSDO();
@@ -2302,7 +2295,7 @@ TEST(CoSsdoUpSegOnRecv, TimeoutTriggered) {
 }
 
 TEST(CoSsdoUpSegOnRecv, Nominal) {
-  CreateObjInDev(obj2020, IDX);
+  dev_holder->CreateAndInsertObj(obj2020, IDX);
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE64, sub_type64(0x9876543210abcdefu));
   StartSSDO();
 
@@ -2341,7 +2334,7 @@ TEST(CoSsdoUpSegOnRecv, Nominal) {
 }
 
 TEST(CoSsdoUpSegOnRecv, CoSsdoCreateSegRes_ExtendedId) {
-  CreateObjInDev(obj2020, IDX);
+  dev_holder->CreateAndInsertObj(obj2020, IDX);
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE64, sub_type64(0x9876543210abcdefu));
   const co_unsigned32_t new_can_id = 0x1ffff580u + DEV_ID;
   const co_unsigned32_t new_cobid_res = new_can_id | CO_SDO_COBID_FRAME;
@@ -2380,7 +2373,7 @@ TEST(CoSsdoUpSegOnRecv, CoSsdoCreateSegRes_ExtendedId) {
 }
 
 TEST(CoSsdoUpSegOnRecv, IndError) {
-  CreateObjInDev(obj2020, IDX);
+  dev_holder->CreateAndInsertObj(obj2020, IDX);
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE64, sub_type64(0x9876543210abcdefu));
   co_obj_set_up_ind(obj2020->Get(), up_ind_failing, nullptr);
   StartSSDO();
@@ -2416,7 +2409,7 @@ TEST(CoSsdoUpSegOnRecv, IndError) {
 }
 
 TEST(CoSsdoUpSegOnRecv, IndReqSizeLonger) {
-  CreateObjInDev(obj2020, IDX);
+  dev_holder->CreateAndInsertObj(obj2020, IDX);
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE64, sub_type64(0x9876543210abcdefu));
   co_obj_set_up_ind(obj2020->Get(), up_ind_size_longer, nullptr);
   StartSSDO();
@@ -2554,7 +2547,7 @@ TEST_GROUP_BASE(CoSsdoBlkDn, CO_Ssdo) {
 ///@{
 
 TEST(CoSsdoBlkDn, Sub_NoCS) {
-  CreateObjInDev(obj2020, IDX);
+  dev_holder->CreateAndInsertObj(obj2020, IDX);
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE64, sub_type64(0));
   StartSSDO();
 
@@ -2571,7 +2564,7 @@ TEST(CoSsdoBlkDn, Sub_NoCS) {
 }
 
 TEST(CoSsdoBlkDn, Sub_CSAbort) {
-  CreateObjInDev(obj2020, IDX);
+  dev_holder->CreateAndInsertObj(obj2020, IDX);
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE64, sub_type64(0));
   StartSSDO();
 
@@ -2585,7 +2578,7 @@ TEST(CoSsdoBlkDn, Sub_CSAbort) {
 }
 
 TEST(CoSsdoBlkDn, Sub_SeqnoZero) {
-  CreateObjInDev(obj2020, IDX);
+  dev_holder->CreateAndInsertObj(obj2020, IDX);
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE64, sub_type64(0));
   StartSSDO();
 
@@ -2602,7 +2595,7 @@ TEST(CoSsdoBlkDn, Sub_SeqnoZero) {
 }
 
 TEST(CoSsdoBlkDn, Sub_NoCrc) {
-  CreateObjInDev(obj2020, IDX);
+  dev_holder->CreateAndInsertObj(obj2020, IDX);
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE64, sub_type64(0));
   StartSSDO();
 
@@ -2641,7 +2634,7 @@ TEST(CoSsdoBlkDn, Sub_NoCrc) {
 }
 
 TEST(CoSsdoBlkDn, Sub_NoSub) {
-  CreateObjInDev(obj2020, IDX);
+  dev_holder->CreateAndInsertObj(obj2020, IDX);
   StartSSDO();
 
   InitBlkDn2020Sub00(sizeof(sub_type64));
@@ -2663,7 +2656,7 @@ TEST(CoSsdoBlkDn, Sub_NoSub) {
 }
 
 TEST(CoSsdoBlkDn, Sub_RequestLessThanSize) {
-  CreateObjInDev(obj2020, IDX);
+  dev_holder->CreateAndInsertObj(obj2020, IDX);
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE64, sub_type64(0));
   StartSSDO();
 
@@ -2686,7 +2679,7 @@ TEST(CoSsdoBlkDn, Sub_RequestLessThanSize) {
 }
 
 TEST(CoSsdoBlkDn, Sub_Nominal) {
-  CreateObjInDev(obj2020, IDX);
+  dev_holder->CreateAndInsertObj(obj2020, IDX);
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE64, sub_type64(0));
   StartSSDO();
 
@@ -2723,7 +2716,7 @@ TEST(CoSsdoBlkDn, Sub_Nominal) {
 }
 
 TEST(CoSsdoBlkDn, Sub_InvalidSeqno_LastInBlk) {
-  CreateObjInDev(obj2020, IDX);
+  dev_holder->CreateAndInsertObj(obj2020, IDX);
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE64, sub_type64(0));
   StartSSDO();
 
@@ -2751,7 +2744,7 @@ TEST(CoSsdoBlkDn, Sub_InvalidSeqno_LastInBlk) {
 }
 
 TEST(CoSsdoBlkDn, Sub_CrcError) {
-  CreateObjInDev(obj2020, IDX);
+  dev_holder->CreateAndInsertObj(obj2020, IDX);
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE64, sub_type64(0));
   StartSSDO();
 
@@ -2798,7 +2791,7 @@ TEST(CoSsdoBlkDn, Sub_CrcError) {
 }
 
 TEST(CoSsdoBlkDn, Sub_TimeoutTriggered) {
-  CreateObjInDev(obj2020, IDX);
+  dev_holder->CreateAndInsertObj(obj2020, IDX);
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE64, sub_type64(0));
   co_ssdo_set_timeout(ssdo, 1u);  // 1 ms
   StartSSDO();
@@ -2827,7 +2820,7 @@ TEST(CoSsdoBlkDn, Sub_TimeoutTriggered) {
 }
 
 TEST(CoSsdoBlkDn, EndAbort) {
-  CreateObjInDev(obj2020, IDX);
+  dev_holder->CreateAndInsertObj(obj2020, IDX);
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE64, sub_type64(0));
   StartSSDO();
 
@@ -2864,7 +2857,7 @@ TEST(CoSsdoBlkDn, EndAbort) {
 }
 
 TEST(CoSsdoBlkDn, End_TimeoutTriggered) {
-  CreateObjInDev(obj2020, IDX);
+  dev_holder->CreateAndInsertObj(obj2020, IDX);
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE64, sub_type64(0));
   co_ssdo_set_timeout(ssdo, 1u);  // 1 ms
   StartSSDO();
@@ -2882,7 +2875,7 @@ TEST(CoSsdoBlkDn, End_TimeoutTriggered) {
 }
 
 TEST(CoSsdoBlkDn, EndRecv_NoCS) {
-  CreateObjInDev(obj2020, IDX);
+  dev_holder->CreateAndInsertObj(obj2020, IDX);
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE64, sub_type64(0));
   StartSSDO();
 
@@ -2900,7 +2893,7 @@ TEST(CoSsdoBlkDn, EndRecv_NoCS) {
 }
 
 TEST(CoSsdoBlkDn, EndRecv_CSAbort) {
-  CreateObjInDev(obj2020, IDX);
+  dev_holder->CreateAndInsertObj(obj2020, IDX);
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE64, sub_type64(0));
   StartSSDO();
 
@@ -2915,7 +2908,7 @@ TEST(CoSsdoBlkDn, EndRecv_CSAbort) {
 }
 
 TEST(CoSsdoBlkDn, EndRecv_InvalidCS) {
-  CreateObjInDev(obj2020, IDX);
+  dev_holder->CreateAndInsertObj(obj2020, IDX);
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE64, sub_type64(0));
   StartSSDO();
 
@@ -2933,7 +2926,7 @@ TEST(CoSsdoBlkDn, EndRecv_InvalidCS) {
 }
 
 TEST(CoSsdoBlkDn, EndRecv_InvalidSC) {
-  CreateObjInDev(obj2020, IDX);
+  dev_holder->CreateAndInsertObj(obj2020, IDX);
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE64, sub_type64(0));
   StartSSDO();
 
@@ -2951,7 +2944,7 @@ TEST(CoSsdoBlkDn, EndRecv_InvalidSC) {
 }
 
 TEST(CoSsdoBlkDn, EndRecv_InvalidLen) {
-  CreateObjInDev(obj2020, IDX);
+  dev_holder->CreateAndInsertObj(obj2020, IDX);
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE64, sub_type64(0));
   StartSSDO();
 
@@ -2994,7 +2987,7 @@ TEST(CoSsdoBlkDn, EndRecv_InvalidLen) {
 }
 
 TEST(CoSsdoBlkDn, EndRecv_InvalidSize) {
-  CreateObjInDev(obj2020, IDX);
+  dev_holder->CreateAndInsertObj(obj2020, IDX);
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE64, sub_type64(0));
   StartSSDO();
 
@@ -3013,7 +3006,7 @@ TEST(CoSsdoBlkDn, EndRecv_InvalidSize) {
 }
 
 TEST(CoSsdoBlkDn, EndRecv_ReqZero) {
-  CreateObjInDev(obj2020, IDX);
+  dev_holder->CreateAndInsertObj(obj2020, IDX);
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE64, sub_type64(0));
   StartSSDO();
 
@@ -3047,7 +3040,7 @@ TEST(CoSsdoBlkDn, EndRecv_ReqZero) {
 }
 
 TEST(CoSsdoBlkDn, EndRecv_FailingDnInd) {
-  CreateObjInDev(obj2020, IDX);
+  dev_holder->CreateAndInsertObj(obj2020, IDX);
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE64, sub_type64(0));
   StartSSDO();
 
@@ -3210,7 +3203,7 @@ TEST_GROUP_BASE(CoSsdoBlkUp, CO_Ssdo) {
 ///@{
 
 TEST(CoSsdoBlkUp, Sub_Nominal) {
-  CreateObjInDev(obj2020, IDX);
+  dev_holder->CreateAndInsertObj(obj2020, IDX);
   sub_type64 val = 0x5423456789abcdefu;
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE64, val);
   StartSSDO();
@@ -3282,7 +3275,7 @@ TEST(CoSsdoBlkUp, Sub_Nominal) {
 }
 
 TEST(CoSsdoBlkUp, Sub_BlksizeOne_MsgWithNoLastByte) {
-  CreateObjInDev(obj2020, IDX);
+  dev_holder->CreateAndInsertObj(obj2020, IDX);
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE64, sub_type64(0x5423456789abcdefu));
   StartSSDO();
 
@@ -3332,7 +3325,7 @@ TEST(CoSsdoBlkUp, Sub_BlksizeOne_MsgWithNoLastByte) {
 }
 
 TEST(CoSsdoBlkUp, Sub_IndError) {
-  CreateObjInDev(obj2020, IDX);
+  dev_holder->CreateAndInsertObj(obj2020, IDX);
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE64, sub_type64(0x5423456789abcdefu));
   co_obj_set_up_ind(obj2020->Get(), up_ind_ret_err, nullptr);
   StartSSDO();
@@ -3346,7 +3339,7 @@ TEST(CoSsdoBlkUp, Sub_IndError) {
 }
 
 TEST(CoSsdoBlkUp, Sub_StartButReqNotFirst) {
-  CreateObjInDev(obj2020, IDX);
+  dev_holder->CreateAndInsertObj(obj2020, IDX);
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE64, sub_type64(0x5423456789abcdefu));
   co_obj_set_up_ind(obj2020->Get(), up_ind_inc_req_offset, nullptr);
   StartSSDO();
@@ -3367,7 +3360,7 @@ TEST(CoSsdoBlkUp, Sub_StartButReqNotFirst) {
 }
 
 TEST(CoSsdoBlkUp, Sub_RequestIncremented) {
-  CreateObjInDev(obj2020, IDX);
+  dev_holder->CreateAndInsertObj(obj2020, IDX);
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE64, sub_type64(0x5423456789abcdefu));
   co_obj_set_up_ind(obj2020->Get(), up_ind_inc_req_offset, nullptr);
   StartSSDO();
@@ -3407,7 +3400,7 @@ TEST(CoSsdoBlkUp, Sub_RequestIncremented) {
 }
 
 TEST(CoSsdoBlkUp, Sub_ArrNominal) {
-  CreateObjInDev(obj2020, IDX);
+  dev_holder->CreateAndInsertObj(obj2020, IDX);
   obj2020->InsertAndSetSub(SUBIDX, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(1u));
   sub_type val = 0xabcdu;
   obj2020->InsertAndSetSub(0x01u, SUB_TYPE, sub_type(val));
@@ -3491,7 +3484,7 @@ TEST(CoSsdoBlkUp, Sub_EmptyArray) {
 
   const co_unsigned8_t element_subindex = 0x01u;
   const uint_least32_t res_canid = 0x580u + DEV_ID;
-  CreateObjInDev(obj2020, IDX);
+  dev_holder->CreateAndInsertObj(obj2020, IDX);
   obj2020->InsertAndSetSub(SUBIDX, CO_DEFTYPE_UNSIGNED8, element_subindex);
   obj2020->InsertAndSetSub(element_subindex, SUB_TYPE,
                            sub_type(0));  // the sub-object must exist
@@ -3551,7 +3544,7 @@ TEST(CoSsdoBlkUp, Sub_EmptyArray) {
 }
 
 TEST(CoSsdoBlkUp, Sub_ByteNotLast) {
-  CreateObjInDev(obj2020, IDX);
+  dev_holder->CreateAndInsertObj(obj2020, IDX);
   obj2020->InsertAndSetSub(SUBIDX, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(0));
   co_obj_set_code(co_dev_find_obj(dev, IDX), CO_OBJECT_ARRAY);
   co_obj_set_up_ind(obj2020->Get(), up_ind_big_reqsiz, nullptr);
@@ -3590,7 +3583,7 @@ TEST(CoSsdoBlkUp, Sub_ByteNotLast) {
 }
 
 TEST(CoSsdoBlkUp, Sub_ArrInvalidMaxSubidx) {
-  CreateObjInDev(obj2020, IDX);
+  dev_holder->CreateAndInsertObj(obj2020, IDX);
   obj2020->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(0));
   obj2020->InsertAndSetSub(0x01u, SUB_TYPE, sub_type(0xffffu));
   obj2020->InsertAndSetSub(0x02u, SUB_TYPE, sub_type(0xffffu));
@@ -3606,7 +3599,7 @@ TEST(CoSsdoBlkUp, Sub_ArrInvalidMaxSubidx) {
 }
 
 TEST(CoSsdoBlkUp, Sub_TimeoutTriggered) {
-  CreateObjInDev(obj2020, IDX);
+  dev_holder->CreateAndInsertObj(obj2020, IDX);
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE, sub_type(0xabcdu));
   co_ssdo_set_timeout(ssdo, 1u);  // 1 ms
   StartSSDO();
@@ -3642,7 +3635,7 @@ TEST(CoSsdoBlkUp, Sub_TimeoutTriggered) {
 }
 
 TEST(CoSsdoBlkUp, InitIniRes_CoSdoCobidFrame) {
-  CreateObjInDev(obj2020, IDX);
+  dev_holder->CreateAndInsertObj(obj2020, IDX);
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE, sub_type(0xabcdu));
   co_unsigned32_t cobid_res = (0x580u + DEV_ID) | CO_SDO_COBID_FRAME;
   SetSrv02CobidRes(cobid_res);
@@ -3670,7 +3663,7 @@ TEST(CoSsdoBlkUp, InitIniRes_CoSdoCobidFrame) {
 }
 
 TEST(CoSsdoBlkUp, Sub_InvalidCS) {
-  CreateObjInDev(obj2020, IDX);
+  dev_holder->CreateAndInsertObj(obj2020, IDX);
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE64, sub_type64(0x0123456789abcdefu));
   SetSrv02CobidRes(0x580u + DEV_ID);
   StartSSDO();
@@ -3694,7 +3687,7 @@ TEST(CoSsdoBlkUp, Sub_InvalidCS) {
 }
 
 TEST(CoSsdoBlkUp, Sub_NoCS) {
-  CreateObjInDev(obj2020, IDX);
+  dev_holder->CreateAndInsertObj(obj2020, IDX);
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE, sub_type(0xabcdu));
   StartSSDO();
 
@@ -3713,7 +3706,7 @@ TEST(CoSsdoBlkUp, Sub_NoCS) {
 }
 
 TEST(CoSsdoBlkUp, Sub_CSAbort) {
-  CreateObjInDev(obj2020, IDX);
+  dev_holder->CreateAndInsertObj(obj2020, IDX);
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE, sub_type(0xabcdu));
   StartSSDO();
 
@@ -3730,7 +3723,7 @@ TEST(CoSsdoBlkUp, Sub_CSAbort) {
 }
 
 TEST(CoSsdoBlkUp, Sub_InvalidSC) {
-  CreateObjInDev(obj2020, IDX);
+  dev_holder->CreateAndInsertObj(obj2020, IDX);
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE, sub_type(0xabcdu));
   StartSSDO();
 
@@ -3751,7 +3744,7 @@ TEST(CoSsdoBlkUp, Sub_InvalidSC) {
 }
 
 TEST(CoSsdoBlkUp, Sub_EmptyRequest) {
-  CreateObjInDev(obj2020, IDX);
+  dev_holder->CreateAndInsertObj(obj2020, IDX);
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE, sub_type(0xabcdu));
   StartSSDO();
 
@@ -3770,7 +3763,7 @@ TEST(CoSsdoBlkUp, Sub_EmptyRequest) {
 }
 
 TEST(CoSsdoBlkUp, Sub_NoBlkSeqNum) {
-  CreateObjInDev(obj2020, IDX);
+  dev_holder->CreateAndInsertObj(obj2020, IDX);
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE64, sub_type64(0x0123456789abcdefu));
   StartSSDO();
 
@@ -3808,7 +3801,7 @@ TEST(CoSsdoBlkUp, Sub_NoBlkSeqNum) {
 }
 
 TEST(CoSsdoBlkUp, Sub_TooManySegments) {
-  CreateObjInDev(obj2020, IDX);
+  dev_holder->CreateAndInsertObj(obj2020, IDX);
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE, sub_type(0xabcdu));
   StartSSDO();
 
@@ -3847,7 +3840,7 @@ TEST(CoSsdoBlkUp, Sub_TooManySegments) {
 }
 
 TEST(CoSsdoBlkUp, Sub_NoSegments) {
-  CreateObjInDev(obj2020, IDX);
+  dev_holder->CreateAndInsertObj(obj2020, IDX);
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE, sub_type(0xabcdu));
   StartSSDO();
 
@@ -3886,7 +3879,7 @@ TEST(CoSsdoBlkUp, Sub_NoSegments) {
 }
 
 TEST(CoSsdoBlkUp, Sub_StartUp_ButAlreadyStarted) {
-  CreateObjInDev(obj2020, IDX);
+  dev_holder->CreateAndInsertObj(obj2020, IDX);
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE, sub_type(0xabcdu));
   StartSSDO();
 
@@ -3922,7 +3915,7 @@ TEST(CoSsdoBlkUp, Sub_StartUp_ButAlreadyStarted) {
 }
 
 TEST(CoSsdoBlkUp, End_TimeoutTriggered) {
-  CreateObjInDev(obj2020, IDX);
+  dev_holder->CreateAndInsertObj(obj2020, IDX);
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE64, sub_type64(0x5423456789abcdefu));
   co_ssdo_set_timeout(ssdo, 1u);  // 1 ms
   StartSSDO();
@@ -3942,7 +3935,7 @@ TEST(CoSsdoBlkUp, End_TimeoutTriggered) {
 }
 
 TEST(CoSsdoBlkUp, EndOnRecv_TooShortMsg) {
-  CreateObjInDev(obj2020, IDX);
+  dev_holder->CreateAndInsertObj(obj2020, IDX);
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE64, sub_type64(0x5423456789abcdefu));
   StartSSDO();
 
@@ -3963,7 +3956,7 @@ TEST(CoSsdoBlkUp, EndOnRecv_TooShortMsg) {
 }
 
 TEST(CoSsdoBlkUp, EndOnRecv_InvalidCS) {
-  CreateObjInDev(obj2020, IDX);
+  dev_holder->CreateAndInsertObj(obj2020, IDX);
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE64, sub_type64(0x5423456789abcdefu));
   StartSSDO();
 
@@ -3984,7 +3977,7 @@ TEST(CoSsdoBlkUp, EndOnRecv_InvalidCS) {
 }
 
 TEST(CoSsdoBlkUp, EndOnRecv_InvalidSC) {
-  CreateObjInDev(obj2020, IDX);
+  dev_holder->CreateAndInsertObj(obj2020, IDX);
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE64, sub_type64(0x5423456789abcdefu));
   StartSSDO();
 
@@ -4005,7 +3998,7 @@ TEST(CoSsdoBlkUp, EndOnRecv_InvalidSC) {
 }
 
 TEST(CoSsdoBlkUp, EndOnRecv_CSAbort) {
-  CreateObjInDev(obj2020, IDX);
+  dev_holder->CreateAndInsertObj(obj2020, IDX);
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE64, sub_type64(0x5423456789abcdefu));
   StartSSDO();
 

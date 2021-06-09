@@ -54,14 +54,6 @@ TEST_GROUP(CO_SsdoDnInd) {
   std::unique_ptr<CoDevTHolder> dev_holder;
   std::unique_ptr<CoObjTHolder> obj1200;
 
-  void CreateObjInDev(std::unique_ptr<CoObjTHolder> & obj_holder,
-                      const co_unsigned16_t idx) {
-    assert(dev);
-    obj_holder.reset(new CoObjTHolder(idx));
-    CHECK(obj_holder->Get() != nullptr);
-    CHECK_EQUAL(0, co_dev_insert_obj(dev, obj_holder->Take()));
-  }
-
   co_unsigned32_t GetSrv01CobidReq() {
     return co_dev_get_val_u32(dev, 0x1200u, 0x01u);
   }
@@ -124,7 +116,7 @@ TEST_GROUP(CO_SsdoDnInd) {
     dev = dev_holder->Get();
     assert(dev);
 
-    CreateObjInDev(obj1200, 0x1200u);
+    dev_holder->CreateAndInsertObj(obj1200, 0x1200u);
     SetSrv00HighestSubidxSupported(0x03u);
     SetSrv01CobidReq(CAN_ID);
     SetSrv02CobidRes(CAN_ID);

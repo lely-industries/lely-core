@@ -58,13 +58,6 @@ TEST_GROUP(CO_CsdoInit) {
   Allocators::Default defaultAllocator;
   Allocators::Limited limitedAllocator;
 
-  void CreateObjInDev(std::unique_ptr<CoObjTHolder> & obj_holder,
-                      const co_unsigned16_t idx) {
-    obj_holder.reset(new CoObjTHolder(idx));
-    CHECK(obj_holder->Get() != nullptr);
-    CHECK_EQUAL(0, co_dev_insert_obj(dev, obj_holder->Take()));
-  }
-
   TEST_SETUP() {
     LelyUnitTest::DisableDiagnosticMessages();
     net = can_net_create(defaultAllocator.ToAllocT(), 0);
@@ -223,7 +216,7 @@ TEST(CO_CsdoInit, CoCsdoCreate_NumTooHigh) {
 ///       \Calls membuf_init()
 ///       \IfCalls{!LELY_NO_MALLOC, membuf_init()}
 TEST(CO_CsdoInit, CoCsdoCreate_WithObj1280) {
-  CreateObjInDev(obj1280, 0x1280u);
+  dev_holder->CreateAndInsertObj(obj1280, 0x1280u);
 
   co_csdo_t* const csdo = co_csdo_create(net, dev, CSDO_NUM);
 
@@ -286,7 +279,7 @@ TEST(CO_CsdoInit, CoCsdoCreate_NoServerParameterObj) {
 ///       \Calls co_csdo_get_alloc()
 ///       \Calls set_errc()
 TEST(CO_CsdoInit, CoCsdoCreate_RecvCreateFail) {
-  CreateObjInDev(obj1280, 0x1280u);
+  dev_holder->CreateAndInsertObj(obj1280, 0x1280u);
 
   limitedAllocator.LimitAllocationTo(co_csdo_sizeof());
   co_csdo_t* const csdo = co_csdo_create(failing_net, dev, CSDO_NUM);
@@ -319,7 +312,7 @@ TEST(CO_CsdoInit, CoCsdoCreate_RecvCreateFail) {
 ///       \Calls mem_free()
 ///       \Calls co_csdo_get_alloc()
 TEST(CO_CsdoInit, CoCsdoCreate_TimerCreateFail) {
-  CreateObjInDev(obj1280, 0x1280u);
+  dev_holder->CreateAndInsertObj(obj1280, 0x1280u);
 
   limitedAllocator.LimitAllocationTo(co_csdo_sizeof() + can_recv_sizeof());
   co_csdo_t* const csdo = co_csdo_create(failing_net, dev, CSDO_NUM);
@@ -356,7 +349,7 @@ TEST(CO_CsdoInit, CoCsdoDestroy_Nullptr) {
 ///       \Calls mem_free()
 ///       \Calls co_csdo_get_alloc()
 TEST(CO_CsdoInit, CoCsdoDestroy_Nominal) {
-  CreateObjInDev(obj1280, 0x1280u);
+  dev_holder->CreateAndInsertObj(obj1280, 0x1280u);
   co_csdo_t* const csdo = co_csdo_create(net, dev, CSDO_NUM);
   CHECK(csdo != nullptr);
 
@@ -397,7 +390,7 @@ TEST(CO_CsdoInit, CoCsdoStart_NoDev) {
 /// \Then 0 is returned, the service is not stopped, the service is idle
 ///       \Calls co_csdo_is_stopped()
 TEST(CO_CsdoInit, CoCsdoStart_AlreadyStarted) {
-  CreateObjInDev(obj1280, 0x1280u);
+  dev_holder->CreateAndInsertObj(obj1280, 0x1280u);
   co_csdo_t* const csdo = co_csdo_create(net, dev, CSDO_NUM);
   CHECK_EQUAL(0, co_csdo_start(csdo));
 
@@ -425,7 +418,7 @@ TEST(CO_CsdoInit, CoCsdoStart_AlreadyStarted) {
 ///       \Calls co_csdo_is_valid()
 ///       \Calls can_recv_start()
 TEST(CO_CsdoInit, CoCsdoStart_DefaultCSDO_WithObj1280) {
-  CreateObjInDev(obj1280, 0x1280u);
+  dev_holder->CreateAndInsertObj(obj1280, 0x1280u);
   co_csdo_t* const csdo = co_csdo_create(net, dev, CSDO_NUM);
 
   const auto ret = co_csdo_start(csdo);
@@ -450,7 +443,7 @@ TEST(CO_CsdoInit, CoCsdoStart_DefaultCSDO_WithObj1280) {
 /// \Then the service is stopped
 ///       \Calls co_csdo_is_stopped()
 TEST(CO_CsdoInit, CoCsdoStop_OnCreated) {
-  CreateObjInDev(obj1280, 0x1280u);
+  dev_holder->CreateAndInsertObj(obj1280, 0x1280u);
   co_csdo_t* const csdo = co_csdo_create(net, dev, CSDO_NUM);
   CHECK(csdo != nullptr);
 
@@ -474,7 +467,7 @@ TEST(CO_CsdoInit, CoCsdoStop_OnCreated) {
 ///       \Calls co_dev_find_obj()
 ///       \Calls co_obj_set_dn_ind()
 TEST(CO_CsdoInit, CoCsdoStop_OnStarted) {
-  CreateObjInDev(obj1280, 0x1280u);
+  dev_holder->CreateAndInsertObj(obj1280, 0x1280u);
   co_csdo_t* const csdo = co_csdo_create(net, dev, CSDO_NUM);
   CHECK(csdo != nullptr);
   CHECK_EQUAL(0, co_csdo_start(csdo));
@@ -498,17 +491,9 @@ TEST_BASE(CO_CsdoBase) {
   co_csdo_t* csdo = nullptr;
   co_dev_t* dev = nullptr;
   can_net_t* net = nullptr;
-  std::unique_ptr<CoDevTHolder> dev_holder;
   Allocators::Default defaultAllocator;
-
+  std::unique_ptr<CoDevTHolder> dev_holder;
   std::unique_ptr<CoObjTHolder> obj1280;
-
-  void CreateObjInDev(std::unique_ptr<CoObjTHolder> & obj_holder,
-                      co_unsigned16_t idx) {
-    obj_holder.reset(new CoObjTHolder(idx));
-    CHECK(obj_holder->Get() != nullptr);
-    CHECK_EQUAL(0, co_dev_insert_obj(dev, obj_holder->Take()));
-  }
 
   // obj 0x1280, sub 0x00 - highest sub-index supported
   void SetCli00HighestSubidxSupported(co_unsigned8_t subidx) {
@@ -556,7 +541,7 @@ TEST_BASE(CO_CsdoBase) {
 
     can_net_set_send_func(net, CanSend::func, nullptr);
 
-    CreateObjInDev(obj1280, 0x1280u);
+    dev_holder->CreateAndInsertObj(obj1280, 0x1280u);
     SetCli00HighestSubidxSupported(0x02u);
     SetCli01CobidReq(0x600u + DEV_ID);
     SetCli02CobidRes(0x580u + DEV_ID);
@@ -889,7 +874,7 @@ TEST_GROUP_BASE(CO_Csdo, CO_CsdoBase) {
   TEST_SETUP() {
     TEST_BASE_SETUP();
 
-    CreateObjInDev(obj2020, IDX);
+    dev_holder->CreateAndInsertObj(obj2020, IDX);
     obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE, sub_type(0));
 
     CoCsdoUpCon::Clear();
@@ -1416,7 +1401,7 @@ TEST(CO_Csdo, CoDevDnDcfReq_ManyEntriesButDnIndFail) {
   uint_least8_t* const begin = concise_dcf;
   uint_least8_t* const end = concise_dcf + CONCISE_DCF_COMBINED_SIZE;
   const co_unsigned16_t OTHER_IDX = 0x2021u;
-  CreateObjInDev(obj2021, OTHER_IDX);
+  dev_holder->CreateAndInsertObj(obj2021, OTHER_IDX);
   obj2021->InsertAndSetSub(0x00u, SUB_TYPE, sub_type(0));
   CHECK_EQUAL(CONCISE_DCF_COMBINED_SIZE,
               co_dev_write_dcf(dev, IDX, OTHER_IDX, begin, end));
@@ -1755,7 +1740,7 @@ TEST(CO_Csdo, CoDevUpReq_ArrayObject_NoElement) {
   membuf mbuf = MEMBUF_INIT;
   MembufInitSubType(&mbuf);
 
-  CreateObjInDev(obj2021, ARRAY_IDX);
+  dev_holder->CreateAndInsertObj(obj2021, ARRAY_IDX);
   co_obj_set_code(obj2021->Get(), CO_OBJECT_ARRAY);
   obj2021->InsertAndSetSub(SUBIDX, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(0x00u));
   obj2021->InsertAndSetSub(ELEMENT_SUBIDX, CO_DEFTYPE_UNSIGNED8,
@@ -1808,7 +1793,7 @@ TEST(CO_Csdo, CoDevUpReq_ArrayObject) {
   membuf mbuf = MEMBUF_INIT;
   MembufInitSubType(&mbuf);
 
-  CreateObjInDev(obj2021, ARRAY_IDX);
+  dev_holder->CreateAndInsertObj(obj2021, ARRAY_IDX);
   co_obj_set_code(obj2021->Get(), CO_OBJECT_ARRAY);
   obj2021->InsertAndSetSub(0x00, CO_DEFTYPE_UNSIGNED8, ELEMENT_SUBIDX);
   obj2021->InsertAndSetSub(ELEMENT_SUBIDX, SUB_TYPE, sub_type(0x1234u));

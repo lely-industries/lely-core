@@ -111,20 +111,13 @@ TEST_BASE(CO_EmcyBase) {
   const co_unsigned32_t PRODUCER_CANID = 0x80u + DEV_ID;
   const co_unsigned32_t CONSUMER_CANID = PRODUCER_CANID + 1u;
 
-  void CreateObjInDev(std::unique_ptr<CoObjTHolder> & obj_holder,
-                      co_unsigned16_t idx) {
-    obj_holder.reset(new CoObjTHolder(idx));
-    CHECK(obj_holder->Get() != nullptr);
-    CHECK_EQUAL(0, co_dev_insert_obj(dev, obj_holder->Take()));
-  }
-
   void CreateObj1001ErrorRegister(co_unsigned8_t er) {
-    CreateObjInDev(obj1001, 0x1001u);
+    dev_holder->CreateAndInsertObj(obj1001, 0x1001u);
     obj1001->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, er);
   }
 
   void CreateObj1003PredefinedErrorField() {
-    CreateObjInDev(obj1003, 0x1003u);
+    dev_holder->CreateAndInsertObj(obj1003, 0x1003u);
     co_obj_set_code(obj1003->Get(), CO_OBJECT_ARRAY);
     obj1003->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t{0u});
     for (co_unsigned8_t i = 0; i < ERROR_STACK_SIZE; ++i) {
@@ -134,13 +127,13 @@ TEST_BASE(CO_EmcyBase) {
   }
 
   void CreateObj1014CobIdEmcy() {
-    CreateObjInDev(obj1014, 0x1014u);
+    dev_holder->CreateAndInsertObj(obj1014, 0x1014u);
     obj1014->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED32,
                              co_unsigned32_t{PRODUCER_CANID});
   }
 
   void CreateObj1028EmcyConsumerObject() {
-    CreateObjInDev(obj1028, 0x1028u);
+    dev_holder->CreateAndInsertObj(obj1028, 0x1028u);
     co_obj_set_code(obj1028->Get(), CO_OBJECT_ARRAY);
     obj1028->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t{1u});
     obj1028->InsertAndSetSub(0x01u, CO_DEFTYPE_UNSIGNED32,
@@ -504,7 +497,7 @@ TEST(CO_EmcyMinimal, CoEmcyStart_AlreadyStarted) {
 ///       \Calls can_recv_start()
 TEST(CO_EmcyCreate, CoEmcyStart_Obj1028_WithMissingSubObject) {
   CreateObj1001ErrorRegister(0u);
-  CreateObjInDev(obj1028, 0x1028u);
+  dev_holder->CreateAndInsertObj(obj1028, 0x1028u);
   co_obj_set_code(obj1028->Get(), CO_OBJECT_ARRAY);
   obj1028->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t{2u});
   obj1028->InsertAndSetSub(0x01u, CO_DEFTYPE_UNSIGNED32, co_unsigned32_t{0u});
@@ -538,7 +531,7 @@ TEST(CO_EmcyCreate, CoEmcyStart_Obj1028_WithMissingSubObject) {
 ///       \Calls can_recv_start()
 TEST(CO_EmcyCreate, CoEmcyStart_Obj1028_BiggerThanMaxNodes) {
   CreateObj1001ErrorRegister(0u);
-  CreateObjInDev(obj1028, 0x1028u);
+  dev_holder->CreateAndInsertObj(obj1028, 0x1028u);
   co_obj_set_code(obj1028->Get(), CO_OBJECT_ARRAY);
   obj1028->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8,
                            co_unsigned8_t{CO_NUM_NODES + 1u});
@@ -805,7 +798,7 @@ TEST_GROUP_BASE(CO_EmcyInhibitTime, CO_EmcyBase) {
   co_emcy_t* emcy = nullptr;
 
   void CreateObj1015InhibitTimeEmcy(co_unsigned16_t time) {
-    CreateObjInDev(obj1015, 0x1015u);
+    dev_holder->CreateAndInsertObj(obj1015, 0x1015u);
     obj1015->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED16,
                              time);  // N x 100us
   }
