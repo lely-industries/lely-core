@@ -91,20 +91,13 @@ TEST_BASE(CO_NmtBase) {
 
   Allocators::Default allocator;
 
-  void CreateObj(std::unique_ptr<CoObjTHolder> & obj_holder,
-                 co_unsigned16_t idx) {
-    obj_holder.reset(new CoObjTHolder(idx));
-    CHECK(obj_holder->Get() != nullptr);
-    CHECK_EQUAL(0, co_dev_insert_obj(dev, obj_holder->Take()));
-  }
-
   void CreateObj1016ConsumerHbTimeN(const co_unsigned8_t num) {
     assert(num > 0);
 #if LELY_NO_MALLOC
     assert(num <= CO_NMT_MAX_NHB);
 #endif
 
-    CreateObj(obj1016, 0x1016u);
+    dev_holder->CreateAndInsertObj(obj1016, 0x1016u);
 
     // 0x00 - Highest sub-index supported
     obj1016->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(num));
@@ -118,13 +111,13 @@ TEST_BASE(CO_NmtBase) {
   }
 
   void CreateObj1017ProducerHeartbeatTime(const co_unsigned16_t hb_time) {
-    CreateObj(obj1017, 0x1017u);
+    dev_holder->CreateAndInsertObj(obj1017, 0x1017u);
     obj1017->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED16,
                              co_unsigned16_t(hb_time));
   }
 
   void CreateObj1f80NmtStartup(const co_unsigned32_t startup) {
-    CreateObj(obj1f80, 0x1f80u);
+    dev_holder->CreateAndInsertObj(obj1f80, 0x1f80u);
     obj1f80->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED32,
                              co_unsigned32_t(startup));
   }
@@ -132,7 +125,7 @@ TEST_BASE(CO_NmtBase) {
   void CreateObj1f81SlaveAssignmentN(const size_t num) {
     assert(num > 0 && num <= CO_NUM_NODES);
     // object 0x1f81 - Slave assignment object
-    CreateObj(obj1f81, 0x1f81u);
+    dev_holder->CreateAndInsertObj(obj1f81, 0x1f81u);
 
     // 0x00 - Highest sub-index supported
     obj1f81->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(num));
@@ -146,7 +139,7 @@ TEST_BASE(CO_NmtBase) {
   void CreateObj1f82RequestNmt(const size_t num) {
     assert(num > 0 && num <= CO_NUM_NODES);
     // object 0x1f82 - Request NMT object
-    CreateObj(obj1f82, 0x1f82u);
+    dev_holder->CreateAndInsertObj(obj1f82, 0x1f82u);
 
     // 0x00 - Highest sub-index supported
     obj1f82->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(num));
@@ -432,7 +425,7 @@ TEST(CO_NmtCreate, CoNmtCreate_Default) {
 ///       \Calls set_errc()
 TEST(CO_NmtCreate, CoNmtCreate_DcfAppParamsWriteFail) {
   const size_t NUM_SUBS = 1u;
-  CreateObj(obj2000, 0x2000u);
+  dev_holder->CreateAndInsertObj(obj2000, 0x2000u);
   obj2000->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(0));
 
   LelyOverride::co_val_write(
@@ -468,10 +461,10 @@ TEST(CO_NmtCreate, CoNmtCreate_DcfAppParamsWriteFail) {
 TEST(CO_NmtCreate, CoNmtCreate_DcfCommParamsWriteFail) {
   const size_t NUM_SUBS = 1u;  // in each region
 #if !LELY_NO_CO_DCF_RESTORE
-  CreateObj(obj2000, 0x2000u);
+  dev_holder->CreateAndInsertObj(obj2000, 0x2000u);
   obj2000->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(0));
 #endif
-  CreateObj(obj1000, 0x1000u);
+  dev_holder->CreateAndInsertObj(obj1000, 0x1000u);
   obj1000->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(0));
 
 #if !LELY_NO_CO_DCF_RESTORE
@@ -1446,7 +1439,7 @@ TEST_GROUP_BASE(CO_Nmt, CO_NmtBase) {
   }
 
   void CreateObj102aNmtInhibitTime(const co_unsigned16_t inhibit_time) {
-    CreateObj(obj102a, 0x102au);
+    dev_holder->CreateAndInsertObj(obj102a, 0x102au);
     obj102a->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED16,
                              co_unsigned16_t(inhibit_time));
   }

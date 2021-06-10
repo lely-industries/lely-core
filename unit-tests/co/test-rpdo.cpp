@@ -61,13 +61,6 @@ TEST_BASE(CO_RpdoBase) {
 
   Allocators::Default allocator;
 
-  void CreateObj(std::unique_ptr<CoObjTHolder> & obj_holder,
-                 co_unsigned16_t idx) {
-    obj_holder.reset(new CoObjTHolder(idx));
-    CHECK(obj_holder->Get() != nullptr);
-    CHECK_EQUAL(0, co_dev_insert_obj(dev, obj_holder->Take()));
-  }
-
   // obj 0x1400, sub 0x00 - highest sub-index supported
   void SetComm00HighestSubidxSupported(const co_unsigned8_t max_subidx) {
     obj1400->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, max_subidx);
@@ -160,7 +153,7 @@ TEST(CO_RpdoCreate, CoRpdoCreate_NoRPDOParameters) {
 }
 
 TEST(CO_RpdoCreate, CoRpdoCreate_NoRPDOMappingParamRecord) {
-  CreateObj(obj1400, 0x1400u);
+  dev_holder->CreateAndInsertObj(obj1400, 0x1400u);
 
   rpdo = co_rpdo_create(net, dev, RPDO_NUM);
 
@@ -169,7 +162,7 @@ TEST(CO_RpdoCreate, CoRpdoCreate_NoRPDOMappingParamRecord) {
 }
 
 TEST(CO_RpdoCreate, CoRpdoCreate_NoRPDOCommParamRecord) {
-  CreateObj(obj1600, 0x1600u);
+  dev_holder->CreateAndInsertObj(obj1600, 0x1600u);
 
   rpdo = co_rpdo_create(net, dev, RPDO_NUM);
 
@@ -178,8 +171,8 @@ TEST(CO_RpdoCreate, CoRpdoCreate_NoRPDOCommParamRecord) {
 }
 
 TEST(CO_RpdoCreate, CoRpdoCreate_MinimalRPDO) {
-  CreateObj(obj1400, 0x1400u);
-  CreateObj(obj1600, 0x1600u);
+  dev_holder->CreateAndInsertObj(obj1400, 0x1400u);
+  dev_holder->CreateAndInsertObj(obj1600, 0x1600u);
 
   rpdo = co_rpdo_create(net, dev, RPDO_NUM);
 
@@ -237,12 +230,12 @@ TEST(CO_RpdoCreate, CoRpdoCreate_MinimalRPDOMaxNum) {
 }
 
 TEST(CO_RpdoCreate, CoRpdoStart_ExtendedFrame) {
-  CreateObj(obj1400, 0x1400u);
+  dev_holder->CreateAndInsertObj(obj1400, 0x1400u);
   SetComm00HighestSubidxSupported(0x02u);
   SetComm01CobId(CO_PDO_COBID_FRAME | DEV_ID);
   SetComm02SynchronousTransmission();
 
-  CreateObj(obj1600, 0x1600u);
+  dev_holder->CreateAndInsertObj(obj1600, 0x1600u);
 
   rpdo = co_rpdo_create(net, dev, RPDO_NUM);
   CHECK(rpdo != nullptr);
@@ -262,8 +255,8 @@ TEST(CO_RpdoCreate, CoRpdoStart_ExtendedFrame) {
 }
 
 TEST(CO_RpdoCreate, CoRpdoStart_AlreadyStarted) {
-  CreateObj(obj1400, 0x1400u);
-  CreateObj(obj1600, 0x1600u);
+  dev_holder->CreateAndInsertObj(obj1400, 0x1400u);
+  dev_holder->CreateAndInsertObj(obj1600, 0x1600u);
 
   rpdo = co_rpdo_create(net, dev, RPDO_NUM);
   co_rpdo_start(rpdo);
@@ -275,12 +268,12 @@ TEST(CO_RpdoCreate, CoRpdoStart_AlreadyStarted) {
 }
 
 TEST(CO_RpdoCreate, CoRpdoStart_InvalidBit) {
-  CreateObj(obj1400, 0x1400u);
+  dev_holder->CreateAndInsertObj(obj1400, 0x1400u);
   SetComm00HighestSubidxSupported(0x02u);
   SetComm01CobId(CO_PDO_COBID_VALID | DEV_ID);
   SetComm02SynchronousTransmission();
 
-  CreateObj(obj1600, 0x1600u);
+  dev_holder->CreateAndInsertObj(obj1600, 0x1600u);
 
   rpdo = co_rpdo_create(net, dev, RPDO_NUM);
   CHECK(rpdo != nullptr);
@@ -300,7 +293,7 @@ TEST(CO_RpdoCreate, CoRpdoStart_InvalidBit) {
 }
 
 TEST(CO_RpdoCreate, CoRpdoCreate_FullRPDOCommParamRecord) {
-  CreateObj(obj1400, 0x1400u);
+  dev_holder->CreateAndInsertObj(obj1400, 0x1400u);
   SetComm00HighestSubidxSupported(0x06u);
   SetComm01CobId(DEV_ID);
   SetComm02TransmissionType(0x01u);
@@ -309,7 +302,7 @@ TEST(CO_RpdoCreate, CoRpdoCreate_FullRPDOCommParamRecord) {
   SetComm05EventTimer(0x0004u);
   SetComm06SyncStartValue(0x05u);
 
-  CreateObj(obj1600, 0x1600u);
+  dev_holder->CreateAndInsertObj(obj1600, 0x1600u);
 
   rpdo = co_rpdo_create(net, dev, RPDO_NUM);
   CHECK(rpdo != nullptr);
@@ -329,9 +322,9 @@ TEST(CO_RpdoCreate, CoRpdoCreate_FullRPDOCommParamRecord) {
 }
 
 TEST(CO_RpdoCreate, CoRpdoCreate_FullRPDOMappingParamRecord) {
-  CreateObj(obj1400, 0x1400u);
+  dev_holder->CreateAndInsertObj(obj1400, 0x1400u);
 
-  CreateObj(obj1600, 0x1600u);
+  dev_holder->CreateAndInsertObj(obj1600, 0x1600u);
   // 0x00 - number of mapped application objects in PDO
   obj1600->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8,
                            co_unsigned8_t(CO_PDO_NUM_MAPS));
@@ -353,7 +346,7 @@ TEST(CO_RpdoCreate, CoRpdoCreate_FullRPDOMappingParamRecord) {
 }
 
 TEST(CO_RpdoCreate, CoRpdoCreate_OversizedRPDOCommParamRecord) {
-  CreateObj(obj1400, 0x1400u);
+  dev_holder->CreateAndInsertObj(obj1400, 0x1400u);
 
   SetComm00HighestSubidxSupported(0x07u);
   SetComm01CobId(DEV_ID);
@@ -366,7 +359,7 @@ TEST(CO_RpdoCreate, CoRpdoCreate_OversizedRPDOCommParamRecord) {
   // 0x07 - illegal sub-object
   obj1400->InsertAndSetSub(0x07u, CO_DEFTYPE_UNSIGNED32, co_unsigned32_t(0));
 
-  CreateObj(obj1600, 0x1600u);
+  dev_holder->CreateAndInsertObj(obj1600, 0x1600u);
 
   rpdo = co_rpdo_create(net, dev, RPDO_NUM);
   CHECK(rpdo != nullptr);
@@ -386,12 +379,12 @@ TEST(CO_RpdoCreate, CoRpdoCreate_OversizedRPDOCommParamRecord) {
 }
 
 TEST(CO_RpdoCreate, CoRpdoCreate_EventDrivenTransmission) {
-  CreateObj(obj1400, 0x1400u);
+  dev_holder->CreateAndInsertObj(obj1400, 0x1400u);
   SetComm00HighestSubidxSupported(0x02u);
   SetComm01CobId(DEV_ID);
   SetComm02EventDrivenTransmission();
 
-  CreateObj(obj1600, 0x1600u);
+  dev_holder->CreateAndInsertObj(obj1600, 0x1600u);
 
   rpdo = co_rpdo_create(net, dev, RPDO_NUM);
   CHECK(rpdo != nullptr);
@@ -411,14 +404,14 @@ TEST(CO_RpdoCreate, CoRpdoCreate_EventDrivenTransmission) {
 }
 
 TEST(CO_RpdoCreate, CoRpdoCreate_TimerSet) {
-  CreateObj(obj1400, 0x1400u);
+  dev_holder->CreateAndInsertObj(obj1400, 0x1400u);
   SetComm00HighestSubidxSupported(0x02u);
   SetComm01CobId(DEV_ID);
   SetComm02SynchronousTransmission();
 
-  CreateObj(obj1600, 0x1600u);
+  dev_holder->CreateAndInsertObj(obj1600, 0x1600u);
 
-  CreateObj(obj1007, 0x1007u);
+  dev_holder->CreateAndInsertObj(obj1007, 0x1007u);
   // 0x00 - synchronous window length
   obj1007->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED32,
                            co_unsigned32_t(0x00000001u));
@@ -505,8 +498,8 @@ TEST_GROUP_BASE(CO_Rpdo, CO_RpdoBase) {
   TEST_SETUP() {
     TEST_BASE_SETUP();
 
-    CreateObj(obj1400, 0x1400u);
-    CreateObj(obj1600, 0x1600u);
+    dev_holder->CreateAndInsertObj(obj1400, 0x1400u);
+    dev_holder->CreateAndInsertObj(obj1600, 0x1600u);
 
     CO_RpdoStatic::rpdo_ind_func_called = false;
     CO_RpdoStatic::rpdo_ind_args.rpdo = nullptr;
@@ -765,7 +758,7 @@ TEST(CO_Rpdo, CoRpdoSync_BadMappingLength) {
                            co_unsigned32_t(0x20000001u));
 
   // object 0x2000
-  CreateObj(obj2000, 0x2000u);
+  dev_holder->CreateAndInsertObj(obj2000, 0x2000u);
   // 0x00
   obj2000->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(0x00u));
 
@@ -812,7 +805,7 @@ TEST(CO_Rpdo, CoRpdoSync_RPDOLengthExceedsMapping) {
   obj1600->InsertAndSetSub(0x01u, CO_DEFTYPE_UNSIGNED32,
                            co_unsigned32_t(0x20000001u));
 
-  CreateObj(obj2000, 0x2000u);
+  dev_holder->CreateAndInsertObj(obj2000, 0x2000u);
   // 0x00
   obj2000->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(0x00u));
   co_sub_set_pdo_mapping(obj2000->GetLastSub(), 1);
@@ -901,7 +894,7 @@ TEST(CO_Rpdo, CoRpdoRecv_ExpiredSyncWindow) {
   SetComm01CobId(DEV_ID);
   SetComm02SynchronousTransmission();
 
-  CreateObj(obj1007, 0x1007u);
+  dev_holder->CreateAndInsertObj(obj1007, 0x1007u);
   // 0x00 - synchronous window length
   obj1007->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED32,
                            co_unsigned32_t(0x00000001u));  // us
@@ -939,7 +932,7 @@ TEST(CO_Rpdo, CoRpdoRecv_NoPDOInSyncWindow_NoErrFunc) {
   SetComm04CompatibilityEntry(0x00u);
   SetComm05EventTimer(0x0001u);
 
-  CreateObj(obj1007, 0x1007u);
+  dev_holder->CreateAndInsertObj(obj1007, 0x1007u);
   // 0x00 - synchronous window length
   obj1007->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED32,
                            co_unsigned32_t(0x00000001u));  // us
@@ -973,7 +966,7 @@ TEST(CO_Rpdo, CoRpdoRecv_NoPDOInSyncWindow) {
   SetComm04CompatibilityEntry(0x00u);
   SetComm05EventTimer(0x0001u);
 
-  CreateObj(obj1007, 0x1007u);
+  dev_holder->CreateAndInsertObj(obj1007, 0x1007u);
   // 0x00 - synchronous window length
   obj1007->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED32,
                            co_unsigned32_t(0x00000001u));  // us
@@ -1013,8 +1006,8 @@ TEST_GROUP_BASE(CO_RpdoAllocation, CO_RpdoBase) {
   co_rpdo_t* rpdo = nullptr;
 
   void BasicConfiguration() {
-    CreateObj(obj1400, 0x1400u);
-    CreateObj(obj1600, 0x1600u);
+    dev_holder->CreateAndInsertObj(obj1400, 0x1400u);
+    dev_holder->CreateAndInsertObj(obj1600, 0x1600u);
   }
 
   TEST_SETUP() {
