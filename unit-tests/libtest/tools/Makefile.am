@@ -12,6 +12,7 @@ liblely_unit_test_src += lely-unit-test.cpp
 liblely_unit_test_src += co-csdo-dn-con.cpp
 liblely_unit_test_src += co-csdo-up-con.cpp
 liblely_unit_test_src += co-sub-dn-ind.cpp
+liblely_unit_test_src += can-send.cpp
 
 lib_LTLIBRARIES += liblely-unit-test.la
 
