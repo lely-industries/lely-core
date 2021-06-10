@@ -539,7 +539,7 @@ TEST_BASE(CO_CsdoBase) {
     dev = dev_holder->Get();
     CHECK(dev != nullptr);
 
-    can_net_set_send_func(net, CanSend::func, nullptr);
+    can_net_set_send_func(net, CanSend::Func, nullptr);
 
     dev_holder->CreateAndInsertObj(obj1280, 0x1280u);
     SetCli00HighestSubidxSupported(0x02u);

@@ -554,7 +554,7 @@ TEST_GROUP_BASE(CO_Tpdo, CO_TpdoBase) {
     CoTpdoInd::Clear();
     CoTpdoSampleInd::Clear();
 
-    can_net_set_send_func(net, CanSend::func, &can_data);
+    can_net_set_send_func(net, CanSend::Func, &can_data);
   }
 
   TEST_TEARDOWN() {

@@ -24,75 +24,12 @@
 #include <config.h>
 #endif
 
-#include <cassert>
-
 #include <CppUTest/TestHarness.h>
 
 #include <lely/co/sdo.h>
 #include <lely/util/diag.h>
 
 #include "lely-unit-test.hpp"
-
-int CanSend::ret = 0;
-void* CanSend::data = nullptr;
-unsigned int CanSend::num_called = 0;
-can_msg CanSend::msg = CAN_MSG_INIT;
-can_msg* CanSend::msg_buf = &CanSend::msg;
-size_t CanSend::buf_size = 1u;
-
-int
-CanSend::func(const can_msg* msg_, int, void* data_) {
-  assert(msg_);
-
-  msg = *msg_;
-  data = data_;
-
-  if (msg_buf != &msg && num_called < buf_size) {
-    msg_buf[num_called] = *msg_;
-  }
-  num_called++;
-
-  return ret;
-}
-
-void
-CanSend::CheckMsg(const uint_least32_t id, const uint_least8_t flags,
-                  const uint_least8_t len, const uint_least8_t* const data) {
-  CHECK_EQUAL(id, msg.id);
-  CHECK_EQUAL(flags, msg.flags);
-  CHECK_EQUAL(len, msg.len);
-  if (data != nullptr) {
-    for (uint_least8_t i = 0; i < len; ++i) {
-      CHECK_EQUAL(data[i], msg.data[i]);
-    }
-  }
-}
-
-void
-CanSend::CheckSdoMsg(const co_unsigned32_t id_, const co_unsigned32_t flags_,
-                     const uint_least8_t len_, const co_unsigned8_t cs_,
-                     const co_unsigned16_t idx_, const co_unsigned8_t subidx_,
-                     const co_unsigned32_t ac_) {
-  CHECK_EQUAL(id_, msg.id);
-  CHECK_EQUAL(flags_, msg.flags);
-  CHECK_EQUAL(len_, msg.len);
-  CHECK_SDO_CAN_MSG_CMD(cs_, msg.data);
-  CHECK_SDO_CAN_MSG_IDX(idx_, msg.data);
-  CHECK_SDO_CAN_MSG_SUBIDX(subidx_, msg.data);
-  CHECK_SDO_CAN_MSG_AC(ac_, msg.data);
-}
-
-void
-CanSend::Clear() {
-  msg = CAN_MSG_INIT;
-  data = nullptr;
-
-  ret = 0;
-  num_called = 0;
-
-  buf_size = 1u;
-  msg_buf = &msg;
-}
 
 void
 LelyUnitTest::DisableDiagnosticMessages() {

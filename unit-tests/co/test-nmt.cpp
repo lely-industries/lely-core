@@ -1456,7 +1456,7 @@ TEST_GROUP_BASE(CO_Nmt, CO_NmtBase) {
   TEST_SETUP() {
     TEST_BASE_SETUP();
 
-    can_net_set_send_func(net, CanSend::func, nullptr);
+    can_net_set_send_func(net, CanSend::Func, nullptr);
   }
 
   TEST_TEARDOWN() {

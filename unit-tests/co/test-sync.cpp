@@ -570,7 +570,7 @@ TEST(CO_Sync, CoSyncStart_FrameBitSet) {
 TEST(CO_Sync, CoSyncStart_PeriodValueZero) {
   SetCobid(DEV_ID | CO_SYNC_COBID_PRODUCER);
   CreateObj1006AndSetPeriod(0x00u);
-  SyncSetSendSetInd(CanSend::func, nullptr);
+  SyncSetSendSetInd(CanSend::Func, nullptr);
 
   const auto ret = co_sync_start(sync);
 
@@ -856,7 +856,7 @@ TEST(CO_Sync, CoSyncRecv_Nominal) {
 TEST(CO_Sync, CoSyncTimer_ExtendedCANID) {
   CreateObj1006AndSetPeriod(500u);
   SetCobid(DEV_ID | CO_SYNC_COBID_PRODUCER | CO_SYNC_COBID_FRAME);
-  SyncSetSendSetInd(CanSend::func, SyncInd::func);
+  SyncSetSendSetInd(CanSend::Func, SyncInd::func);
   StartSYNC();
   const timespec tp = {0L, 600000L};
 
@@ -886,7 +886,7 @@ TEST(CO_Sync, CoSyncTimer_ExtendedCANID) {
 TEST(CO_Sync, CoSyncTimer_NoIndMaxCntNotSet) {
   CreateObj1006AndSetPeriod(500u);
   SetCobid(DEV_ID | CO_SYNC_COBID_PRODUCER);
-  SyncSetSendSetInd(CanSend::func, nullptr);
+  SyncSetSendSetInd(CanSend::Func, nullptr);
   StartSYNC();
   const timespec tp = {0L, 600000L};
 
@@ -915,7 +915,7 @@ TEST(CO_Sync, CoSyncTimer_MaxCntSet) {
   CreateObj1006AndSetPeriod(500u);
   CreateObj1019AndSetCntOverflow(0x02u);
   SetCobid(DEV_ID | CO_SYNC_COBID_PRODUCER);
-  SyncSetSendSetInd(CanSend::func, SyncInd::func);
+  SyncSetSendSetInd(CanSend::Func, SyncInd::func);
   StartSYNC();
   const timespec tp[2] = {{0L, 600000L}, {0L, 1200000L}};
 
@@ -964,7 +964,7 @@ TEST(CO_Sync, CoSyncTimer_MaxCntSet) {
 TEST(CO_Sync, CoSyncTimer) {
   CreateObj1006AndSetPeriod(500u);
   SetCobid(DEV_ID | CO_SYNC_COBID_PRODUCER);
-  SyncSetSendSetInd(CanSend::func, SyncInd::func);
+  SyncSetSendSetInd(CanSend::Func, SyncInd::func);
   StartSYNC();
   const timespec tp = {0L, 600000L};
 

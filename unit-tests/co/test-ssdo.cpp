@@ -647,7 +647,7 @@ TEST_BASE(CO_Ssdo) {
     ssdo = co_ssdo_create(net, dev, SDO_NUM);
     CHECK(ssdo != nullptr);
 
-    can_net_set_send_func(net, CanSend::func, nullptr);
+    can_net_set_send_func(net, CanSend::Func, nullptr);
     CanSend::SetMsgBuf(msg_buf, MSG_BUF_SIZE);
     CanSend::Clear();
   }
