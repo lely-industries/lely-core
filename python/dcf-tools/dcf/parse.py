@@ -1,6 +1,6 @@
 import collections
 import configparser
-
+import os
 
 class IniDict(collections.abc.MutableMapping):
     def __init__(
@@ -37,7 +37,7 @@ def parse_file(filename: str) -> dict:
         dict_type=IniDict, inline_comment_prefixes=("#", ";"), interpolation=None
     )
     cfg.optionxform = str  # case sensitive
-    with open(filename, "r") as f:
+    with open(os.path.expandvars(filename), "r") as f:
         cfg.read_file(f, filename)
 
     __add_compact_rpdo(cfg)
