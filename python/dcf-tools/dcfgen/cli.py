@@ -199,7 +199,7 @@ class Slave(dcf.Device):
         if "dcf_path" in cfg:
             slave.dcf_path = str(cfg["dcf_path"])
         slave.dcf_path = os.path.expandvars(slave.dcf_path)
-        
+
         if "revision_number" in cfg:
             revision_number = int(cfg["revision_number"])
             if slave.revision_number != 0 and slave.revision_number != revision_number:
