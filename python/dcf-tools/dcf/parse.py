@@ -2,6 +2,7 @@ import collections
 import configparser
 import os
 
+
 class IniDict(collections.abc.MutableMapping):
     def __init__(
         self, dict_type=collections.OrderedDict, key_xform=lambda str: str.lower()
