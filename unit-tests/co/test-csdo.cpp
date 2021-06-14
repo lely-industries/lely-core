@@ -24,7 +24,9 @@
 #include <config.h>
 #endif
 
+#include <initializer_list>
 #include <memory>
+#include <numeric>
 #include <vector>
 
 #include <CppUTest/TestHarness.h>
@@ -34,6 +36,7 @@
 #include <lely/co/sdo.h>
 #include <lely/co/type.h>
 #include <lely/co/val.h>
+#include <lely/compat/string.h>
 #include <lely/util/endian.h>
 
 #include <libtest/allocators/default.hpp>
@@ -45,6 +48,49 @@
 #include "holder/dev.hpp"
 #include "holder/obj.hpp"
 #include "holder/array-init.hpp"
+
+class ConciseDcf {
+ private:
+  ConciseDcf(std::initializer_list<size_t> type_sizes) {
+    const size_t size = std::accumulate(
+        std::begin(type_sizes), std::end(type_sizes), sizeof(co_unsigned32_t),
+        [](const size_t& a, const size_t& b) { return a + EntrySize(b); });
+    buffer.assign(size, 0);
+  }
+
+ public:
+  template <typename... types>
+  static ConciseDcf
+  MakeForEntries() {
+    return ConciseDcf({sizeof(types)...});
+  }
+
+  uint_least8_t*
+  Begin() {
+    return buffer.data();
+  }
+
+  uint_least8_t*
+  End() {
+    return buffer.data() + buffer.size();
+  }
+
+  size_t
+  Size() {
+    return buffer.size();
+  }
+
+ private:
+  std::vector<uint_least8_t> buffer;
+
+  static constexpr size_t
+  EntrySize(const size_t type_size) {
+    return sizeof(co_unsigned16_t)    // index
+           + sizeof(co_unsigned8_t)   // subidx
+           + sizeof(co_unsigned32_t)  // data size of parameter
+           + type_size;
+  }
+};
 
 TEST_GROUP(CO_CsdoInit) {
   const co_unsigned8_t CSDO_NUM = 0x01u;
@@ -488,6 +534,8 @@ TEST_BASE(CO_CsdoBase) {
 
   static const co_unsigned8_t CSDO_NUM = 0x01u;
   static const co_unsigned8_t DEV_ID = 0x01u;
+  const co_unsigned32_t DEFAULT_COBID_REQ = 0x600u + DEV_ID;
+  const co_unsigned32_t DEFAULT_COBID_RES = 0x580u + DEV_ID;
   co_csdo_t* csdo = nullptr;
   co_dev_t* dev = nullptr;
   can_net_t* net = nullptr;
@@ -543,8 +591,8 @@ TEST_BASE(CO_CsdoBase) {
 
     dev_holder->CreateAndInsertObj(obj1280, 0x1280u);
     SetCli00HighestSubidxSupported(0x02u);
-    SetCli01CobidReq(0x600u + DEV_ID);
-    SetCli02CobidRes(0x580u + DEV_ID);
+    SetCli01CobidReq(DEFAULT_COBID_REQ);
+    SetCli02CobidRes(DEFAULT_COBID_RES);
     csdo = co_csdo_create(net, dev, CSDO_NUM);
     CHECK(csdo != nullptr);
 
@@ -826,17 +874,6 @@ TEST_GROUP_BASE(CO_Csdo, CO_CsdoBase) {
     return ldle_u16(static_cast<uint_least8_t*>(membuf_begin(mbuf)));
   }
 
-  static constexpr size_t ConciseDcfEntrySize(const size_t type_size) {
-    return sizeof(co_unsigned16_t)    // index
-           + sizeof(co_unsigned8_t)   // subidx
-           + sizeof(co_unsigned32_t)  // data size of parameter
-           + type_size;
-  }
-
-  static constexpr size_t ConciseDcfSize(size_t entries_size) {
-    return sizeof(co_unsigned32_t) + entries_size;
-  }
-
   const co_unsigned16_t IDX = 0x2020u;
   const co_unsigned8_t SUBIDX = 0x00u;
   const co_unsigned16_t INVALID_IDX = 0xffffu;
@@ -913,7 +950,7 @@ TEST(CO_Csdo, CoCsdoIsValid_ReqResValid) {
 ///
 /// \Then 0 is returned
 TEST(CO_Csdo, CoCsdoIsValid_ReqInvalid) {
-  SetCli01CobidReq((0x600u + DEV_ID) | CO_SDO_COBID_VALID);
+  SetCli01CobidReq(DEFAULT_COBID_REQ | CO_SDO_COBID_VALID);
   StartCSDO();
 
   const auto ret = co_csdo_is_valid(csdo);
@@ -928,7 +965,7 @@ TEST(CO_Csdo, CoCsdoIsValid_ReqInvalid) {
 ///
 /// \Then 0 is returned
 TEST(CO_Csdo, CoCsdoIsValid_ResInvalid) {
-  SetCli02CobidRes((0x580u + DEV_ID) | CO_SDO_COBID_VALID);
+  SetCli02CobidRes(DEFAULT_COBID_RES | CO_SDO_COBID_VALID);
   StartCSDO();
 
   const auto ret = co_csdo_is_valid(csdo);
@@ -1229,22 +1266,18 @@ TEST(CO_Csdo, CoDevDnValReq_Nominal) {
 ///       \Calls co_sdo_req_fini()
 ///       \Calls set_errc()
 TEST(CO_Csdo, CoDevDnDcfReq_ConciseBufTooShort) {
-  const size_t CONCISE_DCF_SUB_TYPE_SIZE =
-      ConciseDcfSize(ConciseDcfEntrySize(sizeof(sub_type)));
-  uint_least8_t concise_dcf[CONCISE_DCF_SUB_TYPE_SIZE] = {0};
-  for (size_t concise_buf_size = 3u;
-       concise_buf_size < CONCISE_DCF_SUB_TYPE_SIZE - sizeof(sub_type);
-       concise_buf_size++) {
-    uint_least8_t* const begin = concise_dcf;
-    uint_least8_t* const end = concise_dcf + concise_buf_size;
-    CHECK_EQUAL(CONCISE_DCF_SUB_TYPE_SIZE,
-                co_dev_write_dcf(dev, IDX, IDX, begin, end));
-
+  auto dcf = ConciseDcf::MakeForEntries<sub_type>();
+  for (size_t bytes_missing = sizeof(sub_type) + 1u;
+       bytes_missing < dcf.Size() - sizeof(sub_type); bytes_missing++) {
     const errnum_t error_num = ERRNUM_FAULT;
     set_errnum(error_num);
 
+    CHECK_EQUAL(dcf.Size(), co_dev_write_dcf(dev, IDX, IDX, dcf.Begin(),
+                                             dcf.End() - bytes_missing));
+
     const auto ret =
-        co_dev_dn_dcf_req(dev, begin, end, CoCsdoDnCon::func, nullptr);
+        co_dev_dn_dcf_req(dev, dcf.Begin(), dcf.End() - bytes_missing,
+                          CoCsdoDnCon::func, nullptr);
 
     CHECK_EQUAL(0, ret);
     CHECK_EQUAL(error_num, get_errnum());
@@ -1271,17 +1304,9 @@ TEST(CO_Csdo, CoDevDnDcfReq_ConciseBufTooShort) {
 ///       \Calls co_sdo_req_fini()
 ///       \Calls set_errc()
 TEST(CO_Csdo, CoDevDnDcfReq_DatasizeMismatch) {
-  const size_t CONCISE_DCF_SUB_TYPE_SIZE =
-      ConciseDcfSize(ConciseDcfEntrySize(sizeof(sub_type)));
-  uint_least8_t concise_dcf[CONCISE_DCF_SUB_TYPE_SIZE] = {0};
-
-  obj2020->RemoveAndDestroyLastSub();
-  obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE, sub_type(0));
-
-  uint_least8_t* const begin = concise_dcf;
-  uint_least8_t* const end = concise_dcf + CONCISE_DCF_SUB_TYPE_SIZE;
-  CHECK_EQUAL(CONCISE_DCF_SUB_TYPE_SIZE,
-              co_dev_write_dcf(dev, IDX, IDX, begin, end));
+  auto dcf = ConciseDcf::MakeForEntries<sub_type>();
+  CHECK_EQUAL(dcf.Size(),
+              co_dev_write_dcf(dev, IDX, IDX, dcf.Begin(), dcf.End()));
 
   obj2020->RemoveAndDestroyLastSub();
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE, sub_type(0));
@@ -1289,8 +1314,8 @@ TEST(CO_Csdo, CoDevDnDcfReq_DatasizeMismatch) {
   const errnum_t error_num = ERRNUM_FAULT;
   set_errnum(error_num);
 
-  const auto ret =
-      co_dev_dn_dcf_req(dev, begin, end - 1u, CoCsdoDnCon::func, nullptr);
+  const auto ret = co_dev_dn_dcf_req(dev, dcf.Begin(), dcf.End() - 1u,
+                                     CoCsdoDnCon::func, nullptr);
 
   CHECK_EQUAL(0, ret);
   CHECK_EQUAL(error_num, get_errnum());
@@ -1314,21 +1339,18 @@ TEST(CO_Csdo, CoDevDnDcfReq_DatasizeMismatch) {
 ///       \Calls co_sdo_req_fini()
 ///       \Calls set_errc()
 TEST(CO_Csdo, CoDevDnDcfReq_NoObj) {
-  const size_t CONCISE_DCF_SUB_TYPE_SIZE =
-      ConciseDcfSize(ConciseDcfEntrySize(sizeof(sub_type)));
-  uint_least8_t concise_dcf[CONCISE_DCF_SUB_TYPE_SIZE] = {0};
-  uint_least8_t* const begin = concise_dcf;
-  uint_least8_t* const end = concise_dcf + CONCISE_DCF_SUB_TYPE_SIZE;
-  CHECK_EQUAL(CONCISE_DCF_SUB_TYPE_SIZE,
-              co_dev_write_dcf(dev, IDX, IDX, begin, end));
+  auto dcf = ConciseDcf::MakeForEntries<sub_type>();
+  CHECK_EQUAL(dcf.Size(),
+              co_dev_write_dcf(dev, IDX, IDX, dcf.Begin(), dcf.End()));
+
   CHECK_EQUAL(0, co_dev_remove_obj(dev, obj2020->Get()));
   POINTERS_EQUAL(obj2020->Get(), obj2020->Reclaim());
 
   const errnum_t error_num = ERRNUM_FAULT;
   set_errnum(error_num);
 
-  const auto ret =
-      co_dev_dn_dcf_req(dev, begin, end, CoCsdoDnCon::func, nullptr);
+  const auto ret = co_dev_dn_dcf_req(dev, dcf.Begin(), dcf.End(),
+                                     CoCsdoDnCon::func, nullptr);
 
   CHECK_EQUAL(0, ret);
   CHECK_EQUAL(error_num, get_errnum());
@@ -1353,20 +1375,16 @@ TEST(CO_Csdo, CoDevDnDcfReq_NoObj) {
 ///       \Calls co_sdo_req_fini()
 ///       \Calls set_errc()
 TEST(CO_Csdo, CoDevDnDcfReq_NoSub) {
-  const size_t CONCISE_DCF_SUB_TYPE_SIZE =
-      ConciseDcfSize(ConciseDcfEntrySize(sizeof(sub_type)));
-  uint_least8_t concise_dcf[CONCISE_DCF_SUB_TYPE_SIZE] = {0};
-  uint_least8_t* const begin = concise_dcf;
-  uint_least8_t* const end = concise_dcf + CONCISE_DCF_SUB_TYPE_SIZE;
-  CHECK_EQUAL(CONCISE_DCF_SUB_TYPE_SIZE,
-              co_dev_write_dcf(dev, IDX, IDX, begin, end));
+  auto dcf = ConciseDcf::MakeForEntries<sub_type>();
+  CHECK_EQUAL(dcf.Size(),
+              co_dev_write_dcf(dev, IDX, IDX, dcf.Begin(), dcf.End()));
   obj2020->RemoveAndDestroyLastSub();
 
   const errnum_t error_num = ERRNUM_FAULT;
   set_errnum(error_num);
 
-  const auto ret =
-      co_dev_dn_dcf_req(dev, begin, end, CoCsdoDnCon::func, nullptr);
+  const auto ret = co_dev_dn_dcf_req(dev, dcf.Begin(), dcf.End(),
+                                     CoCsdoDnCon::func, nullptr);
 
   CHECK_EQUAL(0, ret);
   CHECK_EQUAL(error_num, get_errnum());
@@ -1394,24 +1412,21 @@ TEST(CO_Csdo, CoDevDnDcfReq_NoSub) {
 ///       \Calls co_sdo_req_fini()
 ///       \Calls set_errc()
 TEST(CO_Csdo, CoDevDnDcfReq_ManyEntriesButDnIndFail) {
-  const size_t CONCISE_DCF_COMBINED_SIZE =
-      ConciseDcfSize(ConciseDcfEntrySize(sizeof(sub_type)) +
-                     ConciseDcfEntrySize(sizeof(sub_type)));
-  uint_least8_t concise_dcf[CONCISE_DCF_COMBINED_SIZE] = {0};
-  uint_least8_t* const begin = concise_dcf;
-  uint_least8_t* const end = concise_dcf + CONCISE_DCF_COMBINED_SIZE;
   const co_unsigned16_t OTHER_IDX = 0x2021u;
   dev_holder->CreateAndInsertObj(obj2021, OTHER_IDX);
   obj2021->InsertAndSetSub(0x00u, SUB_TYPE, sub_type(0));
-  CHECK_EQUAL(CONCISE_DCF_COMBINED_SIZE,
-              co_dev_write_dcf(dev, IDX, OTHER_IDX, begin, end));
+  auto combined_dcf = ConciseDcf::MakeForEntries<sub_type, sub_type>();
+  CHECK_EQUAL(combined_dcf.Size(),
+              co_dev_write_dcf(dev, IDX, OTHER_IDX, combined_dcf.Begin(),
+                               combined_dcf.End()));
 
   const errnum_t error_num = ERRNUM_FAULT;
   set_errnum(error_num);
 
   co_sub_set_dn_ind(obj2020->GetLastSub(), co_sub_failing_dn_ind, nullptr);
   const auto ret =
-      co_dev_dn_dcf_req(dev, begin, end, CoCsdoDnCon::func, nullptr);
+      co_dev_dn_dcf_req(dev, combined_dcf.Begin(), combined_dcf.End(),
+                        CoCsdoDnCon::func, nullptr);
 
   CHECK_EQUAL(0, ret);
   CHECK_EQUAL(error_num, get_errnum());
@@ -1437,20 +1452,17 @@ TEST(CO_Csdo, CoDevDnDcfReq_ManyEntriesButDnIndFail) {
 ///       \Calls co_sdo_req_fini()
 ///       \Calls set_errc()
 TEST(CO_Csdo, CoDevDnDcfReq_NoCoCsdoDnCon) {
-  const size_t CONCISE_DCF_SUB_TYPE_SIZE =
-      ConciseDcfSize(ConciseDcfEntrySize(sizeof(sub_type)));
-  uint_least8_t concise_dcf[CONCISE_DCF_SUB_TYPE_SIZE] = {0};
-  uint_least8_t* const begin = concise_dcf;
-  uint_least8_t* const end = concise_dcf + CONCISE_DCF_SUB_TYPE_SIZE;
   co_sub_set_val_u16(obj2020->GetLastSub(), VAL);
-  CHECK_EQUAL(CONCISE_DCF_SUB_TYPE_SIZE,
-              co_dev_write_dcf(dev, IDX, IDX, begin, end));
+  auto dcf = ConciseDcf::MakeForEntries<sub_type>();
+  CHECK_EQUAL(dcf.Size(),
+              co_dev_write_dcf(dev, IDX, IDX, dcf.Begin(), dcf.End()));
   co_sub_set_val_u16(obj2020->GetLastSub(), 0);
 
   const errnum_t error_num = ERRNUM_FAULT;
   set_errnum(error_num);
 
-  const auto ret = co_dev_dn_dcf_req(dev, begin, end, nullptr, nullptr);
+  const auto ret =
+      co_dev_dn_dcf_req(dev, dcf.Begin(), dcf.End(), nullptr, nullptr);
 
   CHECK_EQUAL(0, ret);
   CHECK_EQUAL(error_num, get_errnum());
@@ -1475,21 +1487,17 @@ TEST(CO_Csdo, CoDevDnDcfReq_NoCoCsdoDnCon) {
 ///       \Calls co_sdo_req_fini()
 ///       \Calls set_errc()
 TEST(CO_Csdo, CoDevDnDcfReq_Nominal) {
-  const size_t CONCISE_DCF_SUB_TYPE_SIZE =
-      ConciseDcfSize(ConciseDcfEntrySize(sizeof(sub_type)));
-  uint_least8_t concise_dcf[CONCISE_DCF_SUB_TYPE_SIZE] = {0};
-  uint_least8_t* const begin = concise_dcf;
-  uint_least8_t* const end = concise_dcf + CONCISE_DCF_SUB_TYPE_SIZE;
   co_sub_set_val_u16(obj2020->GetLastSub(), VAL);
-  CHECK_EQUAL(CONCISE_DCF_SUB_TYPE_SIZE,
-              co_dev_write_dcf(dev, IDX, IDX, begin, end));
+  auto dcf = ConciseDcf::MakeForEntries<sub_type>();
+  CHECK_EQUAL(dcf.Size(),
+              co_dev_write_dcf(dev, IDX, IDX, dcf.Begin(), dcf.End()));
   co_sub_set_val_u16(obj2020->GetLastSub(), 0);
 
   const errnum_t error_num = ERRNUM_FAULT;
   set_errnum(error_num);
 
-  const auto ret =
-      co_dev_dn_dcf_req(dev, begin, end, CoCsdoDnCon::func, nullptr);
+  const auto ret = co_dev_dn_dcf_req(dev, dcf.Begin(), dcf.End(),
+                                     CoCsdoDnCon::func, nullptr);
 
   CHECK_EQUAL(0, ret);
   CHECK_EQUAL(error_num, get_errnum());
@@ -2245,19 +2253,18 @@ TEST(CO_Csdo, CoCsdoDnReq_TimeoutSet) {
   CHECK_EQUAL(ERRNUM_SUCCESS, get_errnum());
 
   CHECK_EQUAL(1u, CanSend::num_called);
-  std::vector<uint_least8_t> expected;
-  expected = CoCsdoDnReq::InitExpectedU16Data(
+  std::vector<uint_least8_t> expected = CoCsdoDnReq::InitExpectedU16Data(
       CO_SDO_CCS_DN_INI_REQ | CO_SDO_INI_SIZE_EXP_SET(sizeof(sub_type)), IDX,
       SUBIDX, 0x1234u);
-  CanSend::CheckMsg(0x600u + DEV_ID, 0, CO_SDO_MSG_SIZE, expected.data());
+  CanSend::CheckMsg(DEFAULT_COBID_REQ, 0, CO_SDO_MSG_SIZE, expected.data());
 
   CoCsdoDnReq::SetOneSecOnNet(net);
 
   CHECK_EQUAL(2u, CanSend::num_called);
-  CanSend::CheckSdoMsg(0x600u + DEV_ID, 0, CO_SDO_MSG_SIZE, CO_SDO_CS_ABORT,
+  CanSend::CheckSdoMsg(DEFAULT_COBID_REQ, 0, CO_SDO_MSG_SIZE, CO_SDO_CS_ABORT,
                        IDX, SUBIDX, CO_SDO_AC_TIMEOUT);
 
-  CoCsdoDnReq::AbortTransfer(net, 0x580u + DEV_ID);
+  CoCsdoDnReq::AbortTransfer(net, DEFAULT_COBID_RES);
   CHECK_EQUAL(1u, CoCsdoDnCon::num_called);
 }
 
@@ -2285,12 +2292,11 @@ TEST(CO_Csdo, CoCsdoDnReq_SizeZero) {
   CHECK_EQUAL(ERRNUM_SUCCESS, get_errnum());
   CHECK_EQUAL(1u, CanSend::num_called);
 
-  std::vector<uint_least8_t> expected;
-  expected = CoCsdoDnReq::InitExpectedU16Data(
+  std::vector<uint_least8_t> expected = CoCsdoDnReq::InitExpectedU16Data(
       CO_SDO_CCS_DN_INI_REQ | CO_SDO_INI_SIZE_IND, IDX, SUBIDX, buffer_size);
-  CanSend::CheckMsg(0x600u + DEV_ID, 0, CO_SDO_MSG_SIZE, expected.data());
+  CanSend::CheckMsg(DEFAULT_COBID_REQ, 0, CO_SDO_MSG_SIZE, expected.data());
 
-  CoCsdoDnReq::AbortTransfer(net, 0x580u + DEV_ID);
+  CoCsdoDnReq::AbortTransfer(net, DEFAULT_COBID_RES);
   CHECK_EQUAL(1u, CoCsdoDnCon::num_called);
 }
 
@@ -2317,12 +2323,11 @@ TEST(CO_Csdo, CoCsdoDnReq_DownloadInitiate) {
   CHECK_EQUAL(ERRNUM_SUCCESS, get_errnum());
   CHECK_EQUAL(1u, CanSend::num_called);
 
-  std::vector<uint_least8_t> expected;
-  expected = CoCsdoDnReq::InitExpectedU16Data(
+  std::vector<uint_least8_t> expected = CoCsdoDnReq::InitExpectedU16Data(
       CO_SDO_CCS_DN_INI_REQ | CO_SDO_INI_SIZE_IND, IDX, SUBIDX, buffer_size);
-  CanSend::CheckMsg(0x600u + DEV_ID, 0, CO_SDO_MSG_SIZE, expected.data());
+  CanSend::CheckMsg(DEFAULT_COBID_REQ, 0, CO_SDO_MSG_SIZE, expected.data());
 
-  CoCsdoDnReq::AbortTransfer(net, 0x580u + DEV_ID);
+  CoCsdoDnReq::AbortTransfer(net, DEFAULT_COBID_RES);
   CHECK_EQUAL(1u, CoCsdoDnCon::num_called);
 }
 
@@ -2349,14 +2354,157 @@ TEST(CO_Csdo, CoCsdoDnReq_Expedited) {
   CHECK_EQUAL(ERRNUM_SUCCESS, get_errnum());
   CHECK_EQUAL(1u, CanSend::num_called);
 
-  std::vector<uint_least8_t> expected;
-  expected = CoCsdoDnReq::InitExpectedU16Data(
+  std::vector<uint_least8_t> expected = CoCsdoDnReq::InitExpectedU16Data(
       CO_SDO_CCS_DN_INI_REQ | CO_SDO_INI_SIZE_EXP_SET(sizeof(sub_type)), IDX,
       SUBIDX, 0x1234u);
-  CanSend::CheckMsg(0x600u + DEV_ID, 0, CO_SDO_MSG_SIZE, expected.data());
+  CanSend::CheckMsg(DEFAULT_COBID_REQ, 0, CO_SDO_MSG_SIZE, expected.data());
 
-  CoCsdoDnReq::AbortTransfer(net, 0x580u + DEV_ID);
+  CoCsdoDnReq::AbortTransfer(net, DEFAULT_COBID_RES);
   CHECK_EQUAL(1u, CoCsdoDnCon::num_called);
+}
+
+///@}
+
+/// @name co_csdo_dn_val_req()
+///@{
+
+/// \Given a pointer to a CSDO service (co_csdo_t) with a valid server parameter
+///        "COB-ID client -> server (rx)" and "COB-ID server -> client (tx)"
+///        entries
+///
+/// \When co_sdo_dn_val_req() is called with an index, a subindex, a valid type
+///       of the value, a value, a null buffer pointer, a pointer to
+///       the confirmation function and a null user-specified data
+///
+/// \Then 0 is returned and the request is sent
+///       \Calls co_val_write()
+///       \Calls co_val_sizeof()
+///       \Calls membuf_clear()
+///       \Calls membuf_reserve()
+///       \Calls co_val_write()
+///       \Calls co_csdo_dn_req()
+TEST(CO_Csdo, CoCsdoDnValReq_Nominal) {
+  SetCli01CobidReq(DEFAULT_COBID_REQ);
+  SetCli02CobidRes(DEFAULT_COBID_RES);
+  StartCSDO();
+
+  const auto ret = co_csdo_dn_val_req(csdo, IDX, SUBIDX, SUB_TYPE, &VAL,
+                                      nullptr, CoCsdoDnCon::func, nullptr);
+
+  CHECK_EQUAL(0, ret);
+  CHECK_EQUAL(1u, CanSend::num_called);
+  const auto expected = CoCsdoDnReq::InitExpectedU16Data(
+      CO_SDO_CCS_DN_INI_REQ | CO_SDO_INI_SIZE_EXP_SET(sizeof(co_unsigned16_t)),
+      IDX, SUBIDX, VAL);
+  CanSend::CheckMsg(DEFAULT_COBID_REQ, 0, CO_SDO_MSG_SIZE, expected.data());
+}
+
+#if LELY_NO_MALLOC
+/// \Given a pointer to a CSDO service (co_csdo_t) with a valid server parameter
+///        "COB-ID client -> server (rx)" and "COB-ID server -> client (tx)"
+///        entries
+///
+/// \When co_sdo_dn_val_req() is called with an index, a subindex, a valid type
+///       of the value, a value, an empty memory buffer pointer, a pointer to
+///       the confirmation function and a null user-specified data
+///
+/// \Then -1 is returned and the request is not sent
+///       \Calls co_val_write()
+///       \Calls co_val_sizeof()
+///       \Calls membuf_clear()
+///       \Calls membuf_reserve()
+TEST(CO_Csdo, CoCsdoDnValReq_EmptyExternalBuffer) {
+  SetCli01CobidReq(DEFAULT_COBID_REQ);
+  SetCli02CobidRes(DEFAULT_COBID_RES);
+  StartCSDO();
+
+  membuf mbuf = MEMBUF_INIT;
+  const auto ret = co_csdo_dn_val_req(csdo, IDX, SUBIDX, SUB_TYPE, &VAL, &mbuf,
+                                      CoCsdoDnCon::func, nullptr);
+
+  CHECK_EQUAL(-1, ret);
+  CHECK_EQUAL(0u, CanSend::num_called);
+}
+#endif
+
+///@}
+
+/// @name co_csdo_dn_dcf_req()
+///@{
+
+/// \Given a pointer to a CSDO service (co_csdo_t) with a valid server parameter
+///        "COB-ID client -> server (rx)" and "COB-ID server -> client (tx)"
+///        entries; a concise DCF buffer
+///
+/// \When co_csdo_dn_dcf_req() is called with the pointer to the CSDO, a pointer
+///       to the beginning of the buffer, a pointer to the end of the buffer,
+///       a pointer to the confirmation function and a null user-specified data
+///       pointer
+///
+/// \Then 0 is returned, confirmation function is not called, error number is
+///       not changed, expedited download request with the requested values is
+///       sent
+///       \Calls co_csdo_is_valid()
+///       \Calls co_csdo_is_idle()
+///       \Calls co_val_read()
+///       \Calls co_csdo_dn_req()
+TEST(CO_Csdo, CoCsdoDnDcfReq_Nominal) {
+  SetCli01CobidReq(DEFAULT_COBID_REQ);
+  SetCli02CobidRes(DEFAULT_COBID_RES);
+  StartCSDO();
+
+  const errnum_t error_num = ERRNUM_FAULT;
+  set_errnum(error_num);
+
+  co_sub_set_val_u16(obj2020->GetLastSub(), VAL);
+  auto dcf = ConciseDcf::MakeForEntries<sub_type>();
+  CHECK_EQUAL(dcf.Size(),
+              co_dev_write_dcf(dev, IDX, IDX, dcf.Begin(), dcf.End()));
+
+  const auto ret = co_csdo_dn_dcf_req(csdo, dcf.Begin(), dcf.End(),
+                                      CoCsdoDnCon::func, nullptr);
+
+  CHECK_EQUAL(0, ret);
+  CHECK_EQUAL(0u, CoCsdoDnCon::num_called);
+  CHECK_EQUAL(error_num, get_errnum());
+  CHECK_EQUAL(1u, CanSend::num_called);
+  std::vector<uint_least8_t> expected = CoCsdoDnReq::InitExpectedU16Data(
+      CO_SDO_CCS_DN_INI_REQ | CO_SDO_INI_SIZE_EXP_SET(sizeof(sub_type)), IDX,
+      SUBIDX, VAL);
+  CanSend::CheckMsg(DEFAULT_COBID_REQ, 0u, CO_SDO_MSG_SIZE, expected.data());
+}
+
+/// \Given a pointer to a CSDO service (co_csdo_t) with an invalid server
+///        parameter "COB-ID client -> server (rx)" and a valid
+///        "COB-ID server -> client (tx)" entries; a concise DCF buffer
+///
+/// \When co_csdo_dn_dcf_req() is called with the pointer to the CSDO, a pointer
+///       to the beginning of the buffer, a pointer to the end of the buffer,
+///       a pointer to the confirmation function and a null user-specified data
+///       pointer
+///
+/// \Then -1 is returned, confirmation function is not called, ERRNUM_INVAL
+///       is set as the error number, expedited download request is not sent
+///       \Calls co_csdo_is_valid()
+///       \Calls co_csdo_is_idle()
+///       \Calls set_errnum()
+TEST(CO_Csdo, CoCsdoDnDcfReq_InvalidCobidReq) {
+  SetCli01CobidReq(DEFAULT_COBID_REQ | CO_SDO_COBID_VALID);
+  SetCli02CobidRes(DEFAULT_COBID_RES);
+  StartCSDO();
+
+  co_sub_set_val_u16(obj2020->GetLastSub(), VAL);
+  auto dcf = ConciseDcf::MakeForEntries<sub_type>();
+  CHECK_EQUAL(dcf.Size(),
+              co_dev_write_dcf(dev, IDX, IDX, dcf.Begin(), dcf.End()));
+
+  const auto ret = co_csdo_dn_dcf_req(csdo, dcf.Begin(), dcf.End(),
+                                      CoCsdoDnCon::func, nullptr);
+
+  CHECK_EQUAL(-1, ret);
+  CHECK_EQUAL(0u, CoCsdoDnCon::num_called);
+  CHECK_EQUAL(ERRNUM_INVAL, get_errnum());
+  CHECK_EQUAL(0u, CanSend::num_called);
 }
 
 ///@}
