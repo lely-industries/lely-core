@@ -456,7 +456,7 @@ class DataType:
 
     __fmt = {
         0x0001: "<HBLB",  # BOOLEAN
-        0x0002: "<HBLB",  # INTEGER8
+        0x0002: "<HBLb",  # INTEGER8
         0x0003: "<HBLh",  # INTEGER16
         0x0004: "<HBLl",  # INTEGER32
         0x0005: "<HBLB",  # UNSIGNED8
