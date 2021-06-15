@@ -39,6 +39,8 @@
 #define CO_SDO_SCS_BLK_DN_RES 0xa0u
 #define CO_SDO_SCS_BLK_UP_RES 0xc0u
 
+#define CO_SDO_MAX_SEQNO 127u
+
 #define CO_SDO_SC_END_BLK 0x01
 #define CO_SDO_SC_BLK_RES 0x02
 #define CO_SDO_SC_START_UP 0x03
@@ -54,6 +56,7 @@
 #define CO_SDO_BLK_SIZE_IND 0x02u
 #define CO_SDO_BLK_SIZE_MASK 0x1cu
 #define CO_SDO_BLK_SIZE_SET(n) (((7 - (n)) << 2) & CO_SDO_BLK_SIZE_MASK)
+#define CO_SDO_SC_INI_BLK 0x00u
 
 #define CO_SDO_INI_SIZE_IND 0x01u
 #define CO_SDO_INI_SIZE_EXP 0x02u

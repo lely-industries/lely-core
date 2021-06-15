@@ -23,6 +23,7 @@
 #ifndef LELY_UNIT_TEST_HPP_
 #define LELY_UNIT_TEST_HPP_
 
+#include <lely/can/msg.h>
 #include <lely/co/sdo.h>
 #include <lely/co/type.h>
 
@@ -30,6 +31,7 @@
 #include "co-csdo-up-con.hpp"
 #include "co-sub-dn-ind.hpp"
 #include "sdo-defines.hpp"
+#include "sdo-init-expected-data.hpp"
 #include "can-send.hpp"
 
 namespace LelyUnitTest {
