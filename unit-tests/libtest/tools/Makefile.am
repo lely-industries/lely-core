@@ -9,10 +9,11 @@ lib_LTLIBRARIES =
 
 liblely_unit_test_src =
 liblely_unit_test_src += lely-unit-test.cpp
+liblely_unit_test_src += can-send.cpp
 liblely_unit_test_src += co-csdo-dn-con.cpp
 liblely_unit_test_src += co-csdo-up-con.cpp
 liblely_unit_test_src += co-sub-dn-ind.cpp
-liblely_unit_test_src += can-send.cpp
+liblely_unit_test_src += sdo-init-expected-data.cpp
 
 lib_LTLIBRARIES += liblely-unit-test.la
 
