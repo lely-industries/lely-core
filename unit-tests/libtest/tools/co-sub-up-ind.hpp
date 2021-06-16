@@ -1,7 +1,8 @@
+
 /**@file
  * This file is part of the CANopen Library Unit Test Suite.
  *
- * @copyright 2020-2021 N7 Space Sp. z o.o.
+ * @copyright 2021 N7 Space Sp. z o.o.
  *
  * Unit Test Suite was developed under a programme of,
  * and funded by, the European Space Agency.
@@ -20,29 +21,27 @@
  * limitations under the License.
  */
 
-#ifndef LELY_UNIT_TEST_HPP_
-#define LELY_UNIT_TEST_HPP_
+#ifndef LELY_UNIT_TEST_CO_SUB_UP_IND_HPP_
+#define LELY_UNIT_TEST_CO_SUB_UP_IND_HPP_
 
-#include <lely/can/msg.h>
-#include <lely/co/sdo.h>
 #include <lely/co/type.h>
+#include <lely/co/sdo.h>
 
-#include "co-csdo-dn-con.hpp"
-#include "co-csdo-up-con.hpp"
-#include "co-sub-dn-ind.hpp"
-#include "co-sub-up-ind.hpp"
-#include "can-send.hpp"
-#include "sdo-create-message.hpp"
-#include "sdo-defines.hpp"
-#include "sdo-init-expected-data.hpp"
+struct CoSubUpInd {
+  static unsigned int num_called;
+  static const co_sub_t* sub;
+  static co_sdo_req* req;
+  static co_unsigned32_t ac;
+  static void* data;
 
-namespace LelyUnitTest {
-/**
- * Sets empty handlers for all diagnostic messages from lely-core library.
- *
- * @see diag_set_handler(), diag_at_set_handler()
- */
-void DisableDiagnosticMessages();
-}  // namespace LelyUnitTest
+  static co_unsigned32_t Func(const co_sub_t* sub_, co_sdo_req* req_,
+                              co_unsigned32_t ac_, void* data_);
+  static void Clear();
 
-#endif  // LELY_UNIT_TEST_HPP_
+  static inline bool
+  Called() {
+    return num_called > 0;
+  }
+};
+
+#endif  // LELY_UNIT_TEST_CO_SUB_UP_IND_HPP_
