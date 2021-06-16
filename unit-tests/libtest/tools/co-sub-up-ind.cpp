@@ -1,7 +1,7 @@
 /**@file
  * This file is part of the CANopen Library Unit Test Suite.
  *
- * @copyright 2020-2021 N7 Space Sp. z o.o.
+ * @copyright 2021 N7 Space Sp. z o.o.
  *
  * Unit Test Suite was developed under a programme of,
  * and funded by, the European Space Agency.
@@ -20,29 +20,45 @@
  * limitations under the License.
  */
 
-#ifndef LELY_UNIT_TEST_HPP_
-#define LELY_UNIT_TEST_HPP_
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
 
-#include <lely/can/msg.h>
-#include <lely/co/sdo.h>
-#include <lely/co/type.h>
+#include <CppUTest/TestHarness.h>
 
-#include "co-csdo-dn-con.hpp"
-#include "co-csdo-up-con.hpp"
-#include "co-sub-dn-ind.hpp"
+#include <lely/co/dev.h>
+#include <lely/co/detail/obj.h>
+#include <lely/co/obj.h>
+
 #include "co-sub-up-ind.hpp"
-#include "can-send.hpp"
-#include "sdo-create-message.hpp"
-#include "sdo-defines.hpp"
-#include "sdo-init-expected-data.hpp"
 
-namespace LelyUnitTest {
-/**
- * Sets empty handlers for all diagnostic messages from lely-core library.
- *
- * @see diag_set_handler(), diag_at_set_handler()
- */
-void DisableDiagnosticMessages();
-}  // namespace LelyUnitTest
+unsigned int CoSubUpInd::num_called = 0u;
+const co_sub_t* CoSubUpInd::sub = nullptr;
+co_sdo_req* CoSubUpInd::req = nullptr;
+co_unsigned32_t CoSubUpInd::ac = 0u;
+void* CoSubUpInd::data = nullptr;
 
-#endif  // LELY_UNIT_TEST_HPP_
+co_unsigned32_t
+CoSubUpInd::Func(const co_sub_t* sub_, co_sdo_req* req_, co_unsigned32_t ac_,
+                 void* data_) {
+  num_called++;
+
+  sub = sub_;
+  req = req_;
+  ac = ac_;
+  data = data_;
+
+  co_sub_on_up(sub, req, &ac);
+
+  return ac;
+}
+
+void
+CoSubUpInd::Clear() {
+  num_called = 0;
+
+  sub = nullptr;
+  req = nullptr;
+  ac = 0;
+  data = nullptr;
+}

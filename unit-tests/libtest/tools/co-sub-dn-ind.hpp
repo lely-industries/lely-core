@@ -34,7 +34,7 @@ struct CoSubDnInd {
   static co_unsigned32_t ac;
   static void* data;
 
-  static co_unsigned32_t func(co_sub_t* sub_, co_sdo_req* req_,
+  static co_unsigned32_t Func(co_sub_t* sub_, co_sdo_req* req_,
                               co_unsigned32_t ac_, void* data_);
   static void Clear();
 

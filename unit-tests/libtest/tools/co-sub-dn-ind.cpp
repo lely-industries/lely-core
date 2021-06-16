@@ -41,7 +41,7 @@ co_unsigned32_t CoSubDnInd::ac = 0u;
 void* CoSubDnInd::data = nullptr;
 
 co_unsigned32_t
-CoSubDnInd::func(co_sub_t* sub_, co_sdo_req* req_, co_unsigned32_t ac_,
+CoSubDnInd::Func(co_sub_t* sub_, co_sdo_req* req_, co_unsigned32_t ac_,
                  void* data_) {
   num_called++;
 

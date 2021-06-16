@@ -2519,7 +2519,7 @@ TEST(CO_Csdo, CoCsdoUpReq_ServiceNotStarted) {
   CHECK(!CanSend::Called());
 }
 
-/// \Given a pointer to the CSDO service (co_csdo_t) with no ongoing request
+/// \Given a pointer to the CSDO service (co_csdo_t) with no ongoing transfer
 ///
 /// \When co_csdo_up_req() is called with a pointer to the CSDO service,
 ///       an index, a sub-index, a null buffer pointer, a pointer to
@@ -2542,7 +2542,7 @@ TEST(CO_Csdo, CoCsdoUpReq_Nominal) {
   CanSend::CheckMsg(DEFAULT_COBID_REQ, 0, CO_SDO_MSG_SIZE, expected.data());
 }
 
-/// \Given a pointer to the CSDO service (co_csdo_t) with no ongoing request,
+/// \Given a pointer to the CSDO service (co_csdo_t) with no ongoing transfer,
 ///        the timeout of the service was set
 ///
 /// \When co_csdo_up_req() is called with a pointer to the CSDO service,
@@ -2599,7 +2599,7 @@ TEST(CO_Csdo, CoCsdoBlkUpReq_ServiceNotStarted) {
   CHECK(!CanSend::Called());
 }
 
-/// \Given a pointer to the CSDO service (co_csdo_t) with no ongoing request
+/// \Given a pointer to the CSDO service (co_csdo_t) with no ongoing transfer
 ///
 /// \When co_csdo_blk_up_req() is called with an index, a sub-index, 0 protocol
 ///       switch threshold, null buffer pointer, a pointer to the confirmation
@@ -2623,7 +2623,7 @@ TEST(CO_Csdo, CoCsdoBlkUpReq_Nominal) {
   CanSend::CheckMsg(DEFAULT_COBID_REQ, 0, CO_SDO_MSG_SIZE, expected.data());
 }
 
-/// \Given a pointer to the CSDO service (co_csdo_t) with no ongoing request,
+/// \Given a pointer to the CSDO service (co_csdo_t) with no ongoing transfer,
 ///       the timeout of the service was set
 ///
 /// \When co_csdo_blk_up_req() is called with an index, a sub-index, 0 protocol
@@ -2648,6 +2648,143 @@ TEST(CO_Csdo, CoCsdoBlkUpReq_TimeoutSet) {
       CO_SDO_CCS_BLK_UP_REQ | CO_SDO_BLK_CRC | CO_SDO_SC_INI_BLK, IDX, SUBIDX,
       CO_SDO_MAX_SEQNO);
   CanSend::CheckMsg(DEFAULT_COBID_REQ, 0, CO_SDO_MSG_SIZE, expected.data());
+  CanSend::Clear();
+
+  CoCsdoUpDnReq::SetOneSecOnNet(net);
+
+  CHECK_EQUAL(1u, CanSend::num_called);
+  std::vector<uint_least8_t> expected_timeout =
+      SdoInitExpectedData::U32(CO_SDO_CS_ABORT, IDX, SUBIDX, CO_SDO_AC_TIMEOUT);
+  CanSend::CheckMsg(DEFAULT_COBID_REQ, 0, CO_SDO_MSG_SIZE,
+                    expected_timeout.data());
+}
+
+///@}
+
+/// @name CSDO: receive SDO message with no ongoing transfer
+///@{
+
+/// \Given a pointer to the CSDO service (co_csdo_t) with no ongoing transfer
+///
+/// \When a non-abort SDO message is received
+///
+/// \Then 1 is returned by can_net_recv() and an SDO response is not sent
+TEST(CO_Csdo, RecvWhenWaiting_Default) {
+  StartCSDO();
+
+  can_msg msg = SdoCreateMsg::Default(IDX, SUBIDX, DEFAULT_COBID_REQ);
+  msg.data[0] = CO_SDO_CCS_BLK_DN_REQ;
+  const auto ret = can_net_recv(net, &msg, 0);
+
+  CHECK_EQUAL(1, ret);
+  CHECK(!CanSend::Called());
+}
+
+/// \Given a pointer to the CSDO service (co_csdo_t) with no ongoing transfer
+///
+/// \When an abort SDO message is received
+///
+/// \Then 1 is returned by can_net_recv() and an SDO response is not sent
+TEST(CO_Csdo, RecvWhenWaiting_CsAbort) {
+  StartCSDO();
+
+  can_msg msg =
+      SdoCreateMsg::Abort(IDX, SUBIDX, DEFAULT_COBID_REQ, CO_SDO_AC_NO_DATA);
+  const auto ret = can_net_recv(net, &msg, 0);
+
+  CHECK_EQUAL(1, ret);
+  CHECK(!CanSend::Called());
+}
+
+/// \Given a pointer to the CSDO service (co_csdo_t) with no ongoing transfer
+///
+/// \When an abort SDO message is received, the message is shorter than 8 bytes
+///
+/// \Then 1 is returned by can_net_recv() and an SDO response is not sent
+TEST(CO_Csdo, RecvWhenWaiting_CsAbort_TooShortMsg) {
+  StartCSDO();
+
+  can_msg msg = SdoCreateMsg::Abort(IDX, SUBIDX, DEFAULT_COBID_REQ, 0u);
+  msg.len = 7u;
+  const auto ret = can_net_recv(net, &msg, 0);
+
+  CHECK_EQUAL(1, ret);
+  CHECK(!CanSend::Called());
+}
+
+///@}
+
+/// @name co_csdo_blk_dn_req()
+///@{
+
+/// \Given a pointer to the CSDO service (co_csdo_t) which is not started
+///
+/// \When co_csdo_blk_dn_req() is called with an index and a sub-index of
+///       the entry to download, a pointer to the bytes to be downloaded, size
+///       of the entry, a pointer to the confirmation function and a null
+///       user-specified data pointer
+///
+/// \Then -1 is returned and SDO message is not sent
+TEST(CO_Csdo, CoCsdoBlkDnReq_NotStarted) {
+  uint_least8_t bytes2dn[sizeof(sub_type)] = {0};
+  const auto ret =
+      co_csdo_blk_dn_req(csdo, IDX, SUBIDX, bytes2dn, sizeof(sub_type),
+                         CoCsdoDnCon::func, nullptr);
+
+  CHECK_EQUAL(-1, ret);
+  CHECK(!CanSend::Called());
+}
+
+/// \Given a pointer to the CSDO service (co_csdo_t)
+///
+/// \When co_csdo_blk_dn_req() is called with an index and a sub-index of
+///       the entry to download, a pointer to the bytes to be downloaded, size
+///       of the entry, a pointer to the confirmation function and a null
+///       user-specified data pointer
+///
+/// \Then 0 is returned and SDO block download request is sent
+TEST(CO_Csdo, CoCsdoBlkDnReq_Nominal) {
+  StartCSDO();
+
+  uint_least8_t bytes2dn[sizeof(sub_type)] = {0};
+  const auto ret =
+      co_csdo_blk_dn_req(csdo, IDX, SUBIDX, bytes2dn, sizeof(sub_type),
+                         CoCsdoDnCon::func, nullptr);
+
+  CHECK_EQUAL(0, ret);
+  CHECK_EQUAL(1, CanSend::num_called);
+  const co_unsigned8_t cs = CO_SDO_CCS_BLK_DN_REQ | CO_SDO_BLK_CRC |
+                            CO_SDO_BLK_SIZE_IND | CO_SDO_SC_INI_BLK;
+  std::vector<uint_least8_t> expected =
+      SdoInitExpectedData::U32(cs, IDX, SUBIDX, sizeof(sub_type));
+  CanSend::CheckMsg(DEFAULT_COBID_REQ, 0, CO_SDO_MSG_SIZE, expected.data());
+}
+
+/// \Given a pointer to the CSDO service (co_csdo_t) with a timeout set
+///
+/// \When co_csdo_blk_dn_req() is called with an index and a sub-index of
+///       the entry to download, a pointer to the bytes to be downloaded, size
+///       of the entry, a pointer to the confirmation function and a null
+///       user-specified data pointer
+///
+/// \Then 0 is returned and SDO block download request is sent;
+///       after the timeout value elapses and no response from the server
+///       is received - the timeout message is sent
+TEST(CO_Csdo, CoCsdoBlkDnReq_TimeoutSet) {
+  co_csdo_set_timeout(csdo, 999);
+  StartCSDO();
+
+  uint_least8_t bytes2dn[sizeof(sub_type)] = {0};
+  const auto ret =
+      co_csdo_blk_dn_req(csdo, IDX, SUBIDX, bytes2dn, sizeof(sub_type),
+                         CoCsdoDnCon::func, nullptr);
+
+  CHECK_EQUAL(0, ret);
+  CHECK_EQUAL(1, CanSend::num_called);
+  const co_unsigned8_t cs = CO_SDO_CCS_BLK_DN_REQ | CO_SDO_BLK_CRC |
+                            CO_SDO_BLK_SIZE_IND | CO_SDO_SC_INI_BLK;
+  std::vector<uint_least8_t> expected =
+      SdoInitExpectedData::U32(cs, IDX, SUBIDX, sizeof(sub_type));
   CanSend::Clear();
 
   CoCsdoUpDnReq::SetOneSecOnNet(net);
