@@ -46,6 +46,7 @@
 .deps
 .dirstamp
 .libs
+cpputest_*.xml
 Makefile
 Makefile.in
 *~

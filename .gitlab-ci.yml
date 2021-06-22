@@ -62,6 +62,7 @@ workflow:
     - make
   artifacts:
     untracked: true
+    expire_in: 1 week
 
 .test:
   stage: test
@@ -73,10 +74,13 @@ workflow:
     - make -t
     - make check
   artifacts:
-    when: on_failure
+    when: always
     paths:
       - test/test-*.log
+      - unit-tests/*/test-*.log
       - unit-tests/*/unit-test-*.log
+    reports:
+      junit: unit-tests/*/cpputest_*.xml
     expire_in: 1 week
 
 .docker-gcc:
@@ -304,6 +308,7 @@ doc:
     - ./configure
     - make html
   artifacts:
+    when: always
     paths:
       - doc/
     expire_in: 1 week
@@ -381,7 +386,7 @@ valgrind:
     - make
     - make check-valgrind-memcheck
   artifacts:
-    when: on_failure
+    when: always
     paths:
       - test/test-*.log
       - unit-tests/*/test-*.log
@@ -408,7 +413,7 @@ valgrind:ecss:
     - make
     - make check-valgrind-memcheck
   artifacts:
-    when: on_failure
+    when: always
     paths:
       - test/test-*.log
       - unit-tests/*/test-*.log
@@ -431,7 +436,7 @@ asan:
     - make
     - make check
   artifacts:
-    when: on_failure
+    when: always
     paths:
       - test/test-*.log
       - unit-tests/*/test-*.log
@@ -454,7 +459,7 @@ asan:ecss:
     - make
     - make check
   artifacts:
-    when: on_failure
+    when: always
     paths:
       - test/test-*.log
       - unit-tests/*/test-*.log
@@ -509,7 +514,7 @@ scan-build:
     - scan-build ./configure --disable-cython $LELY_CORE_ANALYSIS_CONFIGURE_OPTIONS
     - scan-build --keep-cc -o ./scan-build make check
   artifacts:
-    when: on_failure
+    when: always
     paths:
       - scan-build/
     expire_in: 1 week

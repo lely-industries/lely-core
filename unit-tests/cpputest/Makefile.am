@@ -1,4 +1,3 @@
-
 bin =
 
 if PLATFORM_WIN32
@@ -48,10 +47,11 @@ check_PROGRAMS = $(bin)
 TESTS = $(check_PROGRAMS)
 EXEC = $(SHELL) $(top_builddir)/exec-wrapper.sh
 
+AM_TESTS_ENVIRONMENT = TEST_ARGS="-ojunit -v"; export TEST_ARGS;
+
 if CODE_COVERAGE_ENABLED
 LOG_COMPILER = $(SHELL) $(top_builddir)/lcov-wrapper.sh
-AM_TESTS_ENVIRONMENT = EXEC_WRAPPER="$(EXEC)"
-AM_TESTS_ENVIRONMENT += ;
+AM_TESTS_ENVIRONMENT += EXEC_WRAPPER="$(EXEC)"; export EXEC_WRAPPER;
 @CODE_COVERAGE_RULES@
 else
 LOG_COMPILER = $(EXEC)
