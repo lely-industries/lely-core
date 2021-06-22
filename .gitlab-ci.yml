@@ -79,6 +79,8 @@ workflow:
       - test/test-*.log
       - unit-tests/*/test-*.log
       - unit-tests/*/unit-test-*.log
+    reports:
+      junit: unit-tests/*/cpputest_*.xml
     expire_in: 1 week
 
 .docker-gcc:
