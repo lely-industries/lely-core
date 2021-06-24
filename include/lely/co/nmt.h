@@ -2,7 +2,7 @@
  * This header file is part of the CANopen library; it contains the network
  * management (NMT) declarations.
  *
- * @copyright 2020 Lely Industries N.V.
+ * @copyright 2020-2021 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -89,6 +89,15 @@ enum {
 	CO_NMT_EC_STATE
 };
 
+#if !LELY_NO_CO_ECSS_REDUNDANCY
+enum {
+	/// An NMT ECSS redundancy manager bus switch.
+	CO_NMT_ECSS_RDN_BUS_SWITCH,
+	/// An NMT ECSS redundancy manager no-master operation.
+	CO_NMT_ECSS_RDN_NO_MASTER,
+};
+#endif // !LELY_NO_CO_ECSS_REDUNDANCY
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -154,6 +163,20 @@ typedef void co_nmt_lg_ind_t(co_nmt_t *nmt, int state, void *data);
  */
 typedef void co_nmt_hb_ind_t(co_nmt_t *nmt, co_unsigned8_t id, int state,
 		int reason, void *data);
+
+/**
+ * The type of a CANopen NMT redundancy indication function, invoked when a
+ * redundancy event occurs.
+ *
+ * @param nmt    a pointer to an NMT master/slave service.
+ * @param bus_id the active CAN bus identifier.
+ * @param reason indicates whether the event occurred because of a bus switch
+ *               (#CO_NMT_ECSS_RDN_BUS_SWITCH) or entering no-master operation
+ *               mode (#CO_NMT_ECSS_RDN_NO_MASTER).
+ * @param data a pointer to user-specified data.
+ */
+typedef void co_nmt_ecss_rdn_ind_t(
+		co_nmt_t *nmt, co_unsigned8_t bus_id, int reason, void *data);
 
 /**
  * The type of a CANopen NMT state change indication function, invoked when a
@@ -413,6 +436,33 @@ void co_nmt_set_lg_ind(co_nmt_t *nmt, co_nmt_lg_ind_t *ind, void *data);
  * @see co_nmt_lg_ind_t
  */
 void co_nmt_on_lg(co_nmt_t *nmt, int state);
+
+/**
+ * Retrieves the indication function invoked when a redundancy event occurs.
+ *
+ * @param nmt   a pointer to an NMT master/slave service.
+ * @param pind  the address at which to store a pointer to the indication
+ *              function (can be NULL).
+ * @param pdata the address at which to store a pointer to user-specified data
+ *              (can be NULL).
+ *
+ * @see co_nmt_set_ecss_rdn_ind()
+ */
+void co_nmt_get_ecss_rdn_ind(const co_nmt_t *nmt, co_nmt_ecss_rdn_ind_t **pind,
+		void **pdata);
+
+/**
+ * Sets the indication function invoked when a redundancy event occurs.
+ *
+ * @param nmt  a pointer to an NMT master/slave service.
+ * @param ind  a pointer to the function to be invoked (can be NULL).
+ * @param data a pointer to user-specified data (can be NULL). <b>data</b> is
+ *             passed as the last parameter to <b>ind</b>.
+ *
+ * @see co_nmt_get_ecss_rdn_ind()
+ */
+void co_nmt_set_ecss_rdn_ind(
+		co_nmt_t *nmt, co_nmt_ecss_rdn_ind_t *ind, void *data);
 
 /**
  * Retrieves the indication function invoked when a heartbeat event occurs.
@@ -737,6 +787,29 @@ co_unsigned8_t co_nmt_get_st(const co_nmt_t *nmt);
 
 /// Returns 1 if the specified CANopen NMT service is a master, and 0 if not.
 int co_nmt_is_master(const co_nmt_t *nmt);
+
+/**
+ * Sets the alternate CAN bus identifier which the NMT redundancy manager
+ * service could utilize.
+ *
+ * @param nmt    a pointer to an NMT master service.
+ * @param bus_id a CAN bus identifier.
+ */
+void co_nmt_set_alternate_bus_id(co_nmt_t *nmt, co_unsigned8_t bus_id);
+
+/**
+ * Returns the currently active CAN bus on which the NMT service operates.
+ */
+int co_nmt_get_active_bus_id(const co_nmt_t *nmt);
+
+/**
+ * Sets the active CAN bus on which the NMT service operates. Only NMT master
+ * can initiate a bus change.
+ *
+ * @param nmt    a pointer to an NMT master service.
+ * @param bus_id a CAN bus identifier.
+ */
+int co_nmt_set_active_bus(co_nmt_t *nmt, co_unsigned8_t bus_id);
 
 /**
  * Returns the default SDO timeout used during the NMT 'boot slave' and

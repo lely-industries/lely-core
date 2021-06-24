@@ -31,6 +31,10 @@ src += nmt_cfg.h
 endif
 src += nmt_hb.c
 src += nmt_hb.h
+if !NO_CO_ECSS_REDUNDANCY
+src += nmt_rdn.c
+src += nmt_rdn.h
+endif
 src += nmt_srv.c
 src += nmt_srv.h
 src += obj.c

@@ -50,6 +50,9 @@
 #if !LELY_NO_CO_NMT_CFG
 #include <lib/co/nmt_cfg.h>
 #endif
+#if !LELY_NO_CO_ECSS_REDUNDANCY
+#include <lib/co/nmt_rdn.h>
+#endif
 
 #if LELY_NO_MALLOC
 
@@ -80,7 +83,7 @@ TEST_BASE(CO_NmtBase) {
 
   std::unique_ptr<CoObjTHolder> obj1000;
 #if !LELY_NO_CO_DCF_RESTORE
-  std::unique_ptr<CoObjTHolder> obj2000;
+  std::unique_ptr<CoObjTHolder> obj2001;
 #endif
 
   std::unique_ptr<CoObjTHolder> obj1016;
@@ -88,6 +91,7 @@ TEST_BASE(CO_NmtBase) {
   std::unique_ptr<CoObjTHolder> obj1f80;
   std::unique_ptr<CoObjTHolder> obj1f81;
   std::unique_ptr<CoObjTHolder> obj1f82;
+  std::unique_ptr<CoObjTHolder> obj_rdn;
 
   Allocators::Default allocator;
 
@@ -148,6 +152,14 @@ TEST_BASE(CO_NmtBase) {
       obj1f82->InsertAndSetSub(i + 1u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(0));
     }
   }
+
+#if !LELY_NO_CO_ECSS_REDUNDANCY
+  void CreateEmptyRedundancyObject() {
+    dev_holder->CreateAndInsertObj(obj_rdn, CO_NMT_RDN_REDUNDANCY_OBJ_IDX);
+    obj_rdn->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(0));
+    obj_rdn->InsertAndSetSub(0x01u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(0));
+  }
+#endif
 
   TEST_SETUP() {
     LelyUnitTest::DisableDiagnosticMessages();
@@ -327,9 +339,9 @@ TEST(CO_NmtCreate, CoNmtSizeof_Nominal) {
 #elif LELY_NO_MALLOC
 #if LELY_NO_CO_NG && LELY_NO_CO_NMT_BOOT && LELY_NO_CO_NMT_CFG  // ECSS
 #if LELY_NO_CO_MASTER
-  CHECK_EQUAL(1360u, ret);
+  CHECK_EQUAL(1384u, ret);
 #else
-  CHECK_EQUAL(4768u, ret);
+  CHECK_EQUAL(4792u, ret);
 #endif
 #else
   CHECK_EQUAL(11872u, ret);
@@ -425,8 +437,8 @@ TEST(CO_NmtCreate, CoNmtCreate_Default) {
 ///       \Calls set_errc()
 TEST(CO_NmtCreate, CoNmtCreate_DcfAppParamsWriteFail) {
   const size_t NUM_SUBS = 1u;
-  dev_holder->CreateAndInsertObj(obj2000, 0x2000u);
-  obj2000->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(0));
+  dev_holder->CreateAndInsertObj(obj2001, 0x2001u);
+  obj2001->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(0));
 
   LelyOverride::co_val_write(
       GetCoDevWriteDcf_NullBuf_CoValWriteCalls(NUM_SUBS));
@@ -461,8 +473,8 @@ TEST(CO_NmtCreate, CoNmtCreate_DcfAppParamsWriteFail) {
 TEST(CO_NmtCreate, CoNmtCreate_DcfCommParamsWriteFail) {
   const size_t NUM_SUBS = 1u;  // in each region
 #if !LELY_NO_CO_DCF_RESTORE
-  dev_holder->CreateAndInsertObj(obj2000, 0x2000u);
-  obj2000->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(0));
+  dev_holder->CreateAndInsertObj(obj2001, 0x2001u);
+  obj2001->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(0));
 #endif
   dev_holder->CreateAndInsertObj(obj1000, 0x1000u);
   obj1000->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(0));
@@ -774,6 +786,15 @@ TEST_GROUP_BASE(CO_NmtAllocation, CO_NmtBase) {
 
   static size_t GetNmtRecvsAllocSize() { return 2u * can_recv_sizeof(); }
 
+  static size_t GetNmtRedundancyAllocSize() {
+    size_t size = 0;
+#if !LELY_NO_CO_ECSS_REDUNDANCY
+    size += co_nmt_rdn_sizeof();
+    size += can_timer_sizeof();
+#endif
+    return size;
+  }
+
   TEST_SETUP() {
     LelyUnitTest::DisableDiagnosticMessages();
     net = can_net_create(limitedAllocator.ToAllocT(), 0);
@@ -1010,11 +1031,12 @@ TEST(CO_NmtAllocation, CoNmtCreate_NoMemoryForEcTimer) {
   CHECK_EQUAL(0, limitedAllocator.GetAllocationLimit());
 }
 
-#if !LELY_NO_CO_MASTER
+#if !LELY_NO_CO_ECSS_REDUNDANCY
 /// \Given initialized device (co_dev_t) and network (can_net_t) with a memory
-///        allocator limited to only allocate the NMT service instance, DCFs for
-///        application/communication parameters, the default services instances,
-///        all NMT receivers and a timer for life guarding/heartbeat production
+///        allocator limited to only allocate the NMT service instance, DCFs
+///        for application/communication parameters, the default services
+///        instances, all NMT receivers and a timer for life guarding/heartbeat
+///        production
 ///
 /// \When co_nmt_create() is called with pointers to the network and the device
 ///
@@ -1034,6 +1056,50 @@ TEST(CO_NmtAllocation, CoNmtCreate_NoMemoryForEcTimer) {
 ///       \Calls can_timer_set_func()
 ///       \Calls can_timer_destroy()
 ///       \Calls co_dev_find_obj()
+///       \Calls co_nmt_rdn_create()
+///       \IfCalls{LELY_NO_MALLOC, memset()}
+///       \Calls get_errc()
+///       \Calls mem_free()
+///       \Calls set_errc()
+TEST(CO_NmtAllocation, CoNmtCreate_NoMemoryForRedundancy) {
+  limitedAllocator.LimitAllocationTo(
+      co_nmt_sizeof() + GetDcfParamsAllocSize() + GetServicesAllocSize() +
+      GetNmtRecvsAllocSize() + can_timer_sizeof());
+
+  nmt = co_nmt_create(net, dev);
+
+  POINTERS_EQUAL(nullptr, nmt);
+  CHECK_EQUAL(ERRNUM_NOMEM, get_errnum());
+  CHECK_EQUAL(0, limitedAllocator.GetAllocationLimit());
+}
+#endif
+
+#if !LELY_NO_CO_MASTER
+/// \Given initialized device (co_dev_t) and network (can_net_t) with a memory
+///        allocator limited to only allocate the NMT service instance, DCFs
+///        for application/communication parameters, the default services
+///        instances, all NMT receivers, a timer for life guarding/heartbeat
+///        production and the NMT redundancy manager service instance
+///
+/// \When co_nmt_create() is called with pointers to the network and the device
+///
+/// \Then a null pointer is returned, NMT service is not created and the error
+///       number is set to ERRNUM_NOMEM
+///       \Calls mem_alloc()
+///       \Calls can_net_get_alloc()
+///       \Calls co_nmt_alignof()
+///       \Calls co_nmt_sizeof()
+///       \Calls co_dev_get_id()
+///       \Calls co_dev_write_dcf()
+///       \Calls co_nmt_srv_init()
+///       \Calls can_recv_create()
+///       \Calls can_recv_destroy()
+///       \Calls can_recv_set_func()
+///       \Calls can_timer_create()
+///       \Calls can_timer_set_func()
+///       \Calls can_timer_destroy()
+///       \Calls co_dev_find_obj()
+///       \Calls co_nmt_rdn_create()
 ///       \IfCalls{LELY_NO_MALLOC, memset()}
 ///       \Calls get_errc()
 ///       \Calls mem_free()
@@ -1041,7 +1107,8 @@ TEST(CO_NmtAllocation, CoNmtCreate_NoMemoryForEcTimer) {
 TEST(CO_NmtAllocation, CoNmtCreate_NoMemoryForCsTimer) {
   limitedAllocator.LimitAllocationTo(
       co_nmt_sizeof() + GetDcfParamsAllocSize() + GetServicesAllocSize() +
-      GetNmtRecvsAllocSize() + can_timer_sizeof());
+      GetNmtRecvsAllocSize() + can_timer_sizeof() +
+      GetNmtRedundancyAllocSize());
 
   nmt = co_nmt_create(net, dev);
 
@@ -1098,8 +1165,9 @@ TEST(CO_NmtAllocation, CoNmtCreate_NoMemoryForHbSrv_WithObj1016) {
 /// \Given initialized device (co_dev_t) and network (can_net_t) with a memory
 ///        allocator limited to only allocate the NMT service instance, DCFs for
 ///        application/communication parameters, the default services instances,
-///        all NMT receivers, a timer for life guarding/heartbeat production and
-///        a timer for sending buffered NMT messages
+///        all NMT receivers, a timer for life guarding/heartbeat production,
+///        the NMT redundancy manager service instance and a timer for sending
+///        buffered NMT messages
 ///
 /// \When co_nmt_create() is called with pointers to the network and the device
 ///
@@ -1126,7 +1194,8 @@ TEST(CO_NmtAllocation, CoNmtCreate_NoMemoryForHbSrv_WithObj1016) {
 TEST(CO_NmtAllocation, CoNmtCreate_NoMemoryForNmtSlaveRecvs) {
   limitedAllocator.LimitAllocationTo(
       co_nmt_sizeof() + GetDcfParamsAllocSize() + GetServicesAllocSize() +
-      GetNmtRecvsAllocSize() + GetNmtTimersAllocSize());
+      GetNmtRecvsAllocSize() + GetNmtRedundancyAllocSize() +
+      GetNmtTimersAllocSize());
 
   nmt = co_nmt_create(net, dev);
 
@@ -1167,7 +1236,8 @@ TEST(CO_NmtAllocation, CoNmtCreate_NoMemoryForNmtSlaveRecvs) {
 TEST(CO_NmtAllocation, CoNmtCreate_ExactMemory) {
   limitedAllocator.LimitAllocationTo(
       co_nmt_sizeof() + GetDcfParamsAllocSize() + GetServicesAllocSize() +
-      GetNmtRecvsAllocSize() + GetNmtTimersAllocSize() + GetSlavesAllocSize());
+      GetNmtRecvsAllocSize() + GetNmtRedundancyAllocSize() +
+      GetNmtTimersAllocSize() + GetSlavesAllocSize());
 
   nmt = co_nmt_create(net, dev);
 
@@ -1211,7 +1281,8 @@ TEST(CO_NmtAllocation, CoNmtCreate_ExactMemory_WithObj1016_MaxEntries) {
 
   limitedAllocator.LimitAllocationTo(
       co_nmt_sizeof() + GetDcfParamsAllocSize() + GetServicesAllocSize() +
-      GetNmtRecvsAllocSize() + GetNmtTimersAllocSize() + GetSlavesAllocSize() +
+      GetNmtRecvsAllocSize() + GetNmtRedundancyAllocSize() +
+      GetNmtTimersAllocSize() + GetSlavesAllocSize() +
       GetHbConsumersAllocSize(CO_NMT_MAX_NHB));
 
   nmt = co_nmt_create(net, dev);

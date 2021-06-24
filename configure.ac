@@ -327,6 +327,15 @@ AS_IF([test "$enable_ng" == "no"], [
 	AC_DEFINE([LELY_NO_CO_NG], [1], [Define to 1 if node guarding support is disabled.])
 ])
 
+AM_CONDITIONAL([NO_CO_ECSS_REDUNDANCY], [false])
+AC_ARG_ENABLE([ecss-redundancy],
+	AS_HELP_STRING([--enable-ecss-redundancy], [enable ECSS bus redundancy support]))
+AS_IF([test "$enable_ecss_compliance" == "yes"], [enable_ecss_redundancy=yes])
+AS_IF([test "$enable_ecss_redundancy" != "yes"], [
+	AM_CONDITIONAL([NO_CO_ECSS_REDUNDANCY], [true])
+	AC_DEFINE([LELY_NO_CO_ECSS_REDUNDANCY], [1], [Define to 1 if ECSS bus redundancy support is disabled.])
+])
+
 AM_CONDITIONAL([NO_CO_NMT_BOOT], [false])
 AC_ARG_ENABLE([nmt-boot],
 	AS_HELP_STRING([--disable-nmt-boot], [disable NMT boot slave support]))

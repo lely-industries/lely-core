@@ -1,7 +1,8 @@
+
 /**@file
  * This file is part of the CANopen Library Unit Test Suite.
  *
- * @copyright 2020-2021 N7 Space Sp. z o.o.
+ * @copyright 2021 N7 Space Sp. z o.o.
  *
  * Unit Test Suite was developed under a programme of,
  * and funded by, the European Space Agency.
@@ -20,31 +21,29 @@
  * limitations under the License.
  */
 
-#ifndef LELY_UNIT_TEST_HPP_
-#define LELY_UNIT_TEST_HPP_
+#ifndef LELY_UNIT_TEST_CO_NMT_RDN_IND_HPP_
+#define LELY_UNIT_TEST_CO_NMT_RDN_IND_HPP_
 
-#include <lely/can/msg.h>
-#include <lely/co/sdo.h>
 #include <lely/co/type.h>
 
-#include "co-csdo-dn-con.hpp"
-#include "co-csdo-up-con.hpp"
-#include "co-nmt-hb-ind.hpp"
-#include "co-nmt-rdn-ind.hpp"
-#include "co-sub-dn-ind.hpp"
-#include "co-sub-up-ind.hpp"
-#include "can-send.hpp"
-#include "sdo-create-message.hpp"
-#include "sdo-defines.hpp"
-#include "sdo-init-expected-data.hpp"
+class CoNmtRdnInd {
+ public:
+  static void Func(co_nmt_t* nmt, co_unsigned8_t bus_id, int reason,
+                   void* data);
+  static void Clear();
+  static void Check(const co_nmt_t* nmt, co_unsigned8_t bus_id, int reason,
+                    const void* data);
+  static inline unsigned
+  GetNumCalled() {
+    return num_called;
+  }
 
-namespace LelyUnitTest {
-/**
- * Sets empty handlers for all diagnostic messages from lely-core library.
- *
- * @see diag_set_handler(), diag_at_set_handler()
- */
-void DisableDiagnosticMessages();
-}  // namespace LelyUnitTest
+ private:
+  static unsigned num_called;
+  static co_nmt_t* nmt_;
+  static co_unsigned8_t bus_id_;
+  static int reason_;
+  static void* data_;
+};
 
-#endif  // LELY_UNIT_TEST_HPP_
+#endif  // LELY_UNIT_TEST_CO_NMT_RDN_IND_HPP_

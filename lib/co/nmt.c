@@ -55,6 +55,9 @@
 #if !LELY_NO_CO_NMT_CFG
 #include "nmt_cfg.h"
 #endif
+#if !LELY_NO_CO_ECSS_REDUNDANCY
+#include "nmt_rdn.h"
+#endif
 #include "nmt_hb.h"
 #include "nmt_srv.h"
 
@@ -227,6 +230,18 @@ struct co_nmt {
 #endif
 	/// The producer heartbeat time (in milliseconds).
 	co_unsigned16_t ms;
+#if !LELY_NO_CO_ECSS_REDUNDANCY
+	/// A flag specifying whether redundancy manager is enabled.
+	unsigned rdn_enabled : 1;
+	/// A flag specifying whether the bus selection process is active.
+	unsigned bus_selection : 1;
+	/// A pointer to the redundancy manager service.
+	co_nmt_rdn_t *rdn;
+	/// A pointer to the redundancy event indication function.
+	co_nmt_ecss_rdn_ind_t *rdn_ind;
+	/// A pointer to user-specified data for #rdn_ind.
+	void *rdn_data;
+#endif
 	/// An array of pointers to the heartbeat consumers.
 #if LELY_NO_MALLOC
 	co_nmt_hb_t *hbs[CO_NMT_MAX_NHB];
@@ -712,6 +727,23 @@ static co_nmt_state_t *co_nmt_startup_master(co_nmt_t *nmt);
 /// The NMT slave startup procedure.
 static co_nmt_state_t *co_nmt_startup_slave(co_nmt_t *nmt);
 
+#if !LELY_NO_CO_ECSS_REDUNDANCY
+/// Initializes the redundancy manager service. @see co_nmt_rdn_fini()
+static void co_nmt_rdn_init(co_nmt_t *nmt);
+
+/// Finalizes the redundancy manager service. @see co_nmt_rdn_init()
+static void co_nmt_rdn_fini(co_nmt_t *nmt);
+
+/// Processes a heartbeat event from the Redundancy Master for a slave node.
+static void co_nmt_rdn_slave_on_master_hb(co_nmt_t *nmt, int state, int reason);
+
+/// Starts the bus selection process for a slave node.
+static void co_nmt_rdn_slave_start_bus_selection(co_nmt_t *nmt);
+
+/// Finishes the bus selection process for a slave node.
+static void co_nmt_rdn_slave_finish_bus_selection(co_nmt_t *nmt);
+#endif
+
 /// Initializes the error control services. @see co_nmt_ec_fini()
 static void co_nmt_ec_init(co_nmt_t *nmt);
 
@@ -1051,6 +1083,12 @@ co_nmt_on_hb(co_nmt_t *nmt, co_unsigned8_t id, int state, int reason)
 	if (!id || id > CO_NUM_NODES)
 		return;
 
+#if !LELY_NO_CO_ECSS_REDUNDANCY
+	if (nmt->rdn_enabled && !co_nmt_is_master(nmt)
+			&& (id == co_nmt_rdn_get_master_id(nmt->rdn)))
+		co_nmt_rdn_slave_on_master_hb(nmt, state, reason);
+#endif
+
 	if (state == CO_NMT_EC_OCCURRED && reason == CO_NMT_EC_TIMEOUT) {
 #if !LELY_NO_CO_MASTER
 		if (co_nmt_is_master(nmt)) {
@@ -1061,6 +1099,31 @@ co_nmt_on_hb(co_nmt_t *nmt, co_unsigned8_t id, int state, int reason)
 		co_nmt_on_err(nmt, 0x8130, 0x10, NULL);
 	}
 }
+
+#if !LELY_NO_CO_ECSS_REDUNDANCY
+
+void
+co_nmt_get_ecss_rdn_ind(
+		const co_nmt_t *nmt, co_nmt_ecss_rdn_ind_t **pind, void **pdata)
+{
+	assert(nmt);
+
+	if (pind)
+		*pind = nmt->rdn_ind;
+	if (pdata)
+		*pdata = nmt->rdn_data;
+}
+
+void
+co_nmt_set_ecss_rdn_ind(co_nmt_t *nmt, co_nmt_ecss_rdn_ind_t *ind, void *data)
+{
+	assert(nmt);
+
+	nmt->rdn_ind = ind;
+	nmt->rdn_data = ind ? data : NULL;
+}
+
+#endif // !LELY_NO_CO_ECSS_REDUNDANCY
 
 void
 co_nmt_get_st_ind(const co_nmt_t *nmt, co_nmt_st_ind_t **pind, void **pdata)
@@ -1403,7 +1466,47 @@ co_nmt_is_master(const co_nmt_t *nmt)
 #endif
 }
 
+#if !LELY_NO_CO_ECSS_REDUNDANCY
+void
+co_nmt_set_alternate_bus_id(co_nmt_t *nmt, co_unsigned8_t bus_id)
+{
+	assert(nmt);
+
+	co_nmt_rdn_set_alternate_bus_id(nmt->rdn, bus_id);
+}
+#endif
+
+int
+co_nmt_get_active_bus_id(const co_nmt_t *nmt)
+{
+	assert(nmt);
+
+	return can_net_get_active_bus(nmt->net);
+}
+
 #if !LELY_NO_CO_MASTER
+
+int
+co_nmt_set_active_bus(co_nmt_t *nmt, const co_unsigned8_t bus_id)
+{
+	assert(nmt);
+
+	if (!nmt->master) {
+		set_errnum(ERRNUM_PERM);
+		return -1;
+	}
+
+	can_net_set_active_bus(nmt->net, bus_id);
+
+	// Reset expected/received states of all slaves after switching the bus
+	for (co_unsigned8_t id = 1; id <= CO_NUM_NODES; id++) {
+		struct co_nmt_slave *slave = &nmt->slaves[id - 1];
+		slave->est = 0;
+		slave->rst = 0;
+	}
+
+	return 0;
+}
 
 int
 co_nmt_get_timeout(const co_nmt_t *nmt)
@@ -1574,7 +1677,6 @@ co_nmt_is_booting(const co_nmt_t *nmt, co_unsigned8_t id)
 
 #endif // !LELY_NO_CO_NMT_BOOT
 
-#if !LELY_NO_CO_MASTER
 int
 co_nmt_chk_bootup(const co_nmt_t *nmt, co_unsigned8_t id)
 {
@@ -1604,7 +1706,6 @@ co_nmt_chk_bootup(const co_nmt_t *nmt, co_unsigned8_t id)
 	else
 		return !!nmt->slaves[id - 1].bootup;
 }
-#endif
 
 #if !LELY_NO_CO_NMT_CFG
 
@@ -2077,6 +2178,17 @@ co_nmt_hb_ind(co_nmt_t *nmt, co_unsigned8_t id, int state, int reason,
 	if (reason == CO_NMT_EC_STATE)
 		co_nmt_st_ind(nmt, id, st);
 }
+
+#if !LELY_NO_CO_ECSS_REDUNDANCY
+void
+co_nmt_ecss_rdn_ind(co_nmt_t *nmt, co_unsigned8_t bus_id, int reason)
+{
+	assert(nmt);
+
+	if (nmt->rdn_ind)
+		nmt->rdn_ind(nmt, bus_id, reason, nmt->hb_data);
+}
+#endif
 
 #if !LELY_NO_CO_NG
 
@@ -3064,6 +3176,11 @@ co_nmt_bootup_on_enter(co_nmt_t *nmt)
 	// Enable heartbeat consumption.
 	co_nmt_hb_init(nmt);
 
+#if !LELY_NO_CO_ECSS_REDUNDANCY
+	// Enable redundancy manager
+	co_nmt_rdn_init(nmt);
+#endif
+
 	// Send the boot-up signal to notify the master we exist.
 	co_nmt_ec_send_res(nmt, CO_NMT_ST_BOOTUP);
 
@@ -3332,10 +3449,98 @@ co_nmt_startup_slave(co_nmt_t *nmt)
 {
 	assert(nmt);
 
+#if !LELY_NO_CO_ECSS_REDUNDANCY
+	// Do not enter operational state if the bus selection process is active
+	if (nmt->bus_selection)
+		return NULL;
+#endif
+
 	// Enter the operational state automatically if bit 2 of the NMT startup
 	// value is 0.
 	return (nmt->startup & 0x04) ? NULL : co_nmt_start_state;
 }
+
+#if !LELY_NO_CO_ECSS_REDUNDANCY
+
+static void
+co_nmt_rdn_init(co_nmt_t *nmt)
+{
+	assert(nmt);
+
+	const co_unsigned8_t max_subidx = co_dev_get_val_u8(
+			nmt->dev, CO_NMT_RDN_REDUNDANCY_OBJ_IDX, 0x00);
+
+	if (co_nmt_is_master(nmt)) {
+		// The Redundancy Master requires only the 'Bdefault' sub-object
+		if (max_subidx != CO_NMT_RDN_BDEFAULT_SUBIDX)
+			return;
+	} else if (max_subidx != CO_NMT_REDUNDANCY_OBJ_MAX_IDX
+			|| co_nmt_rdn_get_master_id(nmt->rdn) == 0) {
+		return;
+	}
+
+	nmt->rdn_enabled = 1;
+
+	co_nmt_rdn_select_default_bus(nmt->rdn);
+
+	if (!co_nmt_is_master(nmt))
+		co_nmt_rdn_slave_start_bus_selection(nmt);
+}
+
+static void
+co_nmt_rdn_fini(co_nmt_t *nmt)
+{
+	assert(nmt);
+
+	co_nmt_rdn_destroy(nmt->rdn);
+	nmt->rdn = NULL;
+}
+
+static void
+co_nmt_rdn_slave_start_bus_selection(co_nmt_t *nmt)
+{
+	assert(nmt);
+	assert(!co_nmt_is_master(nmt));
+
+	nmt->bus_selection = 1;
+	co_dev_set_val_u8(nmt->dev, CO_NMT_RDN_REDUNDANCY_OBJ_IDX,
+			CO_NMT_RDN_CTOGGLE_SUBIDX, 0);
+}
+
+static void
+co_nmt_rdn_slave_finish_bus_selection(co_nmt_t *nmt)
+{
+	assert(nmt);
+	assert(!co_nmt_is_master(nmt));
+
+	nmt->bus_selection = 0;
+	co_nmt_rdn_set_active_bus_default(nmt->rdn);
+}
+
+static void
+co_nmt_rdn_slave_on_master_hb(co_nmt_t *nmt, int state, int reason)
+{
+	assert(nmt);
+	assert(!co_nmt_is_master(nmt));
+
+	if (reason == CO_NMT_EC_TIMEOUT) {
+		if (state == CO_NMT_EC_OCCURRED) {
+			if (!nmt->bus_selection) {
+				co_nmt_rdn_slave_start_bus_selection(nmt);
+				co_nmt_cs_ind(nmt, CO_NMT_CS_ENTER_PREOP);
+			}
+			co_nmt_rdn_slave_missed_hb(nmt->rdn);
+		} else if (state == CO_NMT_EC_RESOLVED) {
+			if (nmt->bus_selection)
+				co_nmt_rdn_slave_finish_bus_selection(nmt);
+		}
+	} else if (reason == CO_NMT_EC_STATE && state == CO_NMT_EC_OCCURRED) {
+		if (nmt->bus_selection)
+			co_nmt_rdn_slave_finish_bus_selection(nmt);
+	}
+}
+
+#endif // !LELY_NO_CO_ECSS_REDUNDANCY
 
 static void
 co_nmt_ec_init(co_nmt_t *nmt)
@@ -3468,6 +3673,13 @@ co_nmt_hb_init(co_nmt_t *nmt)
 		co_unsigned8_t id = (val >> 16) & 0xff;
 		co_unsigned16_t ms = val & 0xffff;
 		co_nmt_hb_set_1016(nmt->hbs[i], id, ms);
+
+#if !LELY_NO_CO_ECSS_REDUNDANCY
+		// For slave nodes, the first entry must hold the Master Heartbeat
+		// Consumer object
+		if (!co_nmt_is_master(nmt) && i == CO_NMT_RDN_MASTER_HB_IDX)
+			co_nmt_rdn_set_master_id(nmt->rdn, id, ms);
+#endif
 	}
 }
 
@@ -3670,6 +3882,13 @@ co_nmt_init(co_nmt_t *nmt, can_net_t *net, co_dev_t *dev)
 
 	int errc = 0;
 
+#if !LELY_NO_CO_ECSS_REDUNDANCY
+	if (!co_nmt_rdn_chk_dev(dev)) {
+		errc = errnum2c(ERRNUM_INVAL);
+		goto error_rdn_chk_dev;
+	}
+#endif
+
 	nmt->net = net;
 	nmt->dev = dev;
 
@@ -3786,6 +4005,19 @@ co_nmt_init(co_nmt_t *nmt, can_net_t *net, co_dev_t *dev)
 	nmt->nhb = 0;
 	nmt->hb_ind = &default_hb_ind;
 	nmt->hb_data = NULL;
+
+#if !LELY_NO_CO_ECSS_REDUNDANCY
+	nmt->rdn_enabled = 0;
+	nmt->bus_selection = 0;
+	nmt->rdn = co_nmt_rdn_create(nmt->net, nmt);
+
+	if (!nmt->rdn) {
+		errc = get_errc();
+		goto error_create_rdn;
+	}
+	nmt->rdn_ind = NULL;
+	nmt->rdn_data = NULL;
+#endif
 
 	nmt->st_ind = &default_st_ind;
 	nmt->st_data = NULL;
@@ -4028,6 +4260,10 @@ error_init_slave:
 error_create_cs_timer:
 	can_buf_fini(&nmt->buf);
 #endif
+#if !LELY_NO_CO_ECSS_REDUNDANCY
+	co_nmt_rdn_destroy(nmt->rdn);
+error_create_rdn:
+#endif
 #if LELY_NO_MALLOC
 error_create_hb:
 	for (co_unsigned8_t i = 0; i < CO_NMT_MAX_NHB; i++)
@@ -4048,6 +4284,9 @@ error_alloc_dcf_comm:
 error_write_dcf_node:
 	mem_free(alloc, nmt->dcf_node_begin);
 error_alloc_dcf_node:
+#endif
+#if !LELY_NO_CO_ECSS_REDUNDANCY
+error_rdn_chk_dev:
 #endif
 	set_errc(errc);
 	return NULL;
@@ -4141,6 +4380,10 @@ co_nmt_fini(co_nmt_t *nmt)
 #endif
 
 	co_nmt_ec_fini(nmt);
+
+#if !LELY_NO_CO_ECSS_REDUNDANCY
+	co_nmt_rdn_fini(nmt);
+#endif
 
 	can_timer_destroy(nmt->ec_timer);
 	can_recv_destroy(nmt->recv_700);
