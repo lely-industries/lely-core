@@ -1,7 +1,7 @@
 /**@file
  * This file is part of the CANopen Library Unit Test Suite.
  *
- * @copyright 2020-2021 N7 Space Sp. z o.o.
+ * @copyright 2021 N7 Space Sp. z o.o.
  *
  * Unit Test Suite was developed under a programme of,
  * and funded by, the European Space Agency.
@@ -20,31 +20,29 @@
  * limitations under the License.
  */
 
-#ifndef LELY_UNIT_TEST_HPP_
-#define LELY_UNIT_TEST_HPP_
+#ifndef LELY_UNIT_TEST_NMT_CONFIG_HPP_
+#define LELY_UNIT_TEST_NMT_CONFIG_HPP_
 
-#include <lely/can/msg.h>
-#include <lely/co/sdo.h>
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
+#include <cassert>
+#include <memory>
+
 #include <lely/co/type.h>
 
-#include "co-csdo-dn-con.hpp"
-#include "co-csdo-up-con.hpp"
-#include "co-nmt-hb-ind.hpp"
-#include "co-nmt-rdn-ind.hpp"
-#include "co-sub-dn-ind.hpp"
-#include "co-sub-up-ind.hpp"
-#include "can-send.hpp"
-#include "sdo-create-message.hpp"
-#include "sdo-defines.hpp"
-#include "sdo-init-expected-data.hpp"
+#include "holder/obj.hpp"
 
-namespace LelyUnitTest {
-/**
- * Sets empty handlers for all diagnostic messages from lely-core library.
- *
- * @see diag_set_handler(), diag_at_set_handler()
- */
-void DisableDiagnosticMessages();
-}  // namespace LelyUnitTest
+namespace Obj1f80NmtStartup {
+static const co_unsigned32_t MASTER_BIT = 0x01u;
 
-#endif  // LELY_UNIT_TEST_HPP_
+void
+SetVal(CoObjTHolder& obj_holder, const co_unsigned32_t startup) {
+  assert(co_obj_get_idx(obj_holder.Get()) == 0x1f80u);
+
+  obj_holder.InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED32, startup);
+}
+}  // namespace Obj1f80NmtStartup
+
+#endif  // LELY_UNIT_TEST_NMT_CONFIG_HPP_

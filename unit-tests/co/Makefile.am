@@ -90,6 +90,13 @@ unit_test_co_nmt_SOURCES = $(src_common) test-nmt.cpp
 unit_test_co_nmt_LDADD = $(LELY_OVERRIDE_CO_VAL_LIB) $(LELY_UNIT_TEST_CO_COMMON_LIBS)
 unit_test_co_nmt_LDFLAGS = $(LELY_OVERRIDE_CO_VAL_LDFLGS) $(LELY_UNIT_TEST_CO_LDFLGS)
 
+if !NO_CO_ECSS_REDUNDANCY
+bin += unit-test-co-nmt-rdn
+unit_test_co_nmt_rdn_SOURCES = $(src_common) test-nmt-rdn.cpp
+unit_test_co_nmt_rdn_LDADD = $(LELY_UNIT_TEST_CO_COMMON_LIBS)
+unit_test_co_nmt_rdn_LDFLAGS = $(LELY_UNIT_TEST_CO_LDFLGS)
+endif # !NO_CO_ECSS_REDUNDANCY
+
 bin += unit-test-co-obj
 unit_test_co_obj_SOURCES = $(src_common) test-obj.cpp
 unit_test_co_obj_LDADD = $(LELY_OVERRIDE_CO_VAL_LIB) $(LELY_UNIT_TEST_CO_COMMON_LIBS)
