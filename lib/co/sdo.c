@@ -120,7 +120,7 @@ co_sdo_req_fini(struct co_sdo_req *req)
 {
 	assert(req);
 
-	membuf_fini(&req->_membuf);
+	membuf_fini(&req->membuf_);
 }
 
 void

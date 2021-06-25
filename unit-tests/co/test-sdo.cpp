@@ -165,7 +165,7 @@ TEST(CO_Sdo, CoSdoReqInit) {
   POINTERS_EQUAL(nullptr, req_init.buf);
   POINTERS_EQUAL(&mbuf, req_init.membuf);
 #if LELY_NO_MALLOC
-  CHECK(membuf_begin(req_init.membuf) != req_init._begin);
+  CHECK(membuf_begin(req_init.membuf) != req_init.begin_);
   CHECK_EQUAL(0u, membuf_capacity(req_init.membuf));
   CheckArrayIsZeroed(membuf_begin(req.membuf), CO_SDO_REQ_MEMBUF_SIZE);
 #else
@@ -187,9 +187,9 @@ TEST(CO_Sdo, CoSdoReqInit_BufNull) {
   CHECK_EQUAL(0u, req_init.nbyte);
   CHECK_EQUAL(0u, req_init.offset);
   POINTERS_EQUAL(nullptr, req_init.buf);
-  POINTERS_EQUAL(&req_init._membuf, req_init.membuf);
+  POINTERS_EQUAL(&req_init.membuf_, req_init.membuf);
 #if LELY_NO_MALLOC
-  POINTERS_EQUAL(req_init._begin, membuf_begin(req_init.membuf));
+  POINTERS_EQUAL(req_init.begin_, membuf_begin(req_init.membuf));
   CHECK_EQUAL(CO_SDO_REQ_MEMBUF_SIZE, membuf_capacity(req_init.membuf));
   CheckArrayIsZeroed(membuf_begin(req_init.membuf), CO_SDO_REQ_MEMBUF_SIZE);
 #else
@@ -207,9 +207,9 @@ TEST(CO_Sdo, CoSdoReqInit_Macro) {
   CHECK_EQUAL(0u, req_init.nbyte);
   CHECK_EQUAL(0u, req_init.offset);
   POINTERS_EQUAL(nullptr, req_init.buf);
-  POINTERS_EQUAL(&req_init._membuf, req_init.membuf);
+  POINTERS_EQUAL(&req_init.membuf_, req_init.membuf);
 #if LELY_NO_MALLOC
-  POINTERS_EQUAL(req_init._begin, membuf_begin(req_init.membuf));
+  POINTERS_EQUAL(req_init.begin_, membuf_begin(req_init.membuf));
   CHECK_EQUAL(CO_SDO_REQ_MEMBUF_SIZE, membuf_capacity(req_init.membuf));
   CheckArrayIsZeroed(membuf_begin(req_init.membuf), CO_SDO_REQ_MEMBUF_SIZE);
 #else

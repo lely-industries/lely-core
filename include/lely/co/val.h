@@ -353,7 +353,7 @@ struct co_array {
 		/// The bytes in the array.
 		char data[CO_ARRAY_CAPACITY];
 		// Ensure the correct alignment.
-		union co_val _val;
+		union co_val val_;
 	} u;
 };
 
