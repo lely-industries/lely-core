@@ -586,6 +586,10 @@ __p_value = re.compile(
 )
 
 
+def __is_nodeid(value: str) -> bool:
+    return value.upper() == "$NODEID"
+
+
 def __parse_limit(cfg: dict, section: str, entry: str, data_type: int) -> bool:
     if entry in cfg[section] and cfg[section][entry]:
         value = 0
@@ -593,7 +597,7 @@ def __parse_limit(cfg: dict, section: str, entry: str, data_type: int) -> bool:
         try:
             if data_type == 0x0008 or data_type == 0x0011:
                 value = __parse_float(cfg[section][entry], data_type)
-            elif cfg[section][entry].upper() == "$NODEID":
+            elif __is_nodeid(cfg[section][entry]):
                 value_has_nodeid = True
             else:
                 m = __p_value.match(cfg[section][entry])
@@ -645,7 +649,7 @@ def __parse_value(cfg: dict, section: str, entry: str, value: str) -> bool:
                 high_limit = __parse_float(cfg["HighLimit"], data_type)
         else:
             if "LowLimit" in cfg and cfg["LowLimit"]:
-                if cfg["LowLimit"].upper() == "$NODEID":
+                if __is_nodeid(cfg["LowLimit"]):
                     low_limit = 0
                     low_limit_has_nodeid = True
                 else:
@@ -662,7 +666,7 @@ def __parse_value(cfg: dict, section: str, entry: str, value: str) -> bool:
                         )
                         return False
             if "HighLimit" in cfg and cfg["HighLimit"]:
-                if cfg["HighLimit"].upper() == "$NODEID":
+                if __is_nodeid(cfg["HighLimit"]):
                     high_limit = 0
                     high_limit_has_nodeid = True
                 else:
@@ -688,7 +692,7 @@ def __parse_value(cfg: dict, section: str, entry: str, value: str) -> bool:
                     "invalid {} in [{}]: {}".format(entry, section, value), stacklevel=5
                 )
                 return False
-        elif value == "$NODEID":
+        elif __is_nodeid(value):
             value = 0
             value_has_nodeid = True
         else:
