@@ -168,54 +168,55 @@ co_nmt_srv_init(struct co_nmt_srv *srv, co_nmt_t *nmt)
 #if LELY_NO_MALLOC
 #if !LELY_NO_CO_RPDO || !LELY_NO_CO_TPDO
 	if (co_nmt_srv_init_pdo(srv) == -1)
-		goto error_init_pdo;
+		goto error;
 #endif
 #if !LELY_NO_CO_SDO
 	if (co_nmt_srv_init_sdo(srv) == -1)
-		goto error_init_sdo;
+		goto error;
 #endif
 #if !LELY_NO_CO_SYNC
 	if (co_nmt_srv_init_sync(srv) == -1)
-		goto error_init_sync;
+		goto error;
 #endif
 #if !LELY_NO_CO_TIME
 	if (co_nmt_srv_init_time(srv) == -1)
-		goto error_init_time;
+		goto error;
 #endif
 #if !LELY_NO_CO_EMCY
 	if (co_nmt_srv_init_emcy(srv) == -1)
-		goto error_init_emcy;
+		goto error;
 #endif
 #if !LELY_NO_CO_LSS
 	if (co_nmt_srv_init_lss(srv) == -1)
-		goto error_init_lss;
+		goto error;
 #endif
 #endif // LELY_NO_MALLOC
 
 	return srv;
 
 #if LELY_NO_MALLOC
+// single goto label to reduce "unreachable code" warnings
+// that could occur in some ifdefs combinations
+error:
 #if !LELY_NO_CO_LSS
-	// co_nmt_srv_fini_lss(srv);
-error_init_lss:
+	if (srv->lss)
+		co_nmt_srv_fini_lss(srv);
 #endif
 #if !LELY_NO_CO_EMCY
-	co_nmt_srv_fini_emcy(srv);
-error_init_emcy:
+	if (srv->emcy)
+		co_nmt_srv_fini_emcy(srv);
 #endif
 #if !LELY_NO_CO_TIME
-	co_nmt_srv_fini_time(srv);
-error_init_time:
+	if (srv->time)
+		co_nmt_srv_fini_time(srv);
 #endif
 #if !LELY_NO_CO_SYNC
-	co_nmt_srv_fini_sync(srv);
-error_init_sync:
+	if (srv->sync)
+		co_nmt_srv_fini_sync(srv);
 #endif
 	co_nmt_srv_fini_sdo(srv);
-error_init_sdo:
 #if !LELY_NO_CO_RPDO || !LELY_NO_CO_TPDO
 	co_nmt_srv_fini_pdo(srv);
-error_init_pdo:
 #endif
 	return NULL;
 #endif // LELY_NO_MALLOC
