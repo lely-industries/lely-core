@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="dcf-tools",
-    version="3.1.0",
+    version="3.1.1",
     packages=find_packages(),
     entry_points={
         "console_scripts": [
