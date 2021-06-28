@@ -38,9 +38,9 @@
 
 #include "holder/dev.hpp"
 
-#include "obj_init/nmt-hb-consumer.hpp"
-#include "obj_init/nmt-redundancy.hpp"
-#include "obj_init/nmt-startup.hpp"
+#include "obj-init/nmt-hb-consumer.hpp"
+#include "obj-init/nmt-redundancy.hpp"
+#include "obj-init/nmt-startup.hpp"
 
 TEST_GROUP(CO_NmtRdn) {
   Allocators::Default allocator;
