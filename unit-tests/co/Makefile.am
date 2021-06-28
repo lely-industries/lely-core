@@ -97,6 +97,11 @@ unit_test_co_nmt_rdn_LDADD = $(LELY_UNIT_TEST_CO_COMMON_LIBS)
 unit_test_co_nmt_rdn_LDFLAGS = $(LELY_UNIT_TEST_CO_LDFLGS)
 endif # !NO_CO_ECSS_REDUNDANCY
 
+bin += unit-test-co-nmt-srv
+unit_test_co_nmt_srv_SOURCES = $(src_common) test-nmt-srv.cpp
+unit_test_co_nmt_srv_LDADD = $(LELY_UNIT_TEST_CO_COMMON_LIBS)
+unit_test_co_nmt_srv_LDFLAGS = $(LELY_UNIT_TEST_CO_LDFLGS)
+
 bin += unit-test-co-obj
 unit_test_co_obj_SOURCES = $(src_common) test-obj.cpp
 unit_test_co_obj_LDADD = $(LELY_OVERRIDE_CO_VAL_LIB) $(LELY_UNIT_TEST_CO_COMMON_LIBS)

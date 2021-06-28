@@ -164,7 +164,7 @@ TEST_BASE(CO_TpdoBase) {
                              co_unsigned8_t(0x00u));
   }
 
-  // 0bj 0x1800, sub 0x05 - event-timer
+  // obj 0x1800, sub 0x05 - event-timer
   void SetComm05EventTimer(co_unsigned16_t timer_time) {
     obj1800->InsertAndSetSub(0x05u, CO_DEFTYPE_UNSIGNED16,
                              timer_time);  // ms

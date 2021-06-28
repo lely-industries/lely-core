@@ -42,6 +42,7 @@
 #include "holder/dev.hpp"
 #include "holder/obj.hpp"
 #include "holder/sub.hpp"
+#include "common/nmt-alloc-sizes.hpp"
 
 #include <lib/co/nmt_hb.h>
 #if !LELY_NO_CO_NMT_BOOT
@@ -737,64 +738,6 @@ TEST_GROUP_BASE(CO_NmtAllocation, CO_NmtBase) {
   Allocators::Limited limitedAllocator;
   co_nmt_t* nmt = nullptr;
 
-  size_t GetDcfParamsAllocSize() {
-    size_t dcfs_size = 0;
-    dcfs_size += co_dev_write_dcf(dev, 0x1000u, 0x1fffu, nullptr, nullptr);
-#if !LELY_NO_CO_DCF_RESTORE
-    dcfs_size += co_dev_write_dcf(dev, 0x2000u, 0x9fffu, nullptr, nullptr);
-#endif
-
-    return dcfs_size;
-  }
-
-  static size_t GetSlavesAllocSize() {
-    size_t size = 0;
-#if !LELY_NO_CO_MASTER
-    size += can_recv_sizeof();
-#if !LELY_NO_CO_NG
-    size += can_timer_sizeof();
-#endif
-#endif  // !LELY_NO_CO_MASTER
-    return CO_NUM_NODES * size;
-  }
-
-  static size_t GetHbConsumersAllocSize(const size_t hb_num) {
-    return hb_num *
-           (co_nmt_hb_sizeof() + can_recv_sizeof() + can_timer_sizeof());
-  }
-
-  static size_t GetSsdoAllocSize(size_t ssdo_num = 1u) {
-    return ssdo_num * (sizeof(co_ssdo_t*) + co_ssdo_sizeof() +
-                       can_recv_sizeof() + can_timer_sizeof());
-  }
-
-  static size_t GetServicesAllocSize() {
-    size_t size = 0;
-#if LELY_NO_MALLOC && !LELY_NO_CO_SDO
-    size += GetSsdoAllocSize();
-#endif
-    return size;
-  }
-
-  static size_t GetNmtTimersAllocSize() {
-    size_t size = can_timer_sizeof();
-#if !LELY_NO_CO_MASTER
-    size += can_timer_sizeof();
-#endif
-    return size;
-  }
-
-  static size_t GetNmtRecvsAllocSize() { return 2u * can_recv_sizeof(); }
-
-  static size_t GetNmtRedundancyAllocSize() {
-    size_t size = 0;
-#if !LELY_NO_CO_ECSS_REDUNDANCY
-    size += co_nmt_rdn_sizeof();
-    size += can_timer_sizeof();
-#endif
-    return size;
-  }
-
   TEST_SETUP() {
     LelyUnitTest::DisableDiagnosticMessages();
     net = can_net_create(limitedAllocator.ToAllocT(), 0);
@@ -917,7 +860,8 @@ TEST(CO_NmtAllocation, CoNmtCreate_NoMemoryForDcfCommParams) {
 ///       \Calls mem_free()
 ///       \Calls set_errc()
 TEST(CO_NmtAllocation, CoNmtCreate_NoMemoryForDefaultServices) {
-  limitedAllocator.LimitAllocationTo(co_nmt_sizeof() + GetDcfParamsAllocSize());
+  limitedAllocator.LimitAllocationTo(co_nmt_sizeof() +
+                                     NmtCommon::GetDcfParamsAllocSize(dev));
 
   nmt = co_nmt_create(net, dev);
 
@@ -951,8 +895,9 @@ TEST(CO_NmtAllocation, CoNmtCreate_NoMemoryForDefaultServices) {
 ///       \Calls mem_free()
 ///       \Calls set_errc()
 TEST(CO_NmtAllocation, CoNmtCreate_NoMemoryForNmtRecv) {
-  limitedAllocator.LimitAllocationTo(co_nmt_sizeof() + GetDcfParamsAllocSize() +
-                                     GetServicesAllocSize());
+  limitedAllocator.LimitAllocationTo(co_nmt_sizeof() +
+                                     NmtCommon::GetDcfParamsAllocSize(dev) +
+                                     NmtCommon::GetServicesAllocSize());
 
   nmt = co_nmt_create(net, dev);
 
@@ -984,9 +929,9 @@ TEST(CO_NmtAllocation, CoNmtCreate_NoMemoryForNmtRecv) {
 ///       \Calls mem_free()
 ///       \Calls set_errc()
 TEST(CO_NmtAllocation, CoNmtCreate_NoMemoryForEcRecv) {
-  limitedAllocator.LimitAllocationTo(co_nmt_sizeof() + GetDcfParamsAllocSize() +
-                                     GetServicesAllocSize() +
-                                     can_recv_sizeof());
+  limitedAllocator.LimitAllocationTo(
+      co_nmt_sizeof() + NmtCommon::GetDcfParamsAllocSize(dev) +
+      NmtCommon::GetServicesAllocSize() + can_recv_sizeof());
 
   nmt = co_nmt_create(net, dev);
 
@@ -1020,9 +965,9 @@ TEST(CO_NmtAllocation, CoNmtCreate_NoMemoryForEcRecv) {
 ///       \Calls mem_free()
 ///       \Calls set_errc()
 TEST(CO_NmtAllocation, CoNmtCreate_NoMemoryForEcTimer) {
-  limitedAllocator.LimitAllocationTo(co_nmt_sizeof() + GetDcfParamsAllocSize() +
-                                     GetServicesAllocSize() +
-                                     GetNmtRecvsAllocSize());
+  limitedAllocator.LimitAllocationTo(
+      co_nmt_sizeof() + NmtCommon::GetDcfParamsAllocSize(dev) +
+      NmtCommon::GetServicesAllocSize() + NmtCommon::GetNmtRecvsAllocSize());
 
   nmt = co_nmt_create(net, dev);
 
@@ -1063,8 +1008,9 @@ TEST(CO_NmtAllocation, CoNmtCreate_NoMemoryForEcTimer) {
 ///       \Calls set_errc()
 TEST(CO_NmtAllocation, CoNmtCreate_NoMemoryForRedundancy) {
   limitedAllocator.LimitAllocationTo(
-      co_nmt_sizeof() + GetDcfParamsAllocSize() + GetServicesAllocSize() +
-      GetNmtRecvsAllocSize() + can_timer_sizeof());
+      co_nmt_sizeof() + NmtCommon::GetDcfParamsAllocSize(dev) +
+      NmtCommon::GetServicesAllocSize() + NmtCommon::GetNmtRecvsAllocSize() +
+      can_timer_sizeof());
 
   nmt = co_nmt_create(net, dev);
 
@@ -1106,9 +1052,9 @@ TEST(CO_NmtAllocation, CoNmtCreate_NoMemoryForRedundancy) {
 ///       \Calls set_errc()
 TEST(CO_NmtAllocation, CoNmtCreate_NoMemoryForCsTimer) {
   limitedAllocator.LimitAllocationTo(
-      co_nmt_sizeof() + GetDcfParamsAllocSize() + GetServicesAllocSize() +
-      GetNmtRecvsAllocSize() + can_timer_sizeof() +
-      GetNmtRedundancyAllocSize());
+      co_nmt_sizeof() + NmtCommon::GetDcfParamsAllocSize(dev) +
+      NmtCommon::GetServicesAllocSize() + NmtCommon::GetNmtRecvsAllocSize() +
+      NmtCommon::GetNmtRedundancyAllocSize() + can_timer_sizeof());
 
   nmt = co_nmt_create(net, dev);
 
@@ -1152,8 +1098,9 @@ TEST(CO_NmtAllocation, CoNmtCreate_NoMemoryForHbSrv_WithObj1016) {
   CreateObj1016ConsumerHbTimeN(1u);
 
   limitedAllocator.LimitAllocationTo(
-      co_nmt_sizeof() + GetDcfParamsAllocSize() + GetServicesAllocSize() +
-      GetNmtRecvsAllocSize() + can_timer_sizeof());
+      co_nmt_sizeof() + NmtCommon::GetDcfParamsAllocSize(dev) +
+      NmtCommon::GetServicesAllocSize() + NmtCommon::GetNmtRecvsAllocSize() +
+      can_timer_sizeof());
 
   nmt = co_nmt_create(net, dev);
 
@@ -1193,9 +1140,10 @@ TEST(CO_NmtAllocation, CoNmtCreate_NoMemoryForHbSrv_WithObj1016) {
 ///       \Calls set_errc()
 TEST(CO_NmtAllocation, CoNmtCreate_NoMemoryForNmtSlaveRecvs) {
   limitedAllocator.LimitAllocationTo(
-      co_nmt_sizeof() + GetDcfParamsAllocSize() + GetServicesAllocSize() +
-      GetNmtRecvsAllocSize() + GetNmtRedundancyAllocSize() +
-      GetNmtTimersAllocSize());
+      co_nmt_sizeof() + NmtCommon::GetDcfParamsAllocSize(dev) +
+      NmtCommon::GetServicesAllocSize() + NmtCommon::GetNmtRecvsAllocSize() +
+      NmtCommon::GetNmtRedundancyAllocSize() +
+      NmtCommon::GetNmtTimersAllocSize());
 
   nmt = co_nmt_create(net, dev);
 
@@ -1235,9 +1183,10 @@ TEST(CO_NmtAllocation, CoNmtCreate_NoMemoryForNmtSlaveRecvs) {
 ///       \IfCalls{LELY_NO_MALLOC && !LELY_NO_CO_NMT_CFG, co_nmt_cfg_create()}
 TEST(CO_NmtAllocation, CoNmtCreate_ExactMemory) {
   limitedAllocator.LimitAllocationTo(
-      co_nmt_sizeof() + GetDcfParamsAllocSize() + GetServicesAllocSize() +
-      GetNmtRecvsAllocSize() + GetNmtRedundancyAllocSize() +
-      GetNmtTimersAllocSize() + GetSlavesAllocSize());
+      co_nmt_sizeof() + NmtCommon::GetDcfParamsAllocSize(dev) +
+      NmtCommon::GetServicesAllocSize() + NmtCommon::GetNmtRecvsAllocSize() +
+      NmtCommon::GetNmtRedundancyAllocSize() +
+      NmtCommon::GetNmtTimersAllocSize() + NmtCommon::GetSlavesAllocSize());
 
   nmt = co_nmt_create(net, dev);
 
@@ -1280,10 +1229,11 @@ TEST(CO_NmtAllocation, CoNmtCreate_ExactMemory_WithObj1016_MaxEntries) {
   CreateObj1016ConsumerHbTimeN(CO_NMT_MAX_NHB);
 
   limitedAllocator.LimitAllocationTo(
-      co_nmt_sizeof() + GetDcfParamsAllocSize() + GetServicesAllocSize() +
-      GetNmtRecvsAllocSize() + GetNmtRedundancyAllocSize() +
-      GetNmtTimersAllocSize() + GetSlavesAllocSize() +
-      GetHbConsumersAllocSize(CO_NMT_MAX_NHB));
+      co_nmt_sizeof() + NmtCommon::GetDcfParamsAllocSize(dev) +
+      NmtCommon::GetServicesAllocSize() + NmtCommon::GetNmtRecvsAllocSize() +
+      NmtCommon::GetNmtRedundancyAllocSize() +
+      NmtCommon::GetNmtTimersAllocSize() + NmtCommon::GetSlavesAllocSize() +
+      NmtCommon::GetHbConsumersAllocSize(CO_NMT_MAX_NHB));
 
   nmt = co_nmt_create(net, dev);
 
