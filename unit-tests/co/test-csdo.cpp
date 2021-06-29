@@ -2199,6 +2199,9 @@ AbortTransfer(can_net_t* const net, const co_unsigned32_t can_id) {
 ///
 /// \Then -1 is returned, ERRNUM_INVAL is set as the error number, CAN message
 ///       is not sent
+///       \Calls co_csdo_is_valid()
+///       \Calls co_csdo_is_idle()
+///       \Calls set_errnum()
 TEST(CO_Csdo, CoCsdoDnReq_ServiceIsBusy) {
   CHECK_EQUAL(0, co_csdo_is_idle(csdo));
   uint_least8_t buffer[sizeof(sub_type)] = {0};
@@ -2225,6 +2228,13 @@ TEST(CO_Csdo, CoCsdoDnReq_ServiceIsBusy) {
 ///       is received - the timeout message is sent;
 ///       when the abort transfer message is received the download confirmation
 ///       function is called
+///       \Calls co_csdo_is_valid()
+///       \Calls co_csdo_is_idle()
+///       \Calls membuf_init()
+///       \Calls can_timer_timeout()
+///       \Calls stle_u16()
+///       \Calls stle_u32()
+///       \Calls can_net_send()
 TEST(CO_Csdo, CoCsdoDnReq_TimeoutSet) {
   StartCSDO();
   co_csdo_set_timeout(csdo, 999);  // 999 ms
@@ -2265,6 +2275,12 @@ TEST(CO_Csdo, CoCsdoDnReq_TimeoutSet) {
 /// \Then 0 is returned, the error number is not changed, download initiate
 ///       request is sent to the server, when the abort transfer message is
 ///       received the download confirmation function is called
+///       \Calls co_csdo_is_valid()
+///       \Calls co_csdo_is_idle()
+///       \Calls membuf_init()
+///       \Calls stle_u16()
+///       \Calls stle_u32()
+///       \Calls can_net_send()
 TEST(CO_Csdo, CoCsdoDnReq_SizeZero) {
   StartCSDO();
 
@@ -2297,6 +2313,12 @@ TEST(CO_Csdo, CoCsdoDnReq_SizeZero) {
 /// \Then 0 is returned, the error number is not changed, download initiate
 ///       request is sent to the server, when the abort transfer message
 ///       is received the download confirmation function is called
+///       \Calls co_csdo_is_valid()
+///       \Calls co_csdo_is_idle()
+///       \Calls membuf_init()
+///       \Calls stle_u16()
+///       \Calls stle_u32()
+///       \Calls can_net_send()
 TEST(CO_Csdo, CoCsdoDnReq_DownloadInitiate) {
   StartCSDO();
 
@@ -2329,6 +2351,12 @@ TEST(CO_Csdo, CoCsdoDnReq_DownloadInitiate) {
 /// \Then 0 is returned, the error number is not changed, expedited download
 ///       initiate request is sent to the server, when the abort transfer
 ///       message is received the download confirmation function is called
+///       \Calls co_csdo_is_valid()
+///       \Calls co_csdo_is_idle()
+///       \Calls co_val_read()
+///       \Calls stle_u16()
+///       \Calls memcpy()
+///       \Calls can_net_send()
 TEST(CO_Csdo, CoCsdoDnReq_Expedited) {
   StartCSDO();
 
@@ -2508,6 +2536,9 @@ TEST(CO_Csdo, CoCsdoDnDcfReq_InvalidCobidReq) {
 ///
 /// \Then -1 is returned, ERRNUM_INVAL is set as an error number and no SDO
 ///       message was sent
+///       \Calls co_csdo_is_valid()
+///       \Calls co_csdo_is_idle()
+///       \Calls set_errnum()
 TEST(CO_Csdo, CoCsdoUpReq_ServiceNotStarted) {
   const auto ret =
       co_csdo_up_req(csdo, IDX, SUBIDX, nullptr, CoCsdoUpCon::func, nullptr);
@@ -2525,6 +2556,11 @@ TEST(CO_Csdo, CoCsdoUpReq_ServiceNotStarted) {
 ///
 /// \Then 0 is returned, the error number is not changed and the upload request
 ///       was sent to the server
+///       \Calls co_csdo_is_valid()
+///       \Calls co_csdo_is_idle()
+///       \Calls membuf_clear()
+///       \Calls stle_u16()
+///       \Calls can_net_send()
 TEST(CO_Csdo, CoCsdoUpReq_Nominal) {
   StartCSDO();
 
@@ -2550,6 +2586,12 @@ TEST(CO_Csdo, CoCsdoUpReq_Nominal) {
 /// \Then 0 is returned, the error number is not changed and the upload request
 ///       was sent to the server; when the timeout expired, an SDO abort
 ///       transfer message is sent
+///       \Calls co_csdo_is_valid()
+///       \Calls co_csdo_is_idle()
+///       \Calls membuf_clear()
+///       \Calls can_timer_timeout()
+///       \Calls stle_u16()
+///       \Calls can_net_send()
 TEST(CO_Csdo, CoCsdoUpReq_TimeoutSet) {
   co_csdo_set_timeout(csdo, 999);
   StartCSDO();
@@ -2588,6 +2630,9 @@ TEST(CO_Csdo, CoCsdoUpReq_TimeoutSet) {
 ///
 /// \Then -1 is returned, ERRNUM_INVAL is set as the error number and no SDO
 ///       message was sent
+///       \Calls co_csdo_is_valid()
+///       \Calls co_csdo_is_idle()
+///       \Calls set_errnum()
 TEST(CO_Csdo, CoCsdoBlkUpReq_ServiceNotStarted) {
   const auto ret = co_csdo_blk_up_req(csdo, IDX, SUBIDX, 0, nullptr,
                                       CoCsdoUpCon::func, nullptr);
@@ -2605,6 +2650,11 @@ TEST(CO_Csdo, CoCsdoBlkUpReq_ServiceNotStarted) {
 ///
 /// \Then 0 is returned, the error number is not changed and a block upload
 ///       request was sent to the server
+///       \Calls co_csdo_is_valid()
+///       \Calls co_csdo_is_idle()
+///       \Calls membuf_clear()
+///       \Calls stle_u16()
+///       \Calls can_net_send()
 TEST(CO_Csdo, CoCsdoBlkUpReq_Nominal) {
   StartCSDO();
 
@@ -2631,6 +2681,12 @@ TEST(CO_Csdo, CoCsdoBlkUpReq_Nominal) {
 /// \Then 0 is returned, the error number is not changed and a block upload
 ///       request was sent to the server; when the timeout expired, an SDO abort
 ///       transfer message is sent
+///       \Calls co_csdo_is_valid()
+///       \Calls co_csdo_is_idle()
+///       \Calls membuf_clear()
+///       \Calls can_timer_timeout()
+///       \Calls stle_u16()
+///       \Calls can_net_send()
 TEST(CO_Csdo, CoCsdoBlkUpReq_TimeoutSet) {
   co_csdo_set_timeout(csdo, 999);
   StartCSDO();
