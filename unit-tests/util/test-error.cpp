@@ -60,7 +60,7 @@ TEST_GROUP(Util_Error) {
   int get_errc_value;
 };
 
-/// @name set_errc_get_handler
+/// @name set_errc_get_handler()
 ///@{
 
 /// \Given N/A
@@ -106,7 +106,7 @@ TEST(Util_Error, SetErrcGetHandler_NullHandlerPtr) {
 
 ///@}
 
-/// @name set_errc_set_handler
+/// @name set_errc_set_handler()
 ///@{
 
 /// \Given a custom set_errc() handler
@@ -127,7 +127,7 @@ TEST(Util_Error, SetErrcSetHandler_CustomHandler) {
 
 ///@}
 
-/// @name get_errc_get_handler
+/// @name get_errc_get_handler()
 ///@{
 
 /// \Given N/A
@@ -173,7 +173,7 @@ TEST(Util_Error, GetErrcGetHandler_NullHandlerPtr) {
 
 ///@}
 
-/// @name get_errc_set_handler
+/// @name get_errc_set_handler()
 ///@{
 
 /// \Given a custom get_errc() handler
@@ -194,7 +194,7 @@ TEST(Util_Error, GetErrcSetHandler_CustomHandler) {
 
 ///@}
 
-/// @name get_errc
+/// @name get_errc()
 ///@{
 
 /// \Given N/A
@@ -239,7 +239,7 @@ TEST(Util_Error, GetErrc_NullHandler) {
 
 ///@}
 
-/// @name set_errc
+/// @name set_errc()
 ///@{
 
 /// \Given N/A
@@ -285,7 +285,7 @@ TEST(Util_Error, SetErrc_NullHandler) {
 
 ///@}
 
-/// @name get_errnum
+/// @name get_errnum()
 ///@{
 
 /// \Given N/A
@@ -329,7 +329,7 @@ TEST(Util_Error, GetErrnum_NullHandler) {
 
 ///@}
 
-/// @name set_errnum
+/// @name set_errnum()
 ///@{
 
 /// \Given N/A
@@ -374,7 +374,7 @@ TEST(Util_Error, SetErrnum_NullHandler) {
 
 #if LELY_NO_ERRNO
 
-/// @name errnum2c
+/// @name errnum2c()
 ///@{
 
 /// \Given the library compiled with LELY_NO_ERRNO switch
@@ -386,7 +386,7 @@ TEST(Util_Error, Errnum2c) { CHECK_EQUAL(1789, errnum2c(1789)); }
 
 ///@}
 
-/// @name errc2num
+/// @name errc2num()
 ///@{
 
 /// \Given the library compiled with LELY_NO_ERRNO switch
