@@ -353,7 +353,7 @@ struct co_array {
 		/// The bytes in the array.
 		char data[CO_ARRAY_CAPACITY];
 		// Ensure the correct alignment.
-		union co_val _val;
+		union co_val val_;
 	} u;
 };
 
@@ -380,7 +380,7 @@ struct co_array {
 #define CO_ARRAY_C ((void *)((struct co_array)CO_ARRAY_INIT).u.data)
 #endif
 
-#define _CO_ARRAY(...) __VA_ARGS__
+#define CO_ARRAY_(...) __VA_ARGS__
 
 /**
  * Converts a visible string literal to a CANopen array with a capacity of at
@@ -435,10 +435,10 @@ struct co_array {
  * of at least <b>n</b> bytes
  */
 #define CO_UNICODE_STRING_NC(n, ...) \
-	_CO_UNICODE_STRING_NC(n, _CO_ARRAY(__VA_ARGS__))
+	CO_UNICODE_STRING_NC_(n, CO_ARRAY_(__VA_ARGS__))
 
 // clang-format off
-#define _CO_UNICODE_STRING_NC(n, c) \
+#define CO_UNICODE_STRING_NC_(n, c) \
 	(((struct { \
 		struct co_array_hdr hdr; \
 		union { \
@@ -459,17 +459,17 @@ struct co_array {
 
 /// Converts a (16-bit) Unicode string literal to a CANopen array.
 #define CO_UNICODE_STRING_C(...) \
-	_CO_UNICODE_STRING_NC(CO_ARRAY_CAPACITY, _CO_ARRAY(__VA_ARGS__))
+	CO_UNICODE_STRING_NC_(CO_ARRAY_CAPACITY, CO_ARRAY_(__VA_ARGS__))
 
 /**
  * Converts an array literal with elements of type <b>type</b> to a CANopen
  * array with a capacity of at least <b>n</b> bytes.
  */
 #define CO_DOMAIN_NC(type, n, ...) \
-	_CO_DOMAIN_NC(type, n, _CO_ARRAY(__VA_ARGS__))
+	CO_DOMAIN_NC_(type, n, CO_ARRAY_(__VA_ARGS__))
 
 // clang-format off
-#define _CO_DOMAIN_NC(type, n, c) \
+#define CO_DOMAIN_NC_(type, n, c) \
 	(((struct { \
 		struct co_array_hdr hdr; \
 		union { \
@@ -492,7 +492,7 @@ struct co_array {
  * array.
  */
 #define CO_DOMAIN_C(type, ...) \
-	_CO_DOMAIN_NC(type, CO_ARRAY_CAPACITY, _CO_ARRAY(__VA_ARGS__))
+	CO_DOMAIN_NC_(type, CO_ARRAY_CAPACITY, CO_ARRAY_(__VA_ARGS__))
 
 #endif // __STDC_VERSION__ >= 199901L
 

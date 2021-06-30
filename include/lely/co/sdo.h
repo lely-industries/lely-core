@@ -215,13 +215,13 @@ struct co_sdo_req {
 	 * The memory buffer used for storing serialized values in the absence
 	 * of a user-specified buffer.
 	 */
-	struct membuf _membuf;
+	struct membuf membuf_;
 #if LELY_NO_MALLOC
 	/*
 	 * The static memory buffer used by #_membuf in the absence of dynamic
 	 * memory allocation.
 	 */
-	char _begin[CO_SDO_REQ_MEMBUF_SIZE];
+	char begin_[CO_SDO_REQ_MEMBUF_SIZE];
 #endif
 };
 
@@ -229,9 +229,9 @@ struct co_sdo_req {
 #if LELY_NO_MALLOC
 #define CO_SDO_REQ_INIT(req) \
 	{ \
-		0, NULL, 0, 0, &(req)._membuf, \
-				{ (req)._begin, (req)._begin, \
-					(req)._begin + CO_SDO_REQ_MEMBUF_SIZE }, \
+		0, NULL, 0, 0, &(req).membuf_, \
+				{ (req).begin_, (req).begin_, \
+					(req).begin_ + CO_SDO_REQ_MEMBUF_SIZE }, \
 		{ \
 			0 \
 		} \
@@ -239,7 +239,7 @@ struct co_sdo_req {
 #else
 #define CO_SDO_REQ_INIT(req) \
 	{ \
-		0, NULL, 0, 0, &(req)._membuf, MEMBUF_INIT \
+		0, NULL, 0, 0, &(req).membuf_, MEMBUF_INIT \
 	}
 #endif
 
