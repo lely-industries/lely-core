@@ -36,6 +36,7 @@
 #include <lely/util/membuf.h>
 
 #include <libtest/tools/lely-unit-test.hpp>
+#include <libtest/tools/lely-cpputest-ext.hpp>
 #include <libtest/override/lelyco-val.hpp>
 
 #include "holder/array-init.hpp"
@@ -1575,7 +1576,7 @@ TEST(CO_Sub, CoSubAddressofMin_Null) {
 TEST(CO_Sub, CoSubAddressofMin_Nominal) {
   const auto* const ret = co_sub_addressof_min(sub);
 
-  CHECK(ret != nullptr);
+  POINTER_NOT_NULL(ret);
   CHECK_EQUAL(SUB_MIN, *static_cast<const CO_ObjBase::sub_type*>(ret));
 }
 
@@ -1672,7 +1673,7 @@ TEST(CO_Sub, CoSubAddressofMax_Null) {
 TEST(CO_Sub, CoSubAddressofMax_Nominal) {
   const auto* const ret = co_sub_addressof_max(sub);
 
-  CHECK(ret != nullptr);
+  POINTER_NOT_NULL(ret);
   CHECK_EQUAL(SUB_MAX, *static_cast<const CO_ObjBase::sub_type*>(ret));
 }
 
@@ -1771,7 +1772,7 @@ TEST(CO_Sub, CoSubAddressofDef_Null) {
 TEST(CO_Sub, CoSubAddressofDef_Nominal) {
   const auto* const ret = co_sub_addressof_def(sub);
 
-  CHECK(ret != nullptr);
+  POINTER_NOT_NULL(ret);
   CHECK_EQUAL(SUB_DEF, *static_cast<const CO_ObjBase::sub_type*>(ret));
 }
 
@@ -1872,7 +1873,7 @@ TEST(CO_Sub, CoSubAddressofVal_Null) {
 TEST(CO_ObjSub, CoSubAddressofVal_Nominal) {
   const auto* const ret = co_sub_addressof_val(sub);
 
-  CHECK(ret != nullptr);
+  POINTER_NOT_NULL(ret);
   CHECK_EQUAL(0x0000, *static_cast<const CO_ObjBase::sub_type*>(ret));
 }
 

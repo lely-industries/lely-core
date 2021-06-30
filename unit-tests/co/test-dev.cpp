@@ -507,7 +507,7 @@ TEST(CO_Dev, CoDevSetId_CoType_NonBasic) {
   CHECK_EQUAL(new_id, co_dev_get_id(dev));
 
   const void* val = co_sub_get_val(sub);
-  CHECK(val != nullptr);
+  POINTER_NOT_NULL(val);
   const auto* const val_ret = static_cast<const co_val*>(val);
   CHECK_EQUAL(value.ms, val_ret->t.ms);
   CHECK_EQUAL(value.days, val_ret->t.days);
@@ -1489,7 +1489,7 @@ TEST(CO_Dev, CoDevGetVal_Nominal) {
   const auto* ret =
       static_cast<const co_integer16_t*>(co_dev_get_val(dev, 0x1234u, 0xabu));
 
-  CHECK(ret != nullptr);
+  POINTER_NOT_NULL(ret);
   CHECK_EQUAL(0x0987u, *ret);
 }
 

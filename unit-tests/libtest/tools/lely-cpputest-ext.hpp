@@ -34,4 +34,26 @@
 #define TEST_BASE_SETUP() super::setup()
 #define TEST_BASE_TEARDOWN() super::teardown()
 
+// scan-build reports a null dereference on pointers checked by
+// `CHECK(ptr != nullptr)` due to not recognizing it as a no-return
+// function - below macros add an explicit assert() to fix this issue
+// see: https://clang-analyzer.llvm.org/faq.html#custom_assert
+#define POINTER_NOT_NULL(ptr) \
+  { \
+    const void* const ptr_val = (ptr); \
+    CHECK(ptr_val != nullptr); \
+    assert(ptr_val); \
+  }
+
+#define FUNCTIONPOINTER_NOT_NULL(ptr) \
+  { \
+    auto* const ptr_val = (ptr); \
+    static_assert( \
+        std::is_function< \
+            typename std::remove_pointer<decltype(ptr_val)>::type>::value, \
+        "FUNCTIONPOINTER_NOT_NULL(): 'ptr' is not a function pointer"); \
+    CHECK(ptr_val != nullptr); \
+    assert(ptr_val); \
+  }
+
 #endif  // LELY_UNIT_TESTS_CPPUTEST_EXT_HPP_
