@@ -32,6 +32,8 @@
 #include <lely/co/detail/obj.h>
 #include <lely/co/obj.h>
 
+#include "lely-cpputest-ext.hpp"
+
 #include "co-sub-dn-ind.hpp"
 
 unsigned int CoSubDnInd::num_called = 0u;
@@ -116,8 +118,8 @@ LelyUnitTest::CallDnIndWithAbortCode(const co_dev_t* const dev,
   co_sub_dn_ind_t* ind = nullptr;
   void* data = nullptr;
   co_sub_get_dn_ind(sub, &ind, &data);
-  CHECK(ind != nullptr);
-  CHECK(data != nullptr);
+  FUNCTIONPOINTER_NOT_NULL(ind);
+  POINTER_NOT_NULL(data);
 
   co_sdo_req req;
   co_sdo_req_init(&req, nullptr);

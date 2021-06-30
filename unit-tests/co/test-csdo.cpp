@@ -675,7 +675,7 @@ TEST(CoCsdoSetGet, CoCsdoGetNum_Nominal) {
 TEST(CoCsdoSetGet, CoCsdoGetPar_Nominal) {
   const auto* par = co_csdo_get_par(csdo);
 
-  CHECK(par != nullptr);
+  POINTER_NOT_NULL(par);
   CHECK_EQUAL(3u, par->n);
   CHECK_EQUAL(CSDO_NUM, par->id);
   CHECK_EQUAL(0x580u + CSDO_NUM, par->cobid_res);

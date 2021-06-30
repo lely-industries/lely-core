@@ -715,7 +715,7 @@ TEST(CoSsdoSetGet, CoSsdoGetNum_Nominal) {
 TEST(CoSsdoSetGet, CoSsdoGetPar_Nominal) {
   const auto* ret = co_ssdo_get_par(ssdo);
 
-  CHECK(ret != nullptr);
+  POINTER_NOT_NULL(ret);
   CHECK_EQUAL(3u, ret->n);
   CHECK_EQUAL(DEV_ID, ret->id);
   CHECK_EQUAL(DEFAULT_COBID_RES, ret->cobid_res);

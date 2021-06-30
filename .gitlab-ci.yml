@@ -509,10 +509,13 @@ scan-build:
     - linux
   image: $REGISTRY/scan-build:bullseye
   needs: []
+  variables:
+    CFLAGS: "-O0 -g"
+    CXXFLAGS: "-O0 -g"
   script:
     - autoreconf -i
     - scan-build ./configure --disable-cython $LELY_CORE_ANALYSIS_CONFIGURE_OPTIONS
-    - scan-build --keep-cc -o ./scan-build make check
+    - scan-build --status-bugs --keep-cc -o ./scan-build make check
   artifacts:
     when: always
     paths:
