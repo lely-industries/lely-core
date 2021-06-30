@@ -41,6 +41,7 @@
 
 #include <libtest/allocators/default.hpp>
 #include <libtest/allocators/limited.hpp>
+#include <libtest/override/lelyutil-membuf.hpp>
 #include <libtest/override/lelyco-val.hpp>
 #include <libtest/tools/lely-cpputest-ext.hpp>
 #include <libtest/tools/lely-unit-test.hpp>
@@ -2211,7 +2212,7 @@ TEST(CO_Csdo, CoCsdoDnReq_ServiceIsBusy) {
 
   CHECK_EQUAL(-1, ret);
   CHECK_EQUAL(ERRNUM_INVAL, get_errnum());
-  CHECK_EQUAL(0u, CanSend::num_called);
+  CHECK_EQUAL(0u, CanSend::GetNumCalled());
 }
 
 /// \Given a pointer to the CSDO service (co_csdo_t) with a timeout set,
@@ -2248,7 +2249,7 @@ TEST(CO_Csdo, CoCsdoDnReq_TimeoutSet) {
   CHECK_EQUAL(0, ret);
   CHECK_EQUAL(ERRNUM_SUCCESS, get_errnum());
 
-  CHECK_EQUAL(1u, CanSend::num_called);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
   std::vector<uint_least8_t> expected = SdoInitExpectedData::U16(
       CO_SDO_CCS_DN_INI_REQ | CO_SDO_INI_SIZE_EXP_SET(sizeof(sub_type)), IDX,
       SUBIDX, 0x1234u);
@@ -2256,9 +2257,11 @@ TEST(CO_Csdo, CoCsdoDnReq_TimeoutSet) {
 
   CoCsdoUpDnReq::SetOneSecOnNet(net);
 
-  CHECK_EQUAL(2u, CanSend::num_called);
-  CanSend::CheckSdoMsg(DEFAULT_COBID_REQ, 0, CO_SDO_MSG_SIZE, CO_SDO_CS_ABORT,
-                       IDX, SUBIDX, CO_SDO_AC_TIMEOUT);
+  CHECK_EQUAL(2u, CanSend::GetNumCalled());
+  std::vector<uint_least8_t> expected_timeout =
+      SdoInitExpectedData::U32(CO_SDO_CS_ABORT, IDX, SUBIDX, CO_SDO_AC_TIMEOUT);
+  CanSend::CheckMsg(DEFAULT_COBID_REQ, 0, CO_SDO_MSG_SIZE,
+                    expected_timeout.data());
 
   CoCsdoUpDnReq::AbortTransfer(net, DEFAULT_COBID_RES);
   CHECK_EQUAL(1u, CoCsdoDnCon::num_called);
@@ -2292,7 +2295,7 @@ TEST(CO_Csdo, CoCsdoDnReq_SizeZero) {
 
   CHECK_EQUAL(0, ret);
   CHECK_EQUAL(ERRNUM_SUCCESS, get_errnum());
-  CHECK_EQUAL(1u, CanSend::num_called);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
 
   std::vector<uint_least8_t> expected = SdoInitExpectedData::U16(
       CO_SDO_CCS_DN_INI_REQ | CO_SDO_INI_SIZE_IND, IDX, SUBIDX, buffer_size);
@@ -2329,7 +2332,7 @@ TEST(CO_Csdo, CoCsdoDnReq_DownloadInitiate) {
 
   CHECK_EQUAL(0, ret);
   CHECK_EQUAL(ERRNUM_SUCCESS, get_errnum());
-  CHECK_EQUAL(1u, CanSend::num_called);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
 
   std::vector<uint_least8_t> expected;
   expected = SdoInitExpectedData::U16(
@@ -2367,7 +2370,7 @@ TEST(CO_Csdo, CoCsdoDnReq_Expedited) {
 
   CHECK_EQUAL(0, ret);
   CHECK_EQUAL(ERRNUM_SUCCESS, get_errnum());
-  CHECK_EQUAL(1u, CanSend::num_called);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
 
   std::vector<uint_least8_t> expected;
   expected = SdoInitExpectedData::U16(
@@ -2408,7 +2411,7 @@ TEST(CO_Csdo, CoCsdoDnValReq_Nominal) {
                                       nullptr, CoCsdoDnCon::func, nullptr);
 
   CHECK_EQUAL(0, ret);
-  CHECK_EQUAL(1u, CanSend::num_called);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
   const auto expected = SdoInitExpectedData::U16(
       CO_SDO_CCS_DN_INI_REQ | CO_SDO_INI_SIZE_EXP_SET(sizeof(co_unsigned16_t)),
       IDX, SUBIDX, VAL);
@@ -2439,7 +2442,7 @@ TEST(CO_Csdo, CoCsdoDnValReq_EmptyExternalBuffer) {
                                       CoCsdoDnCon::func, nullptr);
 
   CHECK_EQUAL(-1, ret);
-  CHECK_EQUAL(0u, CanSend::num_called);
+  CHECK_EQUAL(0u, CanSend::GetNumCalled());
 }
 #endif
 
@@ -2483,7 +2486,7 @@ TEST(CO_Csdo, CoCsdoDnDcfReq_Nominal) {
   CHECK_EQUAL(0, ret);
   CHECK_EQUAL(0u, CoCsdoDnCon::num_called);
   CHECK_EQUAL(error_num, get_errnum());
-  CHECK_EQUAL(1u, CanSend::num_called);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
   std::vector<uint_least8_t> expected = SdoInitExpectedData::U16(
       CO_SDO_CCS_DN_INI_REQ | CO_SDO_INI_SIZE_EXP_SET(sizeof(sub_type)), IDX,
       SUBIDX, VAL);
@@ -2520,7 +2523,7 @@ TEST(CO_Csdo, CoCsdoDnDcfReq_InvalidCobidReq) {
   CHECK_EQUAL(-1, ret);
   CHECK_EQUAL(0u, CoCsdoDnCon::num_called);
   CHECK_EQUAL(ERRNUM_INVAL, get_errnum());
-  CHECK_EQUAL(0u, CanSend::num_called);
+  CHECK_EQUAL(0u, CanSend::GetNumCalled());
 }
 
 ///@}
@@ -2545,7 +2548,7 @@ TEST(CO_Csdo, CoCsdoUpReq_ServiceNotStarted) {
 
   CHECK_EQUAL(-1, ret);
   CHECK_EQUAL(ERRNUM_INVAL, get_errnum());
-  CHECK(!CanSend::Called());
+  CHECK_EQUAL(0, CanSend::GetNumCalled());
 }
 
 /// \Given a pointer to the CSDO service (co_csdo_t) with no ongoing transfer
@@ -2570,7 +2573,7 @@ TEST(CO_Csdo, CoCsdoUpReq_Nominal) {
 
   CHECK_EQUAL(0, ret);
   CHECK_EQUAL(error_number, get_errnum());
-  CHECK_EQUAL(1u, CanSend::num_called);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
   std::vector<uint_least8_t> expected =
       SdoInitExpectedData::Empty(CO_SDO_CCS_UP_INI_REQ, IDX, SUBIDX);
   CanSend::CheckMsg(DEFAULT_COBID_REQ, 0, CO_SDO_MSG_SIZE, expected.data());
@@ -2602,7 +2605,7 @@ TEST(CO_Csdo, CoCsdoUpReq_TimeoutSet) {
 
   CHECK_EQUAL(0, ret);
   CHECK_EQUAL(error_number, get_errnum());
-  CHECK_EQUAL(1u, CanSend::num_called);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
   std::vector<uint_least8_t> expected =
       SdoInitExpectedData::Empty(CO_SDO_CCS_UP_INI_REQ, IDX, SUBIDX);
   CanSend::CheckMsg(DEFAULT_COBID_REQ, 0, CO_SDO_MSG_SIZE, expected.data());
@@ -2610,7 +2613,7 @@ TEST(CO_Csdo, CoCsdoUpReq_TimeoutSet) {
 
   CoCsdoUpDnReq::SetOneSecOnNet(net);
 
-  CHECK_EQUAL(1u, CanSend::num_called);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
   std::vector<uint_least8_t> expected_timeout =
       SdoInitExpectedData::U32(CO_SDO_CS_ABORT, IDX, SUBIDX, CO_SDO_AC_TIMEOUT);
   CanSend::CheckMsg(DEFAULT_COBID_REQ, 0, CO_SDO_MSG_SIZE,
@@ -2639,7 +2642,7 @@ TEST(CO_Csdo, CoCsdoBlkUpReq_ServiceNotStarted) {
 
   CHECK_EQUAL(-1, ret);
   CHECK_EQUAL(ERRNUM_INVAL, get_errnum());
-  CHECK(!CanSend::Called());
+  CHECK_EQUAL(0, CanSend::GetNumCalled());
 }
 
 /// \Given a pointer to the CSDO service (co_csdo_t) with no ongoing transfer
@@ -2664,7 +2667,7 @@ TEST(CO_Csdo, CoCsdoBlkUpReq_Nominal) {
 
   CHECK_EQUAL(0, ret);
   CHECK_EQUAL(error_number, get_errnum());
-  CHECK_EQUAL(1u, CanSend::num_called);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
   std::vector<uint_least8_t> expected = SdoInitExpectedData::U32(
       CO_SDO_CCS_BLK_UP_REQ | CO_SDO_BLK_CRC | CO_SDO_SC_INI_BLK, IDX, SUBIDX,
       CO_SDO_MAX_SEQNO);
@@ -2697,7 +2700,7 @@ TEST(CO_Csdo, CoCsdoBlkUpReq_TimeoutSet) {
 
   CHECK_EQUAL(0, ret);
   CHECK_EQUAL(error_number, get_errnum());
-  CHECK_EQUAL(1u, CanSend::num_called);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
   std::vector<uint_least8_t> expected = SdoInitExpectedData::U32(
       CO_SDO_CCS_BLK_UP_REQ | CO_SDO_BLK_CRC | CO_SDO_SC_INI_BLK, IDX, SUBIDX,
       CO_SDO_MAX_SEQNO);
@@ -2706,7 +2709,7 @@ TEST(CO_Csdo, CoCsdoBlkUpReq_TimeoutSet) {
 
   CoCsdoUpDnReq::SetOneSecOnNet(net);
 
-  CHECK_EQUAL(1u, CanSend::num_called);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
   std::vector<uint_least8_t> expected_timeout =
       SdoInitExpectedData::U32(CO_SDO_CS_ABORT, IDX, SUBIDX, CO_SDO_AC_TIMEOUT);
   CanSend::CheckMsg(DEFAULT_COBID_REQ, 0, CO_SDO_MSG_SIZE,
@@ -2715,55 +2718,465 @@ TEST(CO_Csdo, CoCsdoBlkUpReq_TimeoutSet) {
 
 ///@}
 
-/// @name CSDO: receive SDO message with no ongoing transfer
+/// @name CSDO: block upload initiate on receive
 ///@{
 
-/// \Given a pointer to the CSDO service (co_csdo_t) with no ongoing transfer
+/// \Given a pointer to the CSDO service (co_csdo_t) which initiated block
+///        upload transfer (the correct request was sent by the client)
 ///
-/// \When a non-abort SDO message is received
+/// \When a correct block upload initiate response is received
 ///
-/// \Then 1 is returned by can_net_recv() and an SDO response is not sent
-TEST(CO_Csdo, RecvWhenWaiting_Default) {
+/// \Then an SDO message with a client command specifier block upload request
+///       and subcommand start upload is sent
+///       \Calls ldle_u16()
+///       \Calls memcpy()
+///       \Calls ldle_u32()
+///       \Calls membuf_reserve()
+///       \Calls can_net_send()
+TEST(CO_Csdo, CoCsdoBlkUpIniOnRecv_Nominal) {
   StartCSDO();
 
-  can_msg msg = SdoCreateMsg::Default(IDX, SUBIDX, DEFAULT_COBID_REQ);
-  msg.data[0] = CO_SDO_CCS_BLK_DN_REQ;
-  const auto ret = can_net_recv(net, &msg, 0);
+  CHECK_EQUAL(0, co_csdo_blk_up_req(csdo, IDX, SUBIDX, 0, nullptr,
+                                    CoCsdoUpCon::func, nullptr));
 
-  CHECK_EQUAL(1, ret);
-  CHECK(!CanSend::Called());
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
+  std::vector<uint_least8_t> expected = SdoInitExpectedData::U32(
+      CO_SDO_CCS_BLK_UP_REQ | CO_SDO_BLK_CRC | CO_SDO_SC_INI_BLK, IDX, SUBIDX,
+      CO_SDO_MAX_SEQNO);
+  CanSend::CheckMsg(DEFAULT_COBID_REQ, 0, CO_SDO_MSG_SIZE, expected.data());
+  CanSend::Clear();
+
+  can_msg msg_res = SdoCreateMsg::BlkUpIniRes(IDX, SUBIDX, DEFAULT_COBID_RES,
+                                              sizeof(sub_type));
+  CHECK_EQUAL(1, can_net_recv(net, &msg_res, 0));
+
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
+  std::vector<uint_least8_t> expected_res =
+      SdoInitExpectedData::U32(CO_SDO_CCS_BLK_UP_REQ | CO_SDO_SC_START_UP);
+  CanSend::CheckMsg(DEFAULT_COBID_REQ, 0, CO_SDO_MSG_SIZE, expected_res.data());
 }
 
-/// \Given a pointer to the CSDO service (co_csdo_t) with no ongoing transfer
+/// \Given a pointer to the CSDO service (co_csdo_t) which initiated block
+///        upload transfer (the correct request was sent by the client)
 ///
-/// \When an abort SDO message is received
+/// \When an SDO message with a length 0 is received
 ///
-/// \Then 1 is returned by can_net_recv() and an SDO response is not sent
-TEST(CO_Csdo, RecvWhenWaiting_CsAbort) {
+/// \Then an abort transfer SDO message with CO_SDO_AC_NO_CS abort code is sent
+///       \Calls stle_u16()
+///       \Calls stle_u32()
+///       \Calls can_net_send()
+TEST(CO_Csdo, CoCsdoBlkUpIniOnRecv_NoCS) {
   StartCSDO();
 
-  can_msg msg =
-      SdoCreateMsg::Abort(IDX, SUBIDX, DEFAULT_COBID_REQ, CO_SDO_AC_NO_DATA);
-  const auto ret = can_net_recv(net, &msg, 0);
+  CHECK_EQUAL(0, co_csdo_blk_up_req(csdo, IDX, SUBIDX, 0, nullptr,
+                                    CoCsdoUpCon::func, nullptr));
 
-  CHECK_EQUAL(1, ret);
-  CHECK(!CanSend::Called());
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
+  std::vector<uint_least8_t> expected = SdoInitExpectedData::U32(
+      CO_SDO_CCS_BLK_UP_REQ | CO_SDO_BLK_CRC | CO_SDO_SC_INI_BLK, IDX, SUBIDX,
+      CO_SDO_MAX_SEQNO);
+  CanSend::CheckMsg(DEFAULT_COBID_REQ, 0, CO_SDO_MSG_SIZE, expected.data());
+  CanSend::Clear();
+
+  can_msg msg_res = SdoCreateMsg::Default(IDX, SUBIDX, DEFAULT_COBID_RES);
+  msg_res.len = 0u;
+  CHECK_EQUAL(1, can_net_recv(net, &msg_res, 0));
+
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
+  std::vector<uint_least8_t> expected_res =
+      SdoInitExpectedData::U32(CO_SDO_CS_ABORT, IDX, SUBIDX, CO_SDO_AC_NO_CS);
+  CanSend::CheckMsg(DEFAULT_COBID_REQ, 0, CO_SDO_MSG_SIZE, expected_res.data());
 }
 
-/// \Given a pointer to the CSDO service (co_csdo_t) with no ongoing transfer
+/// \Given a pointer to the CSDO service (co_csdo_t) which initiated block
+///        upload transfer (the correct request was sent by the client)
 ///
-/// \When an abort SDO message is received, the message is shorter than 8 bytes
+/// \When a correct upload initiate response is received
 ///
-/// \Then 1 is returned by can_net_recv() and an SDO response is not sent
-TEST(CO_Csdo, RecvWhenWaiting_CsAbort_TooShortMsg) {
+/// \Then an SDO message with a client command specifier upload segment request
+///       is sent
+///       \Calls ldle_u16()
+///       \Calls memcpy()
+///       \Calls can_net_send()
+TEST(CO_Csdo, CoCsdoBlkUpIniOnRecv_ProtocolSwitch) {
   StartCSDO();
 
-  can_msg msg = SdoCreateMsg::Abort(IDX, SUBIDX, DEFAULT_COBID_REQ, 0u);
-  msg.len = 7u;
-  const auto ret = can_net_recv(net, &msg, 0);
+  CHECK_EQUAL(0, co_csdo_blk_up_req(csdo, IDX, SUBIDX, 0, nullptr,
+                                    CoCsdoUpCon::func, nullptr));
 
-  CHECK_EQUAL(1, ret);
-  CHECK(!CanSend::Called());
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
+  std::vector<uint_least8_t> expected = SdoInitExpectedData::U32(
+      CO_SDO_CCS_BLK_UP_REQ | CO_SDO_BLK_CRC | CO_SDO_SC_INI_BLK, IDX, SUBIDX,
+      CO_SDO_MAX_SEQNO);
+  CanSend::CheckMsg(DEFAULT_COBID_REQ, 0, CO_SDO_MSG_SIZE, expected.data());
+  CanSend::Clear();
+
+  can_msg msg_res = SdoCreateMsg::UpIniRes(IDX, SUBIDX, DEFAULT_COBID_RES);
+  CHECK_EQUAL(1, can_net_recv(net, &msg_res, 0));
+
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
+  std::vector<uint_least8_t> expected_res =
+      SdoInitExpectedData::U32(CO_SDO_CCS_UP_SEG_REQ);
+  CanSend::CheckMsg(DEFAULT_COBID_REQ, 0, CO_SDO_MSG_SIZE, expected_res.data());
+}
+
+/// \Given a pointer to the CSDO service (co_csdo_t) which initiated block
+///        upload transfer (the correct request was sent by the client)
+///
+/// \When a correct block upload initiate response is received with a data size
+///       set to 0
+///
+/// \Then an SDO message with a client command specifier block upload request
+///       and subcommand start upload is sent
+///       \Calls ldle_u16()
+///       \Calls can_net_send()
+TEST(CO_Csdo, CoCsdoBlkUpIniOnRecv_Nominal_SizeIsZero) {
+  StartCSDO();
+
+  CHECK_EQUAL(0, co_csdo_blk_up_req(csdo, IDX, SUBIDX, 0, nullptr,
+                                    CoCsdoUpCon::func, nullptr));
+
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
+  std::vector<uint_least8_t> expected = SdoInitExpectedData::U32(
+      CO_SDO_CCS_BLK_UP_REQ | CO_SDO_BLK_CRC | CO_SDO_SC_INI_BLK, IDX, SUBIDX,
+      CO_SDO_MAX_SEQNO);
+  CanSend::CheckMsg(DEFAULT_COBID_REQ, 0, CO_SDO_MSG_SIZE, expected.data());
+  CanSend::Clear();
+
+  can_msg msg_res =
+      SdoCreateMsg::BlkUpIniRes(IDX, SUBIDX, DEFAULT_COBID_RES, 0);
+  CHECK_EQUAL(1, can_net_recv(net, &msg_res, 0));
+
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
+  std::vector<uint_least8_t> expected_res =
+      SdoInitExpectedData::U32(CO_SDO_CCS_BLK_UP_REQ | CO_SDO_SC_START_UP);
+  CanSend::CheckMsg(DEFAULT_COBID_REQ, 0, CO_SDO_MSG_SIZE, expected_res.data());
+}
+
+/// \Given a pointer to the CSDO service (co_csdo_t) which initiated block
+///        upload transfer (the correct request was sent by the client)
+///
+/// \When an abort transfer SDO message with a non-zero abort code is received
+///
+/// \Then no SDO message is sent
+///       \Calls ldle_u32()
+TEST(CO_Csdo, CoCsdoBlkUpIniOnRecv_AcNonZero) {
+  StartCSDO();
+
+  CHECK_EQUAL(0, co_csdo_blk_up_req(csdo, IDX, SUBIDX, 0, nullptr,
+                                    CoCsdoUpCon::func, nullptr));
+
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
+  std::vector<uint_least8_t> expected = SdoInitExpectedData::U32(
+      CO_SDO_CCS_BLK_UP_REQ | CO_SDO_BLK_CRC | CO_SDO_SC_INI_BLK, IDX, SUBIDX,
+      CO_SDO_MAX_SEQNO);
+  CanSend::CheckMsg(DEFAULT_COBID_REQ, 0, CO_SDO_MSG_SIZE, expected.data());
+  CanSend::Clear();
+
+  can_msg msg_res =
+      SdoCreateMsg::Abort(IDX, SUBIDX, DEFAULT_COBID_RES, CO_SDO_AC_NO_READ);
+  CHECK_EQUAL(1, can_net_recv(net, &msg_res, 0));
+
+  CHECK_EQUAL(0, CanSend::GetNumCalled());
+}
+
+/// \Given a pointer to the CSDO service (co_csdo_t) which initiated block
+///        upload transfer (the correct request was sent by the client)
+///
+/// \When an abort transfer SDO message with abort code equal to zero is
+///       received
+///
+/// \Then no SDO message is sent
+///       \Calls ldle_u32()
+TEST(CO_Csdo, CoCsdoBlkUpIniOnRecv_AcZero) {
+  StartCSDO();
+
+  CHECK_EQUAL(0, co_csdo_blk_up_req(csdo, IDX, SUBIDX, 0, nullptr,
+                                    CoCsdoUpCon::func, nullptr));
+
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
+  std::vector<uint_least8_t> expected = SdoInitExpectedData::U32(
+      CO_SDO_CCS_BLK_UP_REQ | CO_SDO_BLK_CRC | CO_SDO_SC_INI_BLK, IDX, SUBIDX,
+      CO_SDO_MAX_SEQNO);
+  CanSend::CheckMsg(DEFAULT_COBID_REQ, 0, CO_SDO_MSG_SIZE, expected.data());
+  CanSend::Clear();
+
+  can_msg msg_res = SdoCreateMsg::Abort(IDX, SUBIDX, DEFAULT_COBID_RES, 0);
+  CHECK_EQUAL(1, can_net_recv(net, &msg_res, 0));
+
+  CHECK_EQUAL(0, CanSend::GetNumCalled());
+}
+
+/// \Given a pointer to the CSDO service (co_csdo_t) which initiated block
+///        upload transfer (the correct request was sent by the client)
+///
+/// \When an abort transfer SDO message with no abort code is received
+///
+/// \Then no SDO message is sent
+TEST(CO_Csdo, CoCsdoBlkUpIniOnRecv_AcNone) {
+  StartCSDO();
+
+  CHECK_EQUAL(0, co_csdo_blk_up_req(csdo, IDX, SUBIDX, 0, nullptr,
+                                    CoCsdoUpCon::func, nullptr));
+
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
+  std::vector<uint_least8_t> expected = SdoInitExpectedData::U32(
+      CO_SDO_CCS_BLK_UP_REQ | CO_SDO_BLK_CRC | CO_SDO_SC_INI_BLK, IDX, SUBIDX,
+      CO_SDO_MAX_SEQNO);
+  CanSend::CheckMsg(DEFAULT_COBID_REQ, 0, CO_SDO_MSG_SIZE, expected.data());
+  CanSend::Clear();
+
+  can_msg msg_res = SdoCreateMsg::Abort(IDX, SUBIDX, DEFAULT_COBID_RES);
+  msg_res.len = 4u;
+  CHECK_EQUAL(1, can_net_recv(net, &msg_res, 0));
+
+  CHECK_EQUAL(0, CanSend::GetNumCalled());
+}
+
+/// \Given a pointer to the CSDO service (co_csdo_t) which initiated block
+///        upload transfer (the correct request was sent by the client)
+///
+/// \When an SDO message with an incorrect command specifier is received
+///
+/// \Then an abort transfer SDO message with CO_SDO_AC_NO_CS abort code is sent
+///       \Calls stle_u16()
+///       \Calls stle_u32()
+///       \Calls can_net_send()
+TEST(CO_Csdo, CoCsdoBlkUpIniOnRecv_IncorrectCS) {
+  StartCSDO();
+
+  CHECK_EQUAL(0, co_csdo_blk_up_req(csdo, IDX, SUBIDX, 0, nullptr,
+                                    CoCsdoUpCon::func, nullptr));
+
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
+  std::vector<uint_least8_t> expected = SdoInitExpectedData::U32(
+      CO_SDO_CCS_BLK_UP_REQ | CO_SDO_BLK_CRC | CO_SDO_SC_INI_BLK, IDX, SUBIDX,
+      CO_SDO_MAX_SEQNO);
+  CanSend::CheckMsg(DEFAULT_COBID_REQ, 0, CO_SDO_MSG_SIZE, expected.data());
+  CanSend::Clear();
+
+  can_msg msg_res = SdoCreateMsg::Default(IDX, SUBIDX, DEFAULT_COBID_RES);
+  msg_res.data[0] = 0xffu;
+  CHECK_EQUAL(1, can_net_recv(net, &msg_res, 0));
+
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
+  std::vector<uint_least8_t> expected_res =
+      SdoInitExpectedData::U32(CO_SDO_CS_ABORT, IDX, SUBIDX, CO_SDO_AC_NO_CS);
+  CanSend::CheckMsg(DEFAULT_COBID_REQ, 0, CO_SDO_MSG_SIZE, expected_res.data());
+}
+
+/// \Given a pointer to the CSDO service (co_csdo_t) which initiated block
+///        upload transfer (the correct request was sent by the client)
+///
+/// \When an SDO block upload initiate response with an incorrect server
+///       subcommand is received
+///
+/// \Then an abort transfer SDO message with CO_SDO_AC_NO_CS abort code is sent
+///       \Calls stle_u16()
+///       \Calls stle_u32()
+///       \Calls can_net_send()
+TEST(CO_Csdo, CoCsdoBlkUpIniOnRecv_IncorrectSC) {
+  StartCSDO();
+
+  CHECK_EQUAL(0, co_csdo_blk_up_req(csdo, IDX, SUBIDX, 0, nullptr,
+                                    CoCsdoUpCon::func, nullptr));
+
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
+  std::vector<uint_least8_t> expected = SdoInitExpectedData::U32(
+      CO_SDO_CCS_BLK_UP_REQ | CO_SDO_BLK_CRC | CO_SDO_SC_INI_BLK, IDX, SUBIDX,
+      CO_SDO_MAX_SEQNO);
+  CanSend::CheckMsg(DEFAULT_COBID_REQ, 0, CO_SDO_MSG_SIZE, expected.data());
+  CanSend::Clear();
+
+  can_msg msg_res = SdoCreateMsg::BlkUpIniRes(IDX, SUBIDX, DEFAULT_COBID_RES,
+                                              sizeof(sub_type));
+  msg_res.data[0] |= 0x01u;
+  CHECK_EQUAL(1, can_net_recv(net, &msg_res, 0));
+
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
+  std::vector<uint_least8_t> expected_res =
+      SdoInitExpectedData::U32(CO_SDO_CS_ABORT, IDX, SUBIDX, CO_SDO_AC_NO_CS);
+  CanSend::CheckMsg(DEFAULT_COBID_REQ, 0, CO_SDO_MSG_SIZE, expected_res.data());
+}
+
+/// \Given a pointer to the CSDO service (co_csdo_t) which initiated block
+///        upload transfer (the correct request was sent by the client)
+///
+/// \When an SDO block upload initiate response with too little bytes is
+///       received
+///
+/// \Then an abort transfer SDO message with CO_SDO_AC_ERROR abort code is sent
+///       \Calls stle_u16()
+///       \Calls stle_u32()
+///       \Calls can_net_send()
+TEST(CO_Csdo, CoCsdoBlkUpIniOnRecv_TooShortMsg) {
+  StartCSDO();
+
+  CHECK_EQUAL(0, co_csdo_blk_up_req(csdo, IDX, SUBIDX, 0, nullptr,
+                                    CoCsdoUpCon::func, nullptr));
+
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
+  std::vector<uint_least8_t> expected = SdoInitExpectedData::U32(
+      CO_SDO_CCS_BLK_UP_REQ | CO_SDO_BLK_CRC | CO_SDO_SC_INI_BLK, IDX, SUBIDX,
+      CO_SDO_MAX_SEQNO);
+  CanSend::CheckMsg(DEFAULT_COBID_REQ, 0, CO_SDO_MSG_SIZE, expected.data());
+  CanSend::Clear();
+
+  can_msg msg_res = SdoCreateMsg::BlkUpIniRes(IDX, SUBIDX, DEFAULT_COBID_RES,
+                                              sizeof(sub_type));
+  msg_res.len = 3u;
+  CHECK_EQUAL(1, can_net_recv(net, &msg_res, 0));
+
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
+  std::vector<uint_least8_t> expected_res =
+      SdoInitExpectedData::U32(CO_SDO_CS_ABORT, IDX, SUBIDX, CO_SDO_AC_ERROR);
+  CanSend::CheckMsg(DEFAULT_COBID_REQ, 0, CO_SDO_MSG_SIZE, expected_res.data());
+}
+
+/// \Given a pointer to the CSDO service (co_csdo_t) which initiated block
+///        upload transfer (the correct request was sent by the client)
+///
+/// \When an SDO block upload reponse with an index not matching the requested
+///       index
+///
+/// \Then an abort transfer SDO message with CO_SDO_AC_ERROR abort code is sent
+///       \Calls ldle_u16()
+///       \Calls stle_u16()
+///       \Calls stle_u32()
+///       \Calls can_net_send()
+TEST(CO_Csdo, CoCsdoBlkUpIniOnRecv_IncorrectIdx) {
+  StartCSDO();
+
+  CHECK_EQUAL(0, co_csdo_blk_up_req(csdo, IDX, SUBIDX, 0, nullptr,
+                                    CoCsdoUpCon::func, nullptr));
+
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
+  std::vector<uint_least8_t> expected = SdoInitExpectedData::U32(
+      CO_SDO_CCS_BLK_UP_REQ | CO_SDO_BLK_CRC | CO_SDO_SC_INI_BLK, IDX, SUBIDX,
+      CO_SDO_MAX_SEQNO);
+  CanSend::CheckMsg(DEFAULT_COBID_REQ, 0, CO_SDO_MSG_SIZE, expected.data());
+  CanSend::Clear();
+
+  can_msg msg_res = SdoCreateMsg::BlkUpIniRes(
+      0xffffu, SUBIDX, DEFAULT_COBID_RES, sizeof(sub_type));
+  CHECK_EQUAL(1, can_net_recv(net, &msg_res, 0));
+
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
+  std::vector<uint_least8_t> expected_res =
+      SdoInitExpectedData::U32(CO_SDO_CS_ABORT, IDX, SUBIDX, CO_SDO_AC_ERROR);
+  CanSend::CheckMsg(DEFAULT_COBID_REQ, 0, CO_SDO_MSG_SIZE, expected_res.data());
+}
+
+/// \Given a pointer to the CSDO service (co_csdo_t) which initiated block
+///        upload transfer (the correct request was sent by the client)
+///
+/// \When an SDO block upload reponse with a sub-index not matching
+///       the requested sub-index
+///
+/// \Then an abort transfer SDO message with CO_SDO_AC_ERROR abort code is sent
+///       \Calls ldle_u16()
+///       \Calls stle_u16()
+///       \Calls stle_u32()
+///       \Calls can_net_send()
+TEST(CO_Csdo, CoCsdoBlkUpIniOnRecv_IncorrectSubidx) {
+  StartCSDO();
+
+  CHECK_EQUAL(0, co_csdo_blk_up_req(csdo, IDX, SUBIDX, 0, nullptr,
+                                    CoCsdoUpCon::func, nullptr));
+
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
+  std::vector<uint_least8_t> expected = SdoInitExpectedData::U32(
+      CO_SDO_CCS_BLK_UP_REQ | CO_SDO_BLK_CRC | CO_SDO_SC_INI_BLK, IDX, SUBIDX,
+      CO_SDO_MAX_SEQNO);
+  CanSend::CheckMsg(DEFAULT_COBID_REQ, 0, CO_SDO_MSG_SIZE, expected.data());
+  CanSend::Clear();
+
+  can_msg msg_res = SdoCreateMsg::BlkUpIniRes(IDX, 0xffu, DEFAULT_COBID_RES,
+                                              sizeof(sub_type));
+  CHECK_EQUAL(1, can_net_recv(net, &msg_res, 0));
+
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
+  std::vector<uint_least8_t> expected_res =
+      SdoInitExpectedData::U32(CO_SDO_CS_ABORT, IDX, SUBIDX, CO_SDO_AC_ERROR);
+  CanSend::CheckMsg(DEFAULT_COBID_REQ, 0, CO_SDO_MSG_SIZE, expected_res.data());
+}
+
+#if HAVE_LELY_OVERRIDE
+/// \Given a pointer to the CSDO service (co_csdo_t) which initiated block
+///        upload transfer (the correct request was sent by the client)
+///
+/// \When a correct block upload initiate response is received but
+///       membuf_reserve() fails
+///
+/// \Then an abort transfer SDO message with CO_SDO_AC_NO_MEM abort code is sent
+///       \Calls ldle_u16()
+///       \Calls memcpy()
+///       \Calls ldle_u32()
+///       \Calls membuf_reserve()
+///       \Calls stle_u32()
+///       \Calls can_net_send()
+TEST(CO_Csdo, CoCsdoBlkUpIniOnRecv_MembufReserveFail) {
+  StartCSDO();
+
+  CHECK_EQUAL(0, co_csdo_blk_up_req(csdo, IDX, SUBIDX, 0, nullptr,
+                                    CoCsdoUpCon::func, nullptr));
+
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
+  std::vector<uint_least8_t> expected = SdoInitExpectedData::U32(
+      CO_SDO_CCS_BLK_UP_REQ | CO_SDO_BLK_CRC | CO_SDO_SC_INI_BLK, IDX, SUBIDX,
+      CO_SDO_MAX_SEQNO);
+  CanSend::CheckMsg(DEFAULT_COBID_REQ, 0, CO_SDO_MSG_SIZE, expected.data());
+  CanSend::Clear();
+
+  LelyOverride::membuf_reserve(Override::NoneCallsValid);
+
+  can_msg msg_res = SdoCreateMsg::BlkUpIniRes(IDX, SUBIDX, DEFAULT_COBID_RES,
+                                              sizeof(sub_type));
+  CHECK_EQUAL(1, can_net_recv(net, &msg_res, 0));
+
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
+  std::vector<uint_least8_t> expected_res =
+      SdoInitExpectedData::U32(CO_SDO_CS_ABORT, IDX, SUBIDX, CO_SDO_AC_NO_MEM);
+  CanSend::CheckMsg(DEFAULT_COBID_REQ, 0, CO_SDO_MSG_SIZE, expected_res.data());
+}
+#endif  // HAVE_LELY_OVERRIDE
+
+/// \Given a pointer to the CSDO service (co_csdo_t) which initiated block
+///        upload transfer (the correct request was sent by the client);
+///        the service has a timeout set
+///
+/// \When a correct block upload initiate response is received
+///
+/// \Then an SDO message with a client command specifier block upload request
+///       and subcommand start upload is sent
+///       \Calls ldle_u16()
+///       \Calls memcpy()
+///       \Calls ldle_u32()
+///       \Calls membuf_reserve()
+///       \Calls can_timer_timeout()
+///       \Calls can_net_send()
+TEST(CO_Csdo, CoCsdoBlkUpIniOnRecv_TimeoutSet) {
+  co_csdo_set_timeout(csdo, 999);  // 999 ms
+  StartCSDO();
+
+  CHECK_EQUAL(0, co_csdo_blk_up_req(csdo, IDX, SUBIDX, 0, nullptr,
+                                    CoCsdoUpCon::func, nullptr));
+
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
+  std::vector<uint_least8_t> expected = SdoInitExpectedData::U32(
+      CO_SDO_CCS_BLK_UP_REQ | CO_SDO_BLK_CRC | CO_SDO_SC_INI_BLK, IDX, SUBIDX,
+      CO_SDO_MAX_SEQNO);
+  CanSend::CheckMsg(DEFAULT_COBID_REQ, 0, CO_SDO_MSG_SIZE, expected.data());
+  CanSend::Clear();
+
+  can_msg msg_res = SdoCreateMsg::BlkUpIniRes(IDX, SUBIDX, DEFAULT_COBID_RES,
+                                              sizeof(sub_type));
+  CHECK_EQUAL(1, can_net_recv(net, &msg_res, 0));
+
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
+  std::vector<uint_least8_t> expected_res =
+      SdoInitExpectedData::U32(CO_SDO_CCS_BLK_UP_REQ | CO_SDO_SC_START_UP);
+  CanSend::CheckMsg(DEFAULT_COBID_REQ, 0, CO_SDO_MSG_SIZE, expected_res.data());
 }
 
 ///@}
@@ -2778,7 +3191,11 @@ TEST(CO_Csdo, RecvWhenWaiting_CsAbort_TooShortMsg) {
 ///       of the entry, a pointer to the confirmation function and a null
 ///       user-specified data pointer
 ///
-/// \Then -1 is returned and SDO message is not sent
+/// \Then -1 is returned and SDO message is not sent, the ERRNUM_INVAL is set
+///       as an error number
+///       \Calls co_csdo_is_valid()
+///       \Calls co_csdo_is_idle()
+///       \Calls set_errnum()
 TEST(CO_Csdo, CoCsdoBlkDnReq_NotStarted) {
   uint_least8_t bytes2dn[sizeof(sub_type)] = {0};
   const auto ret =
@@ -2786,7 +3203,8 @@ TEST(CO_Csdo, CoCsdoBlkDnReq_NotStarted) {
                          CoCsdoDnCon::func, nullptr);
 
   CHECK_EQUAL(-1, ret);
-  CHECK(!CanSend::Called());
+  CHECK_EQUAL(0, CanSend::GetNumCalled());
+  CHECK_EQUAL(ERRNUM_INVAL, get_errnum());
 }
 
 /// \Given a pointer to the CSDO service (co_csdo_t)
@@ -2797,6 +3215,12 @@ TEST(CO_Csdo, CoCsdoBlkDnReq_NotStarted) {
 ///       user-specified data pointer
 ///
 /// \Then 0 is returned and SDO block download request is sent
+///       \Calls co_csdo_is_valid()
+///       \Calls co_csdo_is_idle()
+///       \Calls membuf_init()
+///       \Calls stle_u16()
+///       \Calls stle_u32()
+///       \Calls can_net_send()
 TEST(CO_Csdo, CoCsdoBlkDnReq_Nominal) {
   StartCSDO();
 
@@ -2806,7 +3230,7 @@ TEST(CO_Csdo, CoCsdoBlkDnReq_Nominal) {
                          CoCsdoDnCon::func, nullptr);
 
   CHECK_EQUAL(0, ret);
-  CHECK_EQUAL(1, CanSend::num_called);
+  CHECK_EQUAL(1, CanSend::GetNumCalled());
   const co_unsigned8_t cs = CO_SDO_CCS_BLK_DN_REQ | CO_SDO_BLK_CRC |
                             CO_SDO_BLK_SIZE_IND | CO_SDO_SC_INI_BLK;
   std::vector<uint_least8_t> expected =
@@ -2824,6 +3248,13 @@ TEST(CO_Csdo, CoCsdoBlkDnReq_Nominal) {
 /// \Then 0 is returned and SDO block download request is sent;
 ///       after the timeout value elapses and no response from the server
 ///       is received - the timeout message is sent
+///       \Calls co_csdo_is_valid()
+///       \Calls co_csdo_is_idle()
+///       \Calls membuf_init()
+///       \Calls can_timer_timeout()
+///       \Calls stle_u16()
+///       \Calls stle_u32()
+///       \Calls can_net_send()
 TEST(CO_Csdo, CoCsdoBlkDnReq_TimeoutSet) {
   co_csdo_set_timeout(csdo, 999);
   StartCSDO();
@@ -2834,7 +3265,7 @@ TEST(CO_Csdo, CoCsdoBlkDnReq_TimeoutSet) {
                          CoCsdoDnCon::func, nullptr);
 
   CHECK_EQUAL(0, ret);
-  CHECK_EQUAL(1, CanSend::num_called);
+  CHECK_EQUAL(1, CanSend::GetNumCalled());
   const co_unsigned8_t cs = CO_SDO_CCS_BLK_DN_REQ | CO_SDO_BLK_CRC |
                             CO_SDO_BLK_SIZE_IND | CO_SDO_SC_INI_BLK;
   std::vector<uint_least8_t> expected =
@@ -2843,7 +3274,7 @@ TEST(CO_Csdo, CoCsdoBlkDnReq_TimeoutSet) {
 
   CoCsdoUpDnReq::SetOneSecOnNet(net);
 
-  CHECK_EQUAL(1u, CanSend::num_called);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
   std::vector<uint_least8_t> expected_timeout =
       SdoInitExpectedData::U32(CO_SDO_CS_ABORT, IDX, SUBIDX, CO_SDO_AC_TIMEOUT);
   CanSend::CheckMsg(DEFAULT_COBID_REQ, 0, CO_SDO_MSG_SIZE,
@@ -2862,6 +3293,9 @@ TEST(CO_Csdo, CoCsdoBlkDnReq_TimeoutSet) {
 ///       (not CO_SDO_SCS_BLK_DN_RES) is received
 ///
 /// \Then 1 is returned by can_net_recv() and abort SDO transfer message is sent
+///       \Calls stle_u16()
+///       \Calls stle_u32()
+///       \Calls can_net_send()
 TEST(CO_Csdo, CoCsdoBlkDnIniOnRecv_IncorrectCS) {
   StartCSDO();
 
@@ -2871,7 +3305,7 @@ TEST(CO_Csdo, CoCsdoBlkDnIniOnRecv_IncorrectCS) {
                          CoCsdoDnCon::func, nullptr);
 
   CHECK_EQUAL(0, ret);
-  CHECK_EQUAL(1, CanSend::num_called);
+  CHECK_EQUAL(1, CanSend::GetNumCalled());
   const co_unsigned8_t cs = CO_SDO_CCS_BLK_DN_REQ | CO_SDO_BLK_CRC |
                             CO_SDO_BLK_SIZE_IND | CO_SDO_SC_INI_BLK;
   std::vector<uint_least8_t> expected =
@@ -2883,7 +3317,7 @@ TEST(CO_Csdo, CoCsdoBlkDnIniOnRecv_IncorrectCS) {
   msg.data[0] = 0xffu;
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
-  CHECK_EQUAL(1u, CanSend::num_called);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
   std::vector<uint_least8_t> expected_abort =
       SdoInitExpectedData::U32(CO_SDO_CS_ABORT, IDX, SUBIDX, CO_SDO_AC_NO_CS);
   CanSend::CheckMsg(DEFAULT_COBID_REQ, 0, CO_SDO_MSG_SIZE,
@@ -2896,6 +3330,9 @@ TEST(CO_Csdo, CoCsdoBlkDnIniOnRecv_IncorrectCS) {
 /// \When an SDO message with no command specifier is received
 ///
 /// \Then 1 is returned by can_net_recv() and abort SDO transfer message is sent
+///       \Calls stle_u16()
+///       \Calls stle_u32()
+///       \Calls can_net_send()
 TEST(CO_Csdo, CoCsdoBlkDnIniOnRecv_NoCS) {
   StartCSDO();
 
@@ -2905,7 +3342,7 @@ TEST(CO_Csdo, CoCsdoBlkDnIniOnRecv_NoCS) {
                          CoCsdoDnCon::func, nullptr);
 
   CHECK_EQUAL(0, ret);
-  CHECK_EQUAL(1, CanSend::num_called);
+  CHECK_EQUAL(1, CanSend::GetNumCalled());
   const co_unsigned8_t cs = CO_SDO_CCS_BLK_DN_REQ | CO_SDO_BLK_CRC |
                             CO_SDO_BLK_SIZE_IND | CO_SDO_SC_INI_BLK;
   std::vector<uint_least8_t> expected =
@@ -2917,7 +3354,7 @@ TEST(CO_Csdo, CoCsdoBlkDnIniOnRecv_NoCS) {
   msg.len = 0u;
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
-  CHECK_EQUAL(1u, CanSend::num_called);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
   std::vector<uint_least8_t> expected_abort =
       SdoInitExpectedData::U32(CO_SDO_CS_ABORT, IDX, SUBIDX, CO_SDO_AC_NO_CS);
   CanSend::CheckMsg(DEFAULT_COBID_REQ, 0, CO_SDO_MSG_SIZE,

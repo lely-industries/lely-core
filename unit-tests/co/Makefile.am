@@ -62,8 +62,8 @@ unit_test_co_crc_LDFLAGS = $(LELY_UNIT_TEST_CO_LDFLGS)
 
 bin += unit-test-co-csdo
 unit_test_co_csdo_SOURCES = $(src_common) test-csdo.cpp
-unit_test_co_csdo_LDADD = $(LELY_UNIT_TEST_CO_COMMON_LIBS)
-unit_test_co_csdo_LDFLAGS = $(LELY_UNIT_TEST_CO_LDFLGS)
+unit_test_co_csdo_LDADD = $(LELY_OVERRIDE_UTIL_MEMBUF_LIB) $(LELY_UNIT_TEST_CO_COMMON_LIBS)
+unit_test_co_csdo_LDFLAGS = $(LELY_OVERRIDE_UTIL_MEMBUF_LDFLGS) $(LELY_UNIT_TEST_CO_LDFLGS)
 
 bin += unit-test-co-csdo-sdo
 unit_test_co_csdo_sdo_SOURCES = $(src_common) test-csdo-sdo.cpp

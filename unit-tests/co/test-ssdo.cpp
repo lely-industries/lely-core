@@ -25,6 +25,7 @@
 #endif
 
 #include <memory>
+#include <vector>
 
 #include <CppUTest/TestHarness.h>
 
@@ -821,7 +822,7 @@ TEST(CoSsdoUpdate, ReqCobidValid_ResCobidInvalid) {
   msg.id = CAN_ID;
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
-  CHECK_EQUAL(0, CanSend::num_called);
+  CHECK_EQUAL(0, CanSend::GetNumCalled());
 }
 
 /// \Given a pointer to the SSDO service (co_ssdo_t) with an invalid request
@@ -846,7 +847,7 @@ TEST(CoSsdoUpdate, ReqCobidInvalid_ResCobidValid) {
   msg.id = CAN_ID;
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
-  CHECK_EQUAL(0, CanSend::num_called);
+  CHECK_EQUAL(0, CanSend::GetNumCalled());
 }
 
 /// \Given a pointer to the SSDO service (co_ssdo_t) with an invalid request
@@ -873,7 +874,7 @@ TEST(CoSsdoUpdate, ReqResCobidsInvalid) {
   msg.id = CAN_ID;
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
-  CHECK_EQUAL(0, CanSend::num_called);
+  CHECK_EQUAL(0, CanSend::GetNumCalled());
 }
 
 /// \Given a pointer to the SSDO service (co_ssdo_t) with a valid request
@@ -902,9 +903,10 @@ TEST(CoSsdoUpdate, ReqResCobidsValid) {
   // CAN message is too short - the abort  code will be sent in response
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
-  CHECK_EQUAL(1u, CanSend::num_called);
-  CanSend::CheckSdoMsg(NEW_CAN_ID, 0, CO_SDO_MSG_SIZE, CO_SDO_CS_ABORT, 0x0000u,
-                       0x00u, CO_SDO_AC_NO_CS);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
+  std::vector<uint_least8_t> expected = SdoInitExpectedData::U32(
+      CO_SDO_CS_ABORT, 0x0000u, 0x00u, CO_SDO_AC_NO_CS);
+  CanSend::CheckMsg(NEW_CAN_ID, 0, CO_SDO_MSG_SIZE, expected.data());
 }
 
 /// \Given a pointer to the started SSDO service (co_ssdo_t) with a valid
@@ -934,9 +936,10 @@ TEST(CoSsdoUpdate, ReqResCobidsValid_CobidFrameSet) {
   // CAN message is too short - the abort  code will be sent in response
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
-  CHECK_EQUAL(1u, CanSend::num_called);
-  CanSend::CheckSdoMsg(CAN_ID, 0, CO_SDO_MSG_SIZE, CO_SDO_CS_ABORT, 0x0000u,
-                       0x00u, CO_SDO_AC_NO_CS);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
+  std::vector<uint_least8_t> expected = SdoInitExpectedData::U32(
+      CO_SDO_CS_ABORT, 0x0000u, 0x00u, CO_SDO_AC_NO_CS);
+  CanSend::CheckMsg(CAN_ID, 0, CO_SDO_MSG_SIZE, expected.data());
 }
 
 ///@}
@@ -963,7 +966,7 @@ TEST(CoSsdoTimer, Timeout) {
   can_msg msg = SdoCreateMsg::Default(IDX, SUBIDX, DEFAULT_COBID_REQ);
   msg.data[0] = CO_SDO_CCS_DN_INI_REQ;
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
-  CHECK_EQUAL(1u, CanSend::num_called);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
   const auto expected =
       SdoInitExpectedData::U32(CO_SDO_SCS_DN_INI_RES, IDX, SUBIDX, 0);
   CanSend::CheckMsg(DEFAULT_COBID_RES, 0, CO_SDO_MSG_SIZE, expected.data());
@@ -972,7 +975,7 @@ TEST(CoSsdoTimer, Timeout) {
   const timespec tp = {0L, 1000000L};  // 1 ms
   can_net_set_time(net, &tp);
 
-  CHECK_EQUAL(1u, CanSend::num_called);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
   const auto expected_timeout =
       SdoInitExpectedData::U32(CO_SDO_CS_ABORT, IDX, SUBIDX, CO_SDO_AC_TIMEOUT);
   CanSend::CheckMsg(DEFAULT_COBID_RES, 0, CO_SDO_MSG_SIZE,
@@ -1004,7 +1007,7 @@ TEST(CoSsdoWaitOnRecv, DnIniReq) {
   stle_u16(msg.data + 4u, 0x3214u);
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
-  CHECK_EQUAL(1u, CanSend::num_called);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
   const auto expected =
       SdoInitExpectedData::U32(CO_SDO_SCS_DN_INI_RES, IDX, SUBIDX, 0u);
   CanSend::CheckMsg(DEFAULT_COBID_RES, 0, CO_SDO_MSG_SIZE, expected.data());
@@ -1029,7 +1032,7 @@ TEST(CoSsdoWaitOnRecv, UpIniReq) {
   msg.data[0] = CO_SDO_CCS_UP_INI_REQ;
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
-  CHECK_EQUAL(1u, CanSend::num_called);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
   const auto expected = SdoInitExpectedData::U32(
       CO_SDO_SCS_UP_INI_RES | CO_SDO_INI_SIZE_EXP_SET(sizeof(sub_type)), IDX,
       SUBIDX, 0xabcdu);
@@ -1052,7 +1055,7 @@ TEST(CoSsdoWaitOnRecv, BlkDnIniReq) {
   msg.data[0] = CO_SDO_CCS_BLK_DN_REQ;
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
-  CHECK_EQUAL(1u, CanSend::num_called);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
   const auto expected = SdoInitExpectedData::U32(
       CO_SDO_SCS_BLK_DN_RES | CO_SDO_BLK_CRC, IDX, SUBIDX, 127u);
   CanSend::CheckMsg(DEFAULT_COBID_RES, 0, CO_SDO_MSG_SIZE, expected.data());
@@ -1076,7 +1079,7 @@ TEST(CoSsdoWaitOnRecv, BlkUpIniReq) {
   msg.data[5] = 2u;  // protocol switch
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
-  CHECK_EQUAL(1u, CanSend::num_called);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
   const auto expected = SdoInitExpectedData::U32(
       CO_SDO_SCS_UP_INI_RES | CO_SDO_INI_SIZE_EXP_SET(2u), IDX, SUBIDX,
       0xabcdu);
@@ -1095,7 +1098,7 @@ TEST(CoSsdoWaitOnRecv, Abort) {
   msg.data[0] = CO_SDO_CS_ABORT;
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
-  CHECK(!CanSend::Called());
+  CHECK_EQUAL(0, CanSend::GetNumCalled());
 }
 
 /// \Given a pointer to the SSDO service (co_ssdo_t) with no ongoing requests
@@ -1111,7 +1114,7 @@ TEST(CoSsdoWaitOnRecv, InvalidCS) {
   msg.data[0] = 0xffu;
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
-  CHECK_EQUAL(1u, CanSend::num_called);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
   const auto expected = SdoInitExpectedData::U32(CO_SDO_CS_ABORT, 0x0000u,
                                                  0x00u, CO_SDO_AC_NO_CS);
   CanSend::CheckMsg(DEFAULT_COBID_RES, 0, CO_SDO_MSG_SIZE, expected.data());
@@ -1130,7 +1133,7 @@ TEST(CoSsdoWaitOnRecv, NoCS) {
   msg.len = 0;
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
-  CHECK_EQUAL(1u, CanSend::num_called);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
   const auto expected = SdoInitExpectedData::U32(CO_SDO_CS_ABORT, 0x0000u,
                                                  0x00u, CO_SDO_AC_NO_CS);
   CanSend::CheckMsg(DEFAULT_COBID_RES, 0, CO_SDO_MSG_SIZE, expected.data());
@@ -1151,7 +1154,7 @@ TEST(CoSsdoDnIniOnRecv, NoIdxSpecified) {
   msg.len = 1u;
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
-  CHECK_EQUAL(1u, CanSend::num_called);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
   const auto expected = SdoInitExpectedData::U32(CO_SDO_CS_ABORT, 0x0000u,
                                                  0x00u, CO_SDO_AC_NO_OBJ);
   CanSend::CheckMsg(DEFAULT_COBID_RES, 0, CO_SDO_MSG_SIZE, expected.data());
@@ -1164,7 +1167,7 @@ TEST(CoSsdoDnIniOnRecv, NoSubidxSpecified) {
   msg.len = 3u;
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
-  CHECK_EQUAL(1u, CanSend::num_called);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
   const auto expected =
       SdoInitExpectedData::U32(CO_SDO_CS_ABORT, IDX, 0x00u, CO_SDO_AC_NO_SUB);
   CanSend::CheckMsg(DEFAULT_COBID_RES, 0, CO_SDO_MSG_SIZE, expected.data());
@@ -1182,7 +1185,7 @@ TEST(CoSsdoDnIniOnRecv, TimeoutTriggered) {
                                        CO_SDO_SEG_SIZE_SET(1u));
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
-  CHECK_EQUAL(1u, CanSend::num_called);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
   const auto expected =
       SdoInitExpectedData::U32(CO_SDO_SCS_DN_INI_RES, IDX, SUBIDX, 0);
   CanSend::CheckMsg(DEFAULT_COBID_RES, 0, CO_SDO_MSG_SIZE, expected.data());
@@ -1191,7 +1194,7 @@ TEST(CoSsdoDnIniOnRecv, TimeoutTriggered) {
   const timespec tp = {0L, 1000000L};  // 1 ms
   can_net_set_time(net, &tp);
 
-  CHECK_EQUAL(1u, CanSend::num_called);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
   const auto expected_timeout =
       SdoInitExpectedData::U32(CO_SDO_CS_ABORT, IDX, SUBIDX, CO_SDO_AC_TIMEOUT);
   CanSend::CheckMsg(DEFAULT_COBID_RES, 0, CO_SDO_MSG_SIZE,
@@ -1206,7 +1209,7 @@ TEST(CoSsdoDnIniOnRecv, Expedited_NoObject) {
                                        CO_SDO_INI_SIZE_EXP);
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
-  CHECK_EQUAL(1u, CanSend::num_called);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
   const auto expected =
       SdoInitExpectedData::U32(CO_SDO_CS_ABORT, IDX, SUBIDX, CO_SDO_AC_NO_OBJ);
   CanSend::CheckMsg(DEFAULT_COBID_RES, 0, CO_SDO_MSG_SIZE, expected.data());
@@ -1224,7 +1227,7 @@ TEST(CoSsdoDnIniOnRecv, Expedited) {
       SdoCreateMsg::DnIniReq(IDX, SUBIDX, DEFAULT_COBID_REQ, val2dn, cs);
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
-  CHECK_EQUAL(1u, CanSend::num_called);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
   const auto expected =
       SdoInitExpectedData::U32(CO_SDO_SCS_DN_INI_RES, IDX, SUBIDX, 0);
   CanSend::CheckMsg(DEFAULT_COBID_RES, 0, CO_SDO_MSG_SIZE, expected.data());
@@ -1260,7 +1263,7 @@ TEST(CoSsdoUpIniOnRecv, NoIdxSpecified) {
   msg.len = 1u;
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
-  CHECK_EQUAL(1u, CanSend::num_called);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
   const auto expected = SdoInitExpectedData::U32(CO_SDO_CS_ABORT, 0x0000u,
                                                  0x00u, CO_SDO_AC_NO_OBJ);
   CanSend::CheckMsg(DEFAULT_COBID_RES, 0, CO_SDO_MSG_SIZE, expected.data());
@@ -1273,7 +1276,7 @@ TEST(CoSsdoUpIniOnRecv, NoSubidxSpecified) {
   msg.len = 3u;
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
-  CHECK_EQUAL(1u, CanSend::num_called);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
   const auto expected =
       SdoInitExpectedData::U32(CO_SDO_CS_ABORT, IDX, 0x00u, CO_SDO_AC_NO_SUB);
   CanSend::CheckMsg(DEFAULT_COBID_RES, 0, CO_SDO_MSG_SIZE, expected.data());
@@ -1288,7 +1291,7 @@ TEST(CoSsdoUpIniOnRecv, NoAccess) {
   can_msg msg = SdoCreateMsg::UpIniReq(IDX, SUBIDX, DEFAULT_COBID_REQ);
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
-  CHECK_EQUAL(1u, CanSend::num_called);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
   const auto expected =
       SdoInitExpectedData::U32(CO_SDO_CS_ABORT, IDX, SUBIDX, CO_SDO_AC_NO_READ);
   CanSend::CheckMsg(DEFAULT_COBID_RES, 0, CO_SDO_MSG_SIZE, expected.data());
@@ -1303,7 +1306,7 @@ TEST(CoSsdoUpIniOnRecv, UploadToSubWithSizeZero) {
   can_msg msg = SdoCreateMsg::UpIniReq(IDX, SUBIDX, DEFAULT_COBID_REQ);
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
-  CHECK_EQUAL(1u, CanSend::num_called);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
   const auto expected = SdoInitExpectedData::U32(
       CO_SDO_SCS_UP_INI_RES | CO_SDO_INI_SIZE_IND, IDX, SUBIDX, 0);
   CanSend::CheckMsg(DEFAULT_COBID_RES, 0, CO_SDO_MSG_SIZE, expected.data());
@@ -1318,7 +1321,7 @@ TEST(CoSsdoUpIniOnRecv, TimeoutTriggered) {
   can_msg msg = SdoCreateMsg::UpIniReq(IDX, SUBIDX, DEFAULT_COBID_REQ);
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
-  CHECK_EQUAL(1u, CanSend::num_called);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
   const auto expected =
       SdoInitExpectedData::U32(CO_SDO_SCS_UP_INI_RES | CO_SDO_INI_SIZE_IND, IDX,
                                SUBIDX, sizeof(sub_type64));
@@ -1328,7 +1331,7 @@ TEST(CoSsdoUpIniOnRecv, TimeoutTriggered) {
   const timespec tp = {0L, 1000000L};  // 1 ms
   CHECK_EQUAL(0, can_net_set_time(net, &tp));
 
-  CHECK_EQUAL(1u, CanSend::num_called);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
   const auto expected_timeout =
       SdoInitExpectedData::U32(CO_SDO_CS_ABORT, IDX, SUBIDX, CO_SDO_AC_TIMEOUT);
   CanSend::CheckMsg(DEFAULT_COBID_RES, 0, CO_SDO_MSG_SIZE,
@@ -1343,7 +1346,7 @@ TEST(CoSsdoUpIniOnRecv, Expedited) {
   can_msg msg = SdoCreateMsg::UpIniReq(IDX, SUBIDX, DEFAULT_COBID_REQ);
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
-  CHECK_EQUAL(1u, CanSend::num_called);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
   const auto expected = SdoInitExpectedData::U32(
       CO_SDO_SCS_UP_INI_RES | CO_SDO_INI_SIZE_EXP_SET(2u), IDX, SUBIDX,
       0xabcdu);
@@ -1364,7 +1367,7 @@ TEST(CoSsdoBlkDnIniOnRecv, NoIdxSpecified) {
   msg.len = 1u;
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
-  CHECK_EQUAL(1u, CanSend::num_called);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
   const auto expected = SdoInitExpectedData::U32(CO_SDO_CS_ABORT, 0x0000u,
                                                  0x00u, CO_SDO_AC_NO_OBJ);
   CanSend::CheckMsg(DEFAULT_COBID_RES, 0, CO_SDO_MSG_SIZE, expected.data());
@@ -1377,7 +1380,7 @@ TEST(CoSsdoBlkDnIniOnRecv, NoSubidxSpecified) {
   msg.len = 3u;
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
-  CHECK_EQUAL(1u, CanSend::num_called);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
   const auto expected =
       SdoInitExpectedData::U32(CO_SDO_CS_ABORT, IDX, 0x00u, CO_SDO_AC_NO_SUB);
   CanSend::CheckMsg(DEFAULT_COBID_RES, 0, CO_SDO_MSG_SIZE, expected.data());
@@ -1392,7 +1395,7 @@ TEST(CoSsdoBlkDnIniOnRecv, InvalidCS) {
       SdoCreateMsg::BlkDnIniReq(IDX, SUBIDX, DEFAULT_COBID_REQ, 0x0fu);
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
-  CHECK_EQUAL(1u, CanSend::num_called);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
   const auto expected = SdoInitExpectedData::U32(CO_SDO_CS_ABORT, 0x0000u,
                                                  0x00u, CO_SDO_AC_NO_CS);
   CanSend::CheckMsg(DEFAULT_COBID_RES, 0, CO_SDO_MSG_SIZE, expected.data());
@@ -1407,7 +1410,7 @@ TEST(CoSsdoBlkDnIniOnRecv, BlkSizeSpecified) {
                                           CO_SDO_BLK_SIZE_IND);
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
-  CHECK_EQUAL(1u, CanSend::num_called);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
   const auto expected = SdoInitExpectedData::U32(
       CO_SDO_SCS_BLK_DN_RES | CO_SDO_BLK_CRC, IDX, SUBIDX, 127u);
   CanSend::CheckMsg(DEFAULT_COBID_RES, 0, CO_SDO_MSG_SIZE, expected.data());
@@ -1422,7 +1425,7 @@ TEST(CoSsdoBlkDnIniOnRecv, TimeoutTriggered) {
   can_msg msg = SdoCreateMsg::BlkDnIniReq(IDX, SUBIDX, DEFAULT_COBID_REQ);
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
-  CHECK_EQUAL(1u, CanSend::num_called);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
   const auto expected = SdoInitExpectedData::U32(
       CO_SDO_SCS_BLK_DN_RES | CO_SDO_BLK_CRC, IDX, SUBIDX, 127u);
   CanSend::CheckMsg(DEFAULT_COBID_RES, 0, CO_SDO_MSG_SIZE, expected.data());
@@ -1431,7 +1434,7 @@ TEST(CoSsdoBlkDnIniOnRecv, TimeoutTriggered) {
   const timespec tp = {0L, 1000000L};  // 1 ms
   CHECK_EQUAL(0, can_net_set_time(net, &tp));
 
-  CHECK_EQUAL(1u, CanSend::num_called);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
   const auto expected_timeout =
       SdoInitExpectedData::U32(CO_SDO_CS_ABORT, IDX, SUBIDX, CO_SDO_AC_TIMEOUT);
   CanSend::CheckMsg(DEFAULT_COBID_RES, 0, CO_SDO_MSG_SIZE,
@@ -1446,7 +1449,7 @@ TEST(CoSsdoBlkDnIniOnRecv, Nominal) {
   can_msg msg = SdoCreateMsg::BlkDnIniReq(IDX, SUBIDX, DEFAULT_COBID_REQ);
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
-  CHECK_EQUAL(1u, CanSend::num_called);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
   const auto expected = SdoInitExpectedData::U32(
       CO_SDO_SCS_BLK_DN_RES | CO_SDO_BLK_CRC, IDX, SUBIDX, 127u);
   CanSend::CheckMsg(DEFAULT_COBID_RES, 0, CO_SDO_MSG_SIZE, expected.data());
@@ -1480,7 +1483,7 @@ TEST(CoSsdoBlkUpIniOnRecv, InvalidSC) {
   msg.data[0] |= 0x0fu;
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
-  CHECK_EQUAL(1u, CanSend::num_called);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
   const auto expected = SdoInitExpectedData::U32(CO_SDO_CS_ABORT, 0x0000u,
                                                  0x00u, CO_SDO_AC_NO_CS);
   CanSend::CheckMsg(DEFAULT_COBID_RES, 0, CO_SDO_MSG_SIZE, expected.data());
@@ -1493,7 +1496,7 @@ TEST(CoSsdoBlkUpIniOnRecv, NoIdxSpecified) {
   msg.len = 1u;
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
-  CHECK_EQUAL(1u, CanSend::num_called);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
   const auto expected = SdoInitExpectedData::U32(CO_SDO_CS_ABORT, 0x0000u,
                                                  0x00u, CO_SDO_AC_NO_OBJ);
   CanSend::CheckMsg(DEFAULT_COBID_RES, 0, CO_SDO_MSG_SIZE, expected.data());
@@ -1506,7 +1509,7 @@ TEST(CoSsdoBlkUpIniOnRecv, NoSubidxSpecified) {
   msg.len = 3u;
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
-  CHECK_EQUAL(1u, CanSend::num_called);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
   const auto expected =
       SdoInitExpectedData::U32(CO_SDO_CS_ABORT, IDX, 0x00u, CO_SDO_AC_NO_SUB);
   CanSend::CheckMsg(DEFAULT_COBID_RES, 0, CO_SDO_MSG_SIZE, expected.data());
@@ -1521,7 +1524,7 @@ TEST(CoSsdoBlkUpIniOnRecv, BlocksizeNotSpecified) {
   msg.len = 4u;
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
-  CHECK_EQUAL(1u, CanSend::num_called);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
   const auto expected = SdoInitExpectedData::U32(CO_SDO_CS_ABORT, IDX, SUBIDX,
                                                  CO_SDO_AC_BLK_SIZE);
   CanSend::CheckMsg(DEFAULT_COBID_RES, 0, CO_SDO_MSG_SIZE, expected.data());
@@ -1535,7 +1538,7 @@ TEST(CoSsdoBlkUpIniOnRecv, BlocksizeMoreThanMaxSeqNum) {
   can_msg msg = CreateBlkUp2020IniReqMsg(SUBIDX, CO_SDO_MAX_SEQNO + 1u);
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
-  CHECK_EQUAL(1u, CanSend::num_called);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
   const auto expected = SdoInitExpectedData::U32(CO_SDO_CS_ABORT, IDX, SUBIDX,
                                                  CO_SDO_AC_BLK_SIZE);
   CanSend::CheckMsg(DEFAULT_COBID_RES, 0, CO_SDO_MSG_SIZE, expected.data());
@@ -1549,7 +1552,7 @@ TEST(CoSsdoBlkUpIniOnRecv, BlocksizeZero) {
   can_msg msg = CreateBlkUp2020IniReqMsg(SUBIDX, 0);
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
-  CHECK_EQUAL(1u, CanSend::num_called);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
   const auto expected = SdoInitExpectedData::U32(CO_SDO_CS_ABORT, IDX, SUBIDX,
                                                  CO_SDO_AC_BLK_SIZE);
   CanSend::CheckMsg(DEFAULT_COBID_RES, 0, CO_SDO_MSG_SIZE, expected.data());
@@ -1564,7 +1567,7 @@ TEST(CoSsdoBlkUpIniOnRecv, ProtocolSwitch) {
   msg.len = 5u;
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
-  CHECK_EQUAL(1u, CanSend::num_called);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
   const auto expected = SdoInitExpectedData::U32(
       CO_SDO_SCS_BLK_UP_RES | CO_SDO_BLK_SIZE_IND | CO_SDO_BLK_CRC, IDX, SUBIDX,
       sizeof(sub_type));
@@ -1577,7 +1580,7 @@ TEST(CoSsdoBlkUpIniOnRecv, NoObjPresent) {
   can_msg msg = CreateBlkUp2020IniReqMsg();
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
-  CHECK_EQUAL(1u, CanSend::num_called);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
   const auto expected =
       SdoInitExpectedData::U32(CO_SDO_CS_ABORT, IDX, SUBIDX, CO_SDO_AC_NO_OBJ);
   CanSend::CheckMsg(DEFAULT_COBID_RES, 0, CO_SDO_MSG_SIZE, expected.data());
@@ -1590,7 +1593,7 @@ TEST(CoSsdoBlkUpIniOnRecv, NoSubPresent) {
   can_msg msg = CreateBlkUp2020IniReqMsg();
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
-  CHECK_EQUAL(1u, CanSend::num_called);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
   const auto expected =
       SdoInitExpectedData::U32(CO_SDO_CS_ABORT, IDX, SUBIDX, CO_SDO_AC_NO_SUB);
   CanSend::CheckMsg(DEFAULT_COBID_RES, 0, CO_SDO_MSG_SIZE, expected.data());
@@ -1604,7 +1607,7 @@ TEST(CoSsdoBlkUpIniOnRecv, BlksizeMoreThanPst) {
   can_msg msg = CreateBlkUp2020IniReqMsg(SUBIDX, sizeof(sub_type64));
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
-  CHECK_EQUAL(1u, CanSend::num_called);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
   const auto expected = SdoInitExpectedData::U32(
       CO_SDO_SCS_BLK_UP_RES | CO_SDO_BLK_SIZE_IND | CO_SDO_BLK_CRC, IDX, SUBIDX,
       sizeof(sub_type64));
@@ -1620,7 +1623,7 @@ TEST(CoSsdoBlkUpIniOnRecv, TimeoutTriggered) {
   can_msg msg = CreateBlkUp2020IniReqMsg(SUBIDX, sizeof(sub_type64));
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
-  CHECK_EQUAL(1u, CanSend::num_called);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
   const auto expected = SdoInitExpectedData::U32(
       CO_SDO_SCS_BLK_UP_RES | CO_SDO_BLK_SIZE_IND | CO_SDO_BLK_CRC, IDX, SUBIDX,
       sizeof(sub_type64));
@@ -1630,7 +1633,7 @@ TEST(CoSsdoBlkUpIniOnRecv, TimeoutTriggered) {
   const timespec tp = {0L, 1000000L};  // 1 ms
   can_net_set_time(net, &tp);
 
-  CHECK_EQUAL(1u, CanSend::num_called);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
   CHECK_EQUAL(DEFAULT_COBID_RES, CanSend::msg.id);
   CHECK_EQUAL(0, CanSend::msg.flags);
   CHECK_EQUAL(CO_SDO_MSG_SIZE, CanSend::msg.len);
@@ -1648,7 +1651,7 @@ TEST(CoSsdoBlkUpIniOnRecv, ReqSizeEqualToPst) {
   msg.data[5] = sizeof(sub_type64);
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
-  CHECK_EQUAL(1u, CanSend::num_called);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
   const auto expected =
       SdoInitExpectedData::U32(CO_SDO_SCS_UP_INI_RES | CO_SDO_INI_SIZE_IND, IDX,
                                SUBIDX, sizeof(sub_type64));
@@ -1665,7 +1668,7 @@ TEST(CoSsdoBlkUpIniOnRecv, ReqSizeEqualToPst_MoreFrames_TimeoutSet) {
   msg.data[5] = sizeof(sub_type64);
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
-  CHECK_EQUAL(1u, CanSend::num_called);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
   const auto expected =
       SdoInitExpectedData::U32(CO_SDO_SCS_UP_INI_RES | CO_SDO_SC_END_BLK, IDX,
                                SUBIDX, sizeof(sub_type64));
@@ -1681,7 +1684,7 @@ TEST(CoSsdoBlkUpIniOnRecv, ReqSizeMoreThanPst) {
   msg.data[5] = 2u;
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
-  CHECK_EQUAL(1u, CanSend::num_called);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
   const auto expected = SdoInitExpectedData::U32(
       CO_SDO_SCS_BLK_UP_RES | CO_SDO_BLK_CRC | CO_SDO_BLK_SIZE_IND, IDX, SUBIDX,
       sizeof(sub_type64));
@@ -1696,7 +1699,7 @@ TEST(CoSsdoBlkUpIniOnRecv, Nominal) {
   can_msg msg = CreateBlkUp2020IniReqMsg();
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
-  CHECK_EQUAL(1u, CanSend::num_called);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
   const auto expected = SdoInitExpectedData::U32(
       CO_SDO_SCS_BLK_UP_RES | CO_SDO_BLK_CRC | CO_SDO_BLK_SIZE_IND, IDX, SUBIDX,
       2u);
@@ -1720,7 +1723,7 @@ TEST_GROUP_BASE(CoSsdoDnSegOnRecv, CO_Ssdo) {
 
     CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
-    CHECK_EQUAL(1u, CanSend::num_called);
+    CHECK_EQUAL(1u, CanSend::GetNumCalled());
     CHECK_EQUAL(DEFAULT_COBID_RES, CanSend::msg.id);
     CHECK_EQUAL(0, CanSend::msg.flags);
     CHECK_EQUAL(CO_SDO_MSG_SIZE, CanSend::msg.len);
@@ -1746,7 +1749,7 @@ TEST(CoSsdoDnSegOnRecv, NoCS) {
   msg.len = 0;
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
-  CHECK_EQUAL(1u, CanSend::num_called);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
   const auto expected =
       SdoInitExpectedData::U32(CO_SDO_CS_ABORT, IDX, SUBIDX, CO_SDO_AC_NO_CS);
   CanSend::CheckMsg(DEFAULT_COBID_RES, 0, CO_SDO_MSG_SIZE, expected.data());
@@ -1765,7 +1768,7 @@ TEST(CoSsdoDnSegOnRecv, AbortCS) {
   const auto ret_abort = can_net_recv(net, &msg, 0);
 
   CHECK_EQUAL(1, ret_abort);
-  CHECK(!CanSend::Called());
+  CHECK_EQUAL(0, CanSend::GetNumCalled());
 }
 
 /// \Given a pointer to the SSDO service (co_ssdo_t) with an object dictionary
@@ -1798,7 +1801,7 @@ TEST(CoSsdoDnSegOnRecv, AbortAfterFirstSegment) {
   can_msg abort_transfer =
       SdoCreateMsg::Abort(IDX, SUBIDX, DEFAULT_COBID_REQ, CO_SDO_AC_NO_DATA);
   CHECK_EQUAL(1, can_net_recv(net, &abort_transfer, 0));
-  CHECK(!CanSend::Called());
+  CHECK_EQUAL(0, CanSend::GetNumCalled());
   CHECK(CoSubDnInd::Called());
   CHECK_EQUAL(CO_SDO_AC_NO_DATA, CoSubDnInd::ac);
 
@@ -1837,7 +1840,7 @@ TEST(CoSsdoDnSegOnRecv, AbortAfterFirstSegment_MsgTooShort) {
       SdoCreateMsg::Abort(IDX, SUBIDX, DEFAULT_COBID_REQ, CO_SDO_AC_NO_DATA);
   abort_transfer.len -= 1u;
   CHECK_EQUAL(1, can_net_recv(net, &abort_transfer, 0));
-  CHECK(!CanSend::Called());
+  CHECK_EQUAL(0, CanSend::GetNumCalled());
   CHECK(CoSubDnInd::Called());
   CHECK_EQUAL(CO_SDO_AC_ERROR, CoSubDnInd::ac);
 
@@ -1857,7 +1860,7 @@ TEST(CoSsdoDnSegOnRecv, InvalidCS) {
   const auto ret_abort = can_net_recv(net, &msg, 0);
 
   CHECK_EQUAL(1, ret_abort);
-  CHECK_EQUAL(1u, CanSend::num_called);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
   const auto expected =
       SdoInitExpectedData::U32(CO_SDO_CS_ABORT, IDX, SUBIDX, CO_SDO_AC_NO_CS);
   CanSend::CheckMsg(DEFAULT_COBID_RES, 0, CO_SDO_MSG_SIZE, expected.data());
@@ -1877,7 +1880,7 @@ TEST(CoSsdoDnSegOnRecv, NoToggle) {
       SdoCreateMsg::DnSeg(IDX, SUBIDX, DEFAULT_COBID_REQ, vals2dn, 4u);
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
-  CHECK_EQUAL(1u, CanSend::num_called);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
   const auto expected =
       SdoInitExpectedData::U32(CO_SDO_SCS_DN_SEG_RES, 0x0000u, 0x00u, 0);
   CanSend::CheckMsg(DEFAULT_COBID_RES, 0, CO_SDO_MSG_SIZE, expected.data());
@@ -1888,7 +1891,7 @@ TEST(CoSsdoDnSegOnRecv, NoToggle) {
                             CO_SDO_SEG_LAST);
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
-  CHECK(!CanSend::Called());
+  CHECK_EQUAL(0, CanSend::GetNumCalled());
 }
 
 TEST(CoSsdoDnSegOnRecv, MsgLenLessThanSegmentSize) {
@@ -1903,7 +1906,7 @@ TEST(CoSsdoDnSegOnRecv, MsgLenLessThanSegmentSize) {
   msg.len = 5u;
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
-  CHECK_EQUAL(1u, CanSend::num_called);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
   const auto expected =
       SdoInitExpectedData::U32(CO_SDO_CS_ABORT, IDX, SUBIDX, CO_SDO_AC_NO_CS);
   CanSend::CheckMsg(DEFAULT_COBID_RES, 0, CO_SDO_MSG_SIZE, expected.data());
@@ -1920,7 +1923,7 @@ TEST(CoSsdoDnSegOnRecv, SegmentTooBig) {
   can_msg msg = SdoCreateMsg::DnSeg(IDX, SUBIDX, DEFAULT_COBID_REQ, val2dn, 4u);
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
-  CHECK_EQUAL(1u, CanSend::num_called);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
   const auto expected = SdoInitExpectedData::U32(CO_SDO_CS_ABORT, IDX, SUBIDX,
                                                  CO_SDO_AC_TYPE_LEN_HI);
   CanSend::CheckMsg(DEFAULT_COBID_RES, 0, CO_SDO_MSG_SIZE, expected.data());
@@ -1938,7 +1941,7 @@ TEST(CoSsdoDnSegOnRecv, SegmentTooSmall) {
                                     sizeof(sub_type64) - 1u, CO_SDO_SEG_LAST);
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
-  CHECK_EQUAL(1u, CanSend::num_called);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
   const auto expected = SdoInitExpectedData::U32(CO_SDO_CS_ABORT, IDX, SUBIDX,
                                                  CO_SDO_AC_TYPE_LEN_LO);
   CanSend::CheckMsg(DEFAULT_COBID_RES, 0, CO_SDO_MSG_SIZE, expected.data());
@@ -1958,7 +1961,7 @@ TEST(CoSsdoDnSegOnRecv, FailDnInd) {
       SdoCreateMsg::DnSeg(IDX, SUBIDX, DEFAULT_COBID_REQ, val2dn, 4u);
   CHECK_EQUAL(1, can_net_recv(net, &msg1, 0));
 
-  CHECK_EQUAL(1u, CanSend::num_called);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
   const auto expected =
       SdoInitExpectedData::U32(CO_SDO_CS_ABORT, IDX, SUBIDX, CO_SDO_AC_NO_READ);
   CanSend::CheckMsg(DEFAULT_COBID_RES, 0, CO_SDO_MSG_SIZE, expected.data());
@@ -1979,7 +1982,7 @@ TEST(CoSsdoDnSegOnRecv, TimeoutTriggered) {
       SdoCreateMsg::DnSeg(IDX, SUBIDX, DEFAULT_COBID_REQ, vals2dn, 4u);
   CHECK_EQUAL(1, can_net_recv(net, &msg1, 0));
 
-  CHECK_EQUAL(1u, CanSend::num_called);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
   const auto expected =
       SdoInitExpectedData::U32(CO_SDO_SCS_DN_SEG_RES, 0x0000u, 0x00u, 0);
   CanSend::CheckMsg(DEFAULT_COBID_RES, 0, CO_SDO_MSG_SIZE, expected.data());
@@ -1988,7 +1991,7 @@ TEST(CoSsdoDnSegOnRecv, TimeoutTriggered) {
   const timespec tp = {0L, 1000000L};  // 1 ms
   can_net_set_time(net, &tp);
 
-  CHECK_EQUAL(1u, CanSend::num_called);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
   const auto expected_timeout =
       SdoInitExpectedData::U32(CO_SDO_CS_ABORT, IDX, SUBIDX, CO_SDO_AC_TIMEOUT);
   CanSend::CheckMsg(DEFAULT_COBID_RES, 0, CO_SDO_MSG_SIZE,
@@ -2010,7 +2013,7 @@ TEST(CoSsdoDnSegOnRecv, Nominal) {
       SdoCreateMsg::DnSeg(IDX, SUBIDX, DEFAULT_COBID_REQ, vals2dn, 4u);
   CHECK_EQUAL(1, can_net_recv(net, &msg1, 0));
 
-  CHECK_EQUAL(1u, CanSend::num_called);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
   const auto expected =
       SdoInitExpectedData::U32(CO_SDO_SCS_DN_SEG_RES, 0x0000u, 0x00u, 0);
   CanSend::CheckMsg(DEFAULT_COBID_RES, 0, CO_SDO_MSG_SIZE, expected.data());
@@ -2022,7 +2025,7 @@ TEST(CoSsdoDnSegOnRecv, Nominal) {
                           CO_SDO_SEG_LAST | CO_SDO_SEG_TOGGLE);
   CHECK_EQUAL(1, can_net_recv(net, &msg2, 0));
 
-  CHECK_EQUAL(1u, CanSend::num_called);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
   const auto expected_response = SdoInitExpectedData::U32(
       CO_SDO_SCS_DN_SEG_RES | CO_SDO_SEG_TOGGLE, 0x0000u, 0x00u, 0);
   CanSend::CheckMsg(DEFAULT_COBID_RES, 0, CO_SDO_MSG_SIZE,
@@ -2076,7 +2079,7 @@ TEST_GROUP_BASE(CoSsdoUpSegOnRecv, CO_Ssdo) {
 
     CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
-    CHECK_EQUAL(1u, CanSend::num_called);
+    CHECK_EQUAL(1u, CanSend::GetNumCalled());
     CHECK_EQUAL(can_id, CanSend::msg.id);
     CHECK_EQUAL(flags, CanSend::msg.flags);
     CHECK_EQUAL(CO_SDO_MSG_SIZE, CanSend::msg.len);
@@ -2101,7 +2104,7 @@ TEST(CoSsdoUpSegOnRecv, NoCS) {
   msg.len = 0u;
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
-  CHECK_EQUAL(1u, CanSend::num_called);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
   const auto expected =
       SdoInitExpectedData::U32(CO_SDO_CS_ABORT, IDX, SUBIDX, CO_SDO_AC_NO_CS);
   CanSend::CheckMsg(DEFAULT_COBID_RES, 0, CO_SDO_MSG_SIZE, expected.data());
@@ -2118,7 +2121,7 @@ TEST(CoSsdoUpSegOnRecv, CSAbort) {
   msg.data[0] = CO_SDO_CS_ABORT;
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
-  CHECK(!CanSend::Called());
+  CHECK_EQUAL(0, CanSend::GetNumCalled());
 }
 
 TEST(CoSsdoUpSegOnRecv, InvalidCS) {
@@ -2132,7 +2135,7 @@ TEST(CoSsdoUpSegOnRecv, InvalidCS) {
   msg.data[0] = 0xffu;
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
-  CHECK_EQUAL(1u, CanSend::num_called);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
   const auto expected =
       SdoInitExpectedData::U32(CO_SDO_CS_ABORT, IDX, SUBIDX, CO_SDO_AC_NO_CS);
   CanSend::CheckMsg(DEFAULT_COBID_RES, 0, CO_SDO_MSG_SIZE, expected.data());
@@ -2149,7 +2152,7 @@ TEST(CoSsdoUpSegOnRecv, NoToggle) {
   msg.data[0] = CO_SDO_CCS_UP_SEG_REQ;
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
-  CHECK_EQUAL(1u, CanSend::num_called);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
   CHECK_EQUAL(DEFAULT_COBID_RES, CanSend::msg.id);
   CHECK_EQUAL(0, CanSend::msg.flags);
   CHECK_EQUAL(CO_SDO_MSG_SIZE, CanSend::msg.len);
@@ -2167,7 +2170,7 @@ TEST(CoSsdoUpSegOnRecv, NoToggle) {
   msg2.data[0] = CO_SDO_CCS_UP_SEG_REQ;
   CHECK_EQUAL(1, can_net_recv(net, &msg2, 0));
 
-  CHECK_EQUAL(1u, CanSend::num_called);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
   const auto expected =
       SdoInitExpectedData::U32(CO_SDO_CS_ABORT, IDX, SUBIDX, CO_SDO_AC_TOGGLE);
   CanSend::CheckMsg(DEFAULT_COBID_RES, 0, CO_SDO_MSG_SIZE, expected.data());
@@ -2185,7 +2188,7 @@ TEST(CoSsdoUpSegOnRecv, TimeoutTriggered) {
   msg.data[0] = CO_SDO_CCS_UP_SEG_REQ;
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
-  CHECK_EQUAL(1u, CanSend::num_called);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
   CHECK_EQUAL(DEFAULT_COBID_RES, CanSend::msg.id);
   CHECK_EQUAL(0, CanSend::msg.flags);
   CHECK_EQUAL(CO_SDO_MSG_SIZE, CanSend::msg.len);
@@ -2202,7 +2205,7 @@ TEST(CoSsdoUpSegOnRecv, TimeoutTriggered) {
   const timespec tp = {0L, 1000000L};  // 1 ms
   can_net_set_time(net, &tp);
 
-  CHECK_EQUAL(1u, CanSend::num_called);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
   CHECK_EQUAL(DEFAULT_COBID_RES, CanSend::msg.id);
   CHECK_EQUAL(0, CanSend::msg.flags);
   CHECK_EQUAL(CO_SDO_MSG_SIZE, CanSend::msg.len);
@@ -2222,7 +2225,7 @@ TEST(CoSsdoUpSegOnRecv, Nominal) {
   msg.data[0] = CO_SDO_CCS_UP_SEG_REQ;
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
-  CHECK_EQUAL(1u, CanSend::num_called);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
   CHECK_EQUAL(DEFAULT_COBID_RES, CanSend::msg.id);
   CHECK_EQUAL(0, CanSend::msg.flags);
   CHECK_EQUAL(CO_SDO_MSG_SIZE, CanSend::msg.len);
@@ -2240,7 +2243,7 @@ TEST(CoSsdoUpSegOnRecv, Nominal) {
   msg2.data[0] = CO_SDO_CCS_UP_SEG_REQ | CO_SDO_SEG_TOGGLE;
   CHECK_EQUAL(1, can_net_recv(net, &msg2, 0));
 
-  CHECK_EQUAL(1u, CanSend::num_called);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
   CHECK_EQUAL(DEFAULT_COBID_RES, CanSend::msg.id);
   CHECK_EQUAL(0, CanSend::msg.flags);
   CHECK_EQUAL(CO_SDO_MSG_SIZE, CanSend::msg.len);
@@ -2264,7 +2267,7 @@ TEST(CoSsdoUpSegOnRecv, CoSsdoCreateSegRes_ExtendedId) {
   msg.data[0] = CO_SDO_CCS_UP_SEG_REQ;
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
-  CHECK_EQUAL(1u, CanSend::num_called);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
   CHECK_EQUAL(new_can_id, CanSend::msg.id);
   CHECK_EQUAL(CAN_FLAG_IDE, CanSend::msg.flags);
   CHECK_SDO_CAN_MSG_CMD(0x00u, CanSend::msg.data);
@@ -2281,7 +2284,7 @@ TEST(CoSsdoUpSegOnRecv, CoSsdoCreateSegRes_ExtendedId) {
   msg2.data[0] = CO_SDO_CCS_UP_SEG_REQ | CO_SDO_SEG_TOGGLE;
   CHECK_EQUAL(1, can_net_recv(net, &msg2, 0));
 
-  CHECK_EQUAL(1u, CanSend::num_called);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
   CHECK_EQUAL(new_can_id, CanSend::msg.id);
   CHECK_EQUAL(CAN_FLAG_IDE, CanSend::msg.flags);
   CHECK_SDO_CAN_MSG_CMD(CO_SDO_SEG_TOGGLE | CO_SDO_SEG_LAST | 0x0c,
@@ -2301,7 +2304,7 @@ TEST(CoSsdoUpSegOnRecv, IndError) {
   msg.data[0] = CO_SDO_CCS_UP_SEG_REQ;
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
-  CHECK_EQUAL(1u, CanSend::num_called);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
   CHECK_EQUAL(DEFAULT_COBID_RES, CanSend::msg.id);
   CHECK_EQUAL(0, CanSend::msg.flags);
   CHECK_EQUAL(CO_SDO_MSG_SIZE, CanSend::msg.len);
@@ -2319,7 +2322,7 @@ TEST(CoSsdoUpSegOnRecv, IndError) {
   msg2.data[0] = CO_SDO_CCS_UP_SEG_REQ | CO_SDO_SEG_TOGGLE;
   CHECK_EQUAL(1, can_net_recv(net, &msg2, 0));
 
-  CHECK_EQUAL(1u, CanSend::num_called);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
   const auto expected =
       SdoInitExpectedData::U32(CO_SDO_CS_ABORT, IDX, SUBIDX, CO_SDO_AC_ERROR);
   CanSend::CheckMsg(DEFAULT_COBID_RES, 0, CO_SDO_MSG_SIZE, expected.data());
@@ -2337,7 +2340,7 @@ TEST(CoSsdoUpSegOnRecv, IndReqSizeLonger) {
   msg.data[0] = CO_SDO_CCS_UP_SEG_REQ;
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
-  CHECK_EQUAL(1u, CanSend::num_called);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
   CHECK_EQUAL(DEFAULT_COBID_RES, CanSend::msg.id);
   CHECK_EQUAL(0, CanSend::msg.flags);
   CHECK_EQUAL(CO_SDO_MSG_SIZE, CanSend::msg.len);
@@ -2355,7 +2358,7 @@ TEST(CoSsdoUpSegOnRecv, IndReqSizeLonger) {
   msg2.data[0] = CO_SDO_CCS_UP_SEG_REQ | CO_SDO_SEG_TOGGLE;
   CHECK_EQUAL(1, can_net_recv(net, &msg2, 0));
 
-  CHECK_EQUAL(1u, CanSend::num_called);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
   CHECK_EQUAL(DEFAULT_COBID_RES, CanSend::msg.id);
   CHECK_EQUAL(0, CanSend::msg.flags);
   CHECK_EQUAL(CO_SDO_MSG_SIZE, CanSend::msg.len);
@@ -2382,7 +2385,7 @@ TEST_GROUP_BASE(CoSsdoBlkDn, CO_Ssdo) {
 
     CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
-    CHECK_EQUAL(1u, CanSend::num_called);
+    CHECK_EQUAL(1u, CanSend::GetNumCalled());
     CHECK_EQUAL(DEFAULT_COBID_RES, CanSend::msg.id);
     CHECK_EQUAL(0, CanSend::msg.flags);
     CHECK_EQUAL(CO_SDO_MSG_SIZE, CanSend::msg.len);
@@ -2404,7 +2407,7 @@ TEST_GROUP_BASE(CoSsdoBlkDn, CO_Ssdo) {
 
     CHECK_EQUAL(1, can_net_recv(net, &msg_end, 0));
 
-    CHECK_EQUAL(1u, CanSend::num_called);
+    CHECK_EQUAL(1u, CanSend::GetNumCalled());
     CHECK_EQUAL(DEFAULT_COBID_RES, CanSend::msg.id);
     CHECK_EQUAL(0, CanSend::msg.flags);
     CHECK_EQUAL(CO_SDO_MSG_SIZE, CanSend::msg.len);
@@ -2426,14 +2429,14 @@ TEST_GROUP_BASE(CoSsdoBlkDn, CO_Ssdo) {
     msg_first_blk.data[7] = 0xcdu;
     CHECK_EQUAL(1, can_net_recv(net, &msg_first_blk, 0));
 
-    CHECK(!CanSend::Called());
+    CHECK_EQUAL(0, CanSend::GetNumCalled());
 
     can_msg msg_last_blk = SdoCreateMsg::BlkDnSubReq(
         IDX, SUBIDX, DEFAULT_COBID_REQ, 2u, CO_SDO_SEQ_LAST);
     msg_last_blk.data[1] = 0xefu;
     CHECK_EQUAL(1, can_net_recv(net, &msg_last_blk, 0));
 
-    CHECK_EQUAL(1u, CanSend::num_called);
+    CHECK_EQUAL(1u, CanSend::GetNumCalled());
     CHECK_EQUAL(DEFAULT_COBID_RES, CanSend::msg.id);
     CHECK_EQUAL(0, CanSend::msg.flags);
     CHECK_EQUAL(CO_SDO_MSG_SIZE, CanSend::msg.len);
@@ -2460,7 +2463,7 @@ TEST(CoSsdoBlkDn, Sub_NoCS) {
   msg.len = 0;
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
-  CHECK_EQUAL(1u, CanSend::num_called);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
   const auto expected =
       SdoInitExpectedData::U32(CO_SDO_CS_ABORT, IDX, SUBIDX, CO_SDO_AC_NO_CS);
   CanSend::CheckMsg(DEFAULT_COBID_RES, 0, CO_SDO_MSG_SIZE, expected.data());
@@ -2478,7 +2481,7 @@ TEST(CoSsdoBlkDn, Sub_CSAbort) {
   msg_first_blk.data[0] = CO_SDO_CS_ABORT;
   CHECK_EQUAL(1, can_net_recv(net, &msg_first_blk, 0));
 
-  CHECK(!CanSend::Called());
+  CHECK_EQUAL(0, CanSend::GetNumCalled());
 }
 
 TEST(CoSsdoBlkDn, Sub_SeqnoZero) {
@@ -2493,7 +2496,7 @@ TEST(CoSsdoBlkDn, Sub_SeqnoZero) {
   msg_first_blk.data[0] = 0;
   CHECK_EQUAL(1, can_net_recv(net, &msg_first_blk, 0));
 
-  CHECK_EQUAL(1u, CanSend::num_called);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
   const auto expected =
       SdoInitExpectedData::U32(CO_SDO_CS_ABORT, IDX, SUBIDX, CO_SDO_AC_BLK_SEQ);
   CanSend::CheckMsg(DEFAULT_COBID_RES, 0, CO_SDO_MSG_SIZE, expected.data());
@@ -2516,14 +2519,14 @@ TEST(CoSsdoBlkDn, Sub_NoCrc) {
   msg.data[7] = 0xcdu;
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
-  CHECK(!CanSend::Called());
+  CHECK_EQUAL(0, CanSend::GetNumCalled());
 
   can_msg msg_last_blk = SdoCreateMsg::BlkDnSubReq(
       IDX, SUBIDX, DEFAULT_COBID_REQ, 2u, CO_SDO_SEQ_LAST);
   msg_last_blk.data[1] = 0xefu;
   CHECK_EQUAL(1, can_net_recv(net, &msg_last_blk, 0));
 
-  CHECK_EQUAL(1u, CanSend::num_called);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
   CHECK_EQUAL(DEFAULT_COBID_RES, CanSend::msg.id);
   CHECK_EQUAL(0, CanSend::msg.flags);
   CHECK_EQUAL(CO_SDO_MSG_SIZE, CanSend::msg.len);
@@ -2555,7 +2558,7 @@ TEST(CoSsdoBlkDn, Sub_NoSub) {
   msg.data[7] = 0xcdu;
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
-  CHECK_EQUAL(1u, CanSend::num_called);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
   const auto expected =
       SdoInitExpectedData::U32(CO_SDO_CS_ABORT, IDX, SUBIDX, CO_SDO_AC_NO_SUB);
   CanSend::CheckMsg(DEFAULT_COBID_RES, 0, CO_SDO_MSG_SIZE, expected.data());
@@ -2578,7 +2581,7 @@ TEST(CoSsdoBlkDn, Sub_RequestLessThanSize) {
   msg.data[7] = 0xcdu;
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
-  CHECK_EQUAL(1u, CanSend::num_called);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
   const auto expected = SdoInitExpectedData::U32(CO_SDO_CS_ABORT, IDX, SUBIDX,
                                                  CO_SDO_AC_TYPE_LEN_HI);
   CanSend::CheckMsg(DEFAULT_COBID_RES, 0, CO_SDO_MSG_SIZE, expected.data());
@@ -2599,14 +2602,14 @@ TEST(CoSsdoBlkDn, Sub_Nominal) {
   memcpy(msg_first_blk.data + 1u, val_buf, 7u);
   CHECK_EQUAL(1, can_net_recv(net, &msg_first_blk, 0));
 
-  CHECK(!CanSend::Called());
+  CHECK_EQUAL(0, CanSend::GetNumCalled());
 
   can_msg msg_last_blk = SdoCreateMsg::BlkDnSubReq(
       IDX, SUBIDX, DEFAULT_COBID_REQ, 2u, CO_SDO_SEQ_LAST);
   msg_last_blk.data[1] = val_buf[7];
   CHECK_EQUAL(1, can_net_recv(net, &msg_last_blk, 0));
 
-  CHECK_EQUAL(1u, CanSend::num_called);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
   CHECK_EQUAL(DEFAULT_COBID_RES, CanSend::msg.id);
   CHECK_EQUAL(0, CanSend::msg.flags);
   CHECK_EQUAL(CO_SDO_MSG_SIZE, CanSend::msg.len);
@@ -2641,7 +2644,7 @@ TEST(CoSsdoBlkDn, Sub_InvalidSeqno_LastInBlk) {
   msg_first_blk.data[7] = 0xcdu;
   CHECK_EQUAL(1, can_net_recv(net, &msg_first_blk, 0));
 
-  CHECK_EQUAL(1u, CanSend::num_called);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
   CHECK_EQUAL(DEFAULT_COBID_RES, CanSend::msg.id);
   CHECK_EQUAL(0, CanSend::msg.flags);
   CHECK_EQUAL(CO_SDO_MSG_SIZE, CanSend::msg.len);
@@ -2670,14 +2673,14 @@ TEST(CoSsdoBlkDn, Sub_CrcError) {
   msg_first_blk.data[7] = 0xcdu;
   CHECK_EQUAL(1, can_net_recv(net, &msg_first_blk, 0));
 
-  CHECK(!CanSend::Called());
+  CHECK_EQUAL(0, CanSend::GetNumCalled());
 
   can_msg msg_last_blk = SdoCreateMsg::BlkDnSubReq(
       IDX, SUBIDX, DEFAULT_COBID_REQ, 2u, CO_SDO_SEQ_LAST);
   msg_last_blk.data[1] = 0xefu;
   CHECK_EQUAL(1, can_net_recv(net, &msg_last_blk, 0));
 
-  CHECK_EQUAL(1u, CanSend::num_called);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
   CHECK_EQUAL(DEFAULT_COBID_RES, CanSend::msg.id);
   CHECK_EQUAL(0, CanSend::msg.flags);
   CHECK_EQUAL(CO_SDO_MSG_SIZE, CanSend::msg.len);
@@ -2692,7 +2695,7 @@ TEST(CoSsdoBlkDn, Sub_CrcError) {
   msg_end.data[0] |= CO_SDO_BLK_SIZE_SET(1u);
   CHECK_EQUAL(1, can_net_recv(net, &msg_end, 0));
 
-  CHECK_EQUAL(1u, CanSend::num_called);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
   const auto expected =
       SdoInitExpectedData::U32(CO_SDO_CS_ABORT, IDX, SUBIDX, CO_SDO_AC_BLK_CRC);
   CanSend::CheckMsg(DEFAULT_COBID_RES, 0, CO_SDO_MSG_SIZE, expected.data());
@@ -2720,12 +2723,12 @@ TEST(CoSsdoBlkDn, Sub_TimeoutTriggered) {
   msg_first_blk.data[7] = 0xcdu;
   CHECK_EQUAL(1, can_net_recv(net, &msg_first_blk, 0));
 
-  CHECK(!CanSend::Called());
+  CHECK_EQUAL(0, CanSend::GetNumCalled());
 
   const timespec tp = {0L, 1000000L};  // 1 ms
   can_net_set_time(net, &tp);
 
-  CHECK_EQUAL(1u, CanSend::num_called);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
   const auto expected =
       SdoInitExpectedData::U32(CO_SDO_CS_ABORT, IDX, SUBIDX, CO_SDO_AC_TIMEOUT);
   CanSend::CheckMsg(DEFAULT_COBID_RES, 0, CO_SDO_MSG_SIZE, expected.data());
@@ -2749,7 +2752,7 @@ TEST(CoSsdoBlkDn, EndAbort) {
   msg_first_blk.data[7] = 0xcdu;
   CHECK_EQUAL(1, can_net_recv(net, &msg_first_blk, 0));
 
-  CHECK(!CanSend::Called());
+  CHECK_EQUAL(0, CanSend::GetNumCalled());
 
   can_msg msg_last_blk = SdoCreateMsg::BlkDnSubReq(
       IDX, SUBIDX, DEFAULT_COBID_REQ, 1, CO_SDO_SEQ_LAST);
@@ -2757,7 +2760,7 @@ TEST(CoSsdoBlkDn, EndAbort) {
 
   CHECK_EQUAL(1, can_net_recv(net, &msg_last_blk, 0));
 
-  CHECK_EQUAL(1u, CanSend::num_called);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
   CHECK_EQUAL(DEFAULT_COBID_RES, CanSend::msg.id);
   CHECK_EQUAL(0, CanSend::msg.flags);
   CHECK_EQUAL(CO_SDO_MSG_SIZE, CanSend::msg.len);
@@ -2782,7 +2785,7 @@ TEST(CoSsdoBlkDn, End_TimeoutTriggered) {
   const timespec tp = {0L, 1000000L};  // 1 ms
   can_net_set_time(net, &tp);
 
-  CHECK_EQUAL(1u, CanSend::num_called);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
   const auto expected =
       SdoInitExpectedData::U32(CO_SDO_CS_ABORT, IDX, SUBIDX, CO_SDO_AC_TIMEOUT);
   CanSend::CheckMsg(DEFAULT_COBID_RES, 0, CO_SDO_MSG_SIZE, expected.data());
@@ -2800,7 +2803,7 @@ TEST(CoSsdoBlkDn, EndRecv_NoCS) {
   msg.len = 0;
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
-  CHECK_EQUAL(1u, CanSend::num_called);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
   const auto expected =
       SdoInitExpectedData::U32(CO_SDO_CS_ABORT, IDX, SUBIDX, CO_SDO_AC_NO_CS);
   CanSend::CheckMsg(DEFAULT_COBID_RES, 0, CO_SDO_MSG_SIZE, expected.data());
@@ -2818,7 +2821,7 @@ TEST(CoSsdoBlkDn, EndRecv_CSAbort) {
   msg.data[0] = CO_SDO_CS_ABORT;
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
-  CHECK(!CanSend::Called());
+  CHECK_EQUAL(0, CanSend::GetNumCalled());
 }
 
 TEST(CoSsdoBlkDn, EndRecv_InvalidCS) {
@@ -2833,7 +2836,7 @@ TEST(CoSsdoBlkDn, EndRecv_InvalidCS) {
   msg.data[0] = 0xffu;
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
-  CHECK_EQUAL(1u, CanSend::num_called);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
   const auto expected =
       SdoInitExpectedData::U32(CO_SDO_CS_ABORT, IDX, SUBIDX, CO_SDO_AC_NO_CS);
   CanSend::CheckMsg(DEFAULT_COBID_RES, 0, CO_SDO_MSG_SIZE, expected.data());
@@ -2851,7 +2854,7 @@ TEST(CoSsdoBlkDn, EndRecv_InvalidSC) {
   msg.data[0] = CO_SDO_CCS_BLK_DN_REQ;
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
-  CHECK_EQUAL(1u, CanSend::num_called);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
   const auto expected =
       SdoInitExpectedData::U32(CO_SDO_CS_ABORT, IDX, SUBIDX, CO_SDO_AC_NO_CS);
   CanSend::CheckMsg(DEFAULT_COBID_RES, 0, CO_SDO_MSG_SIZE, expected.data());
@@ -2874,14 +2877,14 @@ TEST(CoSsdoBlkDn, EndRecv_InvalidLen) {
   msg_first_blk.data[7] = 0xcdu;
   CHECK_EQUAL(1, can_net_recv(net, &msg_first_blk, 0));
 
-  CHECK(!CanSend::Called());
+  CHECK_EQUAL(0, CanSend::GetNumCalled());
 
   can_msg msg_last_blk = SdoCreateMsg::BlkDnSubReq(
       IDX, SUBIDX, DEFAULT_COBID_REQ, 1u, CO_SDO_SEQ_LAST);
   msg_last_blk.data[1] = 0xefu;
   CHECK_EQUAL(1, can_net_recv(net, &msg_last_blk, 0));
 
-  CHECK_EQUAL(1u, CanSend::num_called);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
   CHECK_EQUAL(DEFAULT_COBID_RES, CanSend::msg.id);
   CHECK_EQUAL(0, CanSend::msg.flags);
   CHECK_EQUAL(CO_SDO_MSG_SIZE, CanSend::msg.len);
@@ -2896,7 +2899,7 @@ TEST(CoSsdoBlkDn, EndRecv_InvalidLen) {
   msg.data[0] = CO_SDO_CCS_BLK_DN_REQ | CO_SDO_SC_END_BLK;
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
-  CHECK_EQUAL(1u, CanSend::num_called);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
   const auto expected = SdoInitExpectedData::U32(CO_SDO_CS_ABORT, IDX, SUBIDX,
                                                  CO_SDO_AC_TYPE_LEN_LO);
   CanSend::CheckMsg(DEFAULT_COBID_RES, 0, CO_SDO_MSG_SIZE, expected.data());
@@ -2915,7 +2918,7 @@ TEST(CoSsdoBlkDn, EndRecv_InvalidSize) {
   msg.data[0] |= CO_SDO_BLK_SIZE_SET(sizeof(sub_type64) - 2u);
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
-  CHECK_EQUAL(1u, CanSend::num_called);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
   const auto expected =
       SdoInitExpectedData::U32(CO_SDO_CS_ABORT, IDX, SUBIDX, CO_SDO_AC_NO_CS);
   CanSend::CheckMsg(DEFAULT_COBID_RES, 0, CO_SDO_MSG_SIZE, expected.data());
@@ -2933,7 +2936,7 @@ TEST(CoSsdoBlkDn, EndRecv_ReqZero) {
   msg.data[0] |= CO_SDO_BLK_SIZE_SET(1u);
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
-  CHECK_EQUAL(1u, CanSend::num_called);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
   CHECK_EQUAL(DEFAULT_COBID_RES, CanSend::msg.id);
   CHECK_EQUAL(0, CanSend::msg.flags);
   CHECK_EQUAL(CO_SDO_MSG_SIZE, CanSend::msg.len);
@@ -2949,7 +2952,7 @@ TEST(CoSsdoBlkDn, EndRecv_ReqZero) {
   msg.data[0] |= CO_SDO_BLK_SIZE_SET(1u);
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
-  CHECK_EQUAL(1u, CanSend::num_called);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
   const auto expected =
       SdoInitExpectedData::U32(CO_SDO_CS_ABORT, IDX, SUBIDX, CO_SDO_AC_NO_CS);
   CanSend::CheckMsg(DEFAULT_COBID_RES, 0, CO_SDO_MSG_SIZE, expected.data());
@@ -2970,7 +2973,7 @@ TEST(CoSsdoBlkDn, EndRecv_FailingDnInd) {
   memcpy(msg_first_blk.data + 1u, val_buf, 7u);
   CHECK_EQUAL(1, can_net_recv(net, &msg_first_blk, 0));
 
-  CHECK(!CanSend::Called());
+  CHECK_EQUAL(0, CanSend::GetNumCalled());
 
   can_msg msg_last_blk = SdoCreateMsg::BlkDnSubReq(
       IDX, SUBIDX, DEFAULT_COBID_REQ, 2u, CO_SDO_SEQ_LAST);
@@ -2978,7 +2981,7 @@ TEST(CoSsdoBlkDn, EndRecv_FailingDnInd) {
 
   CHECK_EQUAL(1, can_net_recv(net, &msg_last_blk, 0));
 
-  CHECK_EQUAL(1u, CanSend::num_called);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
   CHECK_EQUAL(DEFAULT_COBID_RES, CanSend::msg.id);
   CHECK_EQUAL(0, CanSend::msg.flags);
   CHECK_EQUAL(CO_SDO_MSG_SIZE, CanSend::msg.len);
@@ -2996,7 +2999,7 @@ TEST(CoSsdoBlkDn, EndRecv_FailingDnInd) {
   msg_end.data[0] |= CO_SDO_BLK_SIZE_SET(1u);
   CHECK_EQUAL(1, can_net_recv(net, &msg_end, 0));
 
-  CHECK_EQUAL(1u, CanSend::num_called);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
   const auto expected =
       SdoInitExpectedData::U32(CO_SDO_CS_ABORT, IDX, SUBIDX, CO_SDO_AC_NO_READ);
   CanSend::CheckMsg(DEFAULT_COBID_RES, 0, CO_SDO_MSG_SIZE, expected.data());
@@ -3053,7 +3056,7 @@ TEST_GROUP_BASE(CoSsdoBlkUp, CO_Ssdo) {
 
   void CheckInitBlkUp2020ResData(const co_unsigned8_t subidx,
                                  const size_t size) {
-    CHECK_EQUAL(1u, CanSend::num_called);
+    CHECK_EQUAL(1u, CanSend::GetNumCalled());
     CHECK_SDO_CAN_MSG_CMD(
         CO_SDO_SCS_BLK_UP_RES | CO_SDO_BLK_CRC | CO_SDO_BLK_SIZE_IND,
         CanSend::msg.data);
@@ -3068,7 +3071,7 @@ TEST_GROUP_BASE(CoSsdoBlkUp, CO_Ssdo) {
     CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
     // uploaded value from the server
-    CHECK_EQUAL(2u, CanSend::num_called);
+    CHECK_EQUAL(2u, CanSend::GetNumCalled());
     CHECK_EQUAL(DEFAULT_COBID_RES, CanSend::msg_buf[0].id);
     CHECK_EQUAL(0, CanSend::msg_buf[0].flags);
     CHECK_EQUAL(CO_SDO_MSG_SIZE, CanSend::msg_buf[0].len);
@@ -3101,7 +3104,7 @@ TEST_GROUP_BASE(CoSsdoBlkUp, CO_Ssdo) {
     msg_con_res.data[2] = CO_SDO_MAX_SEQNO;  // blksize
     CHECK_EQUAL(1, can_net_recv(net, &msg_con_res, 0));
 
-    CHECK_EQUAL(1u, CanSend::num_called);
+    CHECK_EQUAL(1u, CanSend::GetNumCalled());
     CHECK_EQUAL(DEFAULT_COBID_RES, CanSend::msg.id);
     CHECK_EQUAL(0, CanSend::msg.flags);
     CHECK_EQUAL(CO_SDO_MSG_SIZE, CanSend::msg.len);
@@ -3135,7 +3138,7 @@ TEST(CoSsdoBlkUp, Sub_Nominal) {
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
   // uploaded value from the server
-  CHECK_EQUAL(2u, CanSend::num_called);
+  CHECK_EQUAL(2u, CanSend::GetNumCalled());
   CHECK_EQUAL(DEFAULT_COBID_RES, CanSend::msg_buf[0].id);
   CHECK_EQUAL(0, CanSend::msg_buf[0].flags);
   CHECK_EQUAL(CO_SDO_MSG_SIZE, CanSend::msg_buf[0].len);
@@ -3167,7 +3170,7 @@ TEST(CoSsdoBlkUp, Sub_Nominal) {
   msg_con_res.data[2] = CO_SDO_MAX_SEQNO;  // blksize
   CHECK_EQUAL(1, can_net_recv(net, &msg_con_res, 0));
 
-  CHECK_EQUAL(1u, CanSend::num_called);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
   CHECK_EQUAL(DEFAULT_COBID_RES, CanSend::msg.id);
   CHECK_EQUAL(0, CanSend::msg.flags);
   CHECK_EQUAL(CO_SDO_MSG_SIZE, CanSend::msg.len);
@@ -3189,7 +3192,7 @@ TEST(CoSsdoBlkUp, Sub_Nominal) {
   msg_con_end.data[0] = CO_SDO_CCS_BLK_UP_REQ | CO_SDO_SC_END_BLK;
   CHECK_EQUAL(1, can_net_recv(net, &msg_con_end, 0));
 
-  CHECK_EQUAL(0, CanSend::num_called);
+  CHECK_EQUAL(0, CanSend::GetNumCalled());
 }
 
 TEST(CoSsdoBlkUp, Sub_BlksizeOne_MsgWithNoLastByte) {
@@ -3206,7 +3209,7 @@ TEST(CoSsdoBlkUp, Sub_BlksizeOne_MsgWithNoLastByte) {
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
   // uploaded value from the server
-  CHECK_EQUAL(1u, CanSend::num_called);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
   CHECK_EQUAL(DEFAULT_COBID_RES, CanSend::msg.id);
   CHECK_EQUAL(0, CanSend::msg.flags);
   CHECK_EQUAL(CO_SDO_MSG_SIZE, CanSend::msg.len);
@@ -3227,7 +3230,7 @@ TEST(CoSsdoBlkUp, Sub_BlksizeOne_MsgWithNoLastByte) {
   msg_con_res.data[2] = 1u;  // blksize
   CHECK_EQUAL(1, can_net_recv(net, &msg_con_res, 0));
 
-  CHECK_EQUAL(1u, CanSend::num_called);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
   CHECK_EQUAL(DEFAULT_COBID_RES, CanSend::msg.id);
   CHECK_EQUAL(0, CanSend::msg.flags);
   CHECK_EQUAL(CO_SDO_MSG_SIZE, CanSend::msg.len);
@@ -3249,7 +3252,7 @@ TEST(CoSsdoBlkUp, Sub_IndError) {
   StartSSDO();
 
   InitBlkUp2020Req(SUBIDX, 1u);
-  CHECK_EQUAL(1u, CanSend::num_called);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
   const auto expected =
       SdoInitExpectedData::U32(CO_SDO_CS_ABORT, IDX, SUBIDX, CO_SDO_AC_DATA);
   CanSend::CheckMsg(DEFAULT_COBID_RES, 0, CO_SDO_MSG_SIZE, expected.data());
@@ -3271,7 +3274,7 @@ TEST(CoSsdoBlkUp, Sub_StartButReqNotFirst) {
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
   // uploaded value from the server
-  CHECK_EQUAL(1u, CanSend::num_called);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
   const auto expected =
       SdoInitExpectedData::U32(CO_SDO_CS_ABORT, IDX, SUBIDX, CO_SDO_AC_NO_CS);
   CanSend::CheckMsg(DEFAULT_COBID_RES, 0, CO_SDO_MSG_SIZE, expected.data());
@@ -3292,7 +3295,7 @@ TEST(CoSsdoBlkUp, Sub_RequestIncremented) {
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
   // uploaded value from the server
-  CHECK_EQUAL(2u, CanSend::num_called);
+  CHECK_EQUAL(2u, CanSend::GetNumCalled());
   CHECK_EQUAL(DEFAULT_COBID_RES, CanSend::msg_buf[0].id);
   CHECK_EQUAL(0, CanSend::msg_buf[0].flags);
   CHECK_EQUAL(CO_SDO_MSG_SIZE, CanSend::msg_buf[0].len);
@@ -3337,7 +3340,7 @@ TEST(CoSsdoBlkUp, Sub_ArrNominal) {
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
   // uploaded value from the server
-  CHECK_EQUAL(1u, CanSend::num_called);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
   CHECK_EQUAL(DEFAULT_COBID_RES, CanSend::msg.id);
   CHECK_EQUAL(0, CanSend::msg.flags);
   CHECK_EQUAL(CO_SDO_MSG_SIZE, CanSend::msg.len);
@@ -3361,7 +3364,7 @@ TEST(CoSsdoBlkUp, Sub_ArrNominal) {
   CHECK_EQUAL(1, can_net_recv(net, &msg_con_res, 0));
 
   // upload end
-  CHECK_EQUAL(1u, CanSend::num_called);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
   CHECK_EQUAL(DEFAULT_COBID_RES, CanSend::msg.id);
   CHECK_EQUAL(0, CanSend::msg.flags);
   CHECK_EQUAL(CO_SDO_MSG_SIZE, CanSend::msg.len);
@@ -3423,7 +3426,7 @@ TEST(CoSsdoBlkUp, Sub_EmptyArray) {
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
   // uploaded value from the server
-  CHECK_EQUAL(1u, CanSend::num_called);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
   CHECK_EQUAL(res_canid, CanSend::msg.id);
   CHECK_EQUAL(0, CanSend::msg.flags);
   CHECK_EQUAL(CO_SDO_MSG_SIZE, CanSend::msg.len);
@@ -3445,7 +3448,7 @@ TEST(CoSsdoBlkUp, Sub_EmptyArray) {
   CHECK_EQUAL(1, can_net_recv(net, &msg_con_res, 0));
 
   // upload end
-  CHECK_EQUAL(1u, CanSend::num_called);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
   CHECK_EQUAL(res_canid, CanSend::msg.id);
   CHECK_EQUAL(0, CanSend::msg.flags);
   CHECK_EQUAL(CO_SDO_MSG_SIZE, CanSend::msg.len);
@@ -3470,7 +3473,7 @@ TEST(CoSsdoBlkUp, Sub_ByteNotLast) {
 
   InitBlkUp2020Req(SUBIDX, 3u);
 
-  CHECK_EQUAL(1u, CanSend::num_called);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
   const auto expected = SdoInitExpectedData::U32(
       CO_SDO_SCS_BLK_UP_RES | CO_SDO_BLK_CRC | CO_SDO_SC_BLK_RES, IDX, SUBIDX,
       3u);
@@ -3482,7 +3485,7 @@ TEST(CoSsdoBlkUp, Sub_ByteNotLast) {
   can_msg msg_res = SdoCreateMsg::Default(IDX, SUBIDX, DEFAULT_COBID_REQ);
   msg_res.data[0] = CO_SDO_CCS_BLK_UP_REQ | CO_SDO_SC_BLK_RES;
   CHECK_EQUAL(1, can_net_recv(net, &msg_res, 0));
-  CHECK_EQUAL(32u, CanSend::num_called);
+  CHECK_EQUAL(32u, CanSend::GetNumCalled());
   for (size_t i = 0; i < 32u; i++) {
     CHECK_EQUAL(DEFAULT_COBID_RES, CanSend::msg_buf[i].id);
     CHECK_EQUAL(0, CanSend::msg_buf[i].flags);
@@ -3510,7 +3513,7 @@ TEST(CoSsdoBlkUp, Sub_ArrInvalidMaxSubidx) {
 
   InitBlkUp2020Req(0x02u, 4u);
 
-  CHECK_EQUAL(1u, CanSend::num_called);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
   const auto expected =
       SdoInitExpectedData::U32(CO_SDO_CS_ABORT, IDX, 0x02u, CO_SDO_AC_NO_DATA);
   CanSend::CheckMsg(DEFAULT_COBID_RES, 0, CO_SDO_MSG_SIZE, expected.data());
@@ -3531,7 +3534,7 @@ TEST(CoSsdoBlkUp, Sub_TimeoutTriggered) {
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
   // uploaded value from the server
-  CHECK_EQUAL(1u, CanSend::num_called);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
   CHECK_EQUAL(DEFAULT_COBID_RES, CanSend::msg.id);
   CHECK_EQUAL(0, CanSend::msg.flags);
   CHECK_EQUAL(CO_SDO_MSG_SIZE, CanSend::msg.len);
@@ -3546,7 +3549,7 @@ TEST(CoSsdoBlkUp, Sub_TimeoutTriggered) {
 
   // upload end
   // server's request
-  CHECK_EQUAL(1u, CanSend::num_called);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
   const auto expected =
       SdoInitExpectedData::U32(CO_SDO_CS_ABORT, IDX, SUBIDX, CO_SDO_AC_TIMEOUT);
   CanSend::CheckMsg(DEFAULT_COBID_RES, 0, CO_SDO_MSG_SIZE, expected.data());
@@ -3570,7 +3573,7 @@ TEST(CoSsdoBlkUp, InitIniRes_CoSdoCobidFrame) {
   msg.data[0] = CO_SDO_CCS_BLK_UP_REQ | CO_SDO_SC_START_UP;
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
-  CHECK_EQUAL(1u, CanSend::num_called);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
 
   CHECK_EQUAL(DEFAULT_COBID_RES, CanSend::msg_buf[0].id);
   CHECK_EQUAL(CAN_FLAG_IDE, CanSend::msg_buf[0].flags);
@@ -3597,7 +3600,7 @@ TEST(CoSsdoBlkUp, Sub_InvalidCS) {
   msg.data[0] = CO_SDO_CCS_BLK_UP_REQ;
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
-  CHECK_EQUAL(1u, CanSend::num_called);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
 
   const auto expected =
       SdoInitExpectedData::U32(CO_SDO_CS_ABORT, IDX, SUBIDX, CO_SDO_AC_NO_CS);
@@ -3617,7 +3620,7 @@ TEST(CoSsdoBlkUp, Sub_NoCS) {
   msg.len = 0;
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
-  CHECK_EQUAL(1u, CanSend::num_called);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
   const auto expected =
       SdoInitExpectedData::U32(CO_SDO_CS_ABORT, IDX, SUBIDX, CO_SDO_AC_NO_CS);
   CanSend::CheckMsg(DEFAULT_COBID_RES, 0, CO_SDO_MSG_SIZE, expected.data());
@@ -3645,7 +3648,7 @@ TEST(CoSsdoBlkUp, Sub_CSAbort_NoAC) {
   msg.len = 7u;
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
-  CHECK(!CanSend::Called());
+  CHECK_EQUAL(0, CanSend::GetNumCalled());
   CHECK_EQUAL(1u, CoSubUpInd::num_called);
   POINTERS_EQUAL(co_dev_find_sub(dev, IDX, SUBIDX), CoSubUpInd::sub);
   CHECK(CoSubUpInd::req != nullptr);
@@ -3675,7 +3678,7 @@ TEST(CoSsdoBlkUp, Sub_CSAbort_AC) {
       SdoCreateMsg::Abort(IDX, SUBIDX, DEFAULT_COBID_REQ, CO_SDO_AC_ERROR);
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
-  CHECK(!CanSend::Called());
+  CHECK_EQUAL(0, CanSend::GetNumCalled());
   CHECK_EQUAL(1u, CoSubUpInd::num_called);
   POINTERS_EQUAL(co_dev_find_sub(dev, IDX, SUBIDX), CoSubUpInd::sub);
   CHECK(CoSubUpInd::req != nullptr);
@@ -3697,7 +3700,7 @@ TEST(CoSsdoBlkUp, Sub_InvalidSC) {
   msg.len = 1u;
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
-  CHECK_EQUAL(1u, CanSend::num_called);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
   CHECK_SDO_CAN_MSG_CMD(CO_SDO_CS_ABORT, CanSend::msg.data);
   CHECK_SDO_CAN_MSG_IDX(IDX, CanSend::msg.data);
   CHECK_SDO_CAN_MSG_SUBIDX(SUBIDX, CanSend::msg.data);
@@ -3717,7 +3720,7 @@ TEST(CoSsdoBlkUp, Sub_EmptyRequest) {
   msg.data[0] = CO_SDO_CCS_BLK_UP_REQ | CO_SDO_SC_BLK_RES;
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
-  CHECK_EQUAL(1u, CanSend::num_called);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
   const auto expected =
       SdoInitExpectedData::U32(CO_SDO_CS_ABORT, IDX, SUBIDX, CO_SDO_AC_NO_CS);
   CanSend::CheckMsg(DEFAULT_COBID_RES, 0, CO_SDO_MSG_SIZE, expected.data());
@@ -3736,7 +3739,7 @@ TEST(CoSsdoBlkUp, Sub_NoBlkSeqNum) {
   msg.data[0] = CO_SDO_CCS_BLK_UP_REQ | CO_SDO_SC_START_UP;
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
-  CHECK_EQUAL(2u, CanSend::num_called);
+  CHECK_EQUAL(2u, CanSend::GetNumCalled());
   CHECK_EQUAL(DEFAULT_COBID_RES, CanSend::msg.id);
   CHECK_EQUAL(0, CanSend::msg.flags);
   CHECK_EQUAL(CO_SDO_MSG_SIZE, CanSend::msg.len);
@@ -3755,7 +3758,7 @@ TEST(CoSsdoBlkUp, Sub_NoBlkSeqNum) {
   msg2.len = 2u;
   CHECK_EQUAL(1, can_net_recv(net, &msg2, 0));
 
-  CHECK_EQUAL(1u, CanSend::num_called);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
   const auto expected =
       SdoInitExpectedData::U32(CO_SDO_SEQ_LAST, IDX, SUBIDX, CO_SDO_AC_BLK_SEQ);
   CanSend::CheckMsg(DEFAULT_COBID_RES, 0, CO_SDO_MSG_SIZE, expected.data());
@@ -3775,7 +3778,7 @@ TEST(CoSsdoBlkUp, Sub_TooManySegments) {
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
   // uploaded value from the server
-  CHECK_EQUAL(1u, CanSend::num_called);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
   CHECK_EQUAL(DEFAULT_COBID_RES, CanSend::msg.id);
   CHECK_EQUAL(0, CanSend::msg.flags);
   CHECK_EQUAL(CO_SDO_MSG_SIZE, CanSend::msg.len);
@@ -3794,7 +3797,7 @@ TEST(CoSsdoBlkUp, Sub_TooManySegments) {
 
   // upload end
   // server's request
-  CHECK_EQUAL(1u, CanSend::num_called);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
   const auto expected = SdoInitExpectedData::U32(CO_SDO_CS_ABORT, IDX, SUBIDX,
                                                  CO_SDO_AC_BLK_SIZE);
   CanSend::CheckMsg(DEFAULT_COBID_RES, 0, CO_SDO_MSG_SIZE, expected.data());
@@ -3814,7 +3817,7 @@ TEST(CoSsdoBlkUp, Sub_NoSegments) {
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
   // uploaded value from the server
-  CHECK_EQUAL(1u, CanSend::num_called);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
   CHECK_EQUAL(DEFAULT_COBID_RES, CanSend::msg.id);
   CHECK_EQUAL(0, CanSend::msg.flags);
   CHECK_EQUAL(CO_SDO_MSG_SIZE, CanSend::msg.len);
@@ -3833,7 +3836,7 @@ TEST(CoSsdoBlkUp, Sub_NoSegments) {
 
   // upload end
   // server's request
-  CHECK_EQUAL(1u, CanSend::num_called);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
   const auto expected = SdoInitExpectedData::U32(CO_SDO_CS_ABORT, IDX, SUBIDX,
                                                  CO_SDO_AC_BLK_SIZE);
   CanSend::CheckMsg(DEFAULT_COBID_RES, 0, CO_SDO_MSG_SIZE, expected.data());
@@ -3853,7 +3856,7 @@ TEST(CoSsdoBlkUp, Sub_StartUp_ButAlreadyStarted) {
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
   // uploaded value from the server
-  CHECK_EQUAL(1u, CanSend::num_called);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
   CHECK_EQUAL(DEFAULT_COBID_RES, CanSend::msg.id);
   CHECK_EQUAL(0, CanSend::msg.flags);
   CHECK_EQUAL(CO_SDO_MSG_SIZE, CanSend::msg.len);
@@ -3869,7 +3872,7 @@ TEST(CoSsdoBlkUp, Sub_StartUp_ButAlreadyStarted) {
   CHECK_EQUAL(1, can_net_recv(net, &msg2, 0));
 
   // server's request
-  CHECK_EQUAL(1u, CanSend::num_called);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
   const auto expected =
       SdoInitExpectedData::U32(CO_SDO_CS_ABORT, IDX, SUBIDX, CO_SDO_AC_NO_CS);
   CanSend::CheckMsg(DEFAULT_COBID_RES, 0, CO_SDO_MSG_SIZE, expected.data());
@@ -3889,7 +3892,7 @@ TEST(CoSsdoBlkUp, End_TimeoutTriggered) {
   const timespec tp = {0L, 1000000L};  // 1 ms
   can_net_set_time(net, &tp);
 
-  CHECK_EQUAL(1u, CanSend::num_called);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
   const auto expected =
       SdoInitExpectedData::U32(CO_SDO_CS_ABORT, IDX, SUBIDX, CO_SDO_AC_TIMEOUT);
   CanSend::CheckMsg(DEFAULT_COBID_RES, 0, CO_SDO_MSG_SIZE, expected.data());
@@ -3910,7 +3913,7 @@ TEST(CoSsdoBlkUp, EndOnRecv_TooShortMsg) {
   msg.len = 0;
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
-  CHECK_EQUAL(1u, CanSend::num_called);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
   const auto expected =
       SdoInitExpectedData::U32(CO_SDO_CS_ABORT, IDX, SUBIDX, CO_SDO_AC_NO_CS);
   CanSend::CheckMsg(DEFAULT_COBID_RES, 0, CO_SDO_MSG_SIZE, expected.data());
@@ -3931,7 +3934,7 @@ TEST(CoSsdoBlkUp, EndOnRecv_InvalidCS) {
   msg.data[0] = 0xffu;
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
-  CHECK_EQUAL(1u, CanSend::num_called);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
   const auto expected =
       SdoInitExpectedData::U32(CO_SDO_CS_ABORT, IDX, SUBIDX, CO_SDO_AC_NO_CS);
   CanSend::CheckMsg(DEFAULT_COBID_RES, 0, CO_SDO_MSG_SIZE, expected.data());
@@ -3952,7 +3955,7 @@ TEST(CoSsdoBlkUp, EndOnRecv_InvalidSC) {
   msg.data[0] = CO_SDO_CCS_BLK_UP_REQ | 0x03u;
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
-  CHECK_EQUAL(1u, CanSend::num_called);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
   const auto expected =
       SdoInitExpectedData::U32(CO_SDO_CS_ABORT, IDX, SUBIDX, CO_SDO_AC_NO_CS);
   CanSend::CheckMsg(DEFAULT_COBID_RES, 0, CO_SDO_MSG_SIZE, expected.data());
@@ -3973,7 +3976,7 @@ TEST(CoSsdoBlkUp, EndOnRecv_CSAbort) {
   msg.data[0] = CO_SDO_CS_ABORT;
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
-  CHECK_EQUAL(0, CanSend::num_called);
+  CHECK_EQUAL(0, CanSend::GetNumCalled());
 }
 
 ///@}

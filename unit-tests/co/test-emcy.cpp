@@ -637,7 +637,7 @@ struct EmcySend : CanSend {
   static void
   CheckMsg(co_unsigned32_t msg_id, co_unsigned16_t eec, co_unsigned8_t er,
            const co_unsigned8_t* msef) {
-    CHECK_EQUAL(1u, num_called);
+    CHECK_EQUAL(1u, GetNumCalled());
     CHECK_EQUAL(msg_id, EmcySend::msg.id);
     CHECK_EQUAL(8u, EmcySend::msg.len);
     CHECK_EQUAL(0u, EmcySend::msg.flags);
@@ -1093,7 +1093,7 @@ TEST(CO_Emcy, CoEmcyPush_SendMultipleAtOnce) {
   CHECK_EQUAL(0, co_emcy_push(emcy, 0x2000u, 0x01u, nullptr));
   CHECK_EQUAL(0, co_emcy_push(emcy, 0x3000u, 0x01u, nullptr));
 
-  CHECK_EQUAL(3u, EmcySend::num_called);
+  CHECK_EQUAL(3u, EmcySend::GetNumCalled());
 }
 
 /// \Given a pointer to a started EMCY service (co_emcy_t), the object
@@ -1118,7 +1118,7 @@ TEST(CO_Emcy, CoEmcyPush_SendInvalidCobidEmcy) {
   const auto ret = co_emcy_push(emcy, 0x1000u, 0x01u, nullptr);
 
   CHECK_EQUAL(0, ret);
-  CHECK_EQUAL(0u, EmcySend::num_called);
+  CHECK_EQUAL(0u, EmcySend::GetNumCalled());
 }
 
 /// \Given a pointer to a started EMCY service (co_emcy_t), the object
@@ -1152,7 +1152,7 @@ TEST(CO_Emcy, CoEmcyPush_SendExtendedId) {
   const auto ret = co_emcy_push(emcy, 0x1000u, 0x01u, nullptr);
 
   CHECK_EQUAL(0, ret);
-  CHECK_EQUAL(1u, EmcySend::num_called);
+  CHECK_EQUAL(1u, EmcySend::GetNumCalled());
   CHECK_EQUAL(eid, EmcySend::msg.id);
 }
 
@@ -1264,7 +1264,7 @@ TEST(CO_EmcyInhibitTime, CoEmcyPush_SendOnlyOne) {
   CHECK_EQUAL(0, co_emcy_push(emcy, 0x3000u, 0x04u, nullptr));
 
   CheckEqualObj1001ErrorRegister(0x04u | 0x02u | 0x01u);
-  CHECK_EQUAL(1u, EmcySend::num_called);
+  CHECK_EQUAL(1u, EmcySend::GetNumCalled());
   CHECK_EQUAL(0x01u, EmcySend::msg.data[2]);
 }
 
@@ -1300,15 +1300,15 @@ TEST(CO_EmcyInhibitTime, CoEmcyPush_SendOneOnTimerTick) {
   CHECK_EQUAL(0, co_emcy_push(emcy, 0x2000u, 0x02u, nullptr));
   CHECK_EQUAL(0, co_emcy_push(emcy, 0x3000u, 0x04u, nullptr));
 
-  CHECK_EQUAL(1u, EmcySend::num_called);
+  CHECK_EQUAL(1u, EmcySend::GetNumCalled());
   CHECK_EQUAL(0x01u, EmcySend::msg.data[2]);
 
   SetCurrentTimeMs(1u);
-  CHECK_EQUAL(2u, EmcySend::num_called);
+  CHECK_EQUAL(2u, EmcySend::GetNumCalled());
   CHECK_EQUAL(0x02u | 0x01u, EmcySend::msg.data[2]);
 
   SetCurrentTimeMs(2u);
-  CHECK_EQUAL(3u, EmcySend::num_called);
+  CHECK_EQUAL(3u, EmcySend::GetNumCalled());
   CHECK_EQUAL(0x04u | 0x02u | 0x01u, EmcySend::msg.data[2]);
 }
 
@@ -1374,7 +1374,7 @@ TEST(CO_EmcyReceiver, CoEmcyPush_CannotSend) {
 
   CHECK_EQUAL(0, ret);
   CheckEqualObj1001ErrorRegister(0x01u);
-  CHECK_EQUAL(0u, EmcySend::num_called);
+  CHECK_EQUAL(0u, EmcySend::GetNumCalled());
 }
 
 ///@}
@@ -1483,7 +1483,7 @@ TEST(CO_Emcy, CoEmcyClear_NotSentOnEmptyErrorStack) {
   const auto ret = co_emcy_clear(emcy);
 
   CHECK_EQUAL(0, ret);
-  CHECK_FALSE(EmcySend::Called());
+  CHECK_EQUAL(0, EmcySend::GetNumCalled());
 }
 
 /// \Given a pointer to a started EMCY service (co_emcy_t) with multiple errors
@@ -1633,7 +1633,7 @@ TEST(CO_Emcy, CoEmcyPop_NotSentOnEmptyErrorStack) {
   const auto ret = co_emcy_pop(emcy, nullptr, nullptr);
 
   CHECK_EQUAL(0, ret);
-  CHECK_EQUAL(0u, EmcySend::num_called);
+  CHECK_EQUAL(0u, EmcySend::GetNumCalled());
 }
 
 /// \Given a pointer to a started EMCY service (co_emcy_t) with multiple errors

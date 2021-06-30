@@ -29,17 +29,14 @@
 #include <lely/co/type.h>
 
 namespace SdoInitExpectedData {
-std::vector<uint_least8_t> Empty(const uint_least8_t cs,
-                                 const co_unsigned16_t idx,
-                                 const co_unsigned8_t subidx);
-std::vector<uint_least8_t> U16(const uint_least8_t cs,
-                               const co_unsigned16_t idx,
-                               const co_unsigned8_t subidx,
-                               const co_unsigned16_t val);
-std::vector<uint_least8_t> U32(const uint_least8_t cs,
-                               const co_unsigned16_t idx,
-                               const co_unsigned8_t subidx,
-                               const co_unsigned32_t val);
+std::vector<uint_least8_t> Empty(uint_least8_t cs, co_unsigned16_t idx = 0,
+                                 co_unsigned8_t subidx = 0);
+std::vector<uint_least8_t> U16(uint_least8_t cs, co_unsigned16_t idx = 0,
+                               co_unsigned8_t subidx = 0,
+                               co_unsigned16_t val = 0);
+std::vector<uint_least8_t> U32(uint_least8_t cs, co_unsigned16_t idx = 0,
+                               co_unsigned8_t subidx = 0,
+                               co_unsigned32_t val = 0);
 }  // namespace SdoInitExpectedData
 
 #endif  // LELY_UNIT_TEST_SDO_INIT_EXPECTED_DATA_
