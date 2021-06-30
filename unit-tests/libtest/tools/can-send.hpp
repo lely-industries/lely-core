@@ -28,20 +28,10 @@
 #include <lely/co/type.h>
 #include <lely/util/endian.h>
 
-#define CHECK_SDO_CAN_MSG_CMD(res, msg) CHECK_EQUAL((res), (msg)[0])
-#define CHECK_SDO_CAN_MSG_IDX(idx, msg) CHECK_EQUAL((idx), ldle_u16((msg) + 1u))
-#define CHECK_SDO_CAN_MSG_SUBIDX(subidx, msg) CHECK_EQUAL((subidx), (msg)[3u])
-#define CHECK_SDO_CAN_MSG_AC(ac, msg) CHECK_EQUAL((ac), ldle_u32((msg) + 4u))
-#define CHECK_SDO_CAN_MSG_VAL(val, msg) CHECK_EQUAL((val), ldle_u32((msg) + 4u))
-
-struct CanSend {
- private:
-  static size_t buf_size;
-
+class CanSend {
  public:
   static int ret;
   static void* data;
-  static unsigned int num_called;
   static int bus_id;
   static can_msg msg;
   static can_msg* msg_buf;
@@ -49,15 +39,11 @@ struct CanSend {
   static int Func(const can_msg* msg_, int bus_id_, void* data_);
   static void CheckMsg(uint_least32_t id, uint_least8_t flags,
                        uint_least8_t len, const uint_least8_t* data);
-  static void CheckSdoMsg(co_unsigned32_t id_, co_unsigned32_t flags_,
-                          uint_least8_t len_, co_unsigned8_t cs_,
-                          co_unsigned16_t idx_, co_unsigned8_t subidx_,
-                          co_unsigned32_t ac_);
   static void Clear();
 
-  static inline bool
-  Called() {
-    return num_called > 0;
+  static inline unsigned int
+  GetNumCalled() {
+    return num_called;
   }
 
   /**
@@ -71,5 +57,9 @@ struct CanSend {
     buf_size = size;
     msg_buf = buf;
   }
+
+ private:
+  static size_t buf_size;
+  static unsigned int num_called;
 };
 #endif  // LELY_UNIT_TEST_CAN_SEND_HPP_

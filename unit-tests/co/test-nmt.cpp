@@ -2203,7 +2203,7 @@ TEST(CO_Nmt, CoNmtCsReq_Slave) {
 
   CHECK_EQUAL(-1, ret);
   CHECK_EQUAL(ERRNUM_PERM, get_errnum());
-  CHECK_EQUAL(false, CanSend::Called());
+  CHECK_EQUAL(0, CanSend::GetNumCalled());
 }
 
 /// \Given a pointer to a booted NMT service (co_nmt_t) configured as
@@ -2225,7 +2225,7 @@ TEST(CO_Nmt, CoNmtCsReq_InvalidCs) {
 
   CHECK_EQUAL(-1, ret);
   CHECK_EQUAL(ERRNUM_INVAL, get_errnum());
-  CHECK_EQUAL(false, CanSend::Called());
+  CHECK_EQUAL(0, CanSend::GetNumCalled());
 }
 
 /// \Given a pointer to a booted NMT service (co_nmt_t) configured as
@@ -2247,7 +2247,7 @@ TEST(CO_Nmt, CoNmtCsReq_NodeIdOverMax) {
 
   CHECK_EQUAL(-1, ret);
   CHECK_EQUAL(ERRNUM_INVAL, get_errnum());
-  CHECK_EQUAL(false, CanSend::Called());
+  CHECK_EQUAL(0, CanSend::GetNumCalled());
 }
 
 /// \Given a pointer to a booted NMT service (co_nmt_t) configured as
@@ -2270,7 +2270,7 @@ TEST(CO_Nmt, CoNmtCsReq_MasterId) {
 
   CHECK_EQUAL(0, ret);
   CHECK_EQUAL(CO_NMT_ST_START, co_nmt_get_st(nmt));
-  CHECK_EQUAL(false, CanSend::Called());
+  CHECK_EQUAL(0, CanSend::GetNumCalled());
 }
 
 #if LELY_NO_MALLOC
@@ -2302,7 +2302,7 @@ TEST(CO_Nmt, CoNmtCsReq_FrameBufferOverflow) {
 
   CHECK_EQUAL(-1, ret);
   CHECK_EQUAL(ERRNUM_NOMEM, get_errnum());
-  CHECK_EQUAL(false, CanSend::Called());
+  CHECK_EQUAL(0, CanSend::GetNumCalled());
 }
 #endif
 
@@ -2331,7 +2331,7 @@ TEST(CO_Nmt, CoNmtCsReq_Nominal) {
   const auto ret = co_nmt_cs_req(nmt, CO_NMT_CS_START, SLAVE_DEV_ID);
 
   CHECK_EQUAL(0, ret);
-  CHECK_EQUAL(1u, CanSend::num_called);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
   const size_t NMT_CS_MSG_SIZE = 2u;
   const uint_least8_t data[NMT_CS_MSG_SIZE] = {CO_NMT_CS_START, SLAVE_DEV_ID};
   CanSend::CheckMsg(CO_NMT_CS_CANID, 0, NMT_CS_MSG_SIZE, data);

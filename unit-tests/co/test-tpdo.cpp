@@ -625,7 +625,7 @@ TEST(CO_Tpdo, CoTpdoEvent_InvalidCobId) {
 
   CHECK_EQUAL(0, ret);
   CHECK(!CoTpdoInd::called);
-  CHECK(!CanSend::Called());
+  CHECK_EQUAL(0, CanSend::GetNumCalled());
 }
 
 TEST(CO_Tpdo, CoTpdoEvent_AcyclicSynchronousTransmission) {
@@ -639,7 +639,7 @@ TEST(CO_Tpdo, CoTpdoEvent_AcyclicSynchronousTransmission) {
 
   CHECK_EQUAL(0, ret);
   CHECK(!CoTpdoInd::called);
-  CHECK(!CanSend::Called());
+  CHECK_EQUAL(0, CanSend::GetNumCalled());
 }
 
 TEST(CO_Tpdo, CoTpdoEvent_CyclicSynchronousTransmission) {
@@ -653,7 +653,7 @@ TEST(CO_Tpdo, CoTpdoEvent_CyclicSynchronousTransmission) {
 
   CHECK_EQUAL(0, ret);
   CHECK(!CoTpdoInd::called);
-  CHECK(!CanSend::Called());
+  CHECK_EQUAL(0, CanSend::GetNumCalled());
 }
 
 TEST(CO_Tpdo, CoTpdoEvent_EventDrivenRTR_InitFrameSuccess) {
@@ -667,7 +667,7 @@ TEST(CO_Tpdo, CoTpdoEvent_EventDrivenRTR_InitFrameSuccess) {
 
   CHECK_EQUAL(0, ret);
   CHECK(!CoTpdoInd::called);
-  CHECK(!CanSend::Called());
+  CHECK_EQUAL(0, CanSend::GetNumCalled());
 }
 
 TEST(CO_Tpdo, CoTpdoEvent_EventDrivenRTR_InitFrameFail) {
@@ -683,7 +683,7 @@ TEST(CO_Tpdo, CoTpdoEvent_EventDrivenRTR_InitFrameFail) {
   const auto ret = co_tpdo_event(tpdo);
 
   CHECK_EQUAL(-1, ret);
-  CHECK(!CanSend::Called());
+  CHECK_EQUAL(0, CanSend::GetNumCalled());
 
   CHECK(CoTpdoInd::called);
   POINTERS_EQUAL(tpdo, CoTpdoInd::pdo);
@@ -713,7 +713,7 @@ TEST(CO_Tpdo, CoTpdoEvent_EventDriven_InhibitTimeNotPassed) {
   CHECK_EQUAL(-1, ret);
   CHECK_EQUAL(ERRNUM_AGAIN, get_errnum());
   CHECK(!CoTpdoInd::called);
-  CHECK(!CanSend::Called());
+  CHECK_EQUAL(0, CanSend::GetNumCalled());
 }
 
 TEST(CO_Tpdo, CoTpdoEvent_EventDriven_InhibitTimePassedNoSendFunc) {
@@ -752,7 +752,7 @@ TEST(CO_Tpdo, CoTpdoEvent_EventDriven_InitFrameFailed) {
   const auto ret = co_tpdo_event(tpdo);
 
   CHECK_EQUAL(-1, ret);
-  CHECK(!CanSend::Called());
+  CHECK_EQUAL(0, CanSend::GetNumCalled());
 
   CHECK(CoTpdoInd::called);
   POINTERS_EQUAL(tpdo, CoTpdoInd::pdo);
@@ -774,7 +774,7 @@ TEST(CO_Tpdo, CoTpdoEvent_EventDriven_SendFrameError) {
   const auto ret = co_tpdo_event(tpdo);
 
   CHECK_EQUAL(-1, ret);
-  CHECK(CanSend::Called());
+  CHECK_COMPARE(CanSend::GetNumCalled(), >, 0);
 
   CHECK(CoTpdoInd::called);
   POINTERS_EQUAL(tpdo, CoTpdoInd::pdo);
@@ -803,7 +803,7 @@ TEST(CO_Tpdo, CoTpdoEvent_EventDriven) {
   CHECK_EQUAL(0u, ts.tv_nsec);
   CHECK_EQUAL(0u, ts.tv_sec);
 
-  CHECK(CanSend::Called());
+  CHECK_COMPARE(CanSend::GetNumCalled(), >, 0);
   POINTERS_EQUAL(&can_data, CanSend::data);
   CHECK_EQUAL(DEV_ID, CanSend::msg.id);
   CHECK_EQUAL(0u, CanSend::msg.flags);
@@ -828,7 +828,7 @@ TEST(CO_Tpdo, CoTpdoEvent_EventDriven_EventTimer) {
   CreateTpdo();
 
   CHECK_EQUAL(0, co_tpdo_event(tpdo));
-  CHECK(CanSend::Called());
+  CHECK_COMPARE(CanSend::GetNumCalled(), >, 0);
   CHECK(CoTpdoInd::called);
   CHECK_EQUAL(0, CoTpdoInd::ac);
 
@@ -838,7 +838,7 @@ TEST(CO_Tpdo, CoTpdoEvent_EventDriven_EventTimer) {
   const timespec ts = {0, 1000000u};  // 1 ms
   CHECK_EQUAL(0, can_net_set_time(net, &ts));
 
-  CHECK(CanSend::Called());
+  CHECK_COMPARE(CanSend::GetNumCalled(), >, 0);
   POINTERS_EQUAL(&can_data, CanSend::data);
 
   CHECK(CoTpdoInd::called);
@@ -860,7 +860,7 @@ TEST(CO_Tpdo, CoTpdoEvent_EventDriven_EventTimer_InhibitTimeNotElapsed) {
   CreateTpdo();
 
   CHECK_EQUAL(0, co_tpdo_event(tpdo));
-  CHECK(CanSend::Called());
+  CHECK_COMPARE(CanSend::GetNumCalled(), >, 0);
   CHECK(CoTpdoInd::called);
   CHECK_EQUAL(0, CoTpdoInd::ac);
 
@@ -870,7 +870,7 @@ TEST(CO_Tpdo, CoTpdoEvent_EventDriven_EventTimer_InhibitTimeNotElapsed) {
   const timespec ts = {0, 1000000u};  // 1 ms
   CHECK_EQUAL(0, can_net_set_time(net, &ts));
 
-  CHECK(!CanSend::Called());
+  CHECK_EQUAL(0, CanSend::GetNumCalled());
   CHECK(!CoTpdoInd::called);
 }
 
@@ -1059,7 +1059,7 @@ TEST(CO_Tpdo, CoTpdoSampleRes_InvalidPDO) {
 
   CHECK_EQUAL(0, ret);
   CHECK(!CoTpdoInd::called);
-  CHECK(!CanSend::Called());
+  CHECK_EQUAL(0, CanSend::GetNumCalled());
 }
 
 TEST(CO_Tpdo, CoTpdoSampleRes_EventDriven) {
@@ -1073,7 +1073,7 @@ TEST(CO_Tpdo, CoTpdoSampleRes_EventDriven) {
 
   CHECK_EQUAL(0, ret);
   CHECK(!CoTpdoInd::called);
-  CHECK(!CanSend::Called());
+  CHECK_EQUAL(0, CanSend::GetNumCalled());
 }
 
 TEST(CO_Tpdo, CoTpdoSampleRes_ACErrorArg) {
@@ -1086,7 +1086,7 @@ TEST(CO_Tpdo, CoTpdoSampleRes_ACErrorArg) {
   const auto ret = co_tpdo_sample_res(tpdo, CO_UNSIGNED32_MAX);
 
   CHECK_EQUAL(0, ret);
-  CHECK(!CanSend::Called());
+  CHECK_EQUAL(0, CanSend::GetNumCalled());
 
   CHECK(CoTpdoInd::called);
   CHECK_EQUAL(tpdo, CoTpdoInd::pdo);
@@ -1107,7 +1107,7 @@ TEST(CO_Tpdo, CoTpdoSampleRes_ACErrorArg_NoIndFunc) {
   const auto ret = co_tpdo_sample_res(tpdo, CO_UNSIGNED32_MAX);
 
   CHECK_EQUAL(0, ret);
-  CHECK(!CanSend::Called());
+  CHECK_EQUAL(0, CanSend::GetNumCalled());
 }
 
 TEST(CO_Tpdo, CoTpdoSampleRes_SyncWindowTimeout) {
@@ -1139,7 +1139,7 @@ TEST(CO_Tpdo, CoTpdoSampleRes_SyncWindowTimeout) {
   const auto ret = co_tpdo_sample_res(tpdo, 0);
 
   CHECK_EQUAL(0, ret);
-  CHECK(!CanSend::Called());
+  CHECK_EQUAL(0, CanSend::GetNumCalled());
 
   CHECK(CoTpdoInd::called);
   POINTERS_EQUAL(tpdo, CoTpdoInd::pdo);
@@ -1164,7 +1164,7 @@ TEST(CO_Tpdo, CoTpdoSampleRes_InitFrameFail) {
   const auto ret = co_tpdo_sample_res(tpdo, 0);
 
   CHECK_EQUAL(-1, ret);
-  CHECK(!CanSend::Called());
+  CHECK_EQUAL(0, CanSend::GetNumCalled());
 
   CHECK(CoTpdoInd::called);
   POINTERS_EQUAL(tpdo, CoTpdoInd::pdo);
@@ -1189,7 +1189,7 @@ TEST(CO_Tpdo, CoTpdoSampleRes_CanSendError) {
 
   CHECK_EQUAL(-1, ret);
 
-  CHECK(CanSend::Called());
+  CHECK_COMPARE(CanSend::GetNumCalled(), >, 0);
   POINTERS_EQUAL(&can_data, CanSend::data);
 
   CHECK(CoTpdoInd::called);
@@ -1213,7 +1213,7 @@ TEST(CO_Tpdo, CoTpdoSampleRes) {
 
   CHECK_EQUAL(0, ret);
 
-  CHECK(CanSend::Called());
+  CHECK_COMPARE(CanSend::GetNumCalled(), >, 0);
   POINTERS_EQUAL(&can_data, CanSend::data);
   CHECK_EQUAL(DEV_ID, CanSend::msg.id);
   CHECK_EQUAL(0u, CanSend::msg.flags);
@@ -1264,7 +1264,7 @@ TEST(CO_Tpdo, CoTpdoRecv_SynchRTR_NoInd) {
 
   CHECK_EQUAL(1, ret);
 
-  CHECK(CanSend::Called());
+  CHECK_COMPARE(CanSend::GetNumCalled(), >, 0);
   POINTERS_EQUAL(&can_data, CanSend::data);
   CHECK_EQUAL(DEV_ID, CanSend::msg.id);
   CHECK_EQUAL(0u, CanSend::msg.flags);
@@ -1289,7 +1289,7 @@ TEST(CO_Tpdo, CoTpdoRecv_EventDrivenRTR) {
 
   CHECK_EQUAL(1, ret);
 
-  CHECK(CanSend::Called());
+  CHECK_COMPARE(CanSend::GetNumCalled(), >, 0);
   POINTERS_EQUAL(&can_data, CanSend::data);
   CHECK_EQUAL(DEV_ID, CanSend::msg.id);
   CHECK_EQUAL(0u, CanSend::msg.flags);
@@ -1324,7 +1324,7 @@ TEST(CO_Tpdo, CoTpdoRecv_EventDrivenRTR_InitFrameFail_NoInd) {
 
   CHECK_EQUAL(1, ret);
   CHECK(!CoTpdoInd::called);
-  CHECK(!CanSend::Called());
+  CHECK_EQUAL(0, CanSend::GetNumCalled());
 }
 
 TEST(CO_Tpdo, CoTpdoRecv_EventDrivenRTR_InitFrameFail) {
@@ -1344,7 +1344,7 @@ TEST(CO_Tpdo, CoTpdoRecv_EventDrivenRTR_InitFrameFail) {
   const auto ret = can_net_recv(net, &msg, 0);
 
   CHECK_EQUAL(1, ret);
-  CHECK(!CanSend::Called());
+  CHECK_EQUAL(0, CanSend::GetNumCalled());
 
   CHECK(CoTpdoInd::called);
   POINTERS_EQUAL(tpdo, CoTpdoInd::pdo);
@@ -1372,7 +1372,7 @@ TEST(CO_Tpdo, CoTpdoRecv_NoRTRTransmission) {
 
   CHECK_EQUAL(1, ret);
   CHECK(!CoTpdoInd::called);
-  CHECK(!CanSend::Called());
+  CHECK_EQUAL(0, CanSend::GetNumCalled());
 }
 
 TEST_GROUP_BASE(CO_TpdoAllocation, CO_TpdoBase) {

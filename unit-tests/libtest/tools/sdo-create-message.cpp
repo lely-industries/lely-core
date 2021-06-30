@@ -98,7 +98,7 @@ can_msg
 SdoCreateMsg::DnIniReq(const co_unsigned16_t idx, const co_unsigned8_t subidx,
                        const uint_least32_t recipient_id,
                        uint_least8_t buffer[CO_SDO_INI_DATA_SIZE],
-                       uint_least8_t cs_flags) {
+                       const uint_least8_t cs_flags) {
   can_msg msg = SdoCreateMsg::Default(idx, subidx, recipient_id);
   msg.data[0] |= CO_SDO_CCS_DN_INI_REQ;
   msg.data[0] |= cs_flags;
@@ -126,8 +126,15 @@ SdoCreateMsg::UpIniReq(const co_unsigned16_t idx, const co_unsigned8_t subidx,
                        const uint_least32_t recipient_id) {
   can_msg msg = SdoCreateMsg::Default(idx, subidx, recipient_id);
   msg.data[0] = CO_SDO_CCS_UP_INI_REQ;
-  stle_u16(msg.data + 1u, idx);
-  msg.data[3] = subidx;
+
+  return msg;
+}
+
+can_msg
+SdoCreateMsg::UpIniRes(const co_unsigned16_t idx, const co_unsigned8_t subidx,
+                       const uint_least32_t recipient_id) {
+  can_msg msg = SdoCreateMsg::Default(idx, subidx, recipient_id);
+  msg.data[0] = CO_SDO_SCS_UP_INI_RES;
 
   return msg;
 }
@@ -139,8 +146,23 @@ SdoCreateMsg::BlkUpIniReq(const co_unsigned16_t idx,
                           const co_unsigned8_t blksize) {
   can_msg msg = SdoCreateMsg::Default(idx, subidx, recipient_id);
   msg.data[0] = CO_SDO_CCS_BLK_UP_REQ;
-  msg.data[3] = subidx;
   msg.data[4] = blksize;
+
+  return msg;
+}
+
+can_msg
+SdoCreateMsg::BlkUpIniRes(const co_unsigned16_t idx,
+                          const co_unsigned8_t subidx,
+                          const uint_least32_t recipient_id,
+                          const co_unsigned32_t size) {
+  can_msg msg = SdoCreateMsg::Default(idx, subidx, recipient_id);
+  uint_least8_t cs = CO_SDO_SCS_BLK_UP_RES | CO_SDO_SC_INI_BLK;
+  if (size > 0) {
+    cs |= CO_SDO_BLK_SIZE_IND;
+    stle_u32(msg.data + 4u, size);
+  }
+  msg.data[0] = cs;
 
   return msg;
 }

@@ -25,41 +25,48 @@
 
 #include <lely/can/msg.h>
 #include <lely/co/type.h>
+#include <cstdint>
 
 #include "sdo-defines.hpp"
 
 namespace SdoCreateMsg {
-can_msg Abort(const co_unsigned16_t idx, const co_unsigned8_t subidx,
-              const uint_least32_t recipient_id, const co_unsigned32_t ac);
-can_msg Default(const co_unsigned16_t idx, const co_unsigned8_t subidx,
-                const uint_least32_t recipient_id);
+can_msg Abort(co_unsigned16_t idx, co_unsigned8_t subidx,
+              uint_least32_t recipient_id, co_unsigned32_t ac = 0);
+can_msg Default(co_unsigned16_t idx, co_unsigned8_t subidx,
+                uint_least32_t recipient_id);
 // block download initiate request
-can_msg BlkDnIniReq(const co_unsigned16_t idx, const co_unsigned8_t subidx,
-                    const uint_least32_t recipient_id,
-                    const co_unsigned8_t cs_flags = 0, const size_t size = 0);
+can_msg BlkDnIniReq(co_unsigned16_t idx, co_unsigned8_t subidx,
+                    uint_least32_t recipient_id, co_unsigned8_t cs_flags = 0,
+                    size_t size = 0);
 // block download sub-object request
-can_msg BlkDnSubReq(const co_unsigned16_t idx, const co_unsigned8_t subidx,
-                    const uint_least32_t recipient_id,
-                    const co_unsigned8_t seqno, const co_unsigned8_t last = 0);
+can_msg BlkDnSubReq(co_unsigned16_t idx, co_unsigned8_t subidx,
+                    uint_least32_t recipient_id, co_unsigned8_t seqno,
+                    co_unsigned8_t last = 0);
 // block download end
-can_msg BlkDnEnd(const co_unsigned16_t idx, const co_unsigned8_t subidx,
-                 const uint_least32_t recipient_id, const co_unsigned16_t crc,
-                 const co_unsigned8_t cs_flags = 0);
+can_msg BlkDnEnd(co_unsigned16_t idx, co_unsigned8_t subidx,
+                 uint_least32_t recipient_id, co_unsigned16_t crc,
+                 co_unsigned8_t cs_flags = 0);
 // download initiate request
 can_msg DnIniReq(co_unsigned16_t idx, co_unsigned8_t subidx,
                  uint_least32_t recipient_id, uint_least8_t buffer[],
                  uint_least8_t cs_flags = 0);
 // download segment request
-can_msg DnSeg(const co_unsigned16_t idx, const co_unsigned8_t subidx,
-              const uint_least32_t recipient_id, const uint_least8_t buf[],
-              const size_t size, const uint_least8_t cs_flags = 0);
+can_msg DnSeg(co_unsigned16_t idx, co_unsigned8_t subidx,
+              uint_least32_t recipient_id, const uint_least8_t buf[],
+              size_t size, uint_least8_t cs_flags = 0);
 // upload initiate request
-can_msg UpIniReq(const co_unsigned16_t idx, const co_unsigned8_t subidx,
-                 const uint_least32_t recipient_id);
+can_msg UpIniReq(co_unsigned16_t idx, co_unsigned8_t subidx,
+                 uint_least32_t recipient_id);
+// upload initiate response
+can_msg UpIniRes(co_unsigned16_t idx, co_unsigned8_t subidx,
+                 uint_least32_t recipient_id);
 // block upload initiate request
-can_msg BlkUpIniReq(const co_unsigned16_t idx, const co_unsigned8_t subidx,
-                    const uint_least32_t recipient_id,
-                    const co_unsigned8_t blksize = CO_SDO_MAX_SEQNO);
+can_msg BlkUpIniReq(co_unsigned16_t idx, co_unsigned8_t subidx,
+                    uint_least32_t recipient_id,
+                    co_unsigned8_t blksize = CO_SDO_MAX_SEQNO);
+// block upload initiate response
+can_msg BlkUpIniRes(co_unsigned16_t idx, co_unsigned8_t subidx,
+                    uint_least32_t recipient_id, co_unsigned32_t size = 0);
 }  // namespace SdoCreateMsg
 
 #endif  // LELY_UNIT_TEST_SDO_CREATE_MESSAGE_HPP_
