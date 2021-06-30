@@ -1085,7 +1085,12 @@ co_sub_default_dn_ind(co_sub_t *sub, struct co_sdo_req *req, co_unsigned32_t ac,
 	if (ac)
 		return ac;
 
-	co_sub_on_dn(sub, req, &ac);
+	// Capture and ignore the return value to suppress a Coverity Scan warning.
+	// Any error can be detected by the caller by checking whether 'ac'
+	// is non-zero.
+	int ignored_result = co_sub_on_dn(sub, req, &ac);
+	(void)ignored_result;
+
 	return ac;
 }
 
@@ -1098,7 +1103,10 @@ co_sub_default_up_ind(const co_sub_t *sub, struct co_sdo_req *req,
 	if (ac)
 		return ac;
 
-	co_sub_on_up(sub, req, &ac);
+	const int ret = co_sub_on_up(sub, req, &ac);
+	assert((ret == 0 && ac == 0) || (ret == -1 && ac != 0));
+	(void)ret;
+
 	return ac;
 }
 

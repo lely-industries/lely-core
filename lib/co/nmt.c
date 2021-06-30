@@ -3101,7 +3101,10 @@ co_nmt_reset_comm_on_enter(co_nmt_t *nmt)
 
 	// Update the node-ID if necessary.
 	if (nmt->id != co_dev_get_id(nmt->dev)) {
-		co_dev_set_id(nmt->dev, nmt->id);
+		const int ret = co_dev_set_id(nmt->dev, nmt->id);
+		assert(ret == 0);
+		(void)ret;
+
 		// clang-format off
 		if (co_dev_write_dcf(nmt->dev, 0x1000, 0x1fff,
 				nmt->dcf_comm_begin, nmt->dcf_comm_end) != size)
