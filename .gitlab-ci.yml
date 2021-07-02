@@ -690,13 +690,6 @@ sonarcloud:
            -Dsonar.cfamily.build-wrapper-output=bw-output
            -Dsonar.cfamily.threads=1
            -Dsonar.cfamily.cache.enabled=false
-    - python3 .sonar/sonarcloud-rules-htmlreport.py ${SONAR_TOKEN} ${SONAR_ORGANIZATION} ${SONAR_PROJECT_KEY}
-    - python3 .sonar/sonarcloud-issues-htmlreport.py ${SONAR_TOKEN} ${SONAR_ORGANIZATION} ${SONAR_PROJECT_KEY}
-  artifacts:
-    paths:
-      - sonar-rules.html
-      - sonar-issues.html
-    expire_in: 1 week
   rules:
     - if: '$CI_MERGE_REQUEST_EVENT_TYPE != "merge_train"'
       when: always
