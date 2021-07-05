@@ -35,6 +35,7 @@
 
 #include "holder.hpp"
 #include "obj.hpp"
+#include "obj-init/obj-init.hpp"
 
 class CoDevTHolder : public Holder<co_dev_t> {
  public:
@@ -55,6 +56,34 @@ class CoDevTHolder : public Holder<co_dev_t> {
     obj_holder.reset(new CoObjTHolder(idx));
     CHECK(obj_holder->Get() != nullptr);
     CHECK_EQUAL(0, co_dev_insert_obj(Get(), obj_holder->Take()));
+  }
+
+  /**
+   * Create and insert a CANopen object based on meta-information from
+   * a template type.
+   *
+   * @see ObjInitT
+   */
+  template <typename T>
+  void
+  CreateObj(std::unique_ptr<CoObjTHolder>& obj,
+            const co_unsigned16_t idx = T::idx) {
+    assert(idx >= T::min_idx && idx <= T::max_idx);
+    CreateAndInsertObj(obj, idx);
+  }
+
+  /**
+   * Create and insert a single-value CANopen object based on meta-information
+   * from a template type.
+   *
+   * @see ObjValueInitT
+   */
+  template <typename T>
+  void
+  CreateObjValue(std::unique_ptr<CoObjTHolder>& obj,
+                 const typename T::sub_type val = T::default_val) {
+    CreateAndInsertObj(obj, T::idx);
+    obj->InsertAndSetSub(T::subidx, T::deftype, val);
   }
 };  // class CoDevTHolder
 

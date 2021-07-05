@@ -23,132 +23,19 @@
 #ifndef LELY_UNIT_TEST_TPDO_COMM_PAR_HPP_
 #define LELY_UNIT_TEST_TPDO_COMM_PAR_HPP_
 
-#include <cassert>
-#include <memory>
-
-#include <lely/co/dev.h>
-#include <lely/co/type.h>
-
+#include "obj-init/obj-init.hpp"
 #include "holder/obj.hpp"
 
-// TPDO communication parameter record (0x1800-0x19ff)
-namespace Obj1800TpdoCommPar {
-// sub 0x00 - highest sub-index supported
-void
-Set00HighestSubidxSupported(std::unique_ptr<CoObjTHolder>& obj_holder,
-                            const co_unsigned8_t subidx) {
-  assert(co_obj_get_idx(obj_holder->Get()) >= 0x1800u &&
-         co_obj_get_idx(obj_holder->Get()) <= 0x19ffu);
-  assert(subidx >= 0x02);
-  CHECK(obj_holder != nullptr);
-
-  co_sub_t* const sub = co_obj_find_sub(obj_holder->Get(), 0x00u);
-  if (sub == nullptr)
-    obj_holder->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, subidx);
-  else
-    co_sub_set_val_u8(sub, subidx);
-}
-
-// sub 0x01 contains COB-ID used by TPDO
-void
-Set01CobId(std::unique_ptr<CoObjTHolder>& obj_holder,
-           const co_unsigned32_t cobid) {
-  assert(co_obj_get_idx(obj_holder->Get()) >= 0x1800u &&
-         co_obj_get_idx(obj_holder->Get()) <= 0x19ffu);
-  CHECK(obj_holder != nullptr);
-
-  co_sub_t* const sub = co_obj_find_sub(obj_holder->Get(), 0x01u);
-  if (sub == nullptr)
-    obj_holder->InsertAndSetSub(0x01u, CO_DEFTYPE_UNSIGNED32, cobid);
-  else
-    co_sub_set_val_u32(sub, cobid);
-}
-
-// sub 0x02 - transmission type
-void
-Set02TransmissionType(std::unique_ptr<CoObjTHolder>& obj_holder,
-                      const co_unsigned8_t type) {
-  assert(co_obj_get_idx(obj_holder->Get()) >= 0x1800u &&
-         co_obj_get_idx(obj_holder->Get()) <= 0x19ffu);
-  CHECK(obj_holder != nullptr);
-
-  co_sub_t* const sub = co_obj_find_sub(obj_holder->Get(), 0x02u);
-  if (sub == nullptr)
-    obj_holder->InsertAndSetSub(0x02u, CO_DEFTYPE_UNSIGNED8, type);
-  else
-    co_sub_set_val_u8(sub, type);
-}
-
-// sub 0x03 - inhibit time
-void
-Set03InhibitTime(std::unique_ptr<CoObjTHolder>& obj_holder,
-                 const co_unsigned16_t inhibit_time) {
-  assert(co_obj_get_idx(obj_holder->Get()) >= 0x1800u &&
-         co_obj_get_idx(obj_holder->Get()) <= 0x19ffu);
-  CHECK(obj_holder != nullptr);
-
-  co_sub_t* const sub = co_obj_find_sub(obj_holder->Get(), 0x03u);
-  if (sub == nullptr)
-    obj_holder->InsertAndSetSub(0x03u, CO_DEFTYPE_UNSIGNED16,
-                                inhibit_time);  // n*100 us
-  else
-    co_sub_set_val_u16(sub, inhibit_time);
-}
-
-// sub 0x04 - reserved (compatibility entry)
-void
-Set04CompatibilityEntry(std::unique_ptr<CoObjTHolder>& obj_holder) {
-  assert(co_obj_get_idx(obj_holder->Get()) >= 0x1800u &&
-         co_obj_get_idx(obj_holder->Get()) <= 0x19ffu);
-  CHECK(obj_holder != nullptr);
-
-  co_sub_t* const sub = co_obj_find_sub(obj_holder->Get(), 0x04u);
-  if (sub == nullptr)
-    obj_holder->InsertAndSetSub(0x04u, CO_DEFTYPE_UNSIGNED8,
-                                co_unsigned8_t(0x00u));
-}
-
-// sub 0x05 - event-timer
-void
-Set05EventTimer(std::unique_ptr<CoObjTHolder>& obj_holder,
-                const co_unsigned16_t timer_time) {
-  assert(co_obj_get_idx(obj_holder->Get()) >= 0x1800u &&
-         co_obj_get_idx(obj_holder->Get()) <= 0x19ffu);
-  CHECK(obj_holder != nullptr);
-
-  co_sub_t* const sub = co_obj_find_sub(obj_holder->Get(), 0x05u);
-  if (sub == nullptr)
-    obj_holder->InsertAndSetSub(0x05u, CO_DEFTYPE_UNSIGNED16,
-                                timer_time);  // ms
-  else
-    co_sub_set_val_u16(sub, timer_time);
-}
-
-// sub 0x06 - SYNC start value
-void
-Set06SyncStartValue(std::unique_ptr<CoObjTHolder>& obj_holder,
-                    const co_unsigned8_t start_val) {
-  assert(co_obj_get_idx(obj_holder->Get()) >= 0x1800u &&
-         co_obj_get_idx(obj_holder->Get()) <= 0x19ffu);
-  CHECK(obj_holder != nullptr);
-
-  co_sub_t* const sub = co_obj_find_sub(obj_holder->Get(), 0x06u);
-  if (sub == nullptr)
-    obj_holder->InsertAndSetSub(0x06u, CO_DEFTYPE_UNSIGNED8, start_val);
-  else
-    co_sub_set_val_u8(sub, start_val);
-}
-
-void
-SetDefaultValues(std::unique_ptr<CoObjTHolder>& obj_holder) {
-  assert(co_obj_get_idx(obj_holder->Get()) >= 0x1800u &&
-         co_obj_get_idx(obj_holder->Get()) <= 0x19ffu);
-  CHECK(obj_holder != nullptr);
-
-  Set00HighestSubidxSupported(obj_holder, 0x02u);
-  Set01CobId(obj_holder, 0);
-  Set02TransmissionType(obj_holder, 0x00u);
-}
-}  // namespace Obj1800TpdoCommPar
+// 0x1800-0x19ff: TPDO communication parameter
+struct Obj1800TpdoCommPar : ObjInitT<0x1800u, 0x1800u, 0x19ffu> {
+  struct Sub00HighestSubidxSupported
+      : SubT<0x00u, CO_DEFTYPE_UNSIGNED8, 0x02u> {};
+  struct Sub01CobId : SubT<0x01u, CO_DEFTYPE_UNSIGNED32> {};
+  struct Sub02TransmissionType : SubT<0x02u, CO_DEFTYPE_UNSIGNED8> {};
+  struct Sub03InhibitTime : SubT<0x03u, CO_DEFTYPE_UNSIGNED16> {};
+  struct Sub04Reserved : SubT<0x04u, CO_DEFTYPE_UNSIGNED8, 0> {};
+  struct Sub05EventTimer : SubT<0x05u, CO_DEFTYPE_UNSIGNED16> {};
+  struct Sub06SyncStartValue : SubT<0x04u, CO_DEFTYPE_UNSIGNED8> {};
+};
 
 #endif  // LELY_UNIT_TEST_TPDO_COMM_PAR_HPP_

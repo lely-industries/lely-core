@@ -79,6 +79,32 @@ TEST_GROUP(CO_NmtSrv) {
     CHECK(dev != nullptr);
   }
 
+  void CreateObj1400Defaults() {
+    dev_holder->CreateObj<Obj1400RpdoCommPar>(obj1400);
+    obj1400->EmplaceSub<Obj1400RpdoCommPar::Sub00HighestSubidxSupported>(0x02u);
+    obj1400->EmplaceSub<Obj1400RpdoCommPar::Sub01CobId>(0);
+    obj1400->EmplaceSub<Obj1400RpdoCommPar::Sub02TransmissionType>(0xfeu);
+  }
+
+  void CreateObj1600Defaults() {
+    dev_holder->CreateObj<Obj1600RpdoMapPar>(obj1600);
+    obj1600->EmplaceSub<Obj1600RpdoMapPar::Sub00NumOfMappedObjs>(0x01u);
+    obj1600->EmplaceSub<Obj1600RpdoMapPar::SubNthAppObject>(0x01u, 0);
+  }
+
+  void CreateObj1800Defaults() {
+    dev_holder->CreateObj<Obj1800TpdoCommPar>(obj1800);
+    obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub00HighestSubidxSupported>(0x02u);
+    obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub01CobId>(0);
+    obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub02TransmissionType>(0);
+  }
+
+  void CreateObj1a00Defaults() {
+    dev_holder->CreateObj<Obj1a00TpdoMapPar>(obj1a00);
+    obj1a00->EmplaceSub<Obj1a00TpdoMapPar::Sub00NumOfMappedObjs>(0x01u);
+    obj1a00->EmplaceSub<Obj1a00TpdoMapPar::SubNthAppObject>(0x01u, 0);
+  }
+
   TEST_TEARDOWN() {
     co_nmt_destroy(nmt);
 
@@ -114,19 +140,14 @@ TEST(CO_NmtSrv, Dummy) {
 ///       \Calls co_tpdo_create()
 TEST(CO_NmtSrv, CoNmtSrvInit_Nominal) {
 #if !LELY_NO_CO_RPDO
-  dev_holder->CreateAndInsertObj(obj1400, 0x1400);
-  Obj1400RpdoCommPar::SetDefaultValues(obj1400);
-
-  dev_holder->CreateAndInsertObj(obj1600, 0x1600);
-  Obj1600RpdoMapPar::SetDefaultValues(obj1600);
+  CreateObj1400Defaults();
+  CreateObj1600Defaults();
 #endif
 #if !LELY_NO_CO_TPDO
-  dev_holder->CreateAndInsertObj(obj1800, 0x1800);
-  Obj1800TpdoCommPar::SetDefaultValues(obj1800);
-
-  dev_holder->CreateAndInsertObj(obj1a00, 0x1a00);
-  Obj1a00TpdoMapPar::SetDefaultValues(obj1a00);
+  CreateObj1800Defaults();
+  CreateObj1a00Defaults();
 #endif
+
   // TODO(N7S) add objects for other services and verify if they were created
   //           by the service manager (also add \Calls)
 
@@ -173,19 +194,13 @@ TEST(CO_NmtSrv, CoNmtSrvInit_Nominal) {
 ///       \Calls mem_free()
 TEST(CO_NmtSrv, CoNmtSrvInit_FailPdoAllocation) {
 #if !LELY_NO_CO_RPDO
-  dev_holder->CreateAndInsertObj(obj1400, 0x1400);
-  Obj1400RpdoCommPar::SetDefaultValues(obj1400);
-
-  dev_holder->CreateAndInsertObj(obj1600, 0x1600);
-  Obj1600RpdoMapPar::SetDefaultValues(obj1600);
+  CreateObj1400Defaults();
+  CreateObj1600Defaults();
 #endif
 #if !LELY_NO_CO_TPDO
-  dev_holder->CreateAndInsertObj(obj1800, 0x1800);
-  Obj1800TpdoCommPar::SetDefaultValues(obj1800);
-  Obj1800TpdoCommPar::Set02TransmissionType(obj1800, 0xfe);
-
-  dev_holder->CreateAndInsertObj(obj1a00, 0x1a00);
-  Obj1a00TpdoMapPar::SetDefaultValues(obj1a00);
+  CreateObj1800Defaults();
+  obj1800->SetSub<Obj1800TpdoCommPar::Sub02TransmissionType>(0xfe);
+  CreateObj1a00Defaults();
 #endif
 
   const size_t dcf_app_par_size = NmtCommon::GetDcfParamsAllocSize(dev);
