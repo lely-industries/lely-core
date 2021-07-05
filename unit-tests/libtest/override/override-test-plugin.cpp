@@ -39,6 +39,11 @@ class OverridePlugin::CleanUp {
   explicit CleanUp(int& vc) : vc_(vc), org_value_(vc) {}
   ~CleanUp() { vc_ = org_value_; }
 
+  CleanUp(const CleanUp&) = delete;
+  CleanUp(CleanUp&&) = delete;
+  CleanUp& operator=(const CleanUp&) = delete;
+  CleanUp& operator=(CleanUp&&) = delete;
+
  private:
   int& vc_;
   const int org_value_;
