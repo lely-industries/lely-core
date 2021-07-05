@@ -1854,13 +1854,13 @@ TEST(CO_EmcyReceiver, CoEmcyNodeRecv_TooLargeMessageLength) {
 ///@}
 
 TEST_GROUP_BASE(CO_EmcyAllocation, CO_EmcyBase) {
-  Allocators::Limited allocator;
+  Allocators::Limited limitedAllocator;
 
   TEST_SETUP() {
     TEST_BASE_SETUP();
 
     can_net_destroy(net);
-    net = can_net_create(allocator.ToAllocT(), 0);
+    net = can_net_create(limitedAllocator.ToAllocT(), 0);
 
     CreateObj1001ErrorRegister(0u);
   }
@@ -1880,7 +1880,7 @@ TEST(CO_EmcyAllocation, CoEmcyGetAlloc_Nominal) {
 
   const alloc_t* alloc = co_emcy_get_alloc(emcy);
 
-  POINTERS_EQUAL(allocator.ToAllocT(), alloc);
+  POINTERS_EQUAL(limitedAllocator.ToAllocT(), alloc);
 
   co_emcy_destroy(emcy);
 }
@@ -1899,7 +1899,7 @@ TEST(CO_EmcyAllocation, CoEmcyGetAlloc_Nominal) {
 /// \Then a null pointer is returned and an EMCY service is not created
 ///       \Calls mem_alloc()
 TEST(CO_EmcyAllocation, CoEmcyCreate_NoMemory) {
-  allocator.LimitAllocationTo(0u);
+  limitedAllocator.LimitAllocationTo(0u);
 
   const auto* emcy = co_emcy_create(net, dev);
 
@@ -1920,7 +1920,7 @@ TEST(CO_EmcyAllocation, CoEmcyCreate_NoMemory) {
 ///       \Calls can_buf_init()
 ///       \Calls can_timer_create()
 TEST(CO_EmcyAllocation, CoEmcyCreate_MemoryOnlyForEmcy) {
-  allocator.LimitAllocationTo(co_emcy_sizeof());
+  limitedAllocator.LimitAllocationTo(co_emcy_sizeof());
 
   const auto* emcy = co_emcy_create(net, dev);
 
@@ -1949,7 +1949,7 @@ TEST(CO_EmcyAllocation, CoEmcyCreate_MemoryOnlyForEmcy) {
 ///       \Calls can_buf_fini()
 TEST(CO_EmcyAllocation, CoEmcyCreate_MemoryOnlyForEmcyAndTimer) {
   CreateObj1028EmcyConsumerObject();
-  allocator.LimitAllocationTo(co_emcy_sizeof() + can_timer_sizeof());
+  limitedAllocator.LimitAllocationTo(co_emcy_sizeof() + can_timer_sizeof());
 
   const auto* emcy = co_emcy_create(net, dev);
 
@@ -1977,8 +1977,8 @@ TEST(CO_EmcyAllocation, CoEmcyCreate_MemoryOnlyForEmcyAndTimer) {
 ///       \Calls can_recv_set_func()
 TEST(CO_EmcyAllocation, CoEmcyCreate_ExactMemory) {
   CreateObj1028EmcyConsumerObject();
-  allocator.LimitAllocationTo(co_emcy_sizeof() + can_timer_sizeof() +
-                              can_recv_sizeof());
+  limitedAllocator.LimitAllocationTo(co_emcy_sizeof() + can_timer_sizeof() +
+                                     can_recv_sizeof());
 
   co_emcy_t* emcy = co_emcy_create(net, dev);
 
