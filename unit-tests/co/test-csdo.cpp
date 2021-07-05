@@ -52,7 +52,7 @@
 
 class ConciseDcf {
  private:
-  ConciseDcf(std::initializer_list<size_t> type_sizes) {
+  explicit ConciseDcf(std::initializer_list<size_t> type_sizes) {
     const size_t size = std::accumulate(
         std::begin(type_sizes), std::end(type_sizes), sizeof(co_unsigned32_t),
         [](const size_t& a, const size_t& b) { return a + EntrySize(b); });
