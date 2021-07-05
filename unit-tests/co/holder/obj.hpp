@@ -38,6 +38,7 @@
 
 #include "holder.hpp"
 #include "sub.hpp"
+#include "obj-init/obj-init.hpp"
 
 class CoObjTHolder : public Holder<co_obj_t> {
 #if LELY_NO_MALLOC
@@ -138,6 +139,65 @@ class CoObjTHolder : public Holder<co_obj_t> {
     UpdateSubValues();
 
     return true;
+  }
+
+  /**
+   * Construct and insert a CANopen sub-object with a given sub-index and
+   * value, based on and checked against meta-information from a template type.
+   *
+   * @see ObjInitT::SubT
+   */
+  template <typename T>
+  void
+  EmplaceSub(const co_unsigned8_t subidx, const typename T::sub_type val) {
+    assert(T::min_subidx > 0 ? subidx >= T::min_subidx : subidx == T::subidx);
+    assert(co_obj_get_idx(Get()) >= T::min_idx &&
+           co_obj_get_idx(Get()) <= T::max_idx);
+    assert(co_obj_find_sub(Get(), subidx) == nullptr);
+
+    InsertAndSetSub(subidx, T::deftype, val);
+  }
+
+  /**
+   * Construct and insert a CANopen sub-object with a given value, based on and
+   * checked against meta-information from a template type.
+   *
+   * @see ObjInitT::SubT
+   */
+  template <typename T>
+  void
+  EmplaceSub(const typename T::sub_type val = T::default_val) {
+    EmplaceSub<T>(T::subidx, val);
+  }
+
+  /**
+   * Sets the current value of a CANopen sub-object with a given sub-index,
+   * based on and checked against meta-information from a template type.
+   *
+   * @see ObjInitT::SubT
+   */
+  template <typename T>
+  void
+  SetSub(const co_unsigned8_t subidx, const typename T::sub_type val) {
+    assert(T::min_subidx > 0 ? subidx >= T::min_subidx : subidx == T::subidx);
+    assert(co_obj_get_idx(Get()) >= T::min_idx &&
+           co_obj_get_idx(Get()) <= T::max_idx);
+    assert(co_obj_find_sub(Get(), subidx) != nullptr);
+
+    CHECK_EQUAL(co_type_sizeof(T::deftype),
+                co_obj_set_val(Get(), subidx, &val, sizeof(val)));
+  }
+
+  /**
+   * Sets the current value of a CANopen sub-object, based on and checked
+   * against meta-information from a template type.
+   *
+   * @see ObjInitT::SubT
+   */
+  template <typename T>
+  void
+  SetSub(const typename T::sub_type val) {
+    SetSub<T>(T::subidx, val);
   }
 
  protected:
