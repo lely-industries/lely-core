@@ -89,7 +89,7 @@ TEST(CO_ObjInit, CoObjInit_Nominal) {
   auto* const obj = AcquireCoObjT();
 
   CHECK(obj != nullptr);
-  POINTERS_EQUAL(obj, co_obj_init(obj, 0x1234u, NULL, 0));
+  POINTERS_EQUAL(obj, co_obj_init(obj, 0x1234u, nullptr, 0));
 
   POINTERS_EQUAL(nullptr, co_obj_get_dev(obj));
   CHECK_EQUAL(0x1234u, co_obj_get_idx(obj));
@@ -121,7 +121,7 @@ TEST(CO_ObjInit, CoObjInit_Nominal) {
 ///       \IfCalls{!LELY_NO_MALLOC, co_obj_clear()}
 TEST(CO_ObjInit, CoObjFini_Nominal) {
   auto* const obj = AcquireCoObjT();
-  co_obj_init(obj, 0x1234u, NULL, 0);
+  co_obj_init(obj, 0x1234u, nullptr, 0);
   CoDevTHolder dev(0x01);
   co_dev_insert_obj(dev.Get(), obj);
 
@@ -1131,7 +1131,7 @@ TEST(CO_SubInit, CoSubInit_Nominal) {
   auto* const sub = AcquireCoSubT();
   CHECK(sub != nullptr);
 
-  POINTERS_EQUAL(sub, co_sub_init(sub, SUB_IDX, CO_DEFTYPE_INTEGER16, NULL));
+  POINTERS_EQUAL(sub, co_sub_init(sub, SUB_IDX, CO_DEFTYPE_INTEGER16, nullptr));
 
   POINTERS_EQUAL(nullptr, co_sub_get_obj(sub));
   CHECK_EQUAL(SUB_IDX, co_sub_get_subidx(sub));
@@ -1199,7 +1199,7 @@ TEST(CO_SubInit, CoSubInit_Limits) {
   auto* const sub = AcquireCoSubT();
   CHECK(sub != nullptr);
 
-  POINTERS_EQUAL(sub, co_sub_init(sub, SUB_IDX, CO_DEFTYPE_INTEGER16, NULL));
+  POINTERS_EQUAL(sub, co_sub_init(sub, SUB_IDX, CO_DEFTYPE_INTEGER16, nullptr));
 
   CHECK_EQUAL(CO_INTEGER16_MIN,
               *static_cast<const CO_ObjBase::sub_type*>(co_sub_get_min(sub)));
@@ -1223,7 +1223,7 @@ TEST(CO_SubInit, CoSubInit_InitValMinFails) {
   LelyOverride::co_val_init_min(Override::NoneCallsValid);
 
   POINTERS_EQUAL(nullptr,
-                 co_sub_init(sub, SUB_IDX, CO_DEFTYPE_INTEGER16, NULL));
+                 co_sub_init(sub, SUB_IDX, CO_DEFTYPE_INTEGER16, nullptr));
 
   ReleaseCoSubT(sub);
 }
@@ -1242,7 +1242,7 @@ TEST(CO_SubInit, CoSubInit_InitValMaxFails) {
   LelyOverride::co_val_init_max(Override::NoneCallsValid);
 
   POINTERS_EQUAL(nullptr,
-                 co_sub_init(sub, SUB_IDX, CO_DEFTYPE_INTEGER16, NULL));
+                 co_sub_init(sub, SUB_IDX, CO_DEFTYPE_INTEGER16, nullptr));
 
   ReleaseCoSubT(sub);
 }
@@ -1265,7 +1265,7 @@ TEST(CO_SubInit, CoSubInit_Default) {
   auto* const sub = AcquireCoSubT();
   CHECK(sub != nullptr);
 
-  POINTERS_EQUAL(sub, co_sub_init(sub, SUB_IDX, CO_DEFTYPE_INTEGER16, NULL));
+  POINTERS_EQUAL(sub, co_sub_init(sub, SUB_IDX, CO_DEFTYPE_INTEGER16, nullptr));
 
   CHECK_EQUAL(0x0000,
               *static_cast<const CO_ObjBase::sub_type*>(co_sub_get_def(sub)));
@@ -1288,7 +1288,7 @@ TEST(CO_SubInit, CoSubInit_InitValFails) {
   LelyOverride::co_val_init(Override::NoneCallsValid);
 
   POINTERS_EQUAL(nullptr,
-                 co_sub_init(sub, SUB_IDX, CO_DEFTYPE_INTEGER16, NULL));
+                 co_sub_init(sub, SUB_IDX, CO_DEFTYPE_INTEGER16, nullptr));
 
   ReleaseCoSubT(sub);
 }
@@ -1311,7 +1311,7 @@ TEST(CO_SubInit, CoSubInit_Upload) {
   auto* const sub = AcquireCoSubT();
   CHECK(sub != nullptr);
 
-  POINTERS_EQUAL(sub, co_sub_init(sub, SUB_IDX, CO_DEFTYPE_INTEGER16, NULL));
+  POINTERS_EQUAL(sub, co_sub_init(sub, SUB_IDX, CO_DEFTYPE_INTEGER16, nullptr));
 
   co_sub_up_ind_t* pind_up = nullptr;
   void* pdata_up = nullptr;
@@ -1338,7 +1338,7 @@ TEST(CO_SubInit, CoSubInit_Upload) {
 ///       \IfCalls{!LELY_NO_CO_OBJ_LIMITS, co_val_fini()}
 TEST(CO_SubInit, CoSubFini_Nominal) {
   auto* const sub = AcquireCoSubT();
-  co_sub_init(sub, SUB_IDX, CO_DEFTYPE_INTEGER16, NULL);
+  co_sub_init(sub, SUB_IDX, CO_DEFTYPE_INTEGER16, nullptr);
   CoObjTHolder obj(0x1234u);
   CHECK_EQUAL(0, co_obj_insert_sub(obj.Get(), sub));
 
