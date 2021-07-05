@@ -65,13 +65,10 @@ CoSubDnInd::Clear() {
   data = nullptr;
 }
 
-static void CheckSubDnInd(
-    const co_dev_t* const dev, const co_unsigned16_t idx,
-    std::function<void(co_sub_dn_ind_t*, void* data)> pred);
-
+template <typename Predicate>
 static void
 CheckSubDnInd(const co_dev_t* const dev, const co_unsigned16_t idx,
-              std::function<void(co_sub_dn_ind_t*, void* data)> pred) {
+              Predicate pred) {
   co_sub_t* const sub = co_dev_find_sub(dev, idx, 0x00u);
   CHECK(sub != nullptr);
 
