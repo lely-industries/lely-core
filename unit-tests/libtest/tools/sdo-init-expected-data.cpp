@@ -28,7 +28,7 @@
 
 #include <lely/util/endian.h>
 
-#include "sdo-defines.hpp"
+#include "sdo-consts.hpp"
 
 #include "sdo-init-expected-data.hpp"
 

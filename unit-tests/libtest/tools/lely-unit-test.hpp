@@ -35,7 +35,7 @@
 #include "co-sub-up-ind.hpp"
 #include "can-send.hpp"
 #include "sdo-create-message.hpp"
-#include "sdo-defines.hpp"
+#include "sdo-consts.hpp"
 #include "sdo-init-expected-data.hpp"
 
 namespace LelyUnitTest {
