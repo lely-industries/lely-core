@@ -3,13 +3,13 @@ bin =
 LELY_COMPAT_LIBS =
 if CODE_COVERAGE_ENABLED
 LELY_COMPAT_LIBS += $(CODE_COVERAGE_LIBS)
-endif
+endif CODE_COVERAGE_ENABLED
 
 LELY_COMPAT_LIBS += $(top_builddir)/lib/compat/liblely-compat.la
 
 if PLATFORM_WIN32
 CPPUTEST_LIBS += -lpthread
-endif
+endif PLATFORM_WIN32
 
 LELY_UNIT_TEST_UTIL_COMMON_LIBS =
 LELY_UNIT_TEST_UTIL_COMMON_LIBS += $(LELY_COMPAT_LIBS)
@@ -80,13 +80,13 @@ if !NO_MALLOC
 bin += unit-test-util-bitset
 unit_test_util_bitset_SOURCES = $(src_common) test-bitset.cpp
 unit_test_util_bitset_LDADD = $(LELY_UNIT_TEST_UTIL_COMMON_LIBS)
-endif
+endif !NO_MALLOC
 
 if !NO_CXX
 bin += unit-test-util-mutex
 unit_test_util_mutex_SOURCES = $(src_common) test-mutex.cpp
 unit_test_util_mutex_LDADD = $(LELY_UNIT_TEST_UTIL_COMMON_LIBS)
-endif
+endif !NO_CXX
 
 bin += unit-test-util-sllist
 unit_test_util_sllist_SOURCES = $(src_common) test-sllist.cpp
@@ -95,25 +95,25 @@ unit_test_util_sllist_LDADD = $(LELY_UNIT_TEST_UTIL_COMMON_LIBS)
 bin += unit-test-util-spscring
 unit_test_util_spscring_SOURCES = $(src_common) test-spscring.cpp
 unit_test_util_spscring_LDADD = $(LELY_UNIT_TEST_UTIL_COMMON_LIBS)
-endif
+endif !ECSS_COMPLIANCE
 
 if !NO_DIAG
 bin += unit-test-util-diag
 unit_test_util_diag_SOURCES = $(src_common) test-diag.cpp
 unit_test_util_diag_LDADD = $(LELY_UNIT_TEST_UTIL_COMMON_LIBS)
-else # !NO_DIAG
+else NO_DIAG
 if !NO_CO_DCF
 bin += unit-test-util-diag
 unit_test_util_diag_SOURCES = $(src_common) test-diag.cpp
 unit_test_util_diag_LDADD = $(LELY_UNIT_TEST_UTIL_COMMON_LIBS)
-else # !NO_CO_DCF
+else NO_CO_DCF
 if !NO_CO_GW_TXT
 bin += unit-test-util-diag
 unit_test_util_diag_SOURCES = $(src_common) test-diag.cpp
 unit_test_util_diag_LDADD = $(LELY_UNIT_TEST_UTIL_COMMON_LIBS)
-endif # !NO_CO_GW_TXT
-endif # !NO_CO_DCF
-endif # !NO_DIAG
+endif !NO_CO_GW_TXT
+endif NO_CO_DCF
+endif NO_DIAG
 
 # Compilation flags
 
@@ -121,37 +121,37 @@ AM_CPPFLAGS = -I$(top_srcdir)/include -I$(top_srcdir)/unit-tests
 AM_CPPFLAGS += -DTEST_SRCDIR=\"${srcdir}\"
 if ENABLE_SHARED
 AM_CPPFLAGS += -DLELY_ENABLE_SHARED=1
-endif
+endif ENABLE_SHARED
 AM_CPPFLAGS += $(CPPUTEST_CFLAGS)
 
 if NO_UNIT_TESTS_MEMLEAK
 AM_CPPFLAGS += -DCPPUTEST_MEM_LEAK_DETECTION_DISABLED
-endif
+endif NO_UNIT_TESTS_MEMLEAK
 
 if NO_HOSTED
 # even in no-hosted unit-tests are compiled with libc
 AM_CPPFLAGS += -DLELY_HAVE_TIMESPEC -DLELY_HAVE_ITIMERSPEC
-endif
+endif NO_HOSTED
 
 if CODE_COVERAGE_ENABLED
 AM_CPPFLAGS += $(CODE_COVERAGE_CPPFLAGS)
-endif
+endif CODE_COVERAGE_ENABLED
 
 AM_CFLAGS =
 if CODE_COVERAGE_ENABLED
 AM_CFLAGS += $(CODE_COVERAGE_CFLAGS)
-endif
+endif CODE_COVERAGE_ENABLED
 
 AM_CXXFLAGS =
 AM_CXXFLAGS += -fno-exceptions
 if CODE_COVERAGE_ENABLED
 AM_CXXFLAGS += $(CODE_COVERAGE_CXXFLAGS)
-endif
+endif CODE_COVERAGE_ENABLED
 
 AM_LDFLAGS =
 if PLATFORM_WIN32
 AM_LDFLAGS += -all-static
-endif
+endif PLATFORM_WIN32
 
 check_PROGRAMS = $(bin)
 
@@ -164,8 +164,8 @@ if CODE_COVERAGE_ENABLED
 LOG_COMPILER = $(SHELL) $(top_builddir)/lcov-wrapper.sh
 AM_TESTS_ENVIRONMENT += EXEC_WRAPPER="$(EXEC)"; export EXEC_WRAPPER;
 @CODE_COVERAGE_RULES@
-else
+else !CODE_COVERAGE_ENABLED
 LOG_COMPILER = $(EXEC)
-endif
+endif !CODE_COVERAGE_ENABLED
 
 @VALGRIND_CHECK_RULES@

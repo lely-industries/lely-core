@@ -69,7 +69,7 @@ TEST_GROUP(Util_RbtreeInit){};
 ///
 /// \Then tree is initialized, has zero nodes, null pointer to root and
 ///       requested comparison function set
-TEST(Util_RbtreeInit, RbtreeInit) {
+TEST(Util_RbtreeInit, RbtreeInit_Nominal) {
   rbtree tree;
 
   rbtree_init(&tree, rbtree_cmp_ints);
@@ -92,7 +92,7 @@ TEST(Util_RbtreeInit, RbtreeInit) {
 /// \Then node is initialized, has null pointers to left and right children
 ///       nodes, zeroed parent pointer with black color encoded and pointer to
 ///       requested key set
-TEST(Util_RbtreeInit, RbnodeInit) {
+TEST(Util_RbtreeInit, RbnodeInit_Nominal) {
   rbnode node;
   const int key = 42;
 

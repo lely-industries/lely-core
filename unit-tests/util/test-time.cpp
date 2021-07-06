@@ -72,6 +72,7 @@ TEST(Util_Time, TimespecAddSec_Nominal) {
 ///       (timespec) and a number of miliseconds
 ///
 /// \Then the time interval value is increased by the requested number
+///       \Calls timespec_add()
 TEST(Util_Time, TimespecAddMSec_Nominal) {
   timespec_add_msec(&ts, 0L);
   CHECK_EQUAL(0L, ts.tv_sec);
@@ -97,6 +98,7 @@ TEST(Util_Time, TimespecAddMSec_Nominal) {
 ///       (timespec) and a number of microseconds
 ///
 /// \Then the time interval value is increased by the requested number
+///       \Calls timespec_add()
 TEST(Util_Time, TimespecAddUSec_Nominal) {
   timespec_add_usec(&ts, 0L);
   CHECK_EQUAL(0L, ts.tv_sec);
@@ -122,6 +124,7 @@ TEST(Util_Time, TimespecAddUSec_Nominal) {
 ///       (timespec) and a number of nanoseconds
 ///
 /// \Then the time interval value is increased by the requested number
+///       \Calls timespec_add()
 TEST(Util_Time, TimespecAddNsec_Nominal) {
   timespec_add_nsec(&ts, 0L);
   CHECK_EQUAL(0L, ts.tv_sec);
@@ -224,6 +227,7 @@ TEST(Util_Time, TimespecSubSec_Nominal) {
 ///       (timespec) and a number of miliseconds
 ///
 /// \Then the time interval value is decreased by the requested number
+///       \Calls timespec_sub()
 TEST(Util_Time, TimespecSubMsec_Nominal) {
   timespec_add_sec(&ts, 2L);
 
@@ -251,6 +255,7 @@ TEST(Util_Time, TimespecSubMsec_Nominal) {
 ///       (timespec) and a number of microseconds
 ///
 /// \Then the time interval value is decreased by the requested number
+///       \Calls timespec_sub()
 TEST(Util_Time, TimespecSubUsec_Nominal) {
   timespec_add_sec(&ts, 2L);
 
@@ -278,6 +283,7 @@ TEST(Util_Time, TimespecSubUsec_Nominal) {
 ///       (timespec) and a number of nanoseconds
 ///
 /// \Then the time interval value is decreased by the requested number
+///       \Calls timespec_sub()
 TEST(Util_Time, TimespecSubNsec_Nominal) {
   timespec_add_sec(&ts, 2L);
 
