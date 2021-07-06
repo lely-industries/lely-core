@@ -55,7 +55,7 @@ TEST_BASE(CO_SdoRpdoBase) {
   std::unique_ptr<CoObjTHolder> obj1400;
   std::unique_ptr<CoObjTHolder> obj1600;
 
-  void SetPdoCommCobid(const co_unsigned32_t cobid) {
+  void SetPdoCommCobid(const co_unsigned32_t cobid) const {
     co_sub_t* const sub_comm_cobid = co_dev_find_sub(dev, 0x1400u, 0x01u);
     CHECK(sub_comm_cobid != nullptr);
     co_sub_set_val_u32(sub_comm_cobid, cobid);
@@ -118,7 +118,7 @@ TEST_GROUP_BASE(CO_SdoRpdo1400, CO_SdoRpdoBase) {
     CO_SdoRpdo1400Static::rpdo_err_func_er = er;
   }
 
-  void SetPdoCommEventTimer(const co_unsigned16_t milliseconds) {
+  void SetPdoCommEventTimer(const co_unsigned16_t milliseconds) const {
     co_sub_t* const sub = co_dev_find_sub(dev, 0x1400u, 0x05u);
     CHECK(sub != nullptr);
     co_sub_set_val_u16(sub, milliseconds);
@@ -136,7 +136,7 @@ TEST_GROUP_BASE(CO_SdoRpdo1400, CO_SdoRpdoBase) {
     CHECK_EQUAL(0, can_net_set_time(net, &tp));
   }
 
-  void Insert1400Values() {
+  void Insert1400Values() const {
     // adjust highest subindex supported
     co_sub_t* const sub = co_dev_find_sub(dev, 0x1400u, 0x00u);
     CHECK(sub != nullptr);

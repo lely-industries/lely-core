@@ -45,7 +45,7 @@ class CallWrapper {
 #endif
 
   bool
-  IsCallValid(int& valid_calls) {
+  IsCallValid(int& valid_calls) const {
     if (valid_calls == Override::NoneCallsValid) return false;
 
     if (valid_calls > Override::NoneCallsValid) --valid_calls;

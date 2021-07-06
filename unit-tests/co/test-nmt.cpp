@@ -182,7 +182,7 @@ TEST_BASE(CO_NmtBase) {
 TEST_GROUP_BASE(CO_NmtCreate, CO_NmtBase) {
   co_nmt_t* nmt = nullptr;
 
-  void CheckNmtDefaults() {
+  void CheckNmtDefaults() const {
     POINTERS_EQUAL(net, co_nmt_get_net(nmt));
     POINTERS_EQUAL(dev, co_nmt_get_dev(nmt));
 
@@ -1465,7 +1465,7 @@ TEST_GROUP_BASE(CO_Nmt, CO_NmtBase) {
                              co_unsigned16_t(inhibit_time));
   }
 
-  can_msg CreateNmtBootupMsg(const co_unsigned8_t id) {
+  can_msg CreateNmtBootupMsg(const co_unsigned8_t id) const {
     can_msg msg = CAN_MSG_INIT;
     msg.id = CO_NMT_EC_CANID(id);
     msg.len = 1u;

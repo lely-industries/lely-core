@@ -75,7 +75,8 @@ TEST_GROUP(Util_Dllist) {
   dlnode nodes[NODES_NUM];
   dllist list;
 
-  void AreNodesLinked(const dlnode* const node, const dlnode* const next_node) {
+  void AreNodesLinked(const dlnode* const node, const dlnode* const next_node)
+      const {
     POINTERS_EQUAL(node->next, next_node);
     POINTERS_EQUAL(next_node->prev, node);
   }

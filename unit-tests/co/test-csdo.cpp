@@ -77,7 +77,7 @@ class ConciseDcf {
   }
 
   size_t
-  Size() {
+  Size() const {
     return buffer.size();
   }
 
@@ -545,7 +545,7 @@ TEST_BASE(CO_CsdoBase) {
   std::unique_ptr<CoObjTHolder> obj1280;
 
   // obj 0x1280, sub 0x00 - highest sub-index supported
-  void SetCli00HighestSubidxSupported(co_unsigned8_t subidx) {
+  void SetCli00HighestSubidxSupported(co_unsigned8_t subidx) const {
     co_sub_t* const sub = co_dev_find_sub(dev, 0x1280u, 0x00u);
     if (sub != nullptr)
       co_sub_set_val_u8(sub, subidx);
@@ -554,7 +554,7 @@ TEST_BASE(CO_CsdoBase) {
   }
 
   // obj 0x1280, sub 0x01 contains COB-ID client -> server
-  void SetCli01CobidReq(co_unsigned32_t cobid) {
+  void SetCli01CobidReq(co_unsigned32_t cobid) const {
     co_sub_t* const sub = co_dev_find_sub(dev, 0x1280u, 0x01u);
     if (sub != nullptr)
       co_sub_set_val_u32(sub, cobid);
@@ -563,7 +563,7 @@ TEST_BASE(CO_CsdoBase) {
   }
 
   // obj 0x1280, sub 0x02 contains COB-ID server -> client
-  void SetCli02CobidRes(co_unsigned32_t cobid) {
+  void SetCli02CobidRes(co_unsigned32_t cobid) const {
     co_sub_t* const sub = co_dev_find_sub(dev, 0x1280u, 0x02u);
     if (sub != nullptr)
       co_sub_set_val_u32(sub, cobid);
@@ -571,11 +571,11 @@ TEST_BASE(CO_CsdoBase) {
       obj1280->InsertAndSetSub(0x02u, CO_DEFTYPE_UNSIGNED32, cobid);
   }
 
-  co_unsigned32_t GetCli01CobidReq() {
+  co_unsigned32_t GetCli01CobidReq() const {
     return co_dev_get_val_u32(dev, 0x1280u, 0x01u);
   }
 
-  co_unsigned32_t GetCli02CobidRes() {
+  co_unsigned32_t GetCli02CobidRes() const {
     return co_dev_get_val_u32(dev, 0x1280u, 0x02u);
   }
 

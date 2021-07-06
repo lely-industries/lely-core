@@ -607,11 +607,11 @@ TEST_BASE(CO_Ssdo) {
       obj1200->InsertAndSetSub(0x02u, CO_DEFTYPE_UNSIGNED32, cobid);
   }
 
-  co_unsigned32_t GetSrv01CobidReq() {
+  co_unsigned32_t GetSrv01CobidReq() const {
     return co_dev_get_val_u32(dev, 0x1200u, 0x01u);
   }
 
-  co_unsigned32_t GetSrv02CobidRes() {
+  co_unsigned32_t GetSrv02CobidRes() const {
     return co_dev_get_val_u32(dev, 0x1200u, 0x02u);
   }
 
@@ -1461,7 +1461,7 @@ TEST_GROUP_BASE(CoSsdoBlkUpIniOnRecv, CO_Ssdo) {
   int ignore = 0;  // clang-format fix
 
   // block upload initiate request
-  can_msg CreateBlkUp2020IniReqMsg(
+  static can_msg CreateBlkUp2020IniReqMsg(
       const co_unsigned8_t subidx = SUBIDX,
       const co_unsigned8_t blksize = CO_SDO_MAX_SEQNO) {
     can_msg msg =
@@ -3054,8 +3054,8 @@ TEST_GROUP_BASE(CoSsdoBlkUp, CO_Ssdo) {
     CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
   }
 
-  void CheckInitBlkUp2020ResData(const co_unsigned8_t subidx,
-                                 const size_t size) {
+  void CheckInitBlkUp2020ResData(const co_unsigned8_t subidx, const size_t size)
+      const {
     CHECK_EQUAL(1u, CanSend::GetNumCalled());
     CHECK_SDO_CAN_MSG_CMD(
         CO_SDO_SCS_BLK_UP_RES | CO_SDO_BLK_CRC | CO_SDO_BLK_SIZE_IND,
