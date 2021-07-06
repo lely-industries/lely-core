@@ -229,7 +229,7 @@ class CoObjTHolder : public Holder<co_obj_t> {
       size = ALIGN(size, co_type_alignof(type));
 
       // Move the old value, if it exists.
-      char* src = static_cast<char*>(sub->val);
+      auto src = static_cast<char*>(sub->val);
       sub->val = val_data + size;
       if (src != nullptr) {
         const int DATA_MAX_OFFSET = PREALLOCATED_OBJ_SIZE;
