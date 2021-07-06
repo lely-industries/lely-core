@@ -209,7 +209,7 @@ TEST(Util_MemPool, MemPool_Alloc_SizeZero) {
 /// \When mem_free() is called with a pointer to allocated memory
 ///
 /// \Then nothing is changed
-TEST(Util_MemPool, MemPool_Free_DoeaNothing) {
+TEST(Util_MemPool, MemPool_Free_DoesNothing) {
   const size_t allocationSize = 10u;
   const auto result = mem_alloc(alloc, 0, allocationSize);
 

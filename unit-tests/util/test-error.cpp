@@ -29,6 +29,22 @@
 #include <lely/util/error.h>
 
 TEST_GROUP(Util_Error) {
+  set_errc_handler_t* default_set_errc_handler;
+  get_errc_handler_t* default_get_errc_handler;
+  void* default_set_errc_data;
+  void* default_get_errc_data;
+
+  int set_errc_value;
+  int get_errc_value;
+
+  static void CustomSetErrcHandler(const int errc, void* const data) {
+    *static_cast<int*>(data) = errc;
+  }
+
+  static int CustomGetErrcHandler(void* const data) {
+    return *static_cast<int*>(data);
+  }
+
   TEST_SETUP() {
     set_errc_get_handler(&default_set_errc_handler, &default_set_errc_data);
     get_errc_get_handler(&default_get_errc_handler, &default_get_errc_data);
@@ -42,22 +58,6 @@ TEST_GROUP(Util_Error) {
 
     set_errc(0);
   }
-
-  static void CustomSetErrcHandler(int errc, void* data) {
-    *static_cast<int*>(data) = errc;
-  }
-
-  static int CustomGetErrcHandler(void* data) {
-    return *static_cast<int*>(data);
-  }
-
-  set_errc_handler_t* default_set_errc_handler;
-  get_errc_handler_t* default_get_errc_handler;
-  void* default_set_errc_data;
-  void* default_get_errc_data;
-
-  int set_errc_value;
-  int get_errc_value;
 };
 
 /// @name set_errc_get_handler()

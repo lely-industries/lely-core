@@ -45,8 +45,7 @@ TEST_GROUP(Util_MemBuf_Init) {
 
 /// \Given a pointer to uninitialized memory buffer (membuf)
 ///
-/// \When membuf_init() is called with a null pointer to memory region and zero
-///       size
+/// \When membuf_init() is called with no memory area
 ///
 /// \Then buffer is initialized, has zero size and capacity and its pointer to
 ///       first byte of the buffer is null
@@ -124,13 +123,15 @@ TEST(Util_MemBuf_Init, MemBuf_Init_ExistingMemory) {
 ///@{
 
 #if !LELY_NO_MALLOC
-/// \Given LElY_NO_MALLOC disabled; a pointer to memory buffer (membuf)
-///        initialized with null pointer to memory region and size zero
+/// \Given a pointer to a memory buffer (membuf) initialized with no memory area
 ///
 /// \When membuf_reserve() is called with a non zero capacity
 ///
 /// \Then new capacity larger than zero is returned, memory area the buffer is
 ///       based on is no longer null
+///       \Calls membuf_capacity()
+///       \Calls membuf_size()
+///       \Calls realloc()
 TEST(Util_MemBuf_Init, MemBuf_Reserve_InitialReserve) {
   membuf_init(buf, nullptr, 0);
 
@@ -180,6 +181,7 @@ TEST_GROUP(Util_MemBuf) {
 /// \Then a pointer to reserved memory at buffer's beginning is returned, passed
 ///       size variable is not modified, the buffer's current position indicator
 ///       is moved by requested size and capacity is reduced by the same value
+///       \Calls membuf_seek()
 TEST(Util_MemBuf, MemBuf_Alloc_InEmpty) {
   const size_t REQUIRED_SIZE = CAPACITY / 4u;
   size_t size = REQUIRED_SIZE;
@@ -200,6 +202,7 @@ TEST(Util_MemBuf, MemBuf_Alloc_InEmpty) {
 ///       previous allocation is returned, passed size variable is not modified,
 ///       the buffer's current position indicator is moved by requested size and
 ///       capacity is reduced by the same value
+///       \Calls membuf_seek()
 TEST(Util_MemBuf, MemBuf_Alloc_InNotEmpty) {
   const size_t FIRST_ALLOC_SIZE = CAPACITY / 8u;
   const size_t REQUIRED_SIZE = CAPACITY / 4u;
@@ -226,6 +229,7 @@ TEST(Util_MemBuf, MemBuf_Alloc_InNotEmpty) {
 ///       previous allocation is returned, passed size variable is not modified,
 ///       the buffer's current position indicator is moved to the end of buffer
 ///       and there is no space left in the buffer
+///       \Calls membuf_seek()
 TEST(Util_MemBuf, MemBuf_Alloc_AllCapacity) {
   const size_t REQUIRED_SIZE = CAPACITY / 2u;
   size_t size = REQUIRED_SIZE;
@@ -250,6 +254,7 @@ TEST(Util_MemBuf, MemBuf_Alloc_AllCapacity) {
 ///       space size available before the call, the buffer's current position
 ///       indicator is moved to the end of buffer and there is no space left in
 ///       the buffer
+///       \Calls membuf_seek()
 TEST(Util_MemBuf, MemBuf_Alloc_NotEnoughSpace) {
   const size_t LEFT_OVER_SPACE = 2u;
   const size_t REQUIRED_SIZE = CAPACITY - LEFT_OVER_SPACE;
@@ -388,6 +393,7 @@ TEST(Util_MemBuf, MemBuf_Seek_BackwardTooFar) {
 ///       equal zero
 ///
 /// \Then zero is returned, nothing is changed
+///       \Calls membuf_alloc()
 TEST(Util_MemBuf, MemBuf_Write_Zero) {
   const char DUMMY[] =
       "GCC produces false positive for null argument - nonnull + memcpy";
@@ -407,6 +413,8 @@ TEST(Util_MemBuf, MemBuf_Write_Zero) {
 /// \Then requested data size is returned; requested data was written to the
 ///       buffer and the buffer's current position indicator is moved by
 ///       requested size and capacity is reduced by the same value
+///       \Calls membuf_alloc()
+///       \Calls memcpy()
 TEST(Util_MemBuf, MemBuf_Write_Few) {
   const char TEST[] = "test string";
 
@@ -426,6 +434,8 @@ TEST(Util_MemBuf, MemBuf_Write_Few) {
 /// \Then requested data size is returned; requested data was written to the
 ///       buffer directly after previously written data; buffer's current
 ///       position indicator points at one past just written data
+///       \Calls membuf_alloc()
+///       \Calls memcpy()
 TEST(Util_MemBuf, MemBuf_Write_Append) {
   const char TEST1[] = "test";
   const char TEST2[] = "other";
@@ -447,6 +457,8 @@ TEST(Util_MemBuf, MemBuf_Write_Append) {
 /// \Then the buffer's remaining capacity from before the call is returned, data
 ///       was written into the buffer until its end, rest was discarded and
 ///       there is no space left in the buffer
+///       \Calls membuf_alloc()
+///       \Calls memcpy()
 TEST(Util_MemBuf, MemBuf_Write_TooBig) {
   const char TEST[] = "0123456789ABCDEF__________________";
 
@@ -469,6 +481,7 @@ TEST(Util_MemBuf, MemBuf_Write_TooBig) {
 ///       to remaining buffer capacity
 ///
 /// \Then buffer's initial capacity is returned, nothing is changed
+///       \Calls membuf_capacity()
 TEST(Util_MemBuf, MemBuf_Reserve_EnoughAlready) {
   const char TEST[] = "01234";
   membuf_write(buf, TEST, sizeof(TEST));
@@ -483,8 +496,7 @@ TEST(Util_MemBuf, MemBuf_Reserve_EnoughAlready) {
 }
 
 #if !LELY_NO_MALLOC
-/// \Given LELY_NO_MALLOC disabled; a pointer to memory buffer (membuf) with no
-///        remaining capacity
+/// \Given a pointer to memory buffer (membuf) with no remaining capacity
 ///
 /// \When membuf_reserve() is called with some non-zero capacity
 ///
@@ -492,6 +504,9 @@ TEST(Util_MemBuf, MemBuf_Reserve_EnoughAlready) {
 ///       returned, same value is the new buffer's capacity, buffer's current
 ///       position indicator was not changed and data already written is left
 ///       intact
+///       \Calls membuf_capacity()
+///       \Calls membuf_size()
+///       \Calls realloc()
 TEST(Util_MemBuf, MemBuf_Reserve_AddNew_MallocMode) {
   const char TEST[] = "0123456789ABCDEF__________________";
   membuf_write(buf, TEST, sizeof(TEST));
@@ -507,12 +522,13 @@ TEST(Util_MemBuf, MemBuf_Reserve_AddNew_MallocMode) {
 #endif
 
 #if LELY_NO_MALLOC
-/// \Given LELY_NO_MALLOC enabled; a pointer to memory buffer (membuf) with no
-///        remaining capacity
+/// \Given a pointer to memory buffer (membuf) with no remaining capacity
 ///
 /// \When membuf_reserve() is called with some non-zero capacity
 ///
 /// \Then 0 is returned, nothing is changed, ERRNUM_NOMEM error number is set
+///       \Calls membuf_capacity()
+///       \Calls set_errnum()
 TEST(Util_MemBuf, MemBuf_Reserve_AddNew_NoMallocMode) {
   const char TEST[] = "0123456789ABCDEF__________________";
   membuf_write(buf, TEST, sizeof(TEST));
@@ -538,6 +554,7 @@ TEST(Util_MemBuf, MemBuf_Reserve_AddNew_NoMallocMode) {
 /// \When membuf_flush() is called with some size
 ///
 /// \Then nothing is changed
+///       \Calls membuf_size()
 TEST(Util_MemBuf, MemBuf_Flush_Empty) {
   membuf_flush(buf, CAPACITY);
 
@@ -551,6 +568,8 @@ TEST(Util_MemBuf, MemBuf_Flush_Empty) {
 ///
 /// \Then already written data is removed, the buffer is empty and at full
 ///       capacity
+///       \Calls membuf_size()
+///       \Calls memmove()
 TEST(Util_MemBuf, MemBuf_Flush_All) {
   const char TEST[] = "test";
   membuf_write(buf, TEST, sizeof(TEST));
@@ -569,6 +588,8 @@ TEST(Util_MemBuf, MemBuf_Flush_All) {
 /// \Then part of already written data after requested flush size is moved to
 ///       the beginning of the buffer, remaining capacity is increased by
 ///       requested flush size
+///       \Calls membuf_size()
+///       \Calls memmove()
 TEST(Util_MemBuf, MemBuf_Flush_Part) {
   const char TEST[] = "test";
   membuf_write(buf, TEST, sizeof(TEST));

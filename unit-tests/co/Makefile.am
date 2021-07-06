@@ -3,7 +3,7 @@ bin =
 LELY_COMPAT_LIBS =
 if CODE_COVERAGE_ENABLED
 LELY_COMPAT_LIBS += $(CODE_COVERAGE_LIBS)
-endif
+endif CODE_COVERAGE_ENABLED
 
 LELY_COMPAT_LIBS += $(top_builddir)/lib/compat/liblely-compat.la
 
@@ -12,7 +12,7 @@ LELY_UNIT_TEST_CO_LDFLGS =
 if PLATFORM_WIN32
 LELY_UNIT_TEST_CO_LDFLGS += -all-static
 CPPUTEST_LIBS += -lpthread
-endif
+endif PLATFORM_WIN32
 
 LELY_UNIT_TEST_LIBS = $(top_builddir)/unit-tests/libtest/tools/liblely-unit-test.la
 
@@ -34,8 +34,8 @@ LELY_OVERRIDE_CO_VAL_LDFLGS += -Wl,--wrap=co_val_init_min
 LELY_OVERRIDE_CO_VAL_LDFLGS += -Wl,--wrap=co_val_init_max
 LELY_OVERRIDE_CO_VAL_LDFLGS += -Wl,--wrap=co_val_init
 LELY_OVERRIDE_UTIL_MEMBUF_LDFLGS += -Wl,--wrap=membuf_reserve
-endif
-endif
+endif !ENABLE_SHARED
+endif !PLATFORM_WIN32
 
 LELY_UNIT_TEST_CO_COMMON_LIBS =
 LELY_UNIT_TEST_CO_COMMON_LIBS += $(LELY_CO_LIBS)
@@ -95,7 +95,7 @@ bin += unit-test-co-nmt-rdn
 unit_test_co_nmt_rdn_SOURCES = $(src_common) test-nmt-rdn.cpp
 unit_test_co_nmt_rdn_LDADD = $(LELY_UNIT_TEST_CO_COMMON_LIBS)
 unit_test_co_nmt_rdn_LDFLAGS = $(LELY_UNIT_TEST_CO_LDFLGS)
-endif # !NO_CO_ECSS_REDUNDANCY
+endif !NO_CO_ECSS_REDUNDANCY
 
 bin += unit-test-co-nmt-srv
 unit_test_co_nmt_srv_SOURCES = $(src_common) test-nmt-srv.cpp
@@ -174,37 +174,37 @@ AM_CPPFLAGS = -I$(top_srcdir)/include -I$(top_srcdir)/unit-tests
 AM_CPPFLAGS += -DTEST_SRCDIR=\"${srcdir}\"
 if ENABLE_SHARED
 AM_CPPFLAGS += -DLELY_ENABLE_SHARED=1
-endif
+endif ENABLE_SHARED
 AM_CPPFLAGS += $(CPPUTEST_CFLAGS)
 
 if NO_UNIT_TESTS_MEMLEAK
 AM_CPPFLAGS += -DCPPUTEST_MEM_LEAK_DETECTION_DISABLED
-endif
+endif NO_UNIT_TESTS_MEMLEAK
 
 if NO_HOSTED
 # even in no-hosted unit-tests are compiled with libc
 AM_CPPFLAGS += -DLELY_HAVE_TIMESPEC -DLELY_HAVE_ITIMERSPEC
-endif
+endif NO_HOSTED
 
 if CODE_COVERAGE_ENABLED
 AM_CPPFLAGS += $(CODE_COVERAGE_CPPFLAGS)
-endif
+endif CODE_COVERAGE_ENABLED
 
 AM_CFLAGS =
 if CODE_COVERAGE_ENABLED
 AM_CFLAGS += $(CODE_COVERAGE_CFLAGS)
-endif
+endif CODE_COVERAGE_ENABLED
 
 AM_CXXFLAGS =
 AM_CXXFLAGS += -fno-exceptions
 if CODE_COVERAGE_ENABLED
 AM_CXXFLAGS += $(CODE_COVERAGE_CXXFLAGS)
-endif
+endif CODE_COVERAGE_ENABLED
 
 AM_LDFLAGS =
 if PLATFORM_WIN32
 AM_LDFLAGS += -all-static
-endif
+endif PLATFORM_WIN32
 
 check_PROGRAMS = $(bin)
 
@@ -217,8 +217,8 @@ if CODE_COVERAGE_ENABLED
 LOG_COMPILER = $(SHELL) $(top_builddir)/lcov-wrapper.sh
 AM_TESTS_ENVIRONMENT += EXEC_WRAPPER="$(EXEC)"; export EXEC_WRAPPER;
 @CODE_COVERAGE_RULES@
-else
+else !CODE_COVERAGE_ENABLED
 LOG_COMPILER = $(EXEC)
-endif
+endif !CODE_COVERAGE_ENABLED
 
 @VALGRIND_CHECK_RULES@
