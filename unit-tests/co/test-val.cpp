@@ -122,28 +122,32 @@ TEST_GROUP(CO_Val) {
   static co_integer24_t ldle_i24(const uint_least8_t src[4]) {
     co_unsigned24_t u24 = ldle_u24(src);
     if (u24 > CO_INTEGER24_MAX)
-      return -(CO_UNSIGNED24_MAX + 1 - u24);
+      return -(static_cast<int32_t>(CO_UNSIGNED24_MAX) + 1 -
+               static_cast<int32_t>(u24));
     else
       return u24;
   }
   static co_integer40_t ldle_i40(const uint_least8_t src[8]) {
     co_unsigned40_t u40 = ldle_u40(src);
     if (u40 > CO_INTEGER40_MAX)
-      return -(CO_UNSIGNED40_MAX + 1 - u40);
+      return -(static_cast<int64_t>(CO_UNSIGNED40_MAX) + 1 -
+               static_cast<int64_t>(u40));
     else
       return u40;
   }
   static co_integer48_t ldle_i48(const uint_least8_t src[8]) {
     co_unsigned48_t u48 = ldle_u48(src);
     if (u48 > CO_INTEGER48_MAX)
-      return -(CO_UNSIGNED48_MAX + 1 - u48);
+      return -(static_cast<int64_t>(CO_UNSIGNED48_MAX) + 1 -
+               static_cast<int64_t>(u48));
     else
       return u48;
   }
   static co_integer56_t ldle_i56(const uint_least8_t src[8]) {
     co_unsigned56_t u56 = ldle_u56(src);
     if (u56 > CO_INTEGER56_MAX)
-      return -(CO_UNSIGNED56_MAX + 1 - u56);
+      return -(static_cast<int64_t>(CO_UNSIGNED56_MAX) + 1 -
+               static_cast<int64_t>(u56));
     else
       return u56;
   }
