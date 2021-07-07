@@ -46,9 +46,12 @@
 .deps
 .dirstamp
 .libs
-cpputest_*.xml
 Makefile
 Makefile.in
+cpputest_*.xml
+test-*
+!test-*.cpp
+unit-test-*
 *~
 *.dat
 *.def
@@ -60,6 +63,3 @@ Makefile.in
 *.o
 *.pc
 *.rc
-test-*
-!test-*.cpp
-unit-test-*

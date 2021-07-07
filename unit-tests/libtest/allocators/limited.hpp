@@ -35,8 +35,7 @@ namespace Allocators {
 
 class Limited {
  public:
-  explicit Limited()
-      : alloc(&vtbl), allocationLimit(std::numeric_limits<size_t>::max()) {
+  explicit Limited() : alloc(&vtbl) {
     vtbl.alloc = Alloc;
     vtbl.free = Free;
     vtbl.size = Size;
@@ -107,7 +106,7 @@ class Limited {
   alloc_t alloc;
   alloc_vtbl vtbl;
   Default inner;
-  size_t allocationLimit;
+  size_t allocationLimit = std::numeric_limits<size_t>::max();
 };
 
 }  // namespace Allocators

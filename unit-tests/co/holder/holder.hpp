@@ -30,7 +30,7 @@ class Holder {
 #if LELY_NO_MALLOC
 
  protected:
-  Holder() : item({}) {}
+  Holder() = default;
 
  public:
   Item*
@@ -49,7 +49,7 @@ class Holder {
   }
 
  private:
-  Item item;
+  Item item = {};
 #else   // !LELY_NO_MALLOC
 
  protected:

@@ -3615,7 +3615,7 @@ TEST(CoSsdoBlkUp, Sub_TimeoutTriggered) {
 TEST(CoSsdoBlkUp, InitIniRes_CoSdoCobidFrame) {
   dev_holder->CreateAndInsertObj(obj2020, IDX);
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE, sub_type(0xabcdu));
-  co_unsigned32_t cobid_res = (DEFAULT_COBID_RES) | CO_SDO_COBID_FRAME;
+  co_unsigned32_t cobid_res = DEFAULT_COBID_RES | CO_SDO_COBID_FRAME;
   SetSrv02CobidRes(cobid_res);
   StartSSDO();
 

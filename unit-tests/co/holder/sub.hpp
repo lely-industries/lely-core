@@ -35,8 +35,7 @@ class CoSubTHolder : public Holder<co_sub_t> {
 #if LELY_NO_MALLOC
 
  public:
-  explicit CoSubTHolder(co_unsigned8_t subidx, co_unsigned16_t type)
-      : value({}) {
+  explicit CoSubTHolder(co_unsigned8_t subidx, co_unsigned16_t type) {
     if (co_type_is_array(type)) {
       co_val_init_array(&value, &array);
       co_sub_init(Get(), subidx, type, &value);
@@ -46,7 +45,7 @@ class CoSubTHolder : public Holder<co_sub_t> {
   }
 
  private:
-  co_val value;
+  co_val value = {};
   co_array array = CO_ARRAY_INIT;
 #else  // !LELY_NO_MALLOC
 
