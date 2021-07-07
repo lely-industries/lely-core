@@ -105,7 +105,7 @@ TEST_GROUP(CO_Val) {
     }
   }
 
-  static co_boolean_t ldle_b(const uint_least8_t src[1]) { return (src != 0); }
+  static co_boolean_t ldle_b(const uint_least8_t src[1]) { return src[0] != 0; }
   static co_unsigned8_t ldle_u8(const uint_least8_t src[1]) { return *src; }
   static co_unsigned24_t ldle_u24(const uint_least8_t src[4]) {
     return ldle_u32(src) & 0x00ffffff;
