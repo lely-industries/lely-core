@@ -233,7 +233,7 @@ class CoObjTHolder : public Holder<co_obj_t> {
       sub->val = val_data + size;
       if (src != nullptr) {
         const int DATA_MAX_OFFSET = PREALLOCATED_OBJ_SIZE;
-        int offset = src - val_data;
+        auto offset = src - val_data;
         // If value was located within 'val_data', update the 'src' pointer
         // as value has been moved to 'old_data'.
         if (offset >= 0 && offset < DATA_MAX_OFFSET) src = old_data + offset;

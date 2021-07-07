@@ -58,7 +58,7 @@ TEST_GROUP(CO_NmtRdn) {
 
   std::unique_ptr<CoDevTHolder> dev_holder;
 
-  const uint_least64_t HB_TIMEOUT_MS = 550u;
+  const uint_least16_t HB_TIMEOUT_MS = 550u;
   const uint_least8_t BDEFAULT = 0u;
   const uint_least8_t TTOGGLE = 3u;
   const uint_least8_t NTOGGLE = 5u;

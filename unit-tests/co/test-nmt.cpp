@@ -232,16 +232,15 @@ TEST_GROUP_BASE(CO_NmtCreate, CO_NmtBase) {
   }
 
   // co_dev_write_dcf(): every <> is a call to co_val_write() when writing DCFs
-  static size_t GetCoDevWriteDcf_NullBuf_CoValWriteCalls(
-      const size_t num_subs) {
+  static int GetCoDevWriteDcf_NullBuf_CoValWriteCalls(const size_t num_subs) {
     // <total number of subs> + NUM_SUBS * <get sub's size>
-    return 1u + num_subs;
+    return 1 + static_cast<int>(num_subs);
   }
 
-  static size_t GetCoDevWriteDcf_CoValWriteCalls(const size_t num_subs) {
+  static int GetCoDevWriteDcf_CoValWriteCalls(const size_t num_subs) {
     // <total number of subs> + NUM_SUBS * (<get sub's size> + <sub's index>
     //     + <sub's sub-index> + <sub's size> + <sub's value>)
-    return 1u + num_subs * 5u;
+    return 1 + static_cast<int>(num_subs) * 5;
   }
 
   TEST_TEARDOWN() {

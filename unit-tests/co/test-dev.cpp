@@ -2640,7 +2640,7 @@ TEST(CO_DevTpdoEventInd, CoDevSetTpdoEventInd_Nominal) {
 
 TEST_GROUP_BASE(CO_DevTpdoEvent, CO_DevTpdoBase) {
   const co_unsigned16_t OBJ_IDX = 0x1234u;
-  const co_unsigned16_t SUB_IDX = 0xabu;
+  const co_unsigned8_t SUB_IDX = 0xabu;
   const co_unsigned8_t SUB_SIZE = 16u;
 
   std::unique_ptr<CoObjTHolder> obj_holder;

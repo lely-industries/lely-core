@@ -802,7 +802,7 @@ TEST(CO_Pdo, CoDevCfgPdoMap_MaxMapped) {
   obj.InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8,
                       co_unsigned8_t(CO_PDO_NUM_MAPS));
 
-  for (size_t i = 1; i <= CO_PDO_NUM_MAPS; i++) {
+  for (co_unsigned8_t i = 1; i <= CO_PDO_NUM_MAPS; i++) {
     par.map[i - 1] = 0x20000000u;  // idx: 0x2000 subidx: 0x00 len: 0x00
     obj.InsertAndSetSub(i, CO_DEFTYPE_UNSIGNED32, co_unsigned32_t(0x00000000u));
   }

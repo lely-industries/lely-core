@@ -1771,7 +1771,7 @@ TEST_GROUP_BASE(CoSsdoDnSegOnRecv, CO_Ssdo) {
   // send segmented download initiate request to SSDO (0x2020, 0x00)
   void DownloadInitiateReq(const size_t size) {
     co_unsigned8_t size_buf[4] = {0};
-    stle_u32(size_buf, size);
+    stle_u32(size_buf, static_cast<uint32_t>(size));
     can_msg msg = SdoCreateMsg::Default(IDX, SUBIDX, DEFAULT_COBID_REQ);
     msg.data[0] = CO_SDO_CCS_DN_INI_REQ | CO_SDO_INI_SIZE_IND;
     stle_u16(msg.data + 1u, IDX);

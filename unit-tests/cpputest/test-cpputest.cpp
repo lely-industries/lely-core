@@ -56,7 +56,7 @@ struct param_struct {
   const char* param2;
 };
 
-int
+ssize_t
 sample_func(const struct param_struct* pc, const bool flag) {
   if (!pc || !pc->param2) return -1;
 
@@ -119,7 +119,7 @@ TEST(Module_SampleFunc, InvalidArgs) {
   param.param2 = NULL;
 
   /* act */
-  int ret = sample_func(&param, true);
+  auto ret = sample_func(&param, true);
 
   /* assert */
   CHECK_EQUAL(-1, ret);
@@ -132,7 +132,7 @@ TEST(Module_SampleFunc, Test_FlagTrue_1) {
   SampleHelperFunction(10, '\0');
 
   /* when */
-  int ret = sample_func(&param, true);
+  auto ret = sample_func(&param, true);
 
   /* then */
   CHECK_EQUAL(50, ret);
