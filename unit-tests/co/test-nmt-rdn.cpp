@@ -64,7 +64,7 @@ TEST_GROUP(CO_NmtRdn) {
   const uint_least8_t NTOGGLE = 5u;
   const uint_least8_t INITIAL_CTOGGLE = 0u;
 
-  can_msg CreateMasterHbMsg(const co_unsigned8_t state) {
+  can_msg CreateMasterHbMsg(const co_unsigned8_t state) const {
     can_msg msg = CAN_MSG_INIT;
     msg.id = CO_NMT_EC_CANID(MASTER_DEV_ID);
     msg.len = 1u;

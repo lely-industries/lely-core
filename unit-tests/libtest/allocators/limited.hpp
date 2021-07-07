@@ -52,7 +52,7 @@ class Limited {
   }
 
   size_t
-  GetAllocationLimit() {
+  GetAllocationLimit() const {
     return allocationLimit;
   }
 

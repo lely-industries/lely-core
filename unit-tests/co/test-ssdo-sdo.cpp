@@ -54,15 +54,15 @@ TEST_GROUP(CO_SsdoDnInd) {
   std::unique_ptr<CoDevTHolder> dev_holder;
   std::unique_ptr<CoObjTHolder> obj1200;
 
-  co_unsigned32_t GetSrv01CobidReq() {
+  co_unsigned32_t GetSrv01CobidReq() const {
     return co_dev_get_val_u32(dev, 0x1200u, 0x01u);
   }
 
-  co_unsigned32_t GetSrv02CobidRes() {
+  co_unsigned32_t GetSrv02CobidRes() const {
     return co_dev_get_val_u32(dev, 0x1200u, 0x02u);
   }
 
-  co_unsigned8_t GetSrv03NodeId() {
+  co_unsigned8_t GetSrv03NodeId() const {
     return co_dev_get_val_u8(dev, 0x1200u, 0x03u);
   }
 

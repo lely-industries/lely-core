@@ -233,7 +233,7 @@ TEST_GROUP_BASE(CO_Sync, CO_SyncBase) {
     obj1019->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, overflow);
   }
 
-  void CheckSubDnIndDefault(co_unsigned16_t idx) {
+  void CheckSubDnIndDefault(co_unsigned16_t idx) const {
     co_sub_t* const sub = co_dev_find_sub(dev, idx, 0x00u);
     CHECK(sub != nullptr);
     co_sub_dn_ind_t* ind = nullptr;

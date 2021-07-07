@@ -140,14 +140,14 @@ TEST_BASE(CO_EmcyBase) {
                              co_unsigned32_t{CONSUMER_CANID});
   }
 
-  void CheckDefaultEmcyParams(const co_emcy_t* emcy) {
+  void CheckDefaultEmcyParams(const co_emcy_t* emcy) const {
     POINTERS_EQUAL(net, co_emcy_get_net(emcy));
     POINTERS_EQUAL(dev, co_emcy_get_dev(emcy));
 
     CheckDefaultIndicator(emcy);
   }
 
-  void CheckDefaultIndicator(const co_emcy_t* emcy) {
+  static void CheckDefaultIndicator(const co_emcy_t* emcy) {
     int dummy_data = 42;
     co_emcy_ind_t* ind = &EmcyInd::Func;
     void* data = &dummy_data;
@@ -157,7 +157,7 @@ TEST_BASE(CO_EmcyBase) {
     POINTERS_EQUAL(nullptr, data);
   }
 
-  void CheckEqualObj1001ErrorRegister(co_unsigned8_t er) {
+  void CheckEqualObj1001ErrorRegister(co_unsigned8_t er) const {
     CHECK_EQUAL(er, co_obj_get_val_u8(obj1001->Get(), 0x00u));
   }
 
@@ -671,7 +671,7 @@ TEST_GROUP_BASE(CO_Emcy, CO_EmcyBase) {
   co_emcy_t* emcy = nullptr;
 
   void CheckEqualObj1003PredefinedErrorField(
-      const std::vector<co_unsigned32_t>& error_codes) {
+      const std::vector<co_unsigned32_t>& error_codes) const {
     CHECK_EQUAL(error_codes.size(), co_obj_get_val_u8(obj1003->Get(), 0x00u));
 
     co_unsigned8_t subidx = 1u;
@@ -683,7 +683,7 @@ TEST_GROUP_BASE(CO_Emcy, CO_EmcyBase) {
     }
   }
 
-  void CheckEmptyObj1003PredefinedErrorField() {
+  void CheckEmptyObj1003PredefinedErrorField() const {
     CheckEqualObj1003PredefinedErrorField({});
   }
 
@@ -837,7 +837,7 @@ TEST_GROUP_BASE(CO_EmcyReceiver, CO_EmcyBase) {
   int data = 42;
 
   void CheckEmcyIndCall(co_unsigned16_t eec, co_unsigned8_t er,
-                        const msef_array& msef) {
+                        const msef_array& msef) const {
     CHECK_TRUE(EmcyInd::called);
     POINTERS_EQUAL(emcy, EmcyInd::last_emcy);
     CHECK_EQUAL(0x01u, EmcyInd::last_id);

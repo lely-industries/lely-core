@@ -43,7 +43,7 @@ TEST_GROUP(CO_Sdo) {
 
   co_sdo_req req = CO_SDO_REQ_INIT(req);
 
-  void CheckArrayIsZeroed(const void* const array, const size_t size) {
+  void CheckArrayIsZeroed(const void* const array, const size_t size) const {
     assert(array);
     const char* const arr = static_cast<const char*>(array);
     for (size_t i = 0u; i < size; i++) CHECK_EQUAL('\0', arr[i]);

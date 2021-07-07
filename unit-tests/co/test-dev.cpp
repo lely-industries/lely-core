@@ -74,7 +74,7 @@ TEST_GROUP(CO_DevInit) {
 #endif
   }
 
-  void CheckDevAfterInit(co_dev_t* const dev) {
+  void CheckDevAfterInit(co_dev_t* const dev) const {
     CHECK_EQUAL(0, co_dev_get_netid(dev));
     CHECK_EQUAL(0, co_dev_get_idx(dev, 0, nullptr));
     CHECK_EQUAL(0, co_dev_get_vendor_id(dev));
@@ -87,7 +87,7 @@ TEST_GROUP(CO_DevInit) {
   }
 
 #if !LELY_NO_CO_OBJ_NAME
-  void CheckDefaultNames(co_dev_t* const dev) {
+  void CheckDefaultNames(co_dev_t* const dev) const {
     POINTERS_EQUAL(nullptr, co_dev_get_name(dev));
     POINTERS_EQUAL(nullptr, co_dev_get_vendor_name(dev));
     POINTERS_EQUAL(nullptr, co_dev_get_product_name(dev));
@@ -2680,8 +2680,9 @@ TEST_GROUP_BASE(CO_DevTpdoEvent, CO_DevTpdoBase) {
     tpdo_mappings.push_back(std::move(obj1a00));
   }
 
-  co_unsigned32_t EncodeMapping(co_unsigned16_t obj_idx, co_unsigned8_t sub_idx,
-                                co_unsigned8_t num_bits) {
+  static co_unsigned32_t EncodeMapping(co_unsigned16_t obj_idx,
+                                       co_unsigned8_t sub_idx,
+                                       co_unsigned8_t num_bits) {
     co_unsigned32_t encoding = 0;
 
     encoding |= obj_idx << 16;
