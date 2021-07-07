@@ -62,8 +62,12 @@ unit_test_co_crc_LDFLAGS = $(LELY_UNIT_TEST_CO_LDFLGS)
 
 bin += unit-test-co-csdo
 unit_test_co_csdo_SOURCES = $(src_common) test-csdo.cpp
-unit_test_co_csdo_LDADD = $(LELY_OVERRIDE_UTIL_MEMBUF_LIB) $(LELY_UNIT_TEST_CO_COMMON_LIBS)
-unit_test_co_csdo_LDFLAGS = $(LELY_OVERRIDE_UTIL_MEMBUF_LDFLGS) $(LELY_UNIT_TEST_CO_LDFLGS)
+unit_test_co_csdo_LDADD = $(LELY_OVERRIDE_CO_VAL_LIB) \
+                          $(LELY_OVERRIDE_UTIL_MEMBUF_LIB) \
+			  $(LELY_UNIT_TEST_CO_COMMON_LIBS)
+unit_test_co_csdo_LDFLAGS = $(LELY_OVERRIDE_CO_VAL_LDFLGS) \
+                            $(LELY_OVERRIDE_UTIL_MEMBUF_LDFLGS) \
+			    $(LELY_UNIT_TEST_CO_LDFLGS)
 
 bin += unit-test-co-csdo-sdo
 unit_test_co_csdo_sdo_SOURCES = $(src_common) test-csdo-sdo.cpp
@@ -72,8 +76,10 @@ unit_test_co_csdo_sdo_LDFLAGS = $(LELY_UNIT_TEST_CO_LDFLGS)
 
 bin += unit-test-co-dev
 unit_test_co_dev_SOURCES = $(src_common) test-dev.cpp
-unit_test_co_dev_LDADD = $(LELY_OVERRIDE_CO_VAL_LIB) $(LELY_UNIT_TEST_CO_COMMON_LIBS)
-unit_test_co_dev_LDFLAGS = $(LELY_OVERRIDE_CO_VAL_LDFLGS) $(LELY_UNIT_TEST_CO_LDFLGS)
+unit_test_co_dev_LDADD = $(LELY_OVERRIDE_CO_VAL_LIB) \
+                         $(LELY_UNIT_TEST_CO_COMMON_LIBS)
+unit_test_co_dev_LDFLAGS = $(LELY_OVERRIDE_CO_VAL_LDFLGS) \
+                           $(LELY_UNIT_TEST_CO_LDFLGS)
 
 bin += unit-test-co-emcy
 unit_test_co_emcy_SOURCES = $(src_common) test-emcy.cpp
@@ -87,8 +93,10 @@ unit_test_co_emcy_sdo_LDFLAGS = $(LELY_UNIT_TEST_CO_LDFLGS)
 
 bin += unit-test-co-nmt
 unit_test_co_nmt_SOURCES = $(src_common) test-nmt.cpp
-unit_test_co_nmt_LDADD = $(LELY_OVERRIDE_CO_VAL_LIB) $(LELY_UNIT_TEST_CO_COMMON_LIBS)
-unit_test_co_nmt_LDFLAGS = $(LELY_OVERRIDE_CO_VAL_LDFLGS) $(LELY_UNIT_TEST_CO_LDFLGS)
+unit_test_co_nmt_LDADD = $(LELY_OVERRIDE_CO_VAL_LIB) \
+                         $(LELY_UNIT_TEST_CO_COMMON_LIBS)
+unit_test_co_nmt_LDFLAGS = $(LELY_OVERRIDE_CO_VAL_LDFLGS) \
+                           $(LELY_UNIT_TEST_CO_LDFLGS)
 
 if !NO_CO_ECSS_REDUNDANCY
 bin += unit-test-co-nmt-rdn
@@ -104,8 +112,10 @@ unit_test_co_nmt_srv_LDFLAGS = $(LELY_UNIT_TEST_CO_LDFLGS)
 
 bin += unit-test-co-obj
 unit_test_co_obj_SOURCES = $(src_common) test-obj.cpp
-unit_test_co_obj_LDADD = $(LELY_OVERRIDE_CO_VAL_LIB) $(LELY_UNIT_TEST_CO_COMMON_LIBS)
-unit_test_co_obj_LDFLAGS = $(LELY_OVERRIDE_CO_VAL_LDFLGS) $(LELY_UNIT_TEST_CO_LDFLGS)
+unit_test_co_obj_LDADD = $(LELY_OVERRIDE_CO_VAL_LIB) \
+                         $(LELY_UNIT_TEST_CO_COMMON_LIBS)
+unit_test_co_obj_LDFLAGS = $(LELY_OVERRIDE_CO_VAL_LDFLGS) \
+                           $(LELY_UNIT_TEST_CO_LDFLGS)
 
 bin += unit-test-co-pdo
 unit_test_co_pdo_SOURCES = $(src_common) test-pdo.cpp
@@ -124,8 +134,10 @@ unit_test_co_rpdo_sdo_LDFLAGS = $(LELY_UNIT_TEST_CO_LDFLGS)
 
 bin += unit-test-co-sdo
 unit_test_co_sdo_SOURCES = $(src_common) test-sdo.cpp
-unit_test_co_sdo_LDADD = $(LELY_OVERRIDE_CO_VAL_LIB) $(LELY_UNIT_TEST_CO_COMMON_LIBS)
-unit_test_co_sdo_LDFLAGS = $(LELY_OVERRIDE_CO_VAL_LDFLGS) $(LELY_UNIT_TEST_CO_LDFLGS)
+unit_test_co_sdo_LDADD = $(LELY_OVERRIDE_CO_VAL_LIB) \
+                         $(LELY_UNIT_TEST_CO_COMMON_LIBS)
+unit_test_co_sdo_LDFLAGS = $(LELY_OVERRIDE_CO_VAL_LDFLGS) \
+                           $(LELY_UNIT_TEST_CO_LDFLGS)
 
 bin += unit-test-co-ssdo
 unit_test_co_ssdo_SOURCES = $(src_common) test-ssdo.cpp
