@@ -37,7 +37,7 @@ namespace Override {
 class OverridePlugin : public TestPlugin {
  public:
   OverridePlugin();
-  ~OverridePlugin();
+  ~OverridePlugin() override;
 
   static OverridePlugin* getCurrent();
 
