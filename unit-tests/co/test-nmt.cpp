@@ -1290,10 +1290,10 @@ class CoNmtCsInd {
     checkSeqNmt_ = nmt;
     checkSeqCs_ = csSeq.data();
 
-    checkFunc = [](const co_nmt_t* const nmt, const co_unsigned8_t cs,
+    checkFunc = [](const co_nmt_t* const service, const co_unsigned8_t cs,
                    const void* const data) {
       CHECK(num_called_ < checkSeqNumCalled_);
-      POINTERS_EQUAL(checkSeqNmt_, nmt);
+      POINTERS_EQUAL(checkSeqNmt_, service);
       CHECK_EQUAL(checkSeqCs_[num_called_], cs);
       POINTERS_EQUAL(nullptr, data);
     };
@@ -1375,11 +1375,11 @@ class CoNmtStInd {
     checkSeqId_ = id;
     checkSeqSt_ = stSeq.data();
 
-    checkFunc = [](const co_nmt_t* const nmt, const co_unsigned8_t id,
+    checkFunc = [](const co_nmt_t* const service, const co_unsigned8_t seqId,
                    const co_unsigned8_t st, const void* const data) {
       CHECK(num_called_ < checkSeqNumCalled_);
-      POINTERS_EQUAL(checkSeqNmt_, nmt);
-      CHECK_EQUAL(checkSeqId_, id);
+      POINTERS_EQUAL(checkSeqNmt_, service);
+      CHECK_EQUAL(checkSeqId_, seqId);
       CHECK_EQUAL(checkSeqSt_[num_called_], st);
       POINTERS_EQUAL(nullptr, data);
     };

@@ -1102,9 +1102,9 @@ TEST_GROUP(CO_SubInit) {
 #endif
   }
 
-  void DestroyCoSubT(co_sub_t * sub) {
-    co_sub_fini(sub);
-    ReleaseCoSubT(sub);
+  void DestroyCoSubT(co_sub_t * sub_) {
+    co_sub_fini(sub_);
+    ReleaseCoSubT(sub_);
   }
 
 #if LELY_NO_MALLOC
