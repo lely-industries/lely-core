@@ -123,6 +123,11 @@ TEST_GROUP(CO_CsdoInit) {
     dev_holder.reset();
     can_net_destroy(net);
     can_net_destroy(failing_net);
+
+#if HAVE_LELY_OVERRIDE
+    LelyOverride::membuf_reserve(Override::AllCallsValid);
+    LelyOverride::co_val_write(Override::AllCallsValid);
+#endif  // HAVE_LELY_OVERRIDE
   }
 };
 
@@ -178,7 +183,7 @@ TEST(CO_CsdoInit, CoCsdoSizeof_Nominal) {
 /// \Given a pointer to the device (co_dev_t)
 ///
 /// \When co_csdo_create() is called with a pointer to the network (can_net_t)
-///       with a failing allocator, the pointer to the device and a CSDO number
+///       with a failing allocator, the pointer to the device and a CSDO number,
 ///       but CSDO allocation fails
 ///
 /// \Then a null pointer is returned
@@ -310,7 +315,7 @@ TEST(CO_CsdoInit, CoCsdoCreate_NoServerParameterObj) {
 ///        the object dictionary
 ///
 /// \When co_csdo_create() is called with a pointer to the network (can_net_t)
-///       with a failing allocator, the pointer to the device and a CSDO number
+///       with a failing allocator, the pointer to the device and a CSDO number,
 ///       but can_recv_create() fails
 ///
 /// \Then a null pointer is returned
@@ -339,7 +344,7 @@ TEST(CO_CsdoInit, CoCsdoCreate_RecvCreateFail) {
 ///        the object dictionary
 ///
 /// \When co_csdo_create() is called with a pointer to the network (can_net_t)
-///       with a failing allocator, the pointer to the device and a CSDO number
+///       with a failing allocator, the pointer to the device and a CSDO number,
 ///       but can_timer_create() fails
 ///
 /// \Then a null pointer is returned
@@ -866,6 +871,8 @@ TEST(CoCsdoSetGet, CoCsdoSetTimeout_UpdateTimeout) {
 ///@}
 
 TEST_GROUP_BASE(CO_Csdo, CO_CsdoBase) {
+  CoArrays arrays;
+
   static membuf ind_mbuf;
   static size_t num_called;
   const co_unsigned16_t SUB_TYPE = CO_DEFTYPE_UNSIGNED16;
@@ -879,7 +886,7 @@ TEST_GROUP_BASE(CO_Csdo, CO_CsdoBase) {
   const co_unsigned8_t SUBIDX = 0x00u;
   const co_unsigned16_t INVALID_IDX = 0xffffu;
   const co_unsigned8_t INVALID_SUBIDX = 0xffu;
-  const co_unsigned16_t VAL = 0xabcdu;
+  const sub_type VAL = 0xabcdu;
   std::unique_ptr<CoObjTHolder> obj2020;
   std::unique_ptr<CoObjTHolder> obj2021;
 #if LELY_NO_MALLOC
@@ -922,6 +929,8 @@ TEST_GROUP_BASE(CO_Csdo, CO_CsdoBase) {
   TEST_TEARDOWN() {
     ind_mbuf = MEMBUF_INIT;
     num_called = 0;
+
+    arrays.Clear();
 
     TEST_BASE_TEARDOWN();
   }
@@ -1396,7 +1405,7 @@ TEST(CO_Csdo, CoDevDnDcfReq_NoSub) {
 /// \Given a pointer to the device (co_dev_t), a concise DCF with many entries
 ///
 /// \When co_dev_dn_dcf_req() is called with pointers to the beginning and the
-///       end of the buffer and a pointer to the confirmation function but
+///       end of the buffer and a pointer to the confirmation function, but
 ///       download indication function returns an abort code
 ///
 /// \Then 0 is returned, the confirmation function is called once with a null
@@ -3105,8 +3114,8 @@ TEST(CO_Csdo, CoCsdoBlkUpIniOnRecv_IncorrectSubidx) {
 /// \Given a pointer to the CSDO service (co_csdo_t) which initiated block
 ///        upload transfer (the correct request was sent by the client)
 ///
-/// \When a correct block upload initiate response is received but
-///       membuf_reserve() fails
+/// \When a correct block upload initiate response is received, but the internal
+///       call to membuf_reserve() fails
 ///
 /// \Then an abort transfer SDO message with CO_SDO_AC_NO_MEM abort code is sent
 ///       \Calls ldle_u16()
@@ -3280,6 +3289,141 @@ TEST(CO_Csdo, CoCsdoBlkDnReq_TimeoutSet) {
   CanSend::CheckMsg(DEFAULT_COBID_REQ, 0, CO_SDO_MSG_SIZE,
                     expected_timeout.data());
 }
+
+///@}
+
+/// @name co_csdo_blk_dn_val_req()
+///@{
+
+/// \Given a pointer to the started CSDO service (co_csdo_t)
+///
+/// \When co_csdo_blk_dn_val_req() is called with an index and a sub-index,
+///       a data type, a pointer to a buffer with a value to download, a pointer
+///       to the download confirmation function and a null user-specified data
+///       pointer
+///
+/// \Then 0 is returned and a correct SDO block download value request is sent
+///       \Calls co_val_write()
+///       \Calls membuf_clear()
+///       \Calls membuf_reserve()
+///       \Calls membuf_alloc()
+///       \Calls co_val_write()
+///       \Calls co_csdo_blk_dn_req()
+TEST(CO_Csdo, CoCsdoBlkDnValReq_Nominal) {
+  StartCSDO();
+
+  const auto ret = co_csdo_blk_dn_val_req(csdo, IDX, SUBIDX, SUB_TYPE, &VAL,
+                                          CoCsdoDnCon::func, nullptr);
+
+  CHECK_EQUAL(0, ret);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
+  const std::vector<uint_least8_t> expected =
+      SdoInitExpectedData::U32(CO_SDO_CCS_BLK_DN_REQ | CO_SDO_BLK_CRC |
+                                   CO_SDO_BLK_SIZE_IND | CO_SDO_SC_INI_BLK,
+                               IDX, SUBIDX, sizeof(SUB_TYPE));
+  CanSend::CheckMsg(DEFAULT_COBID_REQ, 0, CO_SDO_MSG_SIZE, expected.data());
+}
+
+/// \Given a pointer to the started CSDO service (co_csdo_t)
+///
+/// \When co_csdo_blk_dn_val_req() is called with an index and a sub-index,
+///       an array data type, a pointer to a buffer with an empty array,
+///       a pointer to the download confirmation function and a null
+///       user-specified data pointer
+///
+/// \Then 0 is returned and a correct SDO block download value request is sent
+///       \Calls co_val_write()
+///       \Calls co_val_sizeof()
+///       \Calls membuf_clear()
+///       \Calls membuf_reserve()
+///       \Calls membuf_alloc()
+///       \Calls co_csdo_blk_dn_req()
+TEST(CO_Csdo, CoCsdoBlkDnValReq_DnEmptyArray) {
+  StartCSDO();
+
+  const co_octet_string_t val2dn = arrays.Init<co_octet_string_t>();
+  const auto ret =
+      co_csdo_blk_dn_val_req(csdo, IDX, SUBIDX, CO_DEFTYPE_OCTET_STRING,
+                             &val2dn, CoCsdoDnCon::func, nullptr);
+
+  CHECK_EQUAL(0, ret);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
+  std::vector<uint_least8_t> expected =
+      SdoInitExpectedData::U32(CO_SDO_CCS_BLK_DN_REQ | CO_SDO_BLK_CRC |
+                                   CO_SDO_BLK_SIZE_IND | CO_SDO_SC_INI_BLK,
+                               IDX, SUBIDX, 0);
+  CanSend::CheckMsg(DEFAULT_COBID_REQ, 0, CO_SDO_MSG_SIZE, expected.data());
+}
+
+#if HAVE_LELY_OVERRIDE
+/// \Given a pointer to the started CSDO service (co_csdo_t)
+///
+/// \When co_csdo_blk_dn_val_req() is called with an index and a sub-index,
+///       a data type, a pointer to a buffer with a value to download,
+///       a pointer to the download confirmation function and a null
+///       user-specified data pointer, but the internal call to co_val_write()
+///       fails
+///
+/// \Then -1 is returned and no SDO message is sent
+///       \Calls co_val_write()
+///       \Calls co_val_sizeof()
+TEST(CO_Csdo, CoCsdoBlkDnValReq_CoValWriteFail) {
+  StartCSDO();
+
+  LelyOverride::co_val_write(Override::NoneCallsValid);
+  const auto ret = co_csdo_blk_dn_val_req(csdo, IDX, SUBIDX, SUB_TYPE, &VAL,
+                                          CoCsdoDnCon::func, nullptr);
+
+  CHECK_EQUAL(-1, ret);
+  CHECK_EQUAL(0, CanSend::GetNumCalled());
+}
+
+/// \Given a pointer to the started CSDO service (co_csdo_t)
+///
+/// \When co_csdo_blk_dn_val_req() is called with an index and a sub-index,
+///       a data type, a pointer to a buffer with a value to download,
+///       a pointer to the download confirmation function and a null
+///       user-specified data pointer, but the second internal call to
+///       co_val_write() fails
+///
+/// \Then -1 is returned and no SDO message is sent
+///       \Calls co_val_write()
+///       \Calls membuf_clear()
+///       \Calls membuf_reserve()
+///       \Calls membuf_alloc()
+TEST(CO_Csdo, CoCsdoBlkDnValReq_SecondCoValWriteFail) {
+  StartCSDO();
+
+  LelyOverride::co_val_write(1u);
+  const auto ret = co_csdo_blk_dn_val_req(csdo, IDX, SUBIDX, SUB_TYPE, &VAL,
+                                          CoCsdoDnCon::func, nullptr);
+
+  CHECK_EQUAL(-1, ret);
+  CHECK_EQUAL(0, CanSend::GetNumCalled());
+}
+
+/// \Given a pointer to the started CSDO service (co_csdo_t)
+///
+/// \When co_csdo_blk_dn_val_req() is called with an index and a sub-index,
+///       type, pointer to a buffer with a value to download, pointer to
+///       the download confirmation function and a null user-specified data
+///       pointer, but the internal call to membuf_reserve() fails
+///
+/// \Then -1 is returned and no SDO message is sent
+///       \Calls co_val_write()
+///       \Calls membuf_clear()
+///       \Calls membuf_reserve()
+TEST(CO_Csdo, CoCsdoBlkDnValReq_MembufReserveFail) {
+  StartCSDO();
+
+  LelyOverride::membuf_reserve(Override::NoneCallsValid);
+  const auto ret = co_csdo_blk_dn_val_req(csdo, IDX, SUBIDX, SUB_TYPE, &VAL,
+                                          CoCsdoDnCon::func, nullptr);
+
+  CHECK_EQUAL(-1, ret);
+  CHECK_EQUAL(0, CanSend::GetNumCalled());
+}
+#endif  // HAVE_LELY_OVERRIDE
 
 ///@}
 

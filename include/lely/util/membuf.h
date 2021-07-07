@@ -93,7 +93,8 @@ LELY_UTIL_MEMBUF_INLINE size_t membuf_capacity(const struct membuf *buf);
  * @param buf  a pointer to a memory buffer.
  * @param size the required capacity of the buffer.
  *
- * @returns the new capacity of the buffer, or 0 on error. The new capacity can
+ * @returns the new capacity of the buffer, or 0 on error (or if both
+ * the current capacity and <b>size</b> are 0). The new capacity can
  * be larger than the requested capacity.
  */
 size_t membuf_reserve(struct membuf *buf, size_t size);
