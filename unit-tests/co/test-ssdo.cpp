@@ -26,6 +26,7 @@
 
 #include <memory>
 #include <vector>
+#include <array>
 
 #include <CppUTest/TestHarness.h>
 
@@ -568,7 +569,7 @@ TEST_BASE(CO_Ssdo) {
   std::unique_ptr<CoDevTHolder> dev_holder;
   std::unique_ptr<CoObjTHolder> obj1200;
   std::unique_ptr<CoObjTHolder> obj2020;
-  can_msg msg_buf[MSG_BUF_SIZE];
+  std::array<can_msg, MSG_BUF_SIZE> msg_buf;
 
   Allocators::Default defaultAllocator;
 
@@ -617,8 +618,8 @@ TEST_BASE(CO_Ssdo) {
 
   void ResetCanSend() {
     CanSend::Clear();
-    for (unsigned int i = 0; i < MSG_BUF_SIZE; i++) msg_buf[i] = CAN_MSG_INIT;
-    CanSend::SetMsgBuf(msg_buf, MSG_BUF_SIZE);
+    msg_buf.fill(CAN_MSG_INIT);
+    CanSend::SetMsgBuf(msg_buf.data(), msg_buf.size());
   }
 
   TEST_SETUP() {
@@ -640,7 +641,7 @@ TEST_BASE(CO_Ssdo) {
     CHECK(ssdo != nullptr);
 
     can_net_set_send_func(net, CanSend::Func, nullptr);
-    CanSend::SetMsgBuf(msg_buf, MSG_BUF_SIZE);
+    CanSend::SetMsgBuf(msg_buf.data(), msg_buf.size());
     CanSend::Clear();
   }
 

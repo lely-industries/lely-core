@@ -29,6 +29,7 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include <array>
 
 #include <CppUTest/TestHarness.h>
 
@@ -2478,13 +2479,13 @@ TEST(CO_DevDCF, CoDevWriteDcf_Nominal) {
 ///       \Calls co_obj_get_idx()
 ///       \Calls co_val_write()
 TEST(CO_DevDCF, CoDevWriteDcf_BeforeMin) {
-  uint_least8_t tmp[BUF_SIZE] = {0};
+  std::array<uint_least8_t, BUF_SIZE> tmp{0x00};
 
-  const auto ret =
-      co_dev_write_dcf(dev, 0x1235u, CO_UNSIGNED16_MAX, tmp, tmp + BUF_SIZE);
+  const auto ret = co_dev_write_dcf(dev, 0x1235u, CO_UNSIGNED16_MAX, tmp.data(),
+                                    tmp.data() + tmp.size());
 
   CHECK_EQUAL(MIN_RW_SIZE, ret);
-  for (size_t i = 0; i < BUF_SIZE; i++) CHECK_EQUAL(0, tmp[i]);
+  for (const auto& item : tmp) CHECK_EQUAL(0, item);
 }
 
 /// \Given a pointer to a device (co_dev_t) containing an entry in
@@ -2502,13 +2503,13 @@ TEST(CO_DevDCF, CoDevWriteDcf_BeforeMin) {
 ///       \Calls co_obj_get_idx()
 ///       \Calls co_val_write()
 TEST(CO_DevDCF, CoDevWriteDcf_AfterMax) {
-  uint_least8_t tmp[BUF_SIZE] = {0};
+  std::array<uint_least8_t, BUF_SIZE> tmp{0x00};
 
-  const auto ret =
-      co_dev_write_dcf(dev, CO_UNSIGNED16_MIN, 0x1233u, tmp, tmp + BUF_SIZE);
+  const auto ret = co_dev_write_dcf(dev, CO_UNSIGNED16_MIN, 0x1233u, tmp.data(),
+                                    tmp.data() + tmp.size());
 
   CHECK_EQUAL(MIN_RW_SIZE, ret);
-  for (size_t i = 0; i < BUF_SIZE; i++) CHECK_EQUAL(0, tmp[i]);
+  for (const auto& item : tmp) CHECK_EQUAL(0, item);
 }
 
 #if LELY_NO_MALLOC
@@ -2552,14 +2553,14 @@ TEST(CO_DevDCF, CoDevWriteDcf_Null) {
 ///       \Calls co_dev_write_sub()
 TEST(CO_DevDCF, CoDevWriteDcf_FailedToWriteSubObject) {
   co_dev_set_val_i16(dev, 0x1234u, 0xabu, 0x0987u);
-  uint_least8_t buf[BUF_SIZE] = {0};
+  std::array<uint_least8_t, BUF_SIZE> buf{0x00};
 
   LelyOverride::co_val_write(Override::NoneCallsValid);
   const auto ret = co_dev_write_dcf(dev, CO_UNSIGNED16_MIN, CO_UNSIGNED16_MAX,
-                                    buf, buf + BUF_SIZE);
+                                    buf.data(), buf.data() + buf.size());
 
   CHECK_EQUAL(0, ret);
-  for (size_t i = 0; i < BUF_SIZE; i++) CHECK_EQUAL(0, buf[i]);
+  for (const auto& item : buf) CHECK_EQUAL(0, item);
 }
 #endif
 
