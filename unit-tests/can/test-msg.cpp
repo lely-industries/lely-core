@@ -507,7 +507,7 @@ TEST_GROUP(CAN_SNPrintfCanMsg) {
 ///
 /// \Then 10 is returned
 TEST(CAN_SNPrintfCanMsg, ZeroStr) {
-  const auto slen = snprintf_can_msg(NULL, 0, &msg);
+  const auto slen = snprintf_can_msg(nullptr, 0, &msg);
 
   CHECK_EQUAL(10, slen);
 }
@@ -519,7 +519,7 @@ TEST(CAN_SNPrintfCanMsg, ZeroStr) {
 ///
 /// \Then 10 is returned
 TEST(CAN_SNPrintfCanMsg, InvalidStr) {
-  const auto slen = snprintf_can_msg(NULL, STRLEN, &msg);
+  const auto slen = snprintf_can_msg(nullptr, STRLEN, &msg);
 
   CHECK_EQUAL(10, slen);
 }
@@ -531,7 +531,7 @@ TEST(CAN_SNPrintfCanMsg, InvalidStr) {
 ///
 /// \Then 0 is returned, nothing is changed
 TEST(CAN_SNPrintfCanMsg, NullCANMsg) {
-  const auto slen = snprintf_can_msg(output_str, STRLEN, NULL);
+  const auto slen = snprintf_can_msg(output_str, STRLEN, nullptr);
 
   CHECK_EQUAL(0, slen);
   STRCMP_EQUAL("", output_str);
@@ -872,7 +872,7 @@ TEST_GROUP(CAN_Crc) {
 ///
 /// \Then 0 is returned
 TEST(CAN_Crc, AllZeros) {
-  auto ret = can_crc(0, NULL, 0, 0);
+  auto ret = can_crc(0, nullptr, 0, 0);
 
   CHECK_EQUAL(0x0, ret);
 }

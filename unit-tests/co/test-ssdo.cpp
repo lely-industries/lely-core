@@ -1845,7 +1845,7 @@ TEST(CoSsdoDnSegOnRecv, AbortAfterFirstSegment) {
 
   DownloadInitiateReq(sizeof(sub_type64));
 
-  const size_t bytes_per_segment = 4u;
+  const uint8_t bytes_per_segment = 4u;
   uint_least8_t val2dn[sizeof(sub_type64)] = {0x12u, 0x34u, 0x56u, 0x78u,
                                               0x90u, 0xabu, 0xcdu, 0xefu};
 
@@ -1883,7 +1883,7 @@ TEST(CoSsdoDnSegOnRecv, AbortAfterFirstSegment_MsgTooShort) {
 
   DownloadInitiateReq(sizeof(sub_type64));
 
-  const size_t bytes_per_segment = 4u;
+  const uint8_t bytes_per_segment = 4u;
   uint_least8_t val2dn[sizeof(sub_type64)] = {0x12u, 0x34u, 0x56u, 0x78u,
                                               0x90u, 0xabu, 0xcdu, 0xefu};
 
@@ -1994,8 +1994,9 @@ TEST(CoSsdoDnSegOnRecv, SegmentTooSmall) {
   DownloadInitiateReq(sizeof(sub_type64));
 
   co_unsigned8_t val2dn[sizeof(sub_type64) - 1u] = {0};
-  can_msg msg = SdoCreateMsg::DnSeg(IDX, SUBIDX, DEFAULT_COBID_REQ, val2dn,
-                                    sizeof(sub_type64) - 1u, CO_SDO_SEG_LAST);
+  can_msg msg = SdoCreateMsg::DnSeg(
+      IDX, SUBIDX, DEFAULT_COBID_REQ, val2dn,
+      static_cast<uint8_t>(sizeof(sub_type64) - 1u), CO_SDO_SEG_LAST);
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
   CHECK_EQUAL(1u, CanSend::GetNumCalled());
@@ -2454,7 +2455,7 @@ TEST_GROUP_BASE(CoSsdoBlkDn, CO_Ssdo) {
     ResetCanSend();
   }
 
-  void EndBlkDn(const co_unsigned16_t crc, const size_t size = 0) {
+  void EndBlkDn(const co_unsigned16_t crc, const uint8_t size = 0) {
     can_msg msg_end = CAN_MSG_INIT;
     if (size != 0)
       msg_end = SdoCreateMsg::BlkDnEnd(IDX, SUBIDX, DEFAULT_COBID_REQ, crc,

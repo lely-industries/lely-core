@@ -49,7 +49,7 @@ TEST_BASE(CO_PdoBase) {
   const co_unsigned8_t DEV_ID = 0x1fu;
   const co_unsigned16_t DEFAULT_OBJ_IDX = 0x2020u;
   co_sdo_req req;
-  char buf[8] = {0};
+  char buf_[8] = {0};
   membuf buffer;
 
   TEST_SETUP() {
@@ -59,7 +59,7 @@ TEST_BASE(CO_PdoBase) {
 
     CHECK(dev != nullptr);
 
-    membuf_init(&buffer, buf, sizeof(buf));
+    membuf_init(&buffer, buf_, sizeof(buf_));
     co_sdo_req_init(&req, &buffer);
   }
 

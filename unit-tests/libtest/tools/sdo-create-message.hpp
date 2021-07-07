@@ -27,7 +27,7 @@
 #include <lely/co/type.h>
 #include <cstdint>
 
-#include "sdo-defines.hpp"
+#include "sdo-consts.hpp"
 
 namespace SdoCreateMsg {
 can_msg Abort(co_unsigned16_t idx, co_unsigned8_t subidx,
@@ -53,7 +53,7 @@ can_msg DnIniReq(co_unsigned16_t idx, co_unsigned8_t subidx,
 // download segment request
 can_msg DnSeg(co_unsigned16_t idx, co_unsigned8_t subidx,
               uint_least32_t recipient_id, const uint_least8_t buf[],
-              size_t size, uint_least8_t cs_flags = 0);
+              uint8_t size, uint_least8_t cs_flags = 0);
 // upload initiate request
 can_msg UpIniReq(co_unsigned16_t idx, co_unsigned8_t subidx,
                  uint_least32_t recipient_id);

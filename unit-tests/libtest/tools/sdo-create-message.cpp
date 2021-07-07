@@ -28,7 +28,7 @@
 
 #include <lely/util/endian.h>
 
-#include "sdo-defines.hpp"
+#include "sdo-consts.hpp"
 #include "sdo-create-message.hpp"
 
 can_msg
@@ -110,7 +110,7 @@ SdoCreateMsg::DnIniReq(const co_unsigned16_t idx, const co_unsigned8_t subidx,
 can_msg
 SdoCreateMsg::DnSeg(const co_unsigned16_t idx, const co_unsigned8_t subidx,
                     const uint_least32_t recipient_id,
-                    const uint_least8_t buf[], const size_t size,
+                    const uint_least8_t buf[], const uint8_t size,
                     const uint_least8_t cs_flags) {
   assert(size <= 7u);
 

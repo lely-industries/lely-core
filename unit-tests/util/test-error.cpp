@@ -229,7 +229,7 @@ TEST(Util_Error, GetErrc_HandlerValue) {
 ///
 /// \Then zero is returned
 TEST(Util_Error, GetErrc_NullHandler) {
-  get_errc_set_handler(NULL, NULL);
+  get_errc_set_handler(nullptr, nullptr);
 
   set_errc(42);
   const auto errc = get_errc();
@@ -276,7 +276,7 @@ TEST(Util_Error, SetErrc_Handler) {
 ///
 /// \Then the error code is ignored
 TEST(Util_Error, SetErrc_NullHandler) {
-  set_errc_set_handler(NULL, NULL);
+  set_errc_set_handler(nullptr, nullptr);
 
   set_errc(42);
 
@@ -319,7 +319,7 @@ TEST(Util_Error, GetErrnum_HandlerValue) {
 ///
 /// \Then ERRNUM_SUCCESS is returned
 TEST(Util_Error, GetErrnum_NullHandler) {
-  get_errc_set_handler(NULL, NULL);
+  get_errc_set_handler(nullptr, nullptr);
 
   set_errnum(ERRNUM_INVAL);
   const auto errnum = get_errnum();
@@ -363,7 +363,7 @@ TEST(Util_Error, SetErrnum_Handler) {
 ///
 /// \Then the error number is ignored
 TEST(Util_Error, SetErrnum_NullHandler) {
-  set_errc_set_handler(NULL, NULL);
+  set_errc_set_handler(nullptr, nullptr);
 
   set_errnum(ERRNUM_INVAL);
 

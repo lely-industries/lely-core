@@ -96,7 +96,7 @@ TEST_GROUP(Module_SampleFunc) {
   /* test setup/teardown */
   TEST_SETUP() {
     param.param1 = 0;
-    param.param2 = NULL;
+    param.param2 = nullptr;
   }
 
   TEST_TEARDOWN(){};
@@ -116,7 +116,7 @@ TEST_GROUP(Module_SampleFunc) {
  */
 TEST(Module_SampleFunc, InvalidArgs) {
   /* arrange */
-  param.param2 = NULL;
+  param.param2 = nullptr;
 
   /* act */
   int ret = sample_func(&param, true);
