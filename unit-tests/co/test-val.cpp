@@ -25,6 +25,7 @@
 #endif
 
 #include <cstring>
+#include <string>
 
 #include <CppUTest/TestHarness.h>
 
@@ -56,8 +57,8 @@ TEST_GROUP(CO_Val) {
   static const size_t MAX_VAL_SIZE =
       MAX(CO_MAX_VAL_SIZE, MAX(MAX_VAL_SIZE_SCET, MAX_VAL_SIZE_SUTC));
 
-  const char* const TEST_STR = "testtesttest";
-  const char16_t* const TEST_STR16 = u"testtesttest";
+  const std::string TEST_STR = "testtesttest";
+  const std::u16string TEST_STR16 = u"testtesttest";
 
   CoArrays arrays;
 
@@ -633,11 +634,11 @@ TEST(CO_Val, CoValInitMax_Invalid) {
 TEST(CO_Val, CoValInitVs_Nominal) {
   co_visible_string_t val = arrays.Init<co_visible_string_t>();
 
-  const auto ret = co_val_init_vs(&val, TEST_STR);
+  const auto ret = co_val_init_vs(&val, TEST_STR.c_str());
 
   CHECK_EQUAL(0, ret);
-  CHECK_EQUAL(strlen(TEST_STR), co_val_sizeof(CO_DEFTYPE_VISIBLE_STRING, &val));
-  CHECK_EQUAL(0, memcmp(TEST_STR, val, strlen(TEST_STR) + 1u));
+  CHECK_EQUAL(TEST_STR.size(), co_val_sizeof(CO_DEFTYPE_VISIBLE_STRING, &val));
+  CHECK_EQUAL(0, memcmp(TEST_STR.c_str(), val, TEST_STR.size() + 1u));
 
   co_val_fini(CO_DEFTYPE_VISIBLE_STRING, &val);
 }
@@ -677,12 +678,12 @@ TEST(CO_Val, CoValInitVsN_Nominal) {
   const size_t n = 4u;
   co_visible_string_t val = arrays.Init<co_visible_string_t>();
 
-  const auto ret = co_val_init_vs_n(&val, TEST_STR, n);
+  const auto ret = co_val_init_vs_n(&val, TEST_STR.c_str(), n);
 
   CHECK_EQUAL(0, ret);
   CHECK_EQUAL(n, co_val_sizeof(CO_DEFTYPE_VISIBLE_STRING, &val));
   char testbuf[n + 1u] = {0};
-  POINTERS_EQUAL(testbuf, memcpy(testbuf, TEST_STR, n));
+  POINTERS_EQUAL(testbuf, memcpy(testbuf, TEST_STR.c_str(), n));
   CHECK_EQUAL(0, memcmp(testbuf, val, n + 1u));
 
   co_val_fini(CO_DEFTYPE_VISIBLE_STRING, &val);
@@ -873,13 +874,13 @@ TEST(CO_Val, CoValInitOs_TooBigArray) {
 ///       \Calls co_val_init_us_n()
 TEST(CO_Val, CoValInitUs_Nominal) {
   co_unicode_string_t val = arrays.Init<co_unicode_string_t>();
-  const size_t us_val_len = str16len(TEST_STR16) * sizeof(char16_t);
+  const size_t us_val_len = TEST_STR16.size() * sizeof(char16_t);
 
-  const auto ret = co_val_init_us(&val, TEST_STR16);
+  const auto ret = co_val_init_us(&val, TEST_STR16.c_str());
 
   CHECK_EQUAL(0, ret);
   CHECK_EQUAL(us_val_len, co_val_sizeof(CO_DEFTYPE_UNICODE_STRING, &val));
-  CHECK_EQUAL(0, memcmp(TEST_STR16, val, us_val_len));
+  CHECK_EQUAL(0, memcmp(TEST_STR16.c_str(), val, us_val_len));
 
   co_val_fini(CO_DEFTYPE_UNICODE_STRING, &val);
 }
@@ -923,12 +924,12 @@ TEST(CO_Val, CoValInitUsN_Nominal) {
   const size_t us_val_len = n * sizeof(char16_t);
   co_unicode_string_t val = arrays.Init<co_unicode_string_t>();
 
-  const auto ret = co_val_init_us_n(&val, TEST_STR16, n);
+  const auto ret = co_val_init_us_n(&val, TEST_STR16.c_str(), n);
 
   CHECK_EQUAL(0, ret);
   CHECK_EQUAL(us_val_len, co_val_sizeof(CO_DEFTYPE_UNICODE_STRING, &val));
   char16_t testbuf[n + 1u] = {0};
-  POINTERS_EQUAL(testbuf, memcpy(testbuf, TEST_STR16, us_val_len));
+  POINTERS_EQUAL(testbuf, memcpy(testbuf, TEST_STR16.c_str(), us_val_len));
   CHECK_EQUAL(0, memcmp(testbuf, val, us_val_len + sizeof(char16_t)));
 
   co_val_fini(CO_DEFTYPE_UNICODE_STRING, &val);
@@ -1116,7 +1117,7 @@ TEST(CO_Val, CoValFini_NonArrayType) {
 ///       \Calls co_array_fini()
 TEST(CO_Val, CoValFini_ArrayType) {
   co_visible_string_t val = arrays.Init<co_visible_string_t>();
-  CHECK_EQUAL(0, co_val_init_vs(&val, TEST_STR));
+  CHECK_EQUAL(0, co_val_init_vs(&val, TEST_STR.c_str()));
 
   co_val_fini(CO_DEFTYPE_VISIBLE_STRING, &val);
 
@@ -1150,7 +1151,7 @@ TEST(CO_Val, CoValAddressof_Null) {
 ///       \Calls co_type_is_array()
 TEST(CO_Val, CoValAddressof_ArrayType) {
   co_visible_string_t val = arrays.Init<co_visible_string_t>();
-  co_val_init_vs(&val, TEST_STR);
+  co_val_init_vs(&val, TEST_STR.c_str());
 
   const auto* ptr = co_val_addressof(CO_DEFTYPE_VISIBLE_STRING, val);
 
@@ -1202,11 +1203,11 @@ TEST(CO_Val, CoValSizeof_Null) {
 ///       \Calls co_array_sizeof()
 TEST(CO_Val, CoValSizeof_ArrayType) {
   co_visible_string_t val = arrays.Init<co_visible_string_t>();
-  co_val_init_vs(&val, TEST_STR);
+  co_val_init_vs(&val, TEST_STR.c_str());
 
   const auto ret = co_val_sizeof(CO_DEFTYPE_VISIBLE_STRING, &val);
 
-  CHECK_EQUAL(strlen(TEST_STR), ret);
+  CHECK_EQUAL(TEST_STR.size(), ret);
 
   co_val_fini(CO_DEFTYPE_VISIBLE_STRING, &val);
 }
@@ -1248,11 +1249,12 @@ TEST(CO_Val, CoValSizeof_NonArrayType) {
 TEST(CO_Val, CoValMake_VISIBLE_STRING_Nominal) {
   co_visible_string_t val = arrays.Init<co_visible_string_t>();
 
-  const auto ret = co_val_make(CO_DEFTYPE_VISIBLE_STRING, &val, TEST_STR, 0);
+  const auto ret =
+      co_val_make(CO_DEFTYPE_VISIBLE_STRING, &val, TEST_STR.c_str(), 0);
 
-  CHECK_EQUAL(strlen(TEST_STR), ret);
-  CHECK_EQUAL(strlen(TEST_STR), co_val_sizeof(CO_DEFTYPE_VISIBLE_STRING, &val));
-  CHECK_EQUAL(0, memcmp(TEST_STR, val, strlen(TEST_STR) + 1u));
+  CHECK_EQUAL(TEST_STR.size(), ret);
+  CHECK_EQUAL(TEST_STR.size(), co_val_sizeof(CO_DEFTYPE_VISIBLE_STRING, &val));
+  CHECK_EQUAL(0, memcmp(TEST_STR.c_str(), val, TEST_STR.size() + 1u));
 
   co_val_fini(CO_DEFTYPE_VISIBLE_STRING, &val);
 }
@@ -1370,13 +1372,14 @@ TEST(CO_Val, CoValMake_OCTET_STRING_TooBigArray) {
 ///       \Calls co_val_init_us()
 TEST(CO_Val, CoValMake_UNICODE_STRING_Nominal) {
   co_unicode_string_t val = arrays.Init<co_unicode_string_t>();
-  const size_t us_val_len = str16len(TEST_STR16) * sizeof(char16_t);
+  const size_t us_val_len = TEST_STR16.size() * sizeof(char16_t);
 
-  const auto ret = co_val_make(CO_DEFTYPE_UNICODE_STRING, &val, TEST_STR16, 0);
+  const auto ret =
+      co_val_make(CO_DEFTYPE_UNICODE_STRING, &val, TEST_STR16.c_str(), 0);
 
-  CHECK_EQUAL(str16len(TEST_STR16), ret);
+  CHECK_EQUAL(TEST_STR16.size(), ret);
   CHECK_EQUAL(us_val_len, co_val_sizeof(CO_DEFTYPE_UNICODE_STRING, &val));
-  CHECK_EQUAL(0, memcmp(TEST_STR16, val, us_val_len));
+  CHECK_EQUAL(0, memcmp(TEST_STR16.c_str(), val, us_val_len));
 
   co_val_fini(CO_DEFTYPE_UNICODE_STRING, &val);
 }
@@ -1555,8 +1558,8 @@ TEST(CO_Val, CoValMake_NonArrayType_WrongSize) {
 ///       \Calls co_val_init_vs()
 TEST(CO_Val, CoValCopy_VISIBLE_STRING_Nominal) {
   co_visible_string_t src = arrays.Init<co_visible_string_t>();
-  CHECK_EQUAL(strlen(TEST_STR),
-              co_val_make(CO_DEFTYPE_VISIBLE_STRING, &src, TEST_STR, 0));
+  CHECK_EQUAL(TEST_STR.size(), co_val_make(CO_DEFTYPE_VISIBLE_STRING, &src,
+                                           TEST_STR.c_str(), 0));
   co_visible_string_t dst = arrays.Init<co_visible_string_t>();
 
   const auto ret = co_val_copy(CO_DEFTYPE_VISIBLE_STRING, &dst, &src);
@@ -1564,7 +1567,7 @@ TEST(CO_Val, CoValCopy_VISIBLE_STRING_Nominal) {
   CHECK(dst != nullptr);
   CHECK_EQUAL(co_val_sizeof(CO_DEFTYPE_VISIBLE_STRING, &src), ret);
   CHECK_EQUAL(ret, co_val_sizeof(CO_DEFTYPE_VISIBLE_STRING, &dst));
-  CHECK_EQUAL(0, memcmp(TEST_STR, dst, strlen(TEST_STR) + 1u));
+  CHECK_EQUAL(0, memcmp(TEST_STR.c_str(), dst, TEST_STR.size() + 1u));
   CHECK(co_val_addressof(CO_DEFTYPE_VISIBLE_STRING, &src) !=
         co_val_addressof(CO_DEFTYPE_VISIBLE_STRING, &dst));
 
@@ -1586,10 +1589,10 @@ TEST(CO_Val, CoValCopy_VISIBLE_STRING_Nominal) {
 ///       \Calls co_val_init_vs()
 TEST(CO_Val, CoValCopy_VISIBLE_STRING_TooSmallDestination) {
   co_visible_string_t src = arrays.Init<co_visible_string_t>();
-  CHECK_EQUAL(strlen(TEST_STR),
-              co_val_make(CO_DEFTYPE_VISIBLE_STRING, &src, TEST_STR, 0));
+  CHECK_EQUAL(TEST_STR.size(), co_val_make(CO_DEFTYPE_VISIBLE_STRING, &src,
+                                           TEST_STR.c_str(), 0));
   co_array dst_array = CO_ARRAY_INIT;
-  dst_array.hdr.capacity = strlen(TEST_STR) - 1u;
+  dst_array.hdr.capacity = TEST_STR.size() - 1u;
   co_visible_string_t dst;
   co_val_init_array(&dst, &dst_array);
 
@@ -1671,8 +1674,8 @@ TEST(CO_Val, CoValCopy_OCTET_STRING_TooSmallDestination) {
 ///       \Calls co_val_init_us()
 TEST(CO_Val, CoValCopy_UNICODE_STRING_Nominal) {
   co_unicode_string_t src = arrays.Init<co_unicode_string_t>();
-  CHECK_EQUAL(str16len(TEST_STR16),
-              co_val_make(CO_DEFTYPE_UNICODE_STRING, &src, TEST_STR16, 0));
+  CHECK_EQUAL(TEST_STR16.size(), co_val_make(CO_DEFTYPE_UNICODE_STRING, &src,
+                                             TEST_STR16.c_str(), 0));
   co_unicode_string_t dst = arrays.Init<co_unicode_string_t>();
 
   const auto ret = co_val_copy(CO_DEFTYPE_UNICODE_STRING, &dst, &src);
@@ -1680,7 +1683,7 @@ TEST(CO_Val, CoValCopy_UNICODE_STRING_Nominal) {
   CHECK(dst != nullptr);
   CHECK_EQUAL(co_val_sizeof(CO_DEFTYPE_UNICODE_STRING, &src), ret);
   CHECK_EQUAL(ret, co_val_sizeof(CO_DEFTYPE_UNICODE_STRING, &dst));
-  CHECK_EQUAL(0, memcmp(TEST_STR16, dst, ret));
+  CHECK_EQUAL(0, memcmp(TEST_STR16.c_str(), dst, ret));
   CHECK(co_val_addressof(CO_DEFTYPE_UNICODE_STRING, &src) !=
         co_val_addressof(CO_DEFTYPE_UNICODE_STRING, &dst));
 
@@ -1702,10 +1705,10 @@ TEST(CO_Val, CoValCopy_UNICODE_STRING_Nominal) {
 ///       \Calls co_val_init_us()
 TEST(CO_Val, CoValCopy_UNICODE_STRING_TooSmallDestination) {
   co_unicode_string_t src = arrays.Init<co_unicode_string_t>();
-  CHECK_EQUAL(str16len(TEST_STR16),
-              co_val_make(CO_DEFTYPE_UNICODE_STRING, &src, TEST_STR16, 0));
+  CHECK_EQUAL(TEST_STR16.size(), co_val_make(CO_DEFTYPE_UNICODE_STRING, &src,
+                                             TEST_STR16.c_str(), 0));
   co_array dst_array = CO_ARRAY_INIT;
-  dst_array.hdr.capacity = str16len(TEST_STR16) - 1u;
+  dst_array.hdr.capacity = TEST_STR16.size() - 1u;
   co_unicode_string_t dst;
   co_val_init_array(&dst, &dst_array);
 
@@ -1838,15 +1841,15 @@ TEST(CO_Val, CoValMove_NonArrayType) {
 ///       \Calls co_type_is_array()
 TEST(CO_Val, CoValMove_ArrayType) {
   co_visible_string_t src = arrays.Init<co_visible_string_t>();
-  CHECK_EQUAL(strlen(TEST_STR),
-              co_val_make(CO_DEFTYPE_VISIBLE_STRING, &src, TEST_STR, 0));
+  CHECK_EQUAL(TEST_STR.size(), co_val_make(CO_DEFTYPE_VISIBLE_STRING, &src,
+                                           TEST_STR.c_str(), 0));
   const void* src_addr = co_val_addressof(CO_DEFTYPE_VISIBLE_STRING, &src);
   co_visible_string_t dst = arrays.Init<co_visible_string_t>();
 
   const auto ret = co_val_move(CO_DEFTYPE_VISIBLE_STRING, &dst, &src);
 
   CHECK_EQUAL(sizeof(src), ret);
-  CHECK_EQUAL(0, memcmp(TEST_STR, dst, strlen(TEST_STR) + 1u));
+  CHECK_EQUAL(0, memcmp(TEST_STR.c_str(), dst, TEST_STR.size() + 1u));
   POINTERS_EQUAL(src_addr, co_val_addressof(CO_DEFTYPE_VISIBLE_STRING, &dst));
   POINTERS_EQUAL(nullptr, co_val_addressof(CO_DEFTYPE_VISIBLE_STRING, &src));
 
@@ -1908,8 +1911,8 @@ TEST(CO_Val, CoValCmp_SecondValNull) {
 ///       \Calls co_type_is_array()
 TEST(CO_Val, CoValCmp_ArrayType_ArrayAddressesEqual) {
   co_visible_string_t val1 = arrays.Init<co_visible_string_t>();
-  CHECK_EQUAL(strlen(TEST_STR),
-              co_val_make(CO_DEFTYPE_VISIBLE_STRING, &val1, TEST_STR, 0));
+  CHECK_EQUAL(TEST_STR.size(), co_val_make(CO_DEFTYPE_VISIBLE_STRING, &val1,
+                                           TEST_STR.c_str(), 0));
   co_visible_string_t val2 = val1;
 
   CHECK_EQUAL(0, co_val_cmp(CO_DEFTYPE_VISIBLE_STRING, &val1, &val2));
@@ -1930,8 +1933,8 @@ TEST(CO_Val, CoValCmp_ArrayType_FirstValNull) {
   co_visible_string_t val1 = nullptr;
   CHECK_EQUAL(0, co_val_init(CO_DEFTYPE_VISIBLE_STRING, &val1));
   co_visible_string_t val2 = arrays.Init<co_visible_string_t>();
-  CHECK_EQUAL(strlen(TEST_STR),
-              co_val_make(CO_DEFTYPE_VISIBLE_STRING, &val2, TEST_STR, 0));
+  CHECK_EQUAL(TEST_STR.size(), co_val_make(CO_DEFTYPE_VISIBLE_STRING, &val2,
+                                           TEST_STR.c_str(), 0));
 
   const auto ret = co_val_cmp(CO_DEFTYPE_VISIBLE_STRING, &val1, &val2);
   CHECK_COMPARE(ret, <, 0);
@@ -1949,8 +1952,8 @@ TEST(CO_Val, CoValCmp_ArrayType_FirstValNull) {
 ///       \Calls co_type_is_array()
 TEST(CO_Val, CoValCmp_ArrayType_SecondValNull) {
   co_visible_string_t val1 = arrays.Init<co_visible_string_t>();
-  CHECK_EQUAL(strlen(TEST_STR),
-              co_val_make(CO_DEFTYPE_VISIBLE_STRING, &val1, TEST_STR, 0));
+  CHECK_EQUAL(TEST_STR.size(), co_val_make(CO_DEFTYPE_VISIBLE_STRING, &val1,
+                                           TEST_STR.c_str(), 0));
   co_visible_string_t val2 = nullptr;
   CHECK_EQUAL(0, co_val_init(CO_DEFTYPE_VISIBLE_STRING, &val2));
 
@@ -2188,14 +2191,14 @@ TEST(CO_Val, CoValCmp_TIME_SUTC_EqualDaysMs) {
 ///       \Calls co_val_sizeof()
 ///       \Calls strncmp()
 TEST(CO_Val, CoValCmp_VISIBLE_STRING) {
-  const char TEST_STR2[] = "abcdefg";
+  const std::string TEST_STR2 = "abcdefg";
 
   co_visible_string_t val1 = arrays.Init<co_visible_string_t>();
   co_visible_string_t val2 = arrays.Init<co_visible_string_t>();
-  CHECK_EQUAL(strlen(TEST_STR),
-              co_val_make(CO_DEFTYPE_VISIBLE_STRING, &val1, TEST_STR, 0));
-  CHECK_EQUAL(strlen(TEST_STR2),
-              co_val_make(CO_DEFTYPE_VISIBLE_STRING, &val2, TEST_STR2, 0));
+  CHECK_EQUAL(TEST_STR.size(), co_val_make(CO_DEFTYPE_VISIBLE_STRING, &val1,
+                                           TEST_STR.c_str(), 0));
+  CHECK_EQUAL(TEST_STR2.size(), co_val_make(CO_DEFTYPE_VISIBLE_STRING, &val2,
+                                            TEST_STR2.c_str(), 0));
 
   const auto ret = co_val_cmp(CO_DEFTYPE_VISIBLE_STRING, &val1, &val2);
 
@@ -2218,9 +2221,10 @@ TEST(CO_Val, CoValCmp_VISIBLE_STRING) {
 TEST(CO_Val, CoValCmp_VISIBLE_STRING_Substr) {
   co_visible_string_t val1 = arrays.Init<co_visible_string_t>();
   co_visible_string_t val2 = arrays.Init<co_visible_string_t>();
-  CHECK_EQUAL(strlen(TEST_STR),
-              co_val_make(CO_DEFTYPE_VISIBLE_STRING, &val1, TEST_STR, 0));
-  CHECK_EQUAL(0, co_val_init_vs_n(&val2, TEST_STR, strlen(TEST_STR) - 5u));
+  CHECK_EQUAL(TEST_STR.size(), co_val_make(CO_DEFTYPE_VISIBLE_STRING, &val1,
+                                           TEST_STR.c_str(), 0));
+  CHECK_EQUAL(0,
+              co_val_init_vs_n(&val2, TEST_STR.c_str(), TEST_STR.size() - 5u));
 
   const auto ret = co_val_cmp(CO_DEFTYPE_VISIBLE_STRING, &val1, &val2);
 
@@ -2270,14 +2274,14 @@ TEST(CO_Val, CoValCmp_OCTET_STRING) {
 ///       \Calls co_val_sizeof()
 ///       \Calls str16ncmp()
 TEST(CO_Val, CoValCmp_UNICODE_STRING) {
-  const char16_t TEST_STR16_2[] = u"abcdefg";
+  const std::u16string TEST_STR16_2 = u"abcdefg";
 
   co_unicode_string_t val1 = arrays.Init<co_unicode_string_t>();
   co_unicode_string_t val2 = arrays.Init<co_unicode_string_t>();
-  CHECK_EQUAL(str16len(TEST_STR16),
-              co_val_make(CO_DEFTYPE_UNICODE_STRING, &val1, TEST_STR16, 0));
-  CHECK_EQUAL(str16len(TEST_STR16_2),
-              co_val_make(CO_DEFTYPE_UNICODE_STRING, &val2, TEST_STR16_2, 0));
+  CHECK_EQUAL(TEST_STR16.size(), co_val_make(CO_DEFTYPE_UNICODE_STRING, &val1,
+                                             TEST_STR16.c_str(), 0));
+  CHECK_EQUAL(TEST_STR16_2.size(), co_val_make(CO_DEFTYPE_UNICODE_STRING, &val2,
+                                               TEST_STR16_2.c_str(), 0));
 
   const auto ret = co_val_cmp(CO_DEFTYPE_UNICODE_STRING, &val1, &val2);
 
