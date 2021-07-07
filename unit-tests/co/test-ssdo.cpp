@@ -996,6 +996,15 @@ TEST_GROUP_BASE(CoSsdoWaitOnRecv, CO_Ssdo){};
 ///
 /// \Then an SDO response with a download initiate server command specifier
 ///       is sent, requested entry is modified
+///       \Calls ldle_u16()
+///       \Calls co_sdo_req_fini()
+///       \Calls co_sdo_req_init()
+///       \Calls co_dev_find_obj()
+///       \Calls co_obj_find_sub()
+///       \Calls co_sub_dn_ind()
+///       \Calls stle_u16()
+///       \Calls can_net_send()
+///       \Calls membuf_clear()
 TEST(CoSsdoWaitOnRecv, DnIniReq) {
   dev_holder->CreateAndInsertObj(obj2020, IDX);
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE, sub_type(0u));
@@ -1023,6 +1032,21 @@ TEST(CoSsdoWaitOnRecv, DnIniReq) {
 ///
 /// \Then an SDO response with an expedited upload server command specifier
 ///       initiate and the requested data is sent
+///       \Calls ldle_u16()
+///       \Calls co_sdo_req_fini()
+///       \Calls co_sdo_req_init()
+///       \Calls co_dev_find_obj()
+///       \Calls co_dev_find_sub()
+///       \Calls co_obj_get_code()
+///       \Calls co_sub_up_ind()
+///       \Calls membuf_reserve()
+///       \Calls membuf_write()
+///       \Calls membuf_begin()
+///       \Calls membuf_size()
+///       \Calls stle_u16()
+///       \Calls memcpy()
+///       \Calls can_net_send()
+///       \Calls membuf_clear()
 TEST(CoSsdoWaitOnRecv, UpIniReq) {
   dev_holder->CreateAndInsertObj(obj2020, IDX);
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE, sub_type(0xabcdu));
@@ -1046,6 +1070,12 @@ TEST(CoSsdoWaitOnRecv, UpIniReq) {
 ///
 /// \Then an SDO response with a block download server command specifier
 ///       is sent
+///       \Calls ldle_u16()
+///       \Calls co_sdo_req_fini()
+///       \Calls co_sdo_req_init()
+///       \Calls stle_u16()
+///       \Calls can_net_send()
+///       \Calls membuf_clear()
 TEST(CoSsdoWaitOnRecv, BlkDnIniReq) {
   dev_holder->CreateAndInsertObj(obj2020, IDX);
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE, sub_type(0));
@@ -1068,6 +1098,21 @@ TEST(CoSsdoWaitOnRecv, BlkDnIniReq) {
 ///
 /// \Then an SDO response with a block upload initiate server command specifier
 ///       is sent
+///       \Calls ldle_u16()
+///       \Calls co_sdo_req_fini()
+///       \Calls co_sdo_req_init()
+///       \Calls co_dev_find_obj()
+///       \Calls co_dev_find_sub()
+///       \Calls co_obj_get_code()
+///       \Calls co_sub_up_ind()
+///       \Calls membuf_reserve()
+///       \Calls membuf_write()
+///       \Calls membuf_begin()
+///       \Calls membuf_size()
+///       \Calls stle_u16()
+///       \Calls memcpy()
+///       \Calls can_net_send()
+///       \Calls membuf_clear()
 TEST(CoSsdoWaitOnRecv, BlkUpIniReq) {
   dev_holder->CreateAndInsertObj(obj2020, IDX);
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE, sub_type(0xabcdu));
@@ -1107,6 +1152,12 @@ TEST(CoSsdoWaitOnRecv, Abort) {
 ///
 /// \Then an SDO response with an abort transfer command specifier and
 ///       CO_SDO_AC_NO_CS abort code is sent
+///       \Calls stle_u16()
+///       \Calls stle_u32()
+///       \Calls can_net_send()
+///       \Calls co_sdo_req_fini()
+///       \Calls co_sdo_req_init()
+///       \Calls membuf_clear()
 TEST(CoSsdoWaitOnRecv, InvalidCS) {
   StartSSDO();
 
@@ -1126,6 +1177,12 @@ TEST(CoSsdoWaitOnRecv, InvalidCS) {
 ///
 /// \Then an SDO response with an abort transfer command specifier and
 ///       CO_SDO_AC_NO_CS abort code is sent
+///       \Calls stle_u16()
+///       \Calls stle_u32()
+///       \Calls can_net_send()
+///       \Calls co_sdo_req_fini()
+///       \Calls co_sdo_req_init()
+///       \Calls membuf_clear()
 TEST(CoSsdoWaitOnRecv, NoCS) {
   StartSSDO();
 
