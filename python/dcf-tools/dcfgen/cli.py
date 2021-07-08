@@ -1,12 +1,12 @@
 import argparse
-import em
 import os
-import pkg_resources
 import struct
-import yaml
 import warnings
 
 import dcf
+import em
+import pkg_resources
+import yaml
 
 
 class Slave(dcf.Device):
@@ -19,6 +19,8 @@ class Slave(dcf.Device):
         self.heartbeat_multiplier = 1
         self.heartbeat_consumer = False
         self.heartbeat_producer = 0
+        self.lifetime_factor = 0
+        self.guard_time = 0
         self.boot = True
         self.mandatory = False
         self.reset_communication = True
@@ -238,6 +240,22 @@ class Slave(dcf.Device):
                 else:
                     warnings.warn(name + ": object 0x1017 does not exist", stacklevel=2)
             slave.heartbeat_producer = heartbeat_producer
+
+        if "guard_time" in cfg:
+            slave.guard_time = int(cfg["guard_time"])
+            if 0x100C in slave:
+                sdo = slave.concise_value(0x100C, 0, slave.guard_time)
+                slave.sdo.append(sdo)
+            else:
+                warnings.warn(name + ": object 0x100C does not exist", stacklevel=2)
+
+        if "lifetime_factor" in cfg:
+            slave.lifetime_factor = int(cfg["lifetime_factor"])
+            if 0x100D in slave:
+                sdo = slave.concise_value(0x100D, 0, slave.lifetime_factor)
+                slave.sdo.append(sdo)
+            else:
+                warnings.warn(name + ": object 0x100D does not exist", stacklevel=2)
 
         if "error_behavior" in cfg:
             for sub_index, value in cfg["error_behavior"].items():
