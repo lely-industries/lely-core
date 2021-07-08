@@ -232,16 +232,15 @@ TEST_GROUP_BASE(CO_NmtCreate, CO_NmtBase) {
   }
 
   // co_dev_write_dcf(): every <> is a call to co_val_write() when writing DCFs
-  static size_t GetCoDevWriteDcf_NullBuf_CoValWriteCalls(
-      const size_t num_subs) {
+  static int GetCoDevWriteDcf_NullBuf_CoValWriteCalls(const size_t num_subs) {
     // <total number of subs> + NUM_SUBS * <get sub's size>
-    return 1u + num_subs;
+    return 1 + static_cast<int>(num_subs);
   }
 
-  static size_t GetCoDevWriteDcf_CoValWriteCalls(const size_t num_subs) {
+  static int GetCoDevWriteDcf_CoValWriteCalls(const size_t num_subs) {
     // <total number of subs> + NUM_SUBS * (<get sub's size> + <sub's index>
     //     + <sub's sub-index> + <sub's size> + <sub's value>)
-    return 1u + num_subs * 5u;
+    return 1 + static_cast<int>(num_subs) * 5;
   }
 
   TEST_TEARDOWN() {
@@ -1290,10 +1289,10 @@ class CoNmtCsInd {
     checkSeqNmt_ = nmt;
     checkSeqCs_ = csSeq.data();
 
-    checkFunc = [](const co_nmt_t* const nmt, const co_unsigned8_t cs,
+    checkFunc = [](const co_nmt_t* const service, const co_unsigned8_t cs,
                    const void* const data) {
       CHECK(num_called_ < checkSeqNumCalled_);
-      POINTERS_EQUAL(checkSeqNmt_, nmt);
+      POINTERS_EQUAL(checkSeqNmt_, service);
       CHECK_EQUAL(checkSeqCs_[num_called_], cs);
       POINTERS_EQUAL(nullptr, data);
     };
@@ -1375,11 +1374,11 @@ class CoNmtStInd {
     checkSeqId_ = id;
     checkSeqSt_ = stSeq.data();
 
-    checkFunc = [](const co_nmt_t* const nmt, const co_unsigned8_t id,
+    checkFunc = [](const co_nmt_t* const service, const co_unsigned8_t seqId,
                    const co_unsigned8_t st, const void* const data) {
       CHECK(num_called_ < checkSeqNumCalled_);
-      POINTERS_EQUAL(checkSeqNmt_, nmt);
-      CHECK_EQUAL(checkSeqId_, id);
+      POINTERS_EQUAL(checkSeqNmt_, service);
+      CHECK_EQUAL(checkSeqId_, seqId);
       CHECK_EQUAL(checkSeqSt_[num_called_], st);
       POINTERS_EQUAL(nullptr, data);
     };

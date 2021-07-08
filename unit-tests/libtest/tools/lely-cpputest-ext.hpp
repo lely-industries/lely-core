@@ -39,14 +39,14 @@
 // function - below macros add an explicit assert() to fix this issue
 // see: https://clang-analyzer.llvm.org/faq.html#custom_assert
 #define POINTER_NOT_NULL(ptr) \
-  { \
+  do { \
     const void* const ptr_val = (ptr); \
     CHECK(ptr_val != nullptr); \
     assert(ptr_val); \
-  }
+  } while (false)
 
 #define FUNCTIONPOINTER_NOT_NULL(ptr) \
-  { \
+  do { \
     auto* const ptr_val = (ptr); \
     static_assert( \
         std::is_function< \
@@ -54,6 +54,6 @@
         "FUNCTIONPOINTER_NOT_NULL(): 'ptr' is not a function pointer"); \
     CHECK(ptr_val != nullptr); \
     assert(ptr_val); \
-  }
+  } while (false)
 
 #endif  // LELY_UNIT_TESTS_CPPUTEST_EXT_HPP_

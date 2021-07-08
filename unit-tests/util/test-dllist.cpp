@@ -24,6 +24,8 @@
 #include <config.h>
 #endif
 
+#include <array>
+
 #include <CppUTest/TestHarness.h>
 
 #include <lely/util/dllist.h>
@@ -71,8 +73,7 @@ TEST(Util_DllistInit, DlnodeInit_Nominal) {
 ///@}
 
 TEST_GROUP(Util_Dllist) {
-  static const size_t NODES_NUM = 10u;
-  dlnode nodes[NODES_NUM];
+  std::array<dlnode, 10u> nodes;
   dllist list;
 
   void AreNodesLinked(const dlnode* const node, const dlnode* const next_node)
@@ -83,8 +84,8 @@ TEST_GROUP(Util_Dllist) {
 
   TEST_SETUP() {
     dllist_init(&list);
-    for (size_t i = 0u; i < NODES_NUM; i++) {
-      dlnode_init(&nodes[i]);
+    for (auto& node : nodes) {
+      dlnode_init(&node);
     }
   }
 };

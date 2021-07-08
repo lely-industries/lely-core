@@ -24,6 +24,8 @@
 #include <config.h>
 #endif
 
+#include <array>
+
 #include <CppUTest/TestHarness.h>
 
 #include <lely/util/ustring.h>
@@ -114,14 +116,13 @@ TEST(UTIL_UString, Str16NCpy_EmptySrcExactBuffer) {
 ///
 /// \Then a pointer to the buffer is returned, the buffer is zeroed
 TEST(UTIL_UString, Str16NCpy_EmptySrcBigBuffer) {
-  const size_t BUF_LEN = 5u;
-  char16_t buf[BUF_LEN];
-  memset(buf, u'A', BUF_LEN * sizeof(char16_t));
+  std::array<char16_t, 5u> buf;
+  buf.fill(u'A');
 
-  const auto* const ret = str16ncpy(buf, u"", BUF_LEN);
+  const auto* const ret = str16ncpy(buf.data(), u"", buf.size());
 
   POINTERS_EQUAL(&buf, ret);
-  for (size_t i = 0; i < BUF_LEN; ++i) CHECK_EQUAL(u'\0', buf[i]);
+  for (const auto& item : buf) CHECK_EQUAL(u'\0', item);
 }
 
 /// \Given a destination buffer for 16-bit characters

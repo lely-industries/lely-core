@@ -63,7 +63,7 @@ SdoCreateMsg::BlkDnIniReq(const co_unsigned16_t idx,
   co_unsigned8_t cs = CO_SDO_CCS_BLK_DN_REQ | cs_flags;
   if (size > 0) {
     cs |= CO_SDO_BLK_SIZE_IND;
-    stle_u32(msg.data + 4u, size);
+    stle_u32(msg.data + 4u, static_cast<uint32_t>(size));
   }
   msg.data[0] = cs;
 

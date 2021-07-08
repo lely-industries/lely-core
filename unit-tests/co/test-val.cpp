@@ -26,6 +26,7 @@
 
 #include <cstring>
 #include <string>
+#include <array>
 
 #include <CppUTest/TestHarness.h>
 
@@ -104,7 +105,7 @@ TEST_GROUP(CO_Val) {
     }
   }
 
-  static co_boolean_t ldle_b(const uint_least8_t src[1]) { return (src != 0); }
+  static co_boolean_t ldle_b(const uint_least8_t src[1]) { return src[0] != 0; }
   static co_unsigned8_t ldle_u8(const uint_least8_t src[1]) { return *src; }
   static co_unsigned24_t ldle_u24(const uint_least8_t src[4]) {
     return ldle_u32(src) & 0x00ffffff;
@@ -122,28 +123,32 @@ TEST_GROUP(CO_Val) {
   static co_integer24_t ldle_i24(const uint_least8_t src[4]) {
     co_unsigned24_t u24 = ldle_u24(src);
     if (u24 > CO_INTEGER24_MAX)
-      return -(CO_UNSIGNED24_MAX + 1 - u24);
+      return -(static_cast<int32_t>(CO_UNSIGNED24_MAX) + 1 -
+               static_cast<int32_t>(u24));
     else
       return u24;
   }
   static co_integer40_t ldle_i40(const uint_least8_t src[8]) {
     co_unsigned40_t u40 = ldle_u40(src);
     if (u40 > CO_INTEGER40_MAX)
-      return -(CO_UNSIGNED40_MAX + 1 - u40);
+      return -(static_cast<int64_t>(CO_UNSIGNED40_MAX) + 1 -
+               static_cast<int64_t>(u40));
     else
       return u40;
   }
   static co_integer48_t ldle_i48(const uint_least8_t src[8]) {
     co_unsigned48_t u48 = ldle_u48(src);
     if (u48 > CO_INTEGER48_MAX)
-      return -(CO_UNSIGNED48_MAX + 1 - u48);
+      return -(static_cast<int64_t>(CO_UNSIGNED48_MAX) + 1 -
+               static_cast<int64_t>(u48));
     else
       return u48;
   }
   static co_integer56_t ldle_i56(const uint_least8_t src[8]) {
     co_unsigned56_t u56 = ldle_u56(src);
     if (u56 > CO_INTEGER56_MAX)
-      return -(CO_UNSIGNED56_MAX + 1 - u56);
+      return -(static_cast<int64_t>(CO_UNSIGNED56_MAX) + 1 -
+               static_cast<int64_t>(u56));
     else
       return u56;
   }
@@ -3283,15 +3288,14 @@ TEST(CO_Val, CoValWrite_NonArrayTypes_InvalidSize) {
 ///       \Calls co_val_addressof()
 ///       \Calls co_val_sizeof()
 TEST(CO_Val, CoValWrite_NullArray) {
-  const size_t ARRAY_SIZE = 5u;
   const co_visible_string_t val = nullptr;
-  uint_least8_t buffer[ARRAY_SIZE] = {0xffu, 0xffu, 0xffu, 0xffu, 0xffu};
+  std::array<uint_least8_t, 5u> buffer{0xffu, 0xffu, 0xffu, 0xffu, 0xffu};
 
-  const auto ret = co_val_write(CO_DEFTYPE_VISIBLE_STRING, &val, buffer,
-                                buffer + ARRAY_SIZE);
+  const auto ret = co_val_write(CO_DEFTYPE_VISIBLE_STRING, &val, buffer.data(),
+                                buffer.data() + buffer.size());
 
   CHECK_EQUAL(0, ret);
-  for (size_t i = 0; i < ARRAY_SIZE; ++i) CHECK_EQUAL(0xffu, buffer[i]);
+  for (const auto& item : buffer) CHECK_EQUAL(0xffu, item);
 }
 
 /// \Given an array of visible characters (co_visible_string_t), a memory
@@ -3478,16 +3482,15 @@ TEST(CO_Val, CoValWrite_OCTET_STRING_NullBuffer) {
 ///       \Calls co_val_sizeof()
 TEST(CO_Val, CoValWrite_UNICODE_STRING_TooSmallBuffer) {
   co_unicode_string_t val = arrays.Init<co_unicode_string_t>();
-  const size_t ARRAY_SIZE = 6u;
-  const char16_t test_str[ARRAY_SIZE / sizeof(char16_t) + 1u] = u"xyz";
+  std::array<uint_least8_t, 6u> buffer{0x00};
+  const char16_t test_str[buffer.size() / sizeof(char16_t) + 1u] = u"xyz";
   CHECK_EQUAL(0, co_val_init_us(&val, test_str));
-  uint_least8_t buffer[ARRAY_SIZE] = {0x00};
 
-  const auto ret = co_val_write(CO_DEFTYPE_UNICODE_STRING, &val, buffer,
-                                buffer + ARRAY_SIZE - 1);
+  const auto ret = co_val_write(CO_DEFTYPE_UNICODE_STRING, &val, buffer.data(),
+                                buffer.data() + buffer.size() - 1);
 
-  CHECK_EQUAL(ARRAY_SIZE, ret);
-  for (size_t i = 0; i < ARRAY_SIZE; ++i) CHECK_EQUAL(0x00, buffer[i]);
+  CHECK_EQUAL(buffer.size(), ret);
+  for (const auto& item : buffer) CHECK_EQUAL(0x00, item);
 
   co_val_fini(CO_DEFTYPE_UNICODE_STRING, &val);
 }

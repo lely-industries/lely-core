@@ -77,7 +77,7 @@ struct EmcyInd {
   static void
   Clear() {
     called = false;
-    last_emcy = 0u;
+    last_emcy = nullptr;
     last_id = 0u;
     last_eec = 0u;
     last_er = 0u;
@@ -87,7 +87,7 @@ struct EmcyInd {
 };
 
 bool EmcyInd::called = false;
-co_emcy_t* EmcyInd::last_emcy = 0u;
+co_emcy_t* EmcyInd::last_emcy = nullptr;
 co_unsigned8_t EmcyInd::last_id = 0u;
 co_unsigned16_t EmcyInd::last_eec = 0u;
 co_unsigned8_t EmcyInd::last_er = 0u;

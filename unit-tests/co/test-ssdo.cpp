@@ -26,6 +26,7 @@
 
 #include <memory>
 #include <vector>
+#include <array>
 
 #include <CppUTest/TestHarness.h>
 
@@ -568,7 +569,7 @@ TEST_BASE(CO_Ssdo) {
   std::unique_ptr<CoDevTHolder> dev_holder;
   std::unique_ptr<CoObjTHolder> obj1200;
   std::unique_ptr<CoObjTHolder> obj2020;
-  can_msg msg_buf[MSG_BUF_SIZE];
+  std::array<can_msg, MSG_BUF_SIZE> msg_buf;
 
   Allocators::Default defaultAllocator;
 
@@ -617,8 +618,8 @@ TEST_BASE(CO_Ssdo) {
 
   void ResetCanSend() {
     CanSend::Clear();
-    for (unsigned int i = 0; i < MSG_BUF_SIZE; i++) msg_buf[i] = CAN_MSG_INIT;
-    CanSend::SetMsgBuf(msg_buf, MSG_BUF_SIZE);
+    msg_buf.fill(CAN_MSG_INIT);
+    CanSend::SetMsgBuf(msg_buf.data(), msg_buf.size());
   }
 
   TEST_SETUP() {
@@ -640,7 +641,7 @@ TEST_BASE(CO_Ssdo) {
     CHECK(ssdo != nullptr);
 
     can_net_set_send_func(net, CanSend::Func, nullptr);
-    CanSend::SetMsgBuf(msg_buf, MSG_BUF_SIZE);
+    CanSend::SetMsgBuf(msg_buf.data(), msg_buf.size());
     CanSend::Clear();
   }
 
@@ -1771,7 +1772,7 @@ TEST_GROUP_BASE(CoSsdoDnSegOnRecv, CO_Ssdo) {
   // send segmented download initiate request to SSDO (0x2020, 0x00)
   void DownloadInitiateReq(const size_t size) {
     co_unsigned8_t size_buf[4] = {0};
-    stle_u32(size_buf, size);
+    stle_u32(size_buf, static_cast<uint32_t>(size));
     can_msg msg = SdoCreateMsg::Default(IDX, SUBIDX, DEFAULT_COBID_REQ);
     msg.data[0] = CO_SDO_CCS_DN_INI_REQ | CO_SDO_INI_SIZE_IND;
     stle_u16(msg.data + 1u, IDX);
