@@ -247,7 +247,7 @@ TEST(CO_CsdoInit, CoCsdoCreate_NumTooHigh) {
   CHECK_EQUAL(ERRNUM_INVAL, get_errnum());
 }
 
-/// \Given a pointer to the device (co_dev_t) containing 0x1280 object in the
+/// \Given a pointer to the device (co_dev_t) containing object 0x1280 in the
 ///        object dictionary
 ///
 /// \When co_csdo_create() is called with a pointer to the network (can_net_t),
@@ -311,7 +311,7 @@ TEST(CO_CsdoInit, CoCsdoCreate_NoServerParameterObj) {
   CHECK_EQUAL(ERRNUM_INVAL, get_errnum());
 }
 
-/// \Given a pointer to the device (co_dev_t) containing 0x1280 object in
+/// \Given a pointer to the device (co_dev_t) containing object 0x1280 in
 ///        the object dictionary
 ///
 /// \When co_csdo_create() is called with a pointer to the network (can_net_t)
@@ -340,7 +340,7 @@ TEST(CO_CsdoInit, CoCsdoCreate_RecvCreateFail) {
   CHECK_EQUAL(ERRNUM_NOMEM, get_errnum());
 }
 
-/// \Given a pointer to the device (co_dev_t) containing 0x1280 object in
+/// \Given a pointer to the device (co_dev_t) containing object 0x1280 in
 ///        the object dictionary
 ///
 /// \When co_csdo_create() is called with a pointer to the network (can_net_t)
@@ -455,7 +455,40 @@ TEST(CO_CsdoInit, CoCsdoStart_AlreadyStarted) {
   co_csdo_destroy(csdo);
 }
 
-/// \Given a pointer to the CSDO service (co_csdo_t) containing 0x1280 object in
+/// \Given a pointer to the CSDO service (co_csdo_t) containing object 0x1280 in
+///        the object dictionary; "COB-ID client -> server" entry contains
+///        an extended CAN ID
+///
+/// \When co_csdo_start() is called
+///
+/// \Then 0 is returned, the service is not stopped, the service is idle
+///       \Calls co_csdo_is_stopped()
+///       \Calls co_dev_find_obj()
+///       \Calls co_obj_sizeof_val()
+///       \Calls memcpy()
+///       \Calls co_obj_addressof_val()
+///       \Calls co_csdo_abort_req()
+///       \Calls co_csdo_is_valid()
+///       \Calls can_recv_start()
+TEST(CO_CsdoInit, CoCsdoStart_CobidRes_ExtendedId) {
+  dev_holder->CreateAndInsertObj(obj1280, 0x1280u);
+  obj1280->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(0x02u));
+  obj1280->InsertAndSetSub(0x01u, CO_DEFTYPE_UNSIGNED32,
+                           co_unsigned32_t(0x600u + CSDO_NUM));
+  const co_unsigned32_t cobid_res = DEV_ID | (1u << 28u) | CO_SDO_COBID_FRAME;
+  obj1280->InsertAndSetSub(0x02u, CO_DEFTYPE_UNSIGNED32, cobid_res);
+  co_csdo_t* const csdo = co_csdo_create(net, dev, CSDO_NUM);
+
+  const auto ret = co_csdo_start(csdo);
+
+  CHECK_EQUAL(0, ret);
+  CHECK_EQUAL(0, co_csdo_is_stopped(csdo));
+  CHECK_EQUAL(1u, co_csdo_is_idle(csdo));
+
+  co_csdo_destroy(csdo);
+}
+
+/// \Given a pointer to the CSDO service (co_csdo_t) containing object 0x1280 in
 ///        the object dictionary
 ///
 /// \When co_csdo_start() is called
@@ -487,7 +520,7 @@ TEST(CO_CsdoInit, CoCsdoStart_DefaultCSDO_WithObj1280) {
 /// @name co_csdo_stop()
 ///@{
 
-/// \Given a pointer to the CSDO service (co_csdo_t) containing 0x1280 object in
+/// \Given a pointer to the CSDO service (co_csdo_t) containing object 0x1280 in
 ///        the object dictionary
 ///
 /// \When co_csdo_stop() is called
