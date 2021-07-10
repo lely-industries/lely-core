@@ -594,9 +594,9 @@ if slave.software_file:
 if slave.restore_configuration != 0:
     value |= 0x80
 if slave.lifetime_factor != 0:
-    value |= (slave.lifetime_factor << 8)
+    value |= slave.lifetime_factor << 8
 if slave.guard_time != 0:
-    value |= (slave.guard_time << 16)
+    value |= slave.guard_time << 16
 }@
 @slave.node_id=@("0x{:08X}".format(value))
 @[end for]@

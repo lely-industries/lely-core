@@ -19,7 +19,7 @@ class Slave(dcf.Device):
         self.heartbeat_multiplier = 1
         self.heartbeat_consumer = False
         self.heartbeat_producer = 0
-        self.lifetime_factor = 0
+        self.life_time_factor = 0
         self.guard_time = 0
         self.boot = True
         self.mandatory = False
@@ -241,7 +241,13 @@ class Slave(dcf.Device):
                     warnings.warn(name + ": object 0x1017 does not exist", stacklevel=2)
             slave.heartbeat_producer = heartbeat_producer
 
-        if "guard_time" in cfg:
+        if "guard_time" in cfg and "life_time_factor" in cfg:
+            if slave.heartbeat_producer:
+                warnings.warn(
+                    "Cannot use producer heartbeat and node guard simultaneously",
+                    stacklevel=2,
+                )
+
             slave.guard_time = int(cfg["guard_time"])
             if 0x100C in slave:
                 sdo = slave.concise_value(0x100C, 0, slave.guard_time)
@@ -249,10 +255,9 @@ class Slave(dcf.Device):
             else:
                 warnings.warn(name + ": object 0x100C does not exist", stacklevel=2)
 
-        if "lifetime_factor" in cfg:
-            slave.lifetime_factor = int(cfg["lifetime_factor"])
+            slave.life_time_factor = int(cfg["life_time_factor"])
             if 0x100D in slave:
-                sdo = slave.concise_value(0x100D, 0, slave.lifetime_factor)
+                sdo = slave.concise_value(0x100D, 0, slave.life_time_factor)
                 slave.sdo.append(sdo)
             else:
                 warnings.warn(name + ": object 0x100D does not exist", stacklevel=2)
