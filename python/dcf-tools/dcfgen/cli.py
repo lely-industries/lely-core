@@ -242,7 +242,7 @@ class Slave(dcf.Device):
             slave.heartbeat_producer = heartbeat_producer
 
         if "guard_time" in cfg and "life_time_factor" in cfg:
-            if slave.heartbeat_producer:
+            if "heartbeat_producer" in cfg:
                 warnings.warn(
                     "Cannot use producer heartbeat and node guard simultaneously",
                     stacklevel=2,
