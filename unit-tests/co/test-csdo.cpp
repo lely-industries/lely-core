@@ -566,6 +566,27 @@ TEST(CO_CsdoInit, CoCsdoStop_OnStarted) {
 
 ///@}
 
+/// @name co_csdo_abort_req()
+///@{
+
+/// \Given a pointer to the stopped SSDO service (co_ssdo_t)
+///
+/// \When co_csdo_abort_req() is called with an abort code
+///
+/// \Then nothing is changed
+TEST(CO_CsdoInit, CoCsdoAbortReq_Stopped) {
+  dev_holder->CreateAndInsertObj(obj1280, 0x1280u);
+  co_csdo_t* const csdo = co_csdo_create(net, dev, CSDO_NUM);
+  CHECK(csdo != nullptr);
+  co_csdo_stop(csdo);
+
+  co_csdo_abort_req(csdo, CO_SDO_AC_ERROR);
+
+  co_csdo_destroy(csdo);
+}
+
+///@}
+
 TEST_BASE(CO_CsdoBase) {
   TEST_BASE_SUPER(CO_CsdoBase);
 
