@@ -38,14 +38,14 @@ template <typename F>
 class CallWrapper {
  public:
 #if LELY_ENABLE_SHARED
-  explicit CallWrapper(const char* name)
+  explicit CallWrapper(const char* const name)
       : fun_(reinterpret_cast<F>(dlsym(RTLD_NEXT, name))) {}
 #else
   explicit CallWrapper(F f) : fun_(f) {}
 #endif
 
   bool
-  IsCallValid(int& valid_calls) const {
+  IsCallValid(int32_t& valid_calls) const {
     if (valid_calls == Override::NoneCallsValid) return false;
 
     if (valid_calls > Override::NoneCallsValid) --valid_calls;

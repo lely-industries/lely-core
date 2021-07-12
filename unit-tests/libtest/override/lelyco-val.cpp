@@ -37,40 +37,40 @@
 using Override::OverridePlugin;
 
 /* 1. Initialize valid calls global variable for each function. */
-static int co_val_read_vc = Override::AllCallsValid;
-static int co_val_write_vc = Override::AllCallsValid;
-static int co_val_make_vc = Override::AllCallsValid;
-static int co_val_init_min_vc = Override::AllCallsValid;
-static int co_val_init_max_vc = Override::AllCallsValid;
-static int co_val_init_vc = Override::AllCallsValid;
+static int32_t co_val_read_vc = Override::AllCallsValid;
+static int32_t co_val_write_vc = Override::AllCallsValid;
+static int32_t co_val_make_vc = Override::AllCallsValid;
+static int32_t co_val_init_min_vc = Override::AllCallsValid;
+static int32_t co_val_init_max_vc = Override::AllCallsValid;
+static int32_t co_val_init_vc = Override::AllCallsValid;
 
 void
-LelyOverride::co_val_read(int valid_calls) {
+LelyOverride::co_val_read(const int32_t valid_calls) {
   OverridePlugin::getCurrent()->setForNextTest(co_val_read_vc, valid_calls);
 }
 
 void
-LelyOverride::co_val_write(int valid_calls) {
+LelyOverride::co_val_write(const int32_t valid_calls) {
   OverridePlugin::getCurrent()->setForNextTest(co_val_write_vc, valid_calls);
 }
 
 void
-LelyOverride::co_val_make(int valid_calls) {
+LelyOverride::co_val_make(const int32_t valid_calls) {
   OverridePlugin::getCurrent()->setForNextTest(co_val_make_vc, valid_calls);
 }
 
 void
-LelyOverride::co_val_init_min(int valid_calls) {
+LelyOverride::co_val_init_min(const int32_t valid_calls) {
   OverridePlugin::getCurrent()->setForNextTest(co_val_init_min_vc, valid_calls);
 }
 
 void
-LelyOverride::co_val_init_max(int valid_calls) {
+LelyOverride::co_val_init_max(const int32_t valid_calls) {
   OverridePlugin::getCurrent()->setForNextTest(co_val_init_max_vc, valid_calls);
 }
 
 void
-LelyOverride::co_val_init(int valid_calls) {
+LelyOverride::co_val_init(const int32_t valid_calls) {
   OverridePlugin::getCurrent()->setForNextTest(co_val_init_vc, valid_calls);
 }
 
@@ -89,46 +89,47 @@ extern decltype(co_val_init) __real_co_val_init;
 /* 3. Override function definition with both exact and "wrap" version. */
 
 size_t
-LELY_OVERRIDE(co_val_read)(co_unsigned16_t type, void* val,
-                           const uint_least8_t* begin,
-                           const uint_least8_t* end) {
+LELY_OVERRIDE(co_val_read)(const co_unsigned16_t type, void* const val,
+                           const uint_least8_t* const begin,
+                           const uint_least8_t* const end) {
   auto fun = LELY_WRAP_CALL_TO(co_val_read);
   if (!fun.IsCallValid(co_val_read_vc)) return 0;
   return fun.call(type, val, begin, end);
 }
 
 size_t
-LELY_OVERRIDE(co_val_write)(co_unsigned16_t type, const void* val,
-                            uint_least8_t* begin, uint_least8_t* end) {
+LELY_OVERRIDE(co_val_write)(const co_unsigned16_t type, const void* const val,
+                            uint_least8_t* const begin,
+                            uint_least8_t* const end) {
   auto fun = LELY_WRAP_CALL_TO(co_val_write);
   if (!fun.IsCallValid(co_val_write_vc)) return 0;
   return fun.call(type, val, begin, end);
 }
 
 size_t
-LELY_OVERRIDE(co_val_make)(co_unsigned16_t type, void* val, const void* ptr,
-                           size_t n) {
+LELY_OVERRIDE(co_val_make)(const co_unsigned16_t type, void* const val,
+                           const void* const ptr, const size_t n) {
   auto fun = LELY_WRAP_CALL_TO(co_val_make);
   if (!fun.IsCallValid(co_val_make_vc)) return 0;
   return fun.call(type, val, ptr, n);
 }
 
 int
-LELY_OVERRIDE(co_val_init_min)(co_unsigned16_t type, void* val) {
+LELY_OVERRIDE(co_val_init_min)(const co_unsigned16_t type, void* const val) {
   auto fun = LELY_WRAP_CALL_TO(co_val_init_min);
   if (!fun.IsCallValid(co_val_init_min_vc)) return -1;
   return fun.call(type, val);
 }
 
 int
-LELY_OVERRIDE(co_val_init_max)(co_unsigned16_t type, void* val) {
+LELY_OVERRIDE(co_val_init_max)(const co_unsigned16_t type, void* const val) {
   auto fun = LELY_WRAP_CALL_TO(co_val_init_max);
   if (!fun.IsCallValid(co_val_init_max_vc)) return -1;
   return fun.call(type, val);
 }
 
 int
-LELY_OVERRIDE(co_val_init)(co_unsigned16_t type, void* val) {
+LELY_OVERRIDE(co_val_init)(const co_unsigned16_t type, void* const val) {
   auto fun = LELY_WRAP_CALL_TO(co_val_init);
   if (!fun.IsCallValid(co_val_init_vc)) return -1;
   return fun.call(type, val);

@@ -613,7 +613,7 @@ TEST(Util_Dllist, DllistContains_ListWithManyDoesNotContain) {
 ///
 /// \Then no loop iterations are performed
 TEST(Util_Dllist, DlnodeForeach_Null) {
-  unsigned node_counter = 0;
+  size_t node_counter = 0;
 
   dlnode_foreach(nullptr, current_node) { ++node_counter; }
 
@@ -631,9 +631,9 @@ TEST(Util_Dllist, DlnodeForeach_MiddleNode) {
   dllist_push_back(&list, &nodes[2]);
   dllist_push_back(&list, &nodes[3]);
   dllist_push_back(&list, &nodes[4]);
-  unsigned node_counter = 0;
+  size_t node_counter = 0;
 
-  unsigned i = 2;
+  size_t i = 2;
   dlnode_foreach(&nodes[2], current_node) {
     POINTERS_EQUAL(&nodes[i], current_node);
 
@@ -655,7 +655,7 @@ TEST(Util_Dllist, DlnodeForeach_MiddleNode) {
 ///
 /// \Then no loop iterations are performed
 TEST(Util_Dllist, DllistForeach_Empty) {
-  unsigned node_counter = 0;
+  size_t node_counter = 0;
 
   dllist_foreach(&list, current_node) { ++node_counter; }
 
@@ -674,7 +674,7 @@ TEST(Util_Dllist, DllistForeach_ManyAdded) {
   dllist_push_back(&list, &nodes[2]);
   dllist_push_back(&list, &nodes[3]);
   dllist_push_back(&list, &nodes[4]);
-  unsigned node_counter = 0;
+  size_t node_counter = 0;
 
   dllist_foreach(&list, current_node) {
     POINTERS_EQUAL(&nodes[node_counter], current_node);
@@ -696,7 +696,7 @@ TEST(Util_Dllist, DllistForeach_ManyAddedRemoveCurrent) {
   dllist_push_back(&list, &nodes[2]);
   dllist_push_back(&list, &nodes[3]);
 
-  unsigned iteration_counter = 0;
+  size_t iteration_counter = 0;
   dllist_foreach(&list, current_node) {
     if (current_node == &nodes[1]) dllist_remove(&list, current_node);
 

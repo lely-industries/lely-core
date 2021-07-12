@@ -36,7 +36,7 @@ OverridePlugin::~OverridePlugin() {}
 
 class OverridePlugin::CleanUp {
  public:
-  explicit CleanUp(int& vc) : vc_(vc), org_value_(vc) {}
+  explicit CleanUp(int32_t& vc) : vc_(vc), org_value_(vc) {}
   ~CleanUp() { vc_ = org_value_; }
 
   CleanUp(const CleanUp&) = delete;
@@ -45,8 +45,8 @@ class OverridePlugin::CleanUp {
   CleanUp& operator=(CleanUp&&) = delete;
 
  private:
-  int& vc_;
-  const int org_value_;
+  int32_t& vc_;
+  const int32_t org_value_;
 };
 
 void
@@ -55,16 +55,16 @@ OverridePlugin::postTestAction(UtestShell&, TestResult&) {
 }
 
 void
-OverridePlugin::setForNextTest(int& vc, int target_value) {
+OverridePlugin::setForNextTest(int32_t& vc, const int32_t target_value) {
   cleanups.emplace(vc);
   vc = target_value;
 }
 
 OverridePlugin*
 OverridePlugin::getCurrent() {
-  auto registry = TestRegistry::getCurrentRegistry();
+  const auto registry = TestRegistry::getCurrentRegistry();
   assert(registry != nullptr);
-  auto plugin = registry->getPluginByName(PLUGIN_NAME);
+  auto* const plugin = registry->getPluginByName(PLUGIN_NAME);
   assert(plugin != nullptr);
   return static_cast<OverridePlugin*>(plugin);
 }

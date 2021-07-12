@@ -375,7 +375,7 @@ TEST(Util_MemBuf, MemBuf_Seek_BackwardTooFar) {
   size_t size = 5u;
   membuf_alloc(buf, &size);
 
-  const auto ret = membuf_seek(buf, -(ptrdiff_t)size - 1);
+  const auto ret = membuf_seek(buf, -static_cast<ptrdiff_t>(size) - 1);
 
   CHECK_EQUAL(size, static_cast<size_t>(-ret));
   CHECK_EQUAL(0u, membuf_size(buf));

@@ -36,7 +36,7 @@
 
 #include "co-sub-dn-ind.hpp"
 
-unsigned int CoSubDnInd::num_called = 0u;
+size_t CoSubDnInd::num_called = 0u;
 co_sub_t* CoSubDnInd::sub = nullptr;
 co_sdo_req* CoSubDnInd::req = nullptr;
 co_unsigned32_t CoSubDnInd::ac = 0u;

@@ -36,10 +36,10 @@
 using Override::OverridePlugin;
 
 /* 1. Initialize valid calls global variable for the function. */
-static int membuf_reserve_vc = Override::AllCallsValid;
+static int32_t membuf_reserve_vc = Override::AllCallsValid;
 
 void
-LelyOverride::membuf_reserve(int valid_calls) {
+LelyOverride::membuf_reserve(const int32_t valid_calls) {
   OverridePlugin::getCurrent()->setForNextTest(membuf_reserve_vc, valid_calls);
 }
 
@@ -53,7 +53,7 @@ extern decltype(membuf_reserve) __real_membuf_reserve;
 /* 3. Override function definition with both exact and "wrap" version. */
 
 size_t
-LELY_OVERRIDE(membuf_reserve)(membuf* buf, size_t size) {
+LELY_OVERRIDE(membuf_reserve)(membuf* const buf, const size_t size) {
   auto fun = LELY_WRAP_CALL_TO(membuf_reserve);
   if (!fun.IsCallValid(membuf_reserve_vc)) return 0;
   return fun.call(buf, size);

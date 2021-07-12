@@ -32,32 +32,32 @@ namespace LelyOverride {
 /**
  * Setups number of valid calls to co_val_read().
  */
-void co_val_read(int valid_calls);
+void co_val_read(int32_t valid_calls);
 
 /**
  * Setups number of valid calls to co_val_write().
  */
-void co_val_write(int valid_calls);
+void co_val_write(int32_t valid_calls);
 
 /**
  * Setups number of valid calls to co_val_make().
  */
-void co_val_make(int valid_calls);
+void co_val_make(int32_t valid_calls);
 
 /**
  * Setups number of valid calls to co_val_init_min().
  */
-void co_val_init_min(int valid_calls);
+void co_val_init_min(int32_t valid_calls);
 
 /**
  * Setups number of valid calls to co_val_init_max().
  */
-void co_val_init_max(int valid_calls);
+void co_val_init_max(int32_t valid_calls);
 
 /**
  * Setups number of valid calls to co_val_init().
  */
-void co_val_init(int valid_calls);
+void co_val_init(int32_t valid_calls);
 
 }  // namespace LelyOverride
 
