@@ -577,7 +577,7 @@ def main():
     with open(args.filename[0], "r") as input:
         cfg = yaml.safe_load(input)
 
-    options = {"cob_id": 0x680, "dcf_path": "", "heartbeat_multiplier": 3.0, "retry_factor": 3.0}
+    options = {"cob_id": 0x680, "dcf_path": "", "heartbeat_multiplier": 3.0, "retry_factor": 3}
     if "options" in cfg:
         if "dcf_path" in cfg["options"]:
             options["dcf_path"] = str(cfg["options"]["dcf_path"])
