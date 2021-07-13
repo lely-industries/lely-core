@@ -26,15 +26,15 @@
 
 #include <lely/co/type.h>
 
-struct CoCsdoDnCon {
+class CoCsdoDnCon {
+ public:
   static co_csdo_t* sdo;
   static co_unsigned16_t idx;
   static co_unsigned8_t subidx;
   static co_unsigned32_t ac;
   static void* data;
-  static unsigned int num_called;
 
-  static void func(co_csdo_t* sdo_, co_unsigned16_t idx_,
+  static void Func(co_csdo_t* sdo_, co_unsigned16_t idx_,
                    co_unsigned8_t subidx_, co_unsigned32_t ac_, void* data_);
   static void Check(const co_csdo_t* sdo_, co_unsigned16_t idx_,
                     co_unsigned8_t subidx_, co_unsigned32_t ac_,
@@ -45,6 +45,13 @@ struct CoCsdoDnCon {
   Called() {
     return num_called > 0;
   }
+  static inline size_t
+  GetNumCalled() {
+    return num_called;
+  }
+
+ private:
+  static size_t num_called;
 };
 
 #endif  // LELY_UNIT_TEST_CO_CSDO_DN_CON_HPP_

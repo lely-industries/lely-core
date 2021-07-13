@@ -33,10 +33,10 @@ co_unsigned16_t CoCsdoDnCon::idx = 0;
 co_unsigned8_t CoCsdoDnCon::subidx = 0;
 co_unsigned32_t CoCsdoDnCon::ac = 0;
 void* CoCsdoDnCon::data = nullptr;
-unsigned int CoCsdoDnCon::num_called = 0;
+size_t CoCsdoDnCon::num_called = 0;
 
 void
-CoCsdoDnCon::func(co_csdo_t* sdo_, co_unsigned16_t idx_, co_unsigned8_t subidx_,
+CoCsdoDnCon::Func(co_csdo_t* sdo_, co_unsigned16_t idx_, co_unsigned8_t subidx_,
                   co_unsigned32_t ac_, void* data_) {
   sdo = sdo_;
   idx = idx_;

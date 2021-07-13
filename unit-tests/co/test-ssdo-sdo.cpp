@@ -173,10 +173,10 @@ TEST(CO_SsdoDnInd, DownloadHighestSubidx) {
   const int data = 0;
   const auto ret =
       co_dev_dn_val_req(dev, 0x1200u, 0x00u, CO_DEFTYPE_UNSIGNED8, &data,
-                        nullptr, CoCsdoDnCon::func, nullptr);
+                        nullptr, CoCsdoDnCon::Func, nullptr);
 
   CHECK_EQUAL(0, ret);
-  CHECK_EQUAL(1u, CoCsdoDnCon::num_called);
+  CHECK_EQUAL(1u, CoCsdoDnCon::GetNumCalled());
   CHECK_EQUAL(CO_SDO_AC_NO_WRITE, CoCsdoDnCon::ac);
 }
 
@@ -194,10 +194,10 @@ TEST(CO_SsdoDnInd, DownloadReqCobid_TooManyBytes) {
   const uint_least64_t data = 0;
   const auto ret =
       co_dev_dn_val_req(dev, 0x1200u, 0x01u, CO_DEFTYPE_UNSIGNED64, &data,
-                        nullptr, CoCsdoDnCon::func, nullptr);
+                        nullptr, CoCsdoDnCon::Func, nullptr);
 
   CHECK_EQUAL(0, ret);
-  CHECK_EQUAL(1u, CoCsdoDnCon::num_called);
+  CHECK_EQUAL(1u, CoCsdoDnCon::GetNumCalled());
   CHECK_EQUAL(CO_SDO_AC_TYPE_LEN_HI, CoCsdoDnCon::ac);
   CHECK_EQUAL(DEV_ID, GetSrv01CobidReq());
 }
@@ -219,10 +219,10 @@ TEST(CO_SsdoDnInd, DownloadReqCobid_SameAsOld) {
   const co_unsigned32_t cobid = CAN_ID;
   const auto ret =
       co_dev_dn_val_req(dev, 0x1200u, 0x01u, CO_DEFTYPE_UNSIGNED32, &cobid,
-                        nullptr, CoCsdoDnCon::func, nullptr);
+                        nullptr, CoCsdoDnCon::Func, nullptr);
 
   CHECK_EQUAL(0, ret);
-  CHECK_EQUAL(1u, CoCsdoDnCon::num_called);
+  CHECK_EQUAL(1u, CoCsdoDnCon::GetNumCalled());
   CHECK_EQUAL(0, CoCsdoDnCon::ac);
   CHECK_EQUAL(DEV_ID, GetSrv01CobidReq());
 }
@@ -245,10 +245,10 @@ TEST(CO_SsdoDnInd, DownloadReqCobid_OldValidNewValidNewId) {
   const co_unsigned32_t cobid = CAN_ID + 1u;
   const auto ret =
       co_dev_dn_val_req(dev, 0x1200u, 0x01u, CO_DEFTYPE_UNSIGNED32, &cobid,
-                        nullptr, CoCsdoDnCon::func, nullptr);
+                        nullptr, CoCsdoDnCon::Func, nullptr);
 
   CHECK_EQUAL(0, ret);
-  CHECK_EQUAL(1u, CoCsdoDnCon::num_called);
+  CHECK_EQUAL(1u, CoCsdoDnCon::GetNumCalled());
   CHECK_EQUAL(CO_SDO_AC_PARAM_VAL, CoCsdoDnCon::ac);
   CHECK_EQUAL(CAN_ID, GetSrv01CobidReq());
 }
@@ -273,10 +273,10 @@ TEST(CO_SsdoDnInd, DownloadReqCobid_OldValidNewInvalidNewId) {
   const co_unsigned32_t cobid = (CAN_ID + 1u) | CO_SDO_COBID_VALID;
   const auto ret =
       co_dev_dn_val_req(dev, 0x1200u, 0x01u, CO_DEFTYPE_UNSIGNED32, &cobid,
-                        nullptr, CoCsdoDnCon::func, nullptr);
+                        nullptr, CoCsdoDnCon::Func, nullptr);
 
   CHECK_EQUAL(0, ret);
-  CHECK_EQUAL(1u, CoCsdoDnCon::num_called);
+  CHECK_EQUAL(1u, CoCsdoDnCon::GetNumCalled());
   CHECK_EQUAL(0, CoCsdoDnCon::ac);
   CHECK_EQUAL(cobid, GetSrv01CobidReq());
 }
@@ -304,10 +304,10 @@ TEST(CO_SsdoDnInd, DownloadReqCobid_OldInvalidNewValidNewId) {
   const co_unsigned32_t cobid = CAN_ID + 1u;
   const auto ret =
       co_dev_dn_val_req(dev, 0x1200u, 0x01u, CO_DEFTYPE_UNSIGNED32, &cobid,
-                        nullptr, CoCsdoDnCon::func, nullptr);
+                        nullptr, CoCsdoDnCon::Func, nullptr);
 
   CHECK_EQUAL(0, ret);
-  CHECK_EQUAL(1u, CoCsdoDnCon::num_called);
+  CHECK_EQUAL(1u, CoCsdoDnCon::GetNumCalled());
   CHECK_EQUAL(0, CoCsdoDnCon::ac);
   CHECK_EQUAL(cobid, GetSrv01CobidReq());
 }
@@ -332,10 +332,10 @@ TEST(CO_SsdoDnInd, DownloadReqCobid_OldValidNewValidOldId) {
   const co_unsigned32_t cobid = CAN_ID | CO_SDO_COBID_FRAME;
   const auto ret =
       co_dev_dn_val_req(dev, 0x1200u, 0x01u, CO_DEFTYPE_UNSIGNED32, &cobid,
-                        nullptr, CoCsdoDnCon::func, nullptr);
+                        nullptr, CoCsdoDnCon::Func, nullptr);
 
   CHECK_EQUAL(0, ret);
-  CHECK_EQUAL(1u, CoCsdoDnCon::num_called);
+  CHECK_EQUAL(1u, CoCsdoDnCon::GetNumCalled());
   CHECK_EQUAL(0, CoCsdoDnCon::ac);
   CHECK_EQUAL(cobid, GetSrv01CobidReq());
 }
@@ -357,10 +357,10 @@ TEST(CO_SsdoDnInd, DownloadReqCobid_OldValidNewInvalidNewIdExtended) {
   co_unsigned32_t cobid = CAN_ID_EXT | CO_SDO_COBID_VALID;
   const auto ret =
       co_dev_dn_val_req(dev, 0x1200u, 0x01u, CO_DEFTYPE_UNSIGNED32, &cobid,
-                        nullptr, CoCsdoDnCon::func, nullptr);
+                        nullptr, CoCsdoDnCon::Func, nullptr);
 
   CHECK_EQUAL(0, ret);
-  CHECK_EQUAL(1u, CoCsdoDnCon::num_called);
+  CHECK_EQUAL(1u, CoCsdoDnCon::GetNumCalled());
   CHECK_EQUAL(CO_SDO_AC_PARAM_VAL, CoCsdoDnCon::ac);
   CHECK_EQUAL(CAN_ID, GetSrv01CobidReq());
 }
@@ -385,10 +385,10 @@ TEST(CO_SsdoDnInd, DownloadReqCobid_OldValidNewInvalidOldIdExtended) {
   co_unsigned32_t cobid = CAN_ID | CO_SDO_COBID_VALID | CO_SDO_COBID_FRAME;
   const auto ret =
       co_dev_dn_val_req(dev, 0x1200u, 0x01u, CO_DEFTYPE_UNSIGNED32, &cobid,
-                        nullptr, CoCsdoDnCon::func, nullptr);
+                        nullptr, CoCsdoDnCon::Func, nullptr);
 
   CHECK_EQUAL(0, ret);
-  CHECK_EQUAL(1u, CoCsdoDnCon::num_called);
+  CHECK_EQUAL(1u, CoCsdoDnCon::GetNumCalled());
   CHECK_EQUAL(0, CoCsdoDnCon::ac);
   CHECK_EQUAL(cobid, GetSrv01CobidReq());
 }
@@ -410,10 +410,10 @@ TEST(CO_SsdoDnInd, DownloadResCobid_SameAsOld) {
   const co_unsigned32_t cobid = CAN_ID;
   const auto ret =
       co_dev_dn_val_req(dev, 0x1200u, 0x02u, CO_DEFTYPE_UNSIGNED32, &cobid,
-                        nullptr, CoCsdoDnCon::func, nullptr);
+                        nullptr, CoCsdoDnCon::Func, nullptr);
 
   CHECK_EQUAL(0, ret);
-  CHECK_EQUAL(1u, CoCsdoDnCon::num_called);
+  CHECK_EQUAL(1u, CoCsdoDnCon::GetNumCalled());
   CHECK_EQUAL(0, CoCsdoDnCon::ac);
   CHECK_EQUAL(cobid, GetSrv02CobidRes());
 }
@@ -436,10 +436,10 @@ TEST(CO_SsdoDnInd, DownloadResCobid_OldValidNewValidNewId) {
   const co_unsigned32_t cobid = CAN_ID + 1u;
   const auto ret =
       co_dev_dn_val_req(dev, 0x1200u, 0x02u, CO_DEFTYPE_UNSIGNED32, &cobid,
-                        nullptr, CoCsdoDnCon::func, nullptr);
+                        nullptr, CoCsdoDnCon::Func, nullptr);
 
   CHECK_EQUAL(0, ret);
-  CHECK_EQUAL(1u, CoCsdoDnCon::num_called);
+  CHECK_EQUAL(1u, CoCsdoDnCon::GetNumCalled());
   CHECK_EQUAL(CO_SDO_AC_PARAM_VAL, CoCsdoDnCon::ac);
   CHECK_EQUAL(CAN_ID, GetSrv02CobidRes());
 }
@@ -464,10 +464,10 @@ TEST(CO_SsdoDnInd, DownloadResCobid_OldValidNewInvalidNewId) {
   const co_unsigned32_t cobid = CAN_ID | CO_SDO_COBID_VALID;
   const auto ret =
       co_dev_dn_val_req(dev, 0x1200u, 0x02u, CO_DEFTYPE_UNSIGNED32, &cobid,
-                        nullptr, CoCsdoDnCon::func, nullptr);
+                        nullptr, CoCsdoDnCon::Func, nullptr);
 
   CHECK_EQUAL(0, ret);
-  CHECK_EQUAL(1u, CoCsdoDnCon::num_called);
+  CHECK_EQUAL(1u, CoCsdoDnCon::GetNumCalled());
   CHECK_EQUAL(0, CoCsdoDnCon::ac);
   CHECK_EQUAL(cobid, GetSrv02CobidRes());
 }
@@ -495,10 +495,10 @@ TEST(CO_SsdoDnInd, DownloadResCobid_OldInvalidNewValidNewId) {
   const co_unsigned32_t cobid = CAN_ID + 1u;
   const auto ret =
       co_dev_dn_val_req(dev, 0x1200u, 0x02u, CO_DEFTYPE_UNSIGNED32, &cobid,
-                        nullptr, CoCsdoDnCon::func, nullptr);
+                        nullptr, CoCsdoDnCon::Func, nullptr);
 
   CHECK_EQUAL(0, ret);
-  CHECK_EQUAL(1u, CoCsdoDnCon::num_called);
+  CHECK_EQUAL(1u, CoCsdoDnCon::GetNumCalled());
   CHECK_EQUAL(0, CoCsdoDnCon::ac);
   CHECK_EQUAL(cobid, GetSrv02CobidRes());
 }
@@ -524,10 +524,10 @@ TEST(CO_SsdoDnInd, DownloadResCobid_OldValidNewValidOldIdExtended) {
   const co_unsigned32_t cobid = CAN_ID | CO_SDO_COBID_FRAME;
   const auto ret =
       co_dev_dn_val_req(dev, 0x1200u, 0x02u, CO_DEFTYPE_UNSIGNED32, &cobid,
-                        nullptr, CoCsdoDnCon::func, nullptr);
+                        nullptr, CoCsdoDnCon::Func, nullptr);
 
   CHECK_EQUAL(0, ret);
-  CHECK_EQUAL(1u, CoCsdoDnCon::num_called);
+  CHECK_EQUAL(1u, CoCsdoDnCon::GetNumCalled());
   CHECK_EQUAL(0, CoCsdoDnCon::ac);
   CHECK_EQUAL(cobid, GetSrv02CobidRes());
 }
@@ -550,10 +550,10 @@ TEST(CO_SsdoDnInd, DownloadResCobid_OldValidNewInvalidOldId) {
   co_unsigned32_t cobid = CAN_ID_EXT | CO_SDO_COBID_VALID;
   const auto ret =
       co_dev_dn_val_req(dev, 0x1200u, 0x02u, CO_DEFTYPE_UNSIGNED32, &cobid,
-                        nullptr, CoCsdoDnCon::func, nullptr);
+                        nullptr, CoCsdoDnCon::Func, nullptr);
 
   CHECK_EQUAL(0, ret);
-  CHECK_EQUAL(1u, CoCsdoDnCon::num_called);
+  CHECK_EQUAL(1u, CoCsdoDnCon::GetNumCalled());
   CHECK_EQUAL(CO_SDO_AC_PARAM_VAL, CoCsdoDnCon::ac);
   CHECK_EQUAL(CAN_ID, GetSrv02CobidRes());
 }
@@ -578,10 +578,10 @@ TEST(CO_SsdoDnInd, DownloadResCobid_OldValidNewInvalidOldIdExtended) {
   co_unsigned32_t cobid = CAN_ID | CO_SDO_COBID_VALID | CO_SDO_COBID_FRAME;
   const auto ret =
       co_dev_dn_val_req(dev, 0x1200u, 0x02u, CO_DEFTYPE_UNSIGNED32, &cobid,
-                        nullptr, CoCsdoDnCon::func, nullptr);
+                        nullptr, CoCsdoDnCon::Func, nullptr);
 
   CHECK_EQUAL(0, ret);
-  CHECK_EQUAL(1u, CoCsdoDnCon::num_called);
+  CHECK_EQUAL(1u, CoCsdoDnCon::GetNumCalled());
   CHECK_EQUAL(0, CoCsdoDnCon::ac);
   CHECK_EQUAL(cobid, GetSrv02CobidRes());
 }
@@ -603,10 +603,10 @@ TEST(CO_SsdoDnInd, DownloadNodeId_SameAsOld) {
   const co_unsigned8_t new_id = 0x00u;
   const auto ret =
       co_dev_dn_val_req(dev, 0x1200u, 0x03u, CO_DEFTYPE_UNSIGNED8, &new_id,
-                        nullptr, CoCsdoDnCon::func, nullptr);
+                        nullptr, CoCsdoDnCon::Func, nullptr);
 
   CHECK_EQUAL(0, ret);
-  CHECK_EQUAL(1u, CoCsdoDnCon::num_called);
+  CHECK_EQUAL(1u, CoCsdoDnCon::GetNumCalled());
   CHECK_EQUAL(0, CoCsdoDnCon::ac);
   CHECK_EQUAL(0, GetSrv03NodeId());
 }
@@ -629,10 +629,10 @@ TEST(CO_SsdoDnInd, DownloadNodeId_Nominal) {
   const co_unsigned8_t new_id = 0x01u;
   const auto ret =
       co_dev_dn_val_req(dev, 0x1200u, 0x03u, CO_DEFTYPE_UNSIGNED8, &new_id,
-                        nullptr, CoCsdoDnCon::func, nullptr);
+                        nullptr, CoCsdoDnCon::Func, nullptr);
 
   CHECK_EQUAL(0, ret);
-  CHECK_EQUAL(1u, CoCsdoDnCon::num_called);
+  CHECK_EQUAL(1u, CoCsdoDnCon::GetNumCalled());
   CHECK_EQUAL(0, CoCsdoDnCon::ac);
   CHECK_EQUAL(new_id, GetSrv03NodeId());
 }
@@ -655,10 +655,10 @@ TEST(CO_SsdoDnInd, DownloadNodeId_InvalidSubidx) {
   const co_unsigned8_t data = 0;
   const auto ret =
       co_dev_dn_val_req(dev, 0x1200u, 0x04u, CO_DEFTYPE_UNSIGNED8, &data,
-                        nullptr, CoCsdoDnCon::func, nullptr);
+                        nullptr, CoCsdoDnCon::Func, nullptr);
 
   CHECK_EQUAL(0, ret);
-  CHECK_EQUAL(1u, CoCsdoDnCon::num_called);
+  CHECK_EQUAL(1u, CoCsdoDnCon::GetNumCalled());
   CHECK_EQUAL(CO_SDO_AC_NO_SUB, CoCsdoDnCon::ac);
 }
 

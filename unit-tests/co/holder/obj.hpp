@@ -31,6 +31,7 @@
 #include <CppUTest/TestHarness.h>
 
 #include <lely/co/obj.h>
+#include <lely/co/val.h>
 
 #if LELY_NO_MALLOC
 #include <lely/co/detail/obj.h>
@@ -198,6 +199,28 @@ class CoObjTHolder : public Holder<co_obj_t> {
   void
   SetSub(const typename T::sub_type val) {
     SetSub<T>(T::subidx, val);
+  }
+
+  /**
+   * Gets the current value of a CANopen sub-object with the given sub-index,
+   * based on and checked against meta-information from a template type.
+   *
+   * @see ObjInitT::SubT
+   */
+  template <typename T>
+  typename T::sub_type
+  GetSub(const co_unsigned8_t subidx = T::subidx) {
+    assert(T::min_subidx > 0 ? subidx >= T::min_subidx : subidx == T::subidx);
+    assert(co_obj_get_idx(Get()) >= T::min_idx &&
+           co_obj_get_idx(Get()) <= T::max_idx);
+    assert(co_obj_find_sub(Get(), subidx) != nullptr);
+
+    typename T::sub_type val = 0;
+    const void* const val_ptr = co_obj_get_val(Get(), subidx);
+
+    co_val_copy(T::deftype, &val, val_ptr);
+
+    return val;
   }
 
  protected:
