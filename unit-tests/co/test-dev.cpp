@@ -2656,7 +2656,7 @@ TEST_GROUP_BASE(CO_DevTpdoEvent, CO_DevTpdoBase) {
     std::unique_ptr<CoObjTHolder> obj1800(
         new CoObjTHolder(0x1800u + tpdo_num - 1));
     obj1800->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8,
-                             co_unsigned8_t(0x02u));
+                             co_unsigned8_t{0x02u});
     obj1800->InsertAndSetSub(0x01u, CO_DEFTYPE_UNSIGNED32, cobid);
     obj1800->InsertAndSetSub(0x02u, CO_DEFTYPE_UNSIGNED8, transmission);
 
@@ -2674,7 +2674,7 @@ TEST_GROUP_BASE(CO_DevTpdoEvent, CO_DevTpdoBase) {
     std::unique_ptr<CoObjTHolder> obj1a00(
         new CoObjTHolder(0x1a00u + tpdo_num - 1));
     obj1a00->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8,
-                             co_unsigned8_t(0x01u));
+                             co_unsigned8_t{0x01u});
     obj1a00->InsertAndSetSub(0x01u, CO_DEFTYPE_UNSIGNED32, mapping);
     CHECK_EQUAL(0, co_dev_insert_obj(dev, obj1a00->Take()));
 
@@ -2797,7 +2797,7 @@ TEST(CO_DevTpdoEvent, CoDevTpdoEvent_InvalidTpdoMaxSubIndex) {
   CoObjTHolder obj1800(0x1800u);
   obj1800.InsertAndSetSub(
       0x00u, CO_DEFTYPE_UNSIGNED8,
-      co_unsigned8_t(0x00u));  // highest sub-index supported
+      co_unsigned8_t{0x00u});  // highest sub-index supported
   CHECK_EQUAL(0, co_dev_insert_obj(dev, obj1800.Take()));
 
   co_dev_tpdo_event(dev, OBJ_IDX, SUB_IDX);

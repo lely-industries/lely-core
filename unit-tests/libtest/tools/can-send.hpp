@@ -38,7 +38,7 @@ class CanSend {
 
   static int Func(const can_msg* msg_, int bus_id_, void* data_);
   static void CheckMsg(uint_least32_t id, uint_least8_t flags,
-                       uint_least8_t len, const uint_least8_t* data);
+                       uint_least8_t len, const uint_least8_t* data_);
   static void Clear();
 
   static inline unsigned int

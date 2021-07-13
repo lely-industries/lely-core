@@ -105,60 +105,60 @@ TEST_BASE(CO_NmtBase) {
     dev_holder->CreateAndInsertObj(obj1016, 0x1016u);
 
     // 0x00 - Highest sub-index supported
-    obj1016->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(num));
+    obj1016->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t{num});
     // 0x01-0x7f - Consumer heartbeat time
     for (co_unsigned8_t i = 0; i < num; ++i) {
       obj1016->InsertAndSetSub(
           i + 1, CO_DEFTYPE_UNSIGNED32,
-          co_unsigned32_t(co_unsigned32_t(SLAVE_DEV_ID) << 16u) |
-              co_unsigned32_t(0x0001u));  //  1 ms
+          co_unsigned32_t{co_unsigned32_t{SLAVE_DEV_ID} << 16u} |
+              co_unsigned32_t{0x0001u});  //  1 ms
     }
   }
 
   void CreateObj1017ProducerHeartbeatTime(const co_unsigned16_t hb_time) {
     dev_holder->CreateAndInsertObj(obj1017, 0x1017u);
     obj1017->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED16,
-                             co_unsigned16_t(hb_time));
+                             co_unsigned16_t{hb_time});
   }
 
   void CreateObj1f80NmtStartup(const co_unsigned32_t startup) {
     dev_holder->CreateAndInsertObj(obj1f80, 0x1f80u);
     obj1f80->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED32,
-                             co_unsigned32_t(startup));
+                             co_unsigned32_t{startup});
   }
 
-  void CreateObj1f81SlaveAssignmentN(const size_t num) {
+  void CreateObj1f81SlaveAssignmentN(const co_unsigned8_t num) {
     assert(num > 0 && num <= CO_NUM_NODES);
     // object 0x1f81 - Slave assignment object
     dev_holder->CreateAndInsertObj(obj1f81, 0x1f81u);
 
     // 0x00 - Highest sub-index supported
-    obj1f81->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(num));
+    obj1f81->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, num);
     // 0x01-0x7f - Slave with the given Node-ID
     for (co_unsigned8_t i = 0; i < num; ++i) {
       obj1f81->InsertAndSetSub(i + 1u, CO_DEFTYPE_UNSIGNED32,
-                               co_unsigned32_t(0x01u));
+                               co_unsigned32_t{0x01u});
     }
   }
 
-  void CreateObj1f82RequestNmt(const size_t num) {
+  void CreateObj1f82RequestNmt(const co_unsigned8_t num) {
     assert(num > 0 && num <= CO_NUM_NODES);
     // object 0x1f82 - Request NMT object
     dev_holder->CreateAndInsertObj(obj1f82, 0x1f82u);
 
     // 0x00 - Highest sub-index supported
-    obj1f82->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(num));
+    obj1f82->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, num);
     // 0x01-0x7f - Request NMT-Service for slave with the given Node-ID
     for (co_unsigned8_t i = 0; i < num; ++i) {
-      obj1f82->InsertAndSetSub(i + 1u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(0));
+      obj1f82->InsertAndSetSub(i + 1u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t{0});
     }
   }
 
 #if !LELY_NO_CO_ECSS_REDUNDANCY
   void CreateEmptyRedundancyObject() {
     dev_holder->CreateAndInsertObj(obj_rdn, CO_NMT_RDN_REDUNDANCY_OBJ_IDX);
-    obj_rdn->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(0));
-    obj_rdn->InsertAndSetSub(0x01u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(0));
+    obj_rdn->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t{0});
+    obj_rdn->InsertAndSetSub(0x01u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t{0});
   }
 #endif
 
@@ -438,7 +438,7 @@ TEST(CO_NmtCreate, CoNmtCreate_Default) {
 TEST(CO_NmtCreate, CoNmtCreate_DcfAppParamsWriteFail) {
   const size_t NUM_SUBS = 1u;
   dev_holder->CreateAndInsertObj(obj2001, 0x2001u);
-  obj2001->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(0));
+  obj2001->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t{0});
 
   LelyOverride::co_val_write(
       GetCoDevWriteDcf_NullBuf_CoValWriteCalls(NUM_SUBS));
@@ -474,10 +474,10 @@ TEST(CO_NmtCreate, CoNmtCreate_DcfCommParamsWriteFail) {
   const size_t NUM_SUBS = 1u;  // in each region
 #if !LELY_NO_CO_DCF_RESTORE
   dev_holder->CreateAndInsertObj(obj2001, 0x2001u);
-  obj2001->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(0));
+  obj2001->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t{0});
 #endif
   dev_holder->CreateAndInsertObj(obj1000, 0x1000u);
-  obj1000->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(0));
+  obj1000->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t{0});
 
 #if !LELY_NO_CO_DCF_RESTORE
   LelyOverride::co_val_write(
@@ -1461,7 +1461,7 @@ TEST_GROUP_BASE(CO_Nmt, CO_NmtBase) {
   void CreateObj102aNmtInhibitTime(const co_unsigned16_t inhibit_time) {
     dev_holder->CreateAndInsertObj(obj102a, 0x102au);
     obj102a->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED16,
-                             co_unsigned16_t(inhibit_time));
+                             co_unsigned16_t{inhibit_time});
   }
 
   can_msg CreateNmtBootupMsg(const co_unsigned8_t id) const {

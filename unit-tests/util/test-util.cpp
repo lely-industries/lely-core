@@ -145,7 +145,7 @@ TEST(Util_Util, Align_Base2SmallInts) {
 /// \Then the macro evaluates to the nearest multiple of base greater or equal
 ///       to the number
 TEST(Util_Util, Align_Base2BigInts) {
-  int base = 2;
+  const int base = 2;
 
   CHECK_EQUAL(213326L, ALIGN(213325L, base));
   CHECK_EQUAL(21332526LL, ALIGN(21332525LL, base));
@@ -169,7 +169,7 @@ TEST(Util_Util, Align_Base2BigInts) {
 ///
 /// \Then the number is 0
 TEST(Util_Util, Align_Base0SmallInts) {
-  int base = 0;
+  const int base = 0;
 
   CHECK_EQUAL(0, ALIGN(0, base));
   CHECK_EQUAL(0, ALIGN(1, base));
@@ -182,7 +182,7 @@ TEST(Util_Util, Align_Base0SmallInts) {
 ///
 /// \Then the number is 0
 TEST(Util_Util, Align_Base0BigInts) {
-  int base = 0;
+  const int base = 0;
 
   CHECK_EQUAL(0L, ALIGN(213325L, base));
   CHECK_EQUAL(0LL, ALIGN(21332525LL, base));
@@ -207,7 +207,7 @@ TEST(Util_Util, Align_Base0BigInts) {
 /// \Then the macro evaluates to the nearest multiple of base greater or equal
 ///       to the number
 TEST(Util_Util, Align_Base4SmallInts) {
-  int base = 4;
+  const int base = 4;
 
   CHECK_EQUAL(0, ALIGN(0, base));
   CHECK_EQUAL(4, ALIGN(1, base));
@@ -226,7 +226,7 @@ TEST(Util_Util, Align_Base4SmallInts) {
 /// \Then the macro evaluates to the nearest multiple of base greater or equal
 ///       to the number
 TEST(Util_Util, Align_Base4BigInts) {
-  int base = 4;
+  const int base = 4;
 
   CHECK_EQUAL(213328L, ALIGN(213325L, base));
   CHECK_EQUAL(21332528LL, ALIGN(21332525LL, base));
@@ -251,7 +251,7 @@ TEST(Util_Util, Align_Base4BigInts) {
 /// \Then the macro evaluates to the nearest multiple of base greater or equal
 ///       to the number
 TEST(Util_Util, Align_BigBaseSmallInts) {
-  int base = 4096;
+  const int base = 4096;
 
   CHECK_EQUAL(0, ALIGN(0, base));
   CHECK_EQUAL(4096, ALIGN(1, base));
@@ -266,7 +266,7 @@ TEST(Util_Util, Align_BigBaseSmallInts) {
 /// \Then the macro evaluates to the nearest multiple of base greater or equal
 ///       to the number
 TEST(Util_Util, Align_BigBaseBigInts) {
-  int base = 4096;
+  const int base = 4096;
 
   CHECK_EQUAL(217088L, ALIGN(213325L, base));
   CHECK_EQUAL(21336064LL, ALIGN(21332525LL, base));
@@ -355,11 +355,11 @@ TEST(Util_Util, Max) {
 ///
 /// \Then both macros evaluate to different variables
 TEST(Util_Util, MinMaxDifferentAddresses) {
-  const int a = 42;
-  const int b = 42;
+  const int32_t a = 42;
+  const int32_t b = 42;
 
-  const int* const min = &(MIN(a, b));
-  const int* const max = &(MAX(a, b));
+  const int32_t* const min = &(MIN(a, b));
+  const int32_t* const max = &(MAX(a, b));
 
   CHECK(min != max);
 }
@@ -375,12 +375,12 @@ TEST(Util_Util, MinMaxDifferentAddresses) {
 ///
 /// \Then macro evaluates to the number of elements in the array
 TEST(Util_Util, Countof) {
-  int a[1];
+  const int32_t a[1] = {0};
   CHECK_EQUAL(1, countof(a));
-  int b[2];
+  const int32_t b[2] = {0};
   CHECK_EQUAL(2, countof(b));
-  int c[128];
-  CHECK_EQUAL(128, countof(c));
+  const int32_t c[42] = {0};
+  CHECK_EQUAL(42, countof(c));
 }
 
 ///@}
@@ -417,12 +417,12 @@ TEST(Util_Util, Powerof2) {
 
 TEST(Util_Util, Structof_Example) {
   struct TestNode {
-    int x;
+    int32_t x;
   };
 
   struct TestObject {
     TestNode node;
-    int val;
+    int32_t val;
   };
 
   const TestNode test_node_init = {0};
@@ -443,13 +443,13 @@ TEST(Util_Util, Structof_Example) {
 /// \Then the macro evaluates to the address of the member's parent structure
 TEST(Util_Util, Structof_General) {
   struct TestStruct {
-    int a;
-    int b;
+    int32_t a;
+    int32_t b;
   };
 
   const TestStruct test_instance = {0, 0};
-  const int* const a_ptr = &test_instance.a;
-  const int* const b_ptr = &test_instance.b;
+  const int32_t* const a_ptr = &test_instance.a;
+  const int32_t* const b_ptr = &test_instance.b;
 
   POINTERS_EQUAL(&test_instance, structof(a_ptr, TestStruct, a));
   POINTERS_EQUAL(&test_instance, structof(b_ptr, TestStruct, b));

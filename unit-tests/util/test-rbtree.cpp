@@ -31,12 +31,12 @@
 #include <lely/util/rbtree.h>
 
 static int
-rbtree_cmp_ints(const void* p1, const void* p2) {
+rbtree_cmp_ints(const void* const p1, const void* const p2) {
   assert(p1);
   assert(p2);
 
-  const auto val1 = *static_cast<const int*>(p1);
-  const auto val2 = *static_cast<const int*>(p2);
+  const auto val1 = *static_cast<const int32_t*>(p1);
+  const auto val2 = *static_cast<const int32_t*>(p2);
 
   if (val1 > val2)
     return 1;
@@ -49,9 +49,9 @@ rbtree_cmp_ints(const void* p1, const void* p2) {
 TEST_GROUP(Util_RbtreeCmpInts){};
 
 TEST(Util_RbtreeCmpInts, RbtreeCmpInts) {
-  int a = 2;
-  int b = 3;
-  int c = 2;
+  const int32_t a = 2;
+  const int32_t b = 3;
+  const int32_t c = 2;
 
   CHECK_EQUAL(0, rbtree_cmp_ints(&a, &c));
   CHECK_COMPARE(0, >, rbtree_cmp_ints(&a, &b));
@@ -94,7 +94,7 @@ TEST(Util_RbtreeInit, RbtreeInit_Nominal) {
 ///       requested key set
 TEST(Util_RbtreeInit, RbnodeInit_Nominal) {
   rbnode node;
-  const int key = 42;
+  const int32_t key = 42;
 
   rbnode_init(&node, &key);
 
@@ -110,7 +110,7 @@ TEST_GROUP(Util_Rbtree) {
   rbtree tree;
   static const size_t NODES_NUMBER = 10;
   rbnode nodes[NODES_NUMBER];
-  const int keys[NODES_NUMBER] = {-10, 10, 20, 30, 40, 50, 60, 70, 80, 90};
+  const int32_t keys[NODES_NUMBER] = {-10, 10, 20, 30, 40, 50, 60, 70, 80, 90};
 
   TEST_SETUP() {
     rbtree_init(&tree, rbtree_cmp_ints);
@@ -191,7 +191,7 @@ TEST(Util_Rbtree, RbtreeEmpty_LeafAdded) {
 TEST(Util_Rbtree, RbtreeInsert_EmptyTree) {
   rbtree_insert(&tree, &nodes[0]);
 
-  const rbnode* root_ptr = rbtree_root(&tree);
+  const rbnode* const root_ptr = rbtree_root(&tree);
   POINTERS_EQUAL(&nodes[0], root_ptr);
   POINTERS_EQUAL(nullptr, rbnode_next(root_ptr));
 }
@@ -207,7 +207,7 @@ TEST(Util_Rbtree, RbtreeInsert_OneAdded) {
 
   rbtree_insert(&tree, &nodes[1]);
 
-  const rbnode* root_ptr = rbtree_root(&tree);
+  const rbnode* const root_ptr = rbtree_root(&tree);
   POINTERS_EQUAL(&nodes[1], rbnode_next(root_ptr));
   POINTERS_EQUAL(&nodes[1], root_ptr->right);
 }
@@ -225,7 +225,7 @@ TEST(Util_Rbtree, RbtreeInsert_ManyAdded) {
 
   rbtree_insert(&tree, &nodes[2]);
 
-  rbnode* root_ptr = rbtree_root(&tree);
+  const rbnode* const root_ptr = rbtree_root(&tree);
   POINTERS_EQUAL(&nodes[2], rbnode_next(root_ptr));
 }
 
@@ -633,7 +633,7 @@ TEST(Util_Rbtree, RbtreeContains_TreeWithManyDoesNotContain) {
 ///
 /// \Then null pointer is returned
 TEST(Util_Rbtree, RbtreeFind_EmptyTree) {
-  const int key = 42;
+  const int32_t key = 42;
   POINTERS_EQUAL(nullptr, rbtree_find(&tree, &key));
 }
 
@@ -682,7 +682,7 @@ TEST(Util_Rbtree, RbtreeFind_KeyNotInTree) {
   rbtree_insert(&tree, &nodes[2]);
   rbtree_insert(&tree, &nodes[3]);
 
-  const int key = 999;
+  const int32_t key = 999;
   POINTERS_EQUAL(nullptr, rbtree_find(&tree, &key));
 }
 
@@ -844,9 +844,9 @@ TEST(Util_Rbtree, RbnodeForeach_NodeWithMiddleKeyValue) {
   rbtree_insert(&tree, &nodes[3]);
   rbtree_insert(&tree, &nodes[1]);
   rbtree_insert(&tree, &nodes[5]);
-  unsigned node_counter = 0;
+  size_t node_counter = 0;
 
-  unsigned i = 2;
+  size_t i = 2;
   rbnode_foreach(&nodes[2], current_node) {
     POINTERS_EQUAL(&nodes[i], current_node);
 
@@ -868,7 +868,7 @@ TEST(Util_Rbtree, RbnodeForeach_NodeWithMiddleKeyValue) {
 ///
 /// \Then no loop iterations are performed
 TEST(Util_Rbtree, RbtreeForeach_EmptyTree) {
-  unsigned node_counter = 0;
+  size_t node_counter = 0;
 
   rbtree_foreach(&tree, current_node) { ++node_counter; }
 
@@ -887,7 +887,7 @@ TEST(Util_Rbtree, RbtreeForeach_TreeWithMany) {
   rbtree_insert(&tree, &nodes[0]);
   rbtree_insert(&tree, &nodes[3]);
   rbtree_insert(&tree, &nodes[1]);
-  unsigned node_counter = 0;
+  size_t node_counter = 0;
 
   rbtree_foreach(&tree, current_node) {
     POINTERS_EQUAL(&nodes[node_counter], current_node);
@@ -909,7 +909,7 @@ TEST(Util_Rbtree, RbtreeForeach_TreeWithManyRemoveCurrent) {
   rbtree_insert(&tree, &nodes[0]);
   rbtree_insert(&tree, &nodes[1]);
 
-  unsigned iteration_counter = 0;
+  size_t iteration_counter = 0;
   rbtree_foreach(&tree, current_node) {
     if (current_node->key == &keys[1]) rbtree_remove(&tree, current_node);
 

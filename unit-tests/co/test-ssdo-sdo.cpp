@@ -46,7 +46,7 @@ TEST_GROUP(CO_SsdoDnInd) {
   static const co_unsigned8_t SDO_NUM = 0x01u;
   static const co_unsigned32_t CAN_ID = DEV_ID;
   static const co_unsigned32_t CAN_ID_EXT =
-      co_unsigned32_t(DEV_ID) | 0x10000000u;
+      co_unsigned32_t{co_unsigned32_t{DEV_ID} | co_unsigned32_t{0x10000000u}};
 
   co_dev_t* dev = nullptr;
   can_net_t* net = nullptr;
@@ -649,7 +649,7 @@ TEST(CO_SsdoDnInd, DownloadNodeId_Nominal) {
 ///       \Calls co_sdo_req_dn_val()
 ///       \Calls co_sub_get_subidx()
 TEST(CO_SsdoDnInd, DownloadNodeId_InvalidSubidx) {
-  obj1200->InsertAndSetSub(0x04u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(0x00u));
+  obj1200->InsertAndSetSub(0x04u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t{0x00u});
   RestartSSDO();
 
   const co_unsigned8_t data = 0;

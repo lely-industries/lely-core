@@ -79,13 +79,13 @@ TEST_GROUP(CO_SyncSdo) {
 
     // 0x1005 - COB-ID
     obj1005->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED32,
-                             co_unsigned32_t(DEV_ID));
+                             co_unsigned32_t{DEV_ID});
 
     // 0x1006 - communication cycle period
-    obj1006->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED32, co_unsigned32_t(0));
+    obj1006->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED32, co_unsigned32_t{0});
 
     // 0x1019 - counter overflow
-    obj1019->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(0));
+    obj1019->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t{0});
 
     sync = co_sync_create(net, dev);
     CHECK(sync != nullptr);
@@ -156,7 +156,7 @@ TEST(CO_SyncSdo, Co1005Dn_TypeLenTooLow) {
 ///       \Calls co_sub_get_subidx()
 TEST(CO_SyncSdo, Co1005Dn_InvalidSubobject) {
   obj1005->InsertAndSetSub(0x01u, CO_DEFTYPE_UNSIGNED32,
-                           co_unsigned32_t(DEV_ID));
+                           co_unsigned32_t{DEV_ID});
   RestartSYNC();
 
   const co_unsigned32_t data = 0;
@@ -370,7 +370,7 @@ TEST(CO_SyncSdo, Co1006Dn_TypeLenTooLow) {
 ///       \Calls co_sub_get_subidx()
 TEST(CO_SyncSdo, Co1006Dn_InvalidSubobject) {
   obj1006->InsertAndSetSub(0x01u, CO_DEFTYPE_UNSIGNED16,
-                           co_unsigned16_t(0x00u));
+                           co_unsigned16_t{0x00u});
   RestartSYNC();
 
   const co_unsigned16_t data = 0;
@@ -483,7 +483,7 @@ TEST(CO_SyncSdo, Co1019Dn_TypeLenTooHigh) {
 ///       \Calls co_sdo_req_dn_val()
 ///       \Calls co_sub_get_subidx()
 TEST(CO_SyncSdo, Co1019Dn_InvalidSubobject) {
-  obj1019->InsertAndSetSub(0x01u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(0x00u));
+  obj1019->InsertAndSetSub(0x01u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t{0x00u});
   RestartSYNC();
 
   const co_unsigned8_t data = 0;

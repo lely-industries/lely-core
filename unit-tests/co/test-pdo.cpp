@@ -103,7 +103,7 @@ TEST(CO_Pdo, CoDevChkRpdo_NoWriteAccess) {
   CoObjTHolder obj_default(DEFAULT_OBJ_IDX);
   CHECK(obj_default.Get() != nullptr);
   obj_default.InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8,
-                              co_unsigned8_t(0x00u));
+                              co_unsigned8_t{0x00u});
   co_sub_t* const sub = obj_default.GetLastSub();
   CHECK_EQUAL(0, co_sub_set_access(sub, CO_ACCESS_RO));
   CHECK_EQUAL(0, co_dev_insert_obj(dev, obj_default.Take()));
@@ -117,7 +117,7 @@ TEST(CO_Pdo, CoDevChkRpdo_NoAccessRpdo) {
   CoObjTHolder obj_default(DEFAULT_OBJ_IDX);
   CHECK(obj_default.Get() != nullptr);
   obj_default.InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8,
-                              co_unsigned8_t(0x00u));
+                              co_unsigned8_t{0x00u});
   co_sub_t* const sub = obj_default.GetLastSub();
   CHECK_EQUAL(0, co_sub_set_access(sub, CO_ACCESS_RWR));
   co_sub_set_pdo_mapping(sub, 1);
@@ -132,7 +132,7 @@ TEST(CO_Pdo, CoDevChkRpdo_PdoMappingFalse) {
   CoObjTHolder obj_default(DEFAULT_OBJ_IDX);
   CHECK(obj_default.Get() != nullptr);
   obj_default.InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8,
-                              co_unsigned8_t(0x00u));
+                              co_unsigned8_t{0x00u});
   co_sub_t* const sub = obj_default.GetLastSub();
   CHECK_EQUAL(0, co_sub_set_access(sub, CO_ACCESS_WO));
   co_sub_set_pdo_mapping(sub, 0);
@@ -157,7 +157,7 @@ TEST(CO_Pdo, CoDevChkRpdo) {
   CoObjTHolder obj_default(DEFAULT_OBJ_IDX);
   CHECK(obj_default.Get() != nullptr);
   obj_default.InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8,
-                              co_unsigned8_t(0x00u));
+                              co_unsigned8_t{0x00u});
   co_sub_t* const sub = obj_default.GetLastSub();
   CHECK_EQUAL(0, co_sub_set_access(sub, CO_ACCESS_WO));
   co_sub_set_pdo_mapping(sub, 1);
@@ -185,7 +185,7 @@ TEST(CO_Pdo, CoDevCfgRpdo_NoPdoMappingParamObj) {
 
   CoObjTHolder obj1400(0x1400);
   CHECK(obj1400.Get() != nullptr);
-  obj1400.InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(0x00u));
+  obj1400.InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t{0x00u});
   CHECK_EQUAL(0, co_dev_insert_obj(dev, obj1400.Take()));
 
   const auto ret = co_dev_cfg_rpdo(dev, DEFAULT_NUM, &comm, &map);
@@ -201,12 +201,12 @@ TEST(CO_Pdo, CoDevCfgRpdo_ReenableRpdo) {
 
   CoObjTHolder obj1400(0x1400u);
   CHECK(obj1400.Get() != nullptr);
-  obj1400.InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(0x00u));
+  obj1400.InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t{0x00u});
   CHECK_EQUAL(0, co_dev_insert_obj(dev, obj1400.Take()));
 
   CoObjTHolder obj1600(0x1600u);
   CHECK(obj1600.Get() != nullptr);
-  obj1600.InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(0x00u));
+  obj1600.InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t{0x00u});
   CHECK_EQUAL(0, co_dev_insert_obj(dev, obj1600.Take()));
 
   const auto ret = co_dev_cfg_rpdo(dev, DEFAULT_NUM, &comm, &map);
@@ -222,13 +222,13 @@ TEST(CO_Pdo, CoDevCfgRpdo) {
   CoObjTHolder obj1400(0x1400u);
   CHECK(obj1400.Get() != nullptr);
   // 0x00 - highest sub-index supported
-  obj1400.InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(0x00u));
+  obj1400.InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t{0x00u});
   CHECK_EQUAL(0, co_dev_insert_obj(dev, obj1400.Take()));
 
   CoObjTHolder obj1600(0x1600u);
   CHECK(obj1600.Get() != nullptr);
   // 0x00 - number of mapped application objects in PDO
-  obj1600.InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(0x00u));
+  obj1600.InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t{0x00u});
   CHECK_EQUAL(0, co_dev_insert_obj(dev, obj1600.Take()));
 
   const auto ret = co_dev_cfg_rpdo(dev, DEFAULT_NUM, &comm, &map);
@@ -263,10 +263,10 @@ TEST(CO_Pdo, CoDevCfgRpdoComm) {
   CHECK(obj.Get() != nullptr);
   CHECK_EQUAL(0, co_dev_insert_obj(dev, obj.Get()));
   // 0x00 - highest sub-index supported
-  obj.InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(0x01u));
+  obj.InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t{0x01u});
   // 0x01 - COB-ID
   obj.InsertAndSetSub(0x01u, CO_DEFTYPE_UNSIGNED32,
-                      co_unsigned32_t(0x00000000u));
+                      co_unsigned32_t{0x00000000u});
 
   const auto ret = co_dev_cfg_rpdo_comm(dev, DEFAULT_NUM, &par);
 
@@ -300,9 +300,9 @@ TEST(CO_Pdo, CoDevCfgRpdoMap) {
 
   CoObjTHolder obj(0x1600u);
   CHECK_EQUAL(0, co_dev_insert_obj(dev, obj.Get()));
-  obj.InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(0x00u));
+  obj.InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t{0x00u});
   obj.InsertAndSetSub(0x01u, CO_DEFTYPE_UNSIGNED32,
-                      co_unsigned32_t(0x00000000u));
+                      co_unsigned32_t{0x00000000u});
 
   const auto ret = co_dev_cfg_rpdo_map(dev, DEFAULT_NUM, &par);
 
@@ -344,7 +344,7 @@ TEST(CO_Pdo, CoDevCfgPdoComm_NoCobid) {
   CHECK(obj.Get() != nullptr);
   CHECK_EQUAL(0, co_dev_insert_obj(dev, obj.Get()));
   // 0x00 - highest sub-index supported
-  obj.InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(0x01u));
+  obj.InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t{0x01u});
 
   const auto ret = co_dev_cfg_rpdo_comm(dev, DEFAULT_NUM, &par);
 
@@ -360,10 +360,10 @@ TEST(CO_Pdo, CoDevCfgPdoComm_ConfigureCobid) {
   CoObjTHolder obj(0x1400);
   CHECK(obj.Get() != nullptr);
   // 0x00 - highest sub-index supported
-  obj.InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(0x01u));
+  obj.InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t{0x01u});
   // 0x01 - COB-ID
   obj.InsertAndSetSub(0x01u, CO_DEFTYPE_UNSIGNED32,
-                      co_unsigned32_t(0x00000000u));
+                      co_unsigned32_t{0x00000000u});
   CHECK_EQUAL(0, co_dev_insert_obj(dev, obj.Get()));
 
   const auto ret = co_dev_cfg_rpdo_comm(dev, DEFAULT_NUM, &par);
@@ -381,9 +381,9 @@ TEST(CO_Pdo, CoDevCfgPdoComm_ConfigureCobidTypeBroken) {
   CoObjTHolder obj(0x1400u);
   CHECK(obj.Get() != nullptr);
   // 0x00 - highest sub-index supported
-  obj.InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(0x02u));
+  obj.InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t{0x02u});
   // 0x01 - COB-ID
-  obj.InsertAndSetSub(0x01u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(0x00000000u));
+  obj.InsertAndSetSub(0x01u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t{0x00u});
   CHECK_EQUAL(0, co_dev_insert_obj(dev, obj.Get()));
 
   const auto ret = co_dev_cfg_rpdo_comm(dev, DEFAULT_NUM, &par);
@@ -402,10 +402,10 @@ TEST(CO_Pdo, CoDevCfgPdoComm_NoTransmission) {
   CoObjTHolder obj(0x1400u);
   CHECK(obj.Get() != nullptr);
   // 0x00 - highest sub-index supported
-  obj.InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(0x02u));
+  obj.InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t{0x02u});
   // 0x01 - COB-ID
   obj.InsertAndSetSub(0x01u, CO_DEFTYPE_UNSIGNED32,
-                      co_unsigned32_t(0x00000000u));
+                      co_unsigned32_t{0x00000000u});
   CHECK_EQUAL(0, co_dev_insert_obj(dev, obj.Get()));
 
   const auto ret = co_dev_cfg_rpdo_comm(dev, DEFAULT_NUM, &par);
@@ -424,12 +424,12 @@ TEST(CO_Pdo, CoDevCfgPdoComm_WithTransmission) {
   CoObjTHolder obj(0x1400u);
   CHECK(obj.Get() != nullptr);
   // 0x00 - highest sub-index supported
-  obj.InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(0x02u));
+  obj.InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t{0x02u});
   // 0x01 - COB-ID
   obj.InsertAndSetSub(0x01u, CO_DEFTYPE_UNSIGNED32,
-                      co_unsigned32_t(0x00000000u));
+                      co_unsigned32_t{0x00000000u});
   // 0x02 - transmission type
-  obj.InsertAndSetSub(0x02u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(0x00u));
+  obj.InsertAndSetSub(0x02u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t{0x00u});
   CHECK_EQUAL(0, co_dev_insert_obj(dev, obj.Get()));
 
   const auto ret = co_dev_cfg_rpdo_comm(dev, DEFAULT_NUM, &par);
@@ -449,10 +449,10 @@ TEST(CO_Pdo, CoDevCfgPdoComm_TransmissionTypeBroken) {
   CoObjTHolder obj(0x1400u);
   CHECK(obj.Get() != nullptr);
   // 0x00 - highest sub-index supported
-  obj.InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(0x03u));
+  obj.InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t{0x03u});
   // 0x01 - COB-ID
   obj.InsertAndSetSub(0x01u, CO_DEFTYPE_UNSIGNED32,
-                      co_unsigned32_t(0x00000000u));
+                      co_unsigned32_t{0x00000000u});
   // 0x02 - transmission type
   obj.InsertAndSetSub(0x02u, CO_DEFTYPE_UNSIGNED48,
                       co_unsigned48_t(0x000000000000u));
@@ -474,12 +474,12 @@ TEST(CO_Pdo, CoDevCfgPdoComm_NoInhibit) {
   CoObjTHolder obj(0x1400u);
   CHECK(obj.Get() != nullptr);
   // 0x00 - highest sub-index supported
-  obj.InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(0x03u));
+  obj.InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t{0x03u});
   // 0x01 - COB-ID
   obj.InsertAndSetSub(0x01u, CO_DEFTYPE_UNSIGNED32,
-                      co_unsigned32_t(0x00000000u));
+                      co_unsigned32_t{0x00000000u});
   // 0x02 - transmission type
-  obj.InsertAndSetSub(0x02u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(0x00u));
+  obj.InsertAndSetSub(0x02u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t{0x00u});
   CHECK_EQUAL(0, co_dev_insert_obj(dev, obj.Get()));
 
   const auto ret = co_dev_cfg_rpdo_comm(dev, DEFAULT_NUM, &par);
@@ -500,14 +500,14 @@ TEST(CO_Pdo, CoDevCfgPdoComm_WithInhibit) {
   CoObjTHolder obj(0x1400u);
   CHECK(obj.Get() != nullptr);
   // 0x00 - highest sub-index supported
-  obj.InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(0x03u));
+  obj.InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t{0x03u});
   // 0x01 - COB-ID
   obj.InsertAndSetSub(0x01u, CO_DEFTYPE_UNSIGNED32,
-                      co_unsigned32_t(0x00000000u));
+                      co_unsigned32_t{0x00000000u});
   // 0x02 - transmission type
-  obj.InsertAndSetSub(0x02u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(0x00u));
+  obj.InsertAndSetSub(0x02u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t{0x00u});
   // 0x03 - inhibit time
-  obj.InsertAndSetSub(0x03u, CO_DEFTYPE_UNSIGNED16, co_unsigned16_t(0x0000u));
+  obj.InsertAndSetSub(0x03u, CO_DEFTYPE_UNSIGNED16, co_unsigned16_t{0x0000u});
   CHECK_EQUAL(0, co_dev_insert_obj(dev, obj.Get()));
 
   const auto ret = co_dev_cfg_rpdo_comm(dev, DEFAULT_NUM, &par);
@@ -529,14 +529,14 @@ TEST(CO_Pdo, CoDevCfgPdoComm_InhibitTypeBroken) {
   CoObjTHolder obj(0x1400u);
   CHECK(obj.Get() != nullptr);
   // 0x00 - highest sub-index supported
-  obj.InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(0x05u));
+  obj.InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t{0x05u});
   // 0x01 - COB-ID
   obj.InsertAndSetSub(0x01u, CO_DEFTYPE_UNSIGNED32,
-                      co_unsigned32_t(0x00000000u));
+                      co_unsigned32_t{0x00000000u});
   // 0x02 - transmission type
-  obj.InsertAndSetSub(0x02u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(0x00u));
+  obj.InsertAndSetSub(0x02u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t{0x00u});
   // 0x03 - inhibit time
-  obj.InsertAndSetSub(0x03u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(0x00u));
+  obj.InsertAndSetSub(0x03u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t{0x00u});
   CHECK_EQUAL(0, co_dev_insert_obj(dev, obj.Get()));
 
   const auto ret = co_dev_cfg_rpdo_comm(dev, DEFAULT_NUM, &par);
@@ -557,14 +557,14 @@ TEST(CO_Pdo, CoDevCfgPdoComm_NoEvent) {
   CoObjTHolder obj(0x1400u);
   CHECK(obj.Get() != nullptr);
   // 0x00 - highest sub-index supported
-  obj.InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(0x05u));
+  obj.InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t{0x05u});
   // 0x01 - COB-ID
   obj.InsertAndSetSub(0x01u, CO_DEFTYPE_UNSIGNED32,
-                      co_unsigned32_t(0x00000000u));
+                      co_unsigned32_t{0x00000000u});
   // 0x02 - transmission type
-  obj.InsertAndSetSub(0x02u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(0x00u));
+  obj.InsertAndSetSub(0x02u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t{0x00u});
   // 0x03 - inhibit time
-  obj.InsertAndSetSub(0x03u, CO_DEFTYPE_UNSIGNED16, co_unsigned16_t(0x0000u));
+  obj.InsertAndSetSub(0x03u, CO_DEFTYPE_UNSIGNED16, co_unsigned16_t{0x0000u});
   CHECK_EQUAL(0, co_dev_insert_obj(dev, obj.Get()));
 
   const auto ret = co_dev_cfg_rpdo_comm(dev, DEFAULT_NUM, &par);
@@ -587,18 +587,18 @@ TEST(CO_Pdo, CoDevCfgPdoComm_WithEvent) {
   CoObjTHolder obj(0x1400u);
   CHECK(obj.Get() != nullptr);
   // 0x00 - highest sub-index supported
-  obj.InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(0x05u));
+  obj.InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t{0x05u});
   // 0x01 - COB-ID
   obj.InsertAndSetSub(0x01u, CO_DEFTYPE_UNSIGNED32,
-                      co_unsigned32_t(0x00000000u));
+                      co_unsigned32_t{0x00000000u});
   // 0x02 - transmission type
-  obj.InsertAndSetSub(0x02u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(0x00u));
+  obj.InsertAndSetSub(0x02u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t{0x00u});
   // 0x03 - inhibit time
-  obj.InsertAndSetSub(0x03u, CO_DEFTYPE_UNSIGNED16, co_unsigned16_t(0x0000u));
+  obj.InsertAndSetSub(0x03u, CO_DEFTYPE_UNSIGNED16, co_unsigned16_t{0x0000u});
   // 0x04 - reserved (compatibility entry)
-  obj.InsertAndSetSub(0x04u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(0x00u));
+  obj.InsertAndSetSub(0x04u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t{0x00u});
   // 0x05 - event-timer
-  obj.InsertAndSetSub(0x05u, CO_DEFTYPE_UNSIGNED16, co_unsigned16_t(0x0000u));
+  obj.InsertAndSetSub(0x05u, CO_DEFTYPE_UNSIGNED16, co_unsigned16_t{0x0000u});
   CHECK_EQUAL(0, co_dev_insert_obj(dev, obj.Get()));
 
   const auto ret = co_dev_cfg_rpdo_comm(dev, DEFAULT_NUM, &par);
@@ -622,18 +622,18 @@ TEST(CO_Pdo, CoDevCfgPdoComm_EventTypeBroken) {
   CoObjTHolder obj(0x1400u);
   CHECK(obj.Get() != nullptr);
   // 0x00 - highest sub-index supported
-  obj.InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(0x06u));
+  obj.InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t{0x06u});
   // 0x01 - COB-ID
   obj.InsertAndSetSub(0x01u, CO_DEFTYPE_UNSIGNED32,
-                      co_unsigned32_t(0x00000000u));
+                      co_unsigned32_t{0x00000000u});
   // 0x02 - transmission type
-  obj.InsertAndSetSub(0x02u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(0x00u));
+  obj.InsertAndSetSub(0x02u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t{0x00u});
   // 0x03 - inhibit time
-  obj.InsertAndSetSub(0x03u, CO_DEFTYPE_UNSIGNED16, co_unsigned16_t(0x0000u));
+  obj.InsertAndSetSub(0x03u, CO_DEFTYPE_UNSIGNED16, co_unsigned16_t{0x0000u});
   // 0x04 - reserved (compatibility entry)
-  obj.InsertAndSetSub(0x04u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(0x00u));
+  obj.InsertAndSetSub(0x04u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t{0x00u});
   // 0x05 - event-timer
-  obj.InsertAndSetSub(0x05u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(0x00u));
+  obj.InsertAndSetSub(0x05u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t{0x00u});
   CHECK_EQUAL(0, co_dev_insert_obj(dev, obj.Get()));
 
   const auto ret = co_dev_cfg_rpdo_comm(dev, DEFAULT_NUM, &par);
@@ -657,18 +657,18 @@ TEST(CO_Pdo, CoDevCfgPdoComm_NoSync) {
   CoObjTHolder obj(0x1400u);
   CHECK(obj.Get() != nullptr);
   // 0x00 - highest sub-index supported
-  obj.InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(0x06u));
+  obj.InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t{0x06u});
   // 0x01 - COB-ID
   obj.InsertAndSetSub(0x01u, CO_DEFTYPE_UNSIGNED32,
-                      co_unsigned32_t(0x00000000u));
+                      co_unsigned32_t{0x00000000u});
   // 0x02 - transmission type
-  obj.InsertAndSetSub(0x02u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(0x00u));
+  obj.InsertAndSetSub(0x02u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t{0x00u});
   // 0x03 - inhibit time
-  obj.InsertAndSetSub(0x03u, CO_DEFTYPE_UNSIGNED16, co_unsigned16_t(0x0000u));
+  obj.InsertAndSetSub(0x03u, CO_DEFTYPE_UNSIGNED16, co_unsigned16_t{0x0000u});
   // 0x04 - reserved (compatibility entry)
-  obj.InsertAndSetSub(0x04u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(0x00u));
+  obj.InsertAndSetSub(0x04u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t{0x00u});
   // 0x05 - event-timer
-  obj.InsertAndSetSub(0x5u, CO_DEFTYPE_UNSIGNED16, co_unsigned16_t(0x0000u));
+  obj.InsertAndSetSub(0x5u, CO_DEFTYPE_UNSIGNED16, co_unsigned16_t{0x0000u});
   CHECK_EQUAL(0, co_dev_insert_obj(dev, obj.Get()));
 
   const auto ret = co_dev_cfg_rpdo_comm(dev, DEFAULT_NUM, &par);
@@ -695,20 +695,20 @@ TEST(CO_Pdo, CoDevCfgPdoComm) {
   CoObjTHolder obj(0x1400u);
   CHECK(obj.Get() != nullptr);
   // 0x00 - highest sub-index supported
-  obj.InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(0x06u));
+  obj.InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t{0x06u});
   // 0x01 - COB-ID
   obj.InsertAndSetSub(0x01u, CO_DEFTYPE_UNSIGNED32,
-                      co_unsigned32_t(0x00000000u));
+                      co_unsigned32_t{0x00000000u});
   // 0x02 - transmission type
-  obj.InsertAndSetSub(0x02u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(0x00u));
+  obj.InsertAndSetSub(0x02u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t{0x00u});
   // 0x03 - inhibit time
-  obj.InsertAndSetSub(0x03u, CO_DEFTYPE_UNSIGNED16, co_unsigned16_t(0x0000u));
+  obj.InsertAndSetSub(0x03u, CO_DEFTYPE_UNSIGNED16, co_unsigned16_t{0x0000u});
   // 0x04 - reserved (compatibility entry)
-  obj.InsertAndSetSub(0x04u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(0x00u));
+  obj.InsertAndSetSub(0x04u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t{0x00u});
   // 0x05 - event-timer
-  obj.InsertAndSetSub(0x05u, CO_DEFTYPE_UNSIGNED16, co_unsigned16_t(0x0000u));
+  obj.InsertAndSetSub(0x05u, CO_DEFTYPE_UNSIGNED16, co_unsigned16_t{0x0000u});
   // 0x06 - SYNC start value
-  obj.InsertAndSetSub(0x06u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(0x00u));
+  obj.InsertAndSetSub(0x06u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t{0x00u});
   CHECK_EQUAL(0, co_dev_insert_obj(dev, obj.Get()));
 
   const auto ret = co_dev_cfg_rpdo_comm(dev, DEFAULT_NUM, &par);
@@ -751,7 +751,7 @@ TEST(CO_Pdo, CoDevCfgPdoMap_ErrorWhenDisablingMapping) {
   CoObjTHolder obj(0x1a00u);
   CHECK(obj.Get() != nullptr);
   // 0x00 - highest sub-index supported
-  obj.InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED16, co_unsigned16_t(0x0000u));
+  obj.InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED16, co_unsigned16_t{0x0000u});
   CHECK_EQUAL(0, co_dev_insert_obj(dev, obj.Get()));
 
   const auto ret = co_dev_cfg_tpdo_map(dev, DEFAULT_NUM, &par);
@@ -767,7 +767,7 @@ TEST(CO_Pdo, CoDevCfgPdoMap_NoSubOne) {
   CoObjTHolder obj(0x1a00u);
   CHECK(obj.Get() != nullptr);
   // 0x00 - highest sub-index supported
-  obj.InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(0x00u));
+  obj.InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t{0x00u});
   CHECK_EQUAL(0, co_dev_insert_obj(dev, obj.Get()));
 
   const auto ret = co_dev_cfg_tpdo_map(dev, DEFAULT_NUM, &par);
@@ -783,9 +783,9 @@ TEST(CO_Pdo, CoDevCfgPdoMap_ErrorWhenCopyingMappingParameters) {
   CoObjTHolder obj(0x1a00u);
   CHECK(obj.Get() != nullptr);
   // 0x00 - highest sub-index supported
-  obj.InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(0x00u));
+  obj.InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t{0x00u});
   // 0x01 - COB-ID
-  obj.InsertAndSetSub(0x01u, CO_DEFTYPE_UNSIGNED16, co_unsigned16_t(0x0000u));
+  obj.InsertAndSetSub(0x01u, CO_DEFTYPE_UNSIGNED16, co_unsigned16_t{0x0000u});
   CHECK_EQUAL(0, co_dev_insert_obj(dev, obj.Get()));
 
   const auto ret = co_dev_cfg_tpdo_map(dev, DEFAULT_NUM, &par);
@@ -800,11 +800,11 @@ TEST(CO_Pdo, CoDevCfgPdoMap_MaxMapped) {
   CoObjTHolder obj(0x1600u);
   CHECK_EQUAL(0, co_dev_insert_obj(dev, obj.Get()));
   obj.InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8,
-                      co_unsigned8_t(CO_PDO_NUM_MAPS));
+                      co_unsigned8_t{CO_PDO_NUM_MAPS});
 
   for (co_unsigned8_t i = 1; i <= CO_PDO_NUM_MAPS; i++) {
     par.map[i - 1] = 0x20000000u;  // idx: 0x2000 subidx: 0x00 len: 0x00
-    obj.InsertAndSetSub(i, CO_DEFTYPE_UNSIGNED32, co_unsigned32_t(0x00000000u));
+    obj.InsertAndSetSub(i, CO_DEFTYPE_UNSIGNED32, co_unsigned32_t{0x00000000u});
   }
 
   const auto ret = co_dev_cfg_rpdo_map(dev, DEFAULT_NUM, &par);
@@ -823,10 +823,10 @@ TEST(CO_Pdo, CoDevCfgPdoMap) {
   CoObjTHolder obj(0x1a00);
   CHECK(obj.Get() != nullptr);
   // 0x00 - highest sub-index supported
-  obj.InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(0x00u));
+  obj.InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t{0x00u});
   // 0x01 - COB-ID
   obj.InsertAndSetSub(0x01u, CO_DEFTYPE_UNSIGNED32,
-                      co_unsigned32_t(0x00000000u));
+                      co_unsigned32_t{0x00000000u});
   CHECK_EQUAL(0, co_dev_insert_obj(dev, obj.Get()));
 
   const auto ret = co_dev_cfg_tpdo_map(dev, DEFAULT_NUM, &par);
@@ -944,12 +944,12 @@ TEST(CO_Pdo, CoDevCfgTpdo_ReenableTpdo) {
 
   CoObjTHolder obj1800(0x1800u);
   CHECK(obj1800.Get() != nullptr);
-  obj1800.InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(0x00u));
+  obj1800.InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t{0x00u});
   CHECK_EQUAL(0, co_dev_insert_obj(dev, obj1800.Take()));
 
   CoObjTHolder obj1a00(0x1a00u);
   CHECK(obj1a00.Get() != nullptr);
-  obj1a00.InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(0x00u));
+  obj1a00.InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t{0x00u});
   CHECK_EQUAL(0, co_dev_insert_obj(dev, obj1a00.Take()));
 
   const auto ret = co_dev_cfg_tpdo(dev, DEFAULT_NUM, &comm, &map);
@@ -964,12 +964,12 @@ TEST(CO_Pdo, CoDevCfgTpdo) {
 
   CoObjTHolder obj1800(0x1800u);
   CHECK(obj1800.Get() != nullptr);
-  obj1800.InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(0x00u));
+  obj1800.InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t{0x00u});
   CHECK_EQUAL(0, co_dev_insert_obj(dev, obj1800.Take()));
 
   CoObjTHolder obj1a00(0x1a00u);
   CHECK(obj1a00.Get() != nullptr);
-  obj1a00.InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(0x00u));
+  obj1a00.InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t{0x00u});
   CHECK_EQUAL(0, co_dev_insert_obj(dev, obj1a00.Take()));
 
   const auto ret = co_dev_cfg_tpdo(dev, DEFAULT_NUM, &comm, &map);
@@ -1005,10 +1005,10 @@ TEST(CO_Pdo, CoDevCfgTpdoComm) {
   CoObjTHolder obj(obj_idx);
   CHECK(obj.Get() != nullptr);
   // 0x00 - highest sub-index supported
-  obj.InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(0x01u));
+  obj.InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t{0x01u});
   // 0x01 - COB-ID
   obj.InsertAndSetSub(0x01u, CO_DEFTYPE_UNSIGNED32,
-                      co_unsigned32_t(0x00000000u));
+                      co_unsigned32_t{0x00000000u});
   CHECK_EQUAL(0, co_dev_insert_obj(dev, obj.Get()));
 
   const auto ret = co_dev_cfg_tpdo_comm(dev, num, &par);
@@ -1043,9 +1043,9 @@ TEST(CO_Pdo, CoDevCfgTpdoMap) {
 
   CoObjTHolder obj(0x1a00u);
   CHECK(obj.Get() != nullptr);
-  obj.InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(0x00u));
+  obj.InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t{0x00u});
   obj.InsertAndSetSub(0x01u, CO_DEFTYPE_UNSIGNED32,
-                      co_unsigned32_t(0x00000000u));
+                      co_unsigned32_t{0x00000000u});
   CHECK_EQUAL(0, co_dev_insert_obj(dev, obj.Take()));
 
   const auto ret = co_dev_cfg_tpdo_map(dev, DEFAULT_NUM, &par);
@@ -1341,11 +1341,11 @@ TEST(CoPdo_CoPdoDn, DownloadIndicatorReturnsError) {
   CHECK(obj_default.Get() != nullptr);
   CHECK_EQUAL(0, co_dev_insert_obj(dev, obj_default.Take()));
   obj_default.InsertAndSetSub(0x19u, CO_DEFTYPE_UNSIGNED8,
-                              co_unsigned8_t(0x00u));
+                              co_unsigned8_t{0x00u});
 
   CoObjTHolder obj0000(0x0000u);
   CHECK(obj0000.Get() != nullptr);
-  obj0000.InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(0x00u));
+  obj0000.InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t{0x00u});
   co_sub_t* const sub0000_0 = obj0000.GetLastSub();
   CHECK_EQUAL(0, co_sub_set_access(sub0000_0, CO_ACCESS_RW));
   co_sub_set_pdo_mapping(sub0000_0, 1);
@@ -1382,7 +1382,7 @@ TEST(CoPdo_CoPdoDn, Nominal) {
 
   CoObjTHolder obj0000(0x0000u);
   CHECK(obj0000.Get() != nullptr);
-  obj0000.InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(0x00u));
+  obj0000.InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t{0x00u});
   co_sub_t* const sub0000_0 = obj0000.GetLastSub();
   CHECK_EQUAL(0, co_sub_set_access(sub0000_0, CO_ACCESS_RW));
   co_sub_set_pdo_mapping(sub0000_0, 1);
@@ -1470,7 +1470,7 @@ TEST(CoPdo_CoPdoUp, NotReqFirst) {
 
   CoObjTHolder obj0000(0x0000u);
   CHECK(obj0000.Get() != nullptr);
-  obj0000.InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(0x00u));
+  obj0000.InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t{0x00u});
   co_sub_t* const sub = obj0000.GetLastSub();
   CHECK_EQUAL(0, co_sub_set_access(sub, CO_ACCESS_RO));
   co_sub_set_pdo_mapping(sub, 1);
@@ -1490,7 +1490,7 @@ TEST(CoPdo_CoPdoUp, NotReqLast) {
 
   CoObjTHolder obj0000(0x0000u);
   CHECK(obj0000.Get() != nullptr);
-  obj0000.InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(0x00u));
+  obj0000.InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t{0x00u});
   co_sub_t* const sub = obj0000.GetLastSub();
   CHECK_EQUAL(0, co_sub_set_access(sub, CO_ACCESS_RO));
   co_sub_set_pdo_mapping(sub, 1);
@@ -1510,7 +1510,7 @@ TEST(CoPdo_CoPdoUp, ReqLast) {
 
   CoObjTHolder obj0000(0x0000u);
   CHECK(obj0000.Get() != nullptr);
-  obj0000.InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(0x00u));
+  obj0000.InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t{0x00u});
   co_sub_t* const sub = obj0000.GetLastSub();
   CHECK_EQUAL(0, co_sub_set_access(sub, CO_ACCESS_RO));
   co_sub_set_pdo_mapping(sub, 1);
@@ -1530,7 +1530,7 @@ TEST(CoPdo_CoPdoUp, IndError) {
 
   CoObjTHolder obj0000(0x0000u);
   CHECK(obj0000.Get() != nullptr);
-  obj0000.InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(0x00u));
+  obj0000.InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t{0x00u});
   co_sub_t* const sub = obj0000.GetLastSub();
   CHECK_EQUAL(0, co_sub_set_access(sub, CO_ACCESS_RO));
   co_sub_set_pdo_mapping(sub, 1);
@@ -1560,7 +1560,7 @@ TEST(CoPdo_CoPdoUp, MapIsOneObjAndSubAsPDO) {
 
   CoObjTHolder obj0000(0x0000u);
   CHECK(obj0000.Get() != nullptr);
-  obj0000.InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(0x00u));
+  obj0000.InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t{0x00u});
   co_sub_t* const sub = obj0000.GetLastSub();
   CHECK_EQUAL(0, co_sub_set_access(sub, CO_ACCESS_RO));
   co_sub_set_pdo_mapping(sub, 1);
@@ -1579,7 +1579,7 @@ TEST(CoPdo_CoPdoUp, BufNull) {
 
   CoObjTHolder obj0000(0x0000u);
   CHECK(obj0000.Get() != nullptr);
-  obj0000.InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(0x00u));
+  obj0000.InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t{0x00u});
   co_sub_t* const sub = obj0000.GetLastSub();
   CHECK_EQUAL(0, co_sub_set_access(sub, CO_ACCESS_RO));
   co_sub_set_pdo_mapping(sub, 1);
@@ -1597,7 +1597,7 @@ TEST(CoPdo_CoPdoUp, PnNull) {
 
   CoObjTHolder obj0000(0x0000u);
   CHECK(obj0000.Get() != nullptr);
-  obj0000.InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(0x00u));
+  obj0000.InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t{0x00u});
   co_sub_t* const sub = obj0000.GetLastSub();
   CHECK_EQUAL(0, co_sub_set_access(sub, CO_ACCESS_RO));
   co_sub_set_pdo_mapping(sub, 1);
@@ -1616,11 +1616,11 @@ TEST(CoPdo_CoPdoUp, Nominal) {
 
   CoObjTHolder obj0000(0x0000u);
   CHECK(obj0000.Get() != nullptr);
-  obj0000.InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(0x03u));
+  obj0000.InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t{0x03u});
   co_sub_t* const sub = obj0000.GetLastSub();
   co_sub_set_pdo_mapping(sub, 1);
   obj0000.InsertAndSetSub(0x01u, CO_DEFTYPE_UNSIGNED16,
-                          co_unsigned16_t(0xbbddu));
+                          co_unsigned16_t{0xbbddu});
   CHECK_EQUAL(0, co_dev_insert_obj(dev, obj0000.Take()));
   co_sub_set_up_ind(sub, &sub_up_ind, nullptr);
 

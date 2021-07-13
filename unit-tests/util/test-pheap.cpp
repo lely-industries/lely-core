@@ -32,12 +32,12 @@
 #include <lely/util/pheap.h>
 
 static int
-pheap_cmp_ints(const void* p1, const void* p2) noexcept {
+pheap_cmp_ints(const void* const p1, const void* const p2) noexcept {
   assert(p1);
   assert(p2);
 
-  const auto val1 = *static_cast<const int*>(p1);
-  const auto val2 = *static_cast<const int*>(p2);
+  const auto val1 = *static_cast<const int32_t*>(p1);
+  const auto val2 = *static_cast<const int32_t*>(p2);
 
   if (val1 > val2)
     return 1;
@@ -50,9 +50,9 @@ pheap_cmp_ints(const void* p1, const void* p2) noexcept {
 TEST_GROUP(PheapCmpInts){};
 
 TEST(PheapCmpInts, PheapCmpInts) {
-  int a = 2;
-  int b = 3;
-  int c = 2;
+  const int32_t a = 2;
+  const int32_t b = 3;
+  const int32_t c = 2;
 
   CHECK_EQUAL(0, pheap_cmp_ints(&a, &c));
   CHECK_COMPARE(0, >, pheap_cmp_ints(&a, &b));
@@ -64,8 +64,8 @@ TEST_BASE(Util_PheapBase) {
   static const size_t NODES_NUM = 10;
 
   pnode nodes[NODES_NUM];
-  int keys[NODES_NUM] = {-32454, -2431, 0,     273,   332,
-                         3244,   4444,  13444, 17895, 21995};
+  const int32_t keys[NODES_NUM] = {-32454, -2431, 0,     273,   332,
+                                   3244,   4444,  13444, 17895, 21995};
 
   void FillHeap(const size_t how_many) {
     assert(how_many <= NODES_NUM);
@@ -115,7 +115,7 @@ TEST(Util_PheapInit, PnodeInit) {
 ///@}
 
 TEST_GROUP_BASE(Util_Pheap, Util_PheapBase) {
-  int data = 0;  // clang-format fix
+  int32_t data = 0;  // dummy line to workaround clang-format issue
 
   TEST_SETUP() {
     pheap_init(&heap, pheap_cmp_ints);
@@ -137,7 +137,7 @@ TEST_GROUP_BASE(Util_Pheap, Util_PheapBase) {
 TEST(Util_Pheap, PnodeNext_Null) {
   pheap_insert(&heap, &nodes[1]);
 
-  const auto* ret = pnode_next(&nodes[1]);
+  const auto* const ret = pnode_next(&nodes[1]);
 
   POINTERS_EQUAL(nullptr, ret);
 }
@@ -436,7 +436,7 @@ TEST(Util_Pheap, PheapFirst_MultipleInserted) {
 ///
 /// \Then body of the loop was not executed
 TEST(Util_Pheap, PnodeForeach_EmptyHeap) {
-  int node_counter = 0;
+  size_t node_counter = 0;
 
   pnode_foreach(pheap_first(&heap), node) node_counter++;
 
@@ -449,7 +449,7 @@ TEST(Util_Pheap, PnodeForeach_EmptyHeap) {
 ///
 /// \Then body of the loop is executed once
 TEST(Util_Pheap, PnodeForeach_OnlyHead) {
-  int node_counter = 0;
+  size_t node_counter = 0;
   FillHeap(1);
 
   pnode_foreach(pheap_first(&heap), node) {
@@ -467,12 +467,12 @@ TEST(Util_Pheap, PnodeForeach_OnlyHead) {
 /// \Then body of the loop is executed once for each node
 ///       \Calls pnode_next()
 TEST(Util_Pheap, PnodeForeach_MultipleElements) {
-  int node_counter = 0;
+  size_t node_counter = 0;
   FillHeap(NODES_NUM);
-  std::set<int> visited_keys;
+  std::set<int32_t> visited_keys;
 
   pnode_foreach(pheap_first(&heap), node) {
-    visited_keys.insert(*static_cast<const int*>(node->key));
+    visited_keys.insert(*static_cast<const int32_t*>(node->key));
     node_counter++;
   }
 
@@ -492,7 +492,7 @@ TEST(Util_Pheap, PnodeForeach_MultipleElements) {
 /// \Then body of the loop was not executed
 ///       \Calls pheap_first()
 TEST(Util_Pheap, PheapForeach_EmptyHeap) {
-  int node_counter = 0;
+  size_t node_counter = 0;
 
   pheap_foreach(&heap, node) node_counter++;
 
@@ -506,7 +506,7 @@ TEST(Util_Pheap, PheapForeach_EmptyHeap) {
 /// \Then body of the loop is executed once
 ///       \Calls pheap_first()
 TEST(Util_Pheap, PheapForeach_OnlyHead) {
-  int node_counter = 0;
+  size_t node_counter = 0;
   FillHeap(1);
 
   pheap_foreach(&heap, node) {
@@ -525,12 +525,12 @@ TEST(Util_Pheap, PheapForeach_OnlyHead) {
 ///       \Calls pheap_first()
 ///       \Calls pnode_next()
 TEST(Util_Pheap, PheapForeach_MultipleElements) {
-  int node_counter = 0;
+  size_t node_counter = 0;
   FillHeap(NODES_NUM);
-  std::set<int> visited_keys;
+  std::set<int32_t> visited_keys;
 
   pheap_foreach(&heap, node) {
-    visited_keys.insert(*static_cast<const int*>(node->key));
+    visited_keys.insert(*static_cast<const int32_t*>(node->key));
     node_counter++;
   }
 
@@ -547,7 +547,7 @@ TEST(Util_Pheap, PheapForeach_MultipleElements) {
 ///       \Calls pheap_first()
 ///       \Calls pnode_next()
 TEST(Util_Pheap, PheapForeach_MultiElementsRemoveCurrent) {
-  int iteration_counter = 0;
+  size_t iteration_counter = 0;
   FillHeap(NODES_NUM);
 
   pheap_foreach(&heap, node) {

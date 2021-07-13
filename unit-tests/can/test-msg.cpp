@@ -67,7 +67,7 @@ TEST_GROUP(CAN_MsgBits) { can_msg msg = CAN_MSG_INIT; };
 ///
 /// \Then -1 is returned, ERRNUM_INVAL error code is set
 TEST(CAN_MsgBits, InvalidMode) {
-  const auto frameSize = can_msg_bits(&msg, (can_msg_bits_mode)(-1));
+  const auto frameSize = can_msg_bits(&msg, static_cast<can_msg_bits_mode>(-1));
 
   CHECK_EQUAL(-1, frameSize);
   CHECK_EQUAL(ERRNUM_INVAL, get_errnum());
@@ -238,7 +238,7 @@ TEST(CAN_MsgBits, CANBasic_ModeExact_NoData) {
 TEST(CAN_MsgBits, CANBasic_ModeExact_1) {
   msg.id = 0x78;
   msg.len = 8;
-  for (int i = 0; i < msg.len; ++i) msg.data[i] = 0x3c;
+  for (size_t i = 0; i < msg.len; ++i) msg.data[i] = 0x3c;
 
   const auto frameSize =
       can_msg_bits(&msg, can_msg_bits_mode::CAN_MSG_BITS_MODE_EXACT);
@@ -429,7 +429,7 @@ TEST(CAN_MsgBits, CANExtended_ModeExact_1) {
   msg.id = 0x1e38787;
   msg.len = 8;
   msg.flags |= CAN_FLAG_IDE;
-  for (int i = 0; i < msg.len; ++i) msg.data[i] = 0x3c;
+  for (size_t i = 0; i < msg.len; ++i) msg.data[i] = 0x3c;
 
   const auto frameSize =
       can_msg_bits(&msg, can_msg_bits_mode::CAN_MSG_BITS_MODE_EXACT);
@@ -872,7 +872,7 @@ TEST_GROUP(CAN_Crc) {
 ///
 /// \Then 0 is returned
 TEST(CAN_Crc, AllZeros) {
-  auto ret = can_crc(0, nullptr, 0, 0);
+  const auto ret = can_crc(0, nullptr, 0, 0);
 
   CHECK_EQUAL(0x0, ret);
 }
@@ -884,7 +884,7 @@ TEST(CAN_Crc, AllZeros) {
 ///
 /// \Then the initial CRC value is returned
 TEST(CAN_Crc, BitsZero) {
-  auto ret = can_crc(42u, data, 4, 0);
+  const auto ret = can_crc(42u, data, 4, 0);
 
   CHECK_EQUAL(42u, ret);
 }
@@ -897,7 +897,7 @@ TEST(CAN_Crc, BitsZero) {
 /// \Then updated CRC value is returned by computing a CRC-15-CAN checksum of
 ///       requested bits, based on the initial CRC value
 TEST(CAN_Crc, NegativeOff) {
-  auto ret = can_crc(0, data + 3, -11, 46);
+  const auto ret = can_crc(0, data + 3, -11, 46);
 
   CHECK_EQUAL(0x3754, ret);
 }

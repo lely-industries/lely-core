@@ -3381,7 +3381,7 @@ TEST(CoSsdoBlkUp, Sub_RequestIncremented) {
 
 TEST(CoSsdoBlkUp, Sub_ArrNominal) {
   dev_holder->CreateAndInsertObj(obj2020, IDX);
-  obj2020->InsertAndSetSub(SUBIDX, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(1u));
+  obj2020->InsertAndSetSub(SUBIDX, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t{1u});
   sub_type val = 0xabcdu;
   obj2020->InsertAndSetSub(0x01u, SUB_TYPE, sub_type(val));
   co_obj_set_code(co_dev_find_obj(dev, IDX), CO_OBJECT_ARRAY);
@@ -3525,7 +3525,7 @@ TEST(CoSsdoBlkUp, Sub_EmptyArray) {
 
 TEST(CoSsdoBlkUp, Sub_ByteNotLast) {
   dev_holder->CreateAndInsertObj(obj2020, IDX);
-  obj2020->InsertAndSetSub(SUBIDX, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(0));
+  obj2020->InsertAndSetSub(SUBIDX, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t{0});
   co_obj_set_code(co_dev_find_obj(dev, IDX), CO_OBJECT_ARRAY);
   co_obj_set_up_ind(obj2020->Get(), up_ind_big_reqsiz, nullptr);
   StartSSDO();
@@ -3564,9 +3564,9 @@ TEST(CoSsdoBlkUp, Sub_ByteNotLast) {
 
 TEST(CoSsdoBlkUp, Sub_ArrInvalidMaxSubidx) {
   dev_holder->CreateAndInsertObj(obj2020, IDX);
-  obj2020->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(0));
-  obj2020->InsertAndSetSub(0x01u, SUB_TYPE, sub_type(0xffffu));
-  obj2020->InsertAndSetSub(0x02u, SUB_TYPE, sub_type(0xffffu));
+  obj2020->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t{0});
+  obj2020->InsertAndSetSub(0x01u, SUB_TYPE, sub_type{0xffffu});
+  obj2020->InsertAndSetSub(0x02u, SUB_TYPE, sub_type{0xffffu});
   co_obj_set_code(co_dev_find_obj(dev, IDX), CO_OBJECT_ARRAY);
   StartSSDO();
 
