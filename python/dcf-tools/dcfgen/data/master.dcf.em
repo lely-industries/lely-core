@@ -593,8 +593,8 @@ if slave.software_file:
     value |= 0x40
 if slave.restore_configuration != 0:
     value |= 0x80
-if slave.lifetime_factor != 0:
-    value |= slave.lifetime_factor << 8
+if slave.retry_factor != 0:
+    value |= slave.retry_factor << 8
 if slave.guard_time != 0:
     value |= slave.guard_time << 16
 }@
