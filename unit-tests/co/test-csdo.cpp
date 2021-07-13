@@ -1061,11 +1061,11 @@ TEST(CO_Csdo, CoDevDnReq_NoObj) {
   set_errnum(error_num);
 
   const auto ret = co_dev_dn_req(dev, INVALID_IDX, INVALID_SUBIDX, &VAL,
-                                 sizeof(VAL), CoCsdoDnCon::func, nullptr);
+                                 sizeof(VAL), CoCsdoDnCon::Func, nullptr);
 
   CHECK_EQUAL(0, ret);
   CHECK_EQUAL(error_num, get_errnum());
-  CHECK_EQUAL(1u, CoCsdoDnCon::num_called);
+  CHECK_EQUAL(1u, CoCsdoDnCon::GetNumCalled());
   CoCsdoDnCon::Check(nullptr, INVALID_IDX, INVALID_SUBIDX, CO_SDO_AC_NO_OBJ,
                      nullptr);
 }
@@ -1089,11 +1089,11 @@ TEST(CO_Csdo, CoDevDnReq_NoSub) {
   set_errnum(error_num);
 
   const auto ret = co_dev_dn_req(dev, IDX, INVALID_SUBIDX, &VAL, sizeof(VAL),
-                                 CoCsdoDnCon::func, nullptr);
+                                 CoCsdoDnCon::Func, nullptr);
 
   CHECK_EQUAL(0, ret);
   CHECK_EQUAL(error_num, get_errnum());
-  CHECK_EQUAL(1u, CoCsdoDnCon::num_called);
+  CHECK_EQUAL(1u, CoCsdoDnCon::GetNumCalled());
   CoCsdoDnCon::Check(nullptr, IDX, INVALID_SUBIDX, CO_SDO_AC_NO_SUB, nullptr);
 }
 
@@ -1145,11 +1145,11 @@ TEST(CO_Csdo, CoDevDnReq_Nominal) {
   set_errnum(error_num);
 
   const auto ret = co_dev_dn_req(dev, IDX, SUBIDX, &VAL, sizeof(VAL),
-                                 CoCsdoDnCon::func, nullptr);
+                                 CoCsdoDnCon::Func, nullptr);
 
   CHECK_EQUAL(0, ret);
   CHECK_EQUAL(error_num, get_errnum());
-  CHECK_EQUAL(1u, CoCsdoDnCon::num_called);
+  CHECK_EQUAL(1u, CoCsdoDnCon::GetNumCalled());
   CoCsdoDnCon::Check(nullptr, IDX, SUBIDX, 0u, nullptr);
   CHECK_EQUAL(VAL, co_dev_get_val_u16(dev, IDX, SUBIDX));
 }
@@ -1178,11 +1178,11 @@ TEST(CO_Csdo, CoDevDnValReq_NoObj) {
   set_errnum(error_num);
 
   const auto ret = co_dev_dn_val_req(dev, INVALID_IDX, INVALID_SUBIDX, SUB_TYPE,
-                                     &VAL, nullptr, CoCsdoDnCon::func, nullptr);
+                                     &VAL, nullptr, CoCsdoDnCon::Func, nullptr);
 
   CHECK_EQUAL(0, ret);
   CHECK_EQUAL(error_num, get_errnum());
-  CHECK_EQUAL(1u, CoCsdoDnCon::num_called);
+  CHECK_EQUAL(1u, CoCsdoDnCon::GetNumCalled());
   CoCsdoDnCon::Check(nullptr, INVALID_IDX, INVALID_SUBIDX, CO_SDO_AC_NO_OBJ,
                      nullptr);
 }
@@ -1207,11 +1207,11 @@ TEST(CO_Csdo, CoDevDnValReq_NoSub) {
   set_errnum(error_num);
 
   const auto ret = co_dev_dn_val_req(dev, IDX, INVALID_SUBIDX, SUB_TYPE, &VAL,
-                                     nullptr, CoCsdoDnCon::func, nullptr);
+                                     nullptr, CoCsdoDnCon::Func, nullptr);
 
   CHECK_EQUAL(0, ret);
   CHECK_EQUAL(error_num, get_errnum());
-  CHECK_EQUAL(1u, CoCsdoDnCon::num_called);
+  CHECK_EQUAL(1u, CoCsdoDnCon::GetNumCalled());
   CoCsdoDnCon::Check(nullptr, IDX, INVALID_SUBIDX, CO_SDO_AC_NO_SUB, nullptr);
 }
 
@@ -1241,11 +1241,11 @@ TEST(CO_Csdo, CoDevDnValReq_DnTooLong) {
   set_errnum(error_num);
 
   const auto ret = co_dev_dn_val_req(dev, IDX, SUBIDX, CO_DEFTYPE_UNSIGNED64,
-                                     &data, &mbuf, CoCsdoDnCon::func, nullptr);
+                                     &data, &mbuf, CoCsdoDnCon::Func, nullptr);
 
   CHECK_EQUAL(0, ret);
   CHECK_EQUAL(error_num, get_errnum());
-  CHECK_EQUAL(1u, CoCsdoDnCon::num_called);
+  CHECK_EQUAL(1u, CoCsdoDnCon::GetNumCalled());
   CoCsdoDnCon::Check(nullptr, IDX, SUBIDX, CO_SDO_AC_NO_MEM, nullptr);
   CHECK_EQUAL(0u, co_dev_get_val_u8(dev, IDX, SUBIDX));
 
@@ -1303,11 +1303,11 @@ TEST(CO_Csdo, CoDevDnValReq_Nominal) {
   set_errnum(error_num);
 
   const auto ret = co_dev_dn_val_req(dev, IDX, SUBIDX, SUB_TYPE, &VAL, nullptr,
-                                     CoCsdoDnCon::func, nullptr);
+                                     CoCsdoDnCon::Func, nullptr);
 
   CHECK_EQUAL(0, ret);
   CHECK_EQUAL(error_num, get_errnum());
-  CHECK_EQUAL(1u, CoCsdoDnCon::num_called);
+  CHECK_EQUAL(1u, CoCsdoDnCon::GetNumCalled());
   CoCsdoDnCon::Check(nullptr, IDX, SUBIDX, 0u, nullptr);
   CHECK_EQUAL(VAL, co_dev_get_val_u16(dev, IDX, SUBIDX));
 }
@@ -1341,11 +1341,11 @@ TEST(CO_Csdo, CoDevDnDcfReq_ConciseBufTooShort) {
 
     const auto ret =
         co_dev_dn_dcf_req(dev, dcf.Begin(), dcf.End() - bytes_missing,
-                          CoCsdoDnCon::func, nullptr);
+                          CoCsdoDnCon::Func, nullptr);
 
     CHECK_EQUAL(0, ret);
     CHECK_EQUAL(error_num, get_errnum());
-    CHECK_EQUAL(1u, CoCsdoDnCon::num_called);
+    CHECK_EQUAL(1u, CoCsdoDnCon::GetNumCalled());
     CoCsdoDnCon::Check(nullptr, 0, 0, CO_SDO_AC_TYPE_LEN_LO, nullptr);
     CHECK_EQUAL(0, co_dev_get_val_u16(dev, IDX, SUBIDX));
 
@@ -1379,11 +1379,11 @@ TEST(CO_Csdo, CoDevDnDcfReq_DatasizeMismatch) {
   set_errnum(error_num);
 
   const auto ret = co_dev_dn_dcf_req(dev, dcf.Begin(), dcf.End() - 1u,
-                                     CoCsdoDnCon::func, nullptr);
+                                     CoCsdoDnCon::Func, nullptr);
 
   CHECK_EQUAL(0, ret);
   CHECK_EQUAL(error_num, get_errnum());
-  CHECK_EQUAL(1u, CoCsdoDnCon::num_called);
+  CHECK_EQUAL(1u, CoCsdoDnCon::GetNumCalled());
   CoCsdoDnCon::Check(nullptr, IDX, SUBIDX, CO_SDO_AC_TYPE_LEN_LO, nullptr);
   CHECK_EQUAL(0, co_dev_get_val_u16(dev, IDX, SUBIDX));
 }
@@ -1414,11 +1414,11 @@ TEST(CO_Csdo, CoDevDnDcfReq_NoObj) {
   set_errnum(error_num);
 
   const auto ret = co_dev_dn_dcf_req(dev, dcf.Begin(), dcf.End(),
-                                     CoCsdoDnCon::func, nullptr);
+                                     CoCsdoDnCon::Func, nullptr);
 
   CHECK_EQUAL(0, ret);
   CHECK_EQUAL(error_num, get_errnum());
-  CHECK_EQUAL(1u, CoCsdoDnCon::num_called);
+  CHECK_EQUAL(1u, CoCsdoDnCon::GetNumCalled());
   CoCsdoDnCon::Check(nullptr, IDX, SUBIDX, CO_SDO_AC_NO_OBJ, nullptr);
 }
 
@@ -1448,11 +1448,11 @@ TEST(CO_Csdo, CoDevDnDcfReq_NoSub) {
   set_errnum(error_num);
 
   const auto ret = co_dev_dn_dcf_req(dev, dcf.Begin(), dcf.End(),
-                                     CoCsdoDnCon::func, nullptr);
+                                     CoCsdoDnCon::Func, nullptr);
 
   CHECK_EQUAL(0, ret);
   CHECK_EQUAL(error_num, get_errnum());
-  CHECK_EQUAL(1u, CoCsdoDnCon::num_called);
+  CHECK_EQUAL(1u, CoCsdoDnCon::GetNumCalled());
   CoCsdoDnCon::Check(nullptr, IDX, SUBIDX, CO_SDO_AC_NO_SUB, nullptr);
 }
 
@@ -1490,11 +1490,11 @@ TEST(CO_Csdo, CoDevDnDcfReq_ManyEntriesButDnIndFail) {
   co_sub_set_dn_ind(obj2020->GetLastSub(), co_sub_failing_dn_ind, nullptr);
   const auto ret =
       co_dev_dn_dcf_req(dev, combined_dcf.Begin(), combined_dcf.End(),
-                        CoCsdoDnCon::func, nullptr);
+                        CoCsdoDnCon::Func, nullptr);
 
   CHECK_EQUAL(0, ret);
   CHECK_EQUAL(error_num, get_errnum());
-  CHECK_EQUAL(1u, CoCsdoDnCon::num_called);
+  CHECK_EQUAL(1u, CoCsdoDnCon::GetNumCalled());
   CoCsdoDnCon::Check(nullptr, IDX, SUBIDX, CO_SDO_AC_ERROR, nullptr);
   CHECK_EQUAL(0, co_dev_get_val_u16(dev, IDX, SUBIDX));
 }
@@ -1561,11 +1561,11 @@ TEST(CO_Csdo, CoDevDnDcfReq_Nominal) {
   set_errnum(error_num);
 
   const auto ret = co_dev_dn_dcf_req(dev, dcf.Begin(), dcf.End(),
-                                     CoCsdoDnCon::func, nullptr);
+                                     CoCsdoDnCon::Func, nullptr);
 
   CHECK_EQUAL(0, ret);
   CHECK_EQUAL(error_num, get_errnum());
-  CHECK_EQUAL(1u, CoCsdoDnCon::num_called);
+  CHECK_EQUAL(1u, CoCsdoDnCon::GetNumCalled());
   CoCsdoDnCon::Check(nullptr, IDX, SUBIDX, 0, nullptr);
   CHECK_EQUAL(VAL, co_dev_get_val_u16(dev, IDX, SUBIDX));
 }
@@ -2271,7 +2271,7 @@ TEST(CO_Csdo, CoCsdoDnReq_ServiceIsBusy) {
   uint_least8_t buffer[sizeof(sub_type)] = {0};
 
   const auto ret = co_csdo_dn_req(csdo, IDX, SUBIDX, buffer, sizeof(sub_type),
-                                  CoCsdoDnCon::func, nullptr);
+                                  CoCsdoDnCon::Func, nullptr);
 
   CHECK_EQUAL(-1, ret);
   CHECK_EQUAL(ERRNUM_INVAL, get_errnum());
@@ -2307,7 +2307,7 @@ TEST(CO_Csdo, CoCsdoDnReq_TimeoutSet) {
   stle_u16(buffer, 0x1234u);
 
   const auto ret = co_csdo_dn_req(csdo, IDX, SUBIDX, buffer, sizeof(sub_type),
-                                  CoCsdoDnCon::func, nullptr);
+                                  CoCsdoDnCon::Func, nullptr);
 
   CHECK_EQUAL(0, ret);
   CHECK_EQUAL(ERRNUM_SUCCESS, get_errnum());
@@ -2327,7 +2327,7 @@ TEST(CO_Csdo, CoCsdoDnReq_TimeoutSet) {
                     expected_timeout.data());
 
   CoCsdoUpDnReq::AbortTransfer(net, DEFAULT_COBID_RES);
-  CHECK_EQUAL(1u, CoCsdoDnCon::num_called);
+  CHECK_EQUAL(1u, CoCsdoDnCon::GetNumCalled());
 }
 
 /// \Given a pointer to the CSDO service (co_csdo_t), the object dictionary
@@ -2354,7 +2354,7 @@ TEST(CO_Csdo, CoCsdoDnReq_SizeZero) {
   uint_least8_t* buffer = nullptr;
 
   const auto ret = co_csdo_dn_req(csdo, IDX, SUBIDX, buffer, buffer_size,
-                                  CoCsdoDnCon::func, nullptr);
+                                  CoCsdoDnCon::Func, nullptr);
 
   CHECK_EQUAL(0, ret);
   CHECK_EQUAL(ERRNUM_SUCCESS, get_errnum());
@@ -2365,7 +2365,7 @@ TEST(CO_Csdo, CoCsdoDnReq_SizeZero) {
   CanSend::CheckMsg(DEFAULT_COBID_REQ, 0, CO_SDO_MSG_SIZE, expected.data());
 
   CoCsdoUpDnReq::AbortTransfer(net, DEFAULT_COBID_RES);
-  CHECK_EQUAL(1u, CoCsdoDnCon::num_called);
+  CHECK_EQUAL(1u, CoCsdoDnCon::GetNumCalled());
 }
 
 /// \Given a pointer to the CSDO service (co_csdo_t), the object dictionary
@@ -2391,7 +2391,7 @@ TEST(CO_Csdo, CoCsdoDnReq_DownloadInitiate) {
   const uint_least8_t buffer_size = 10u;
   uint_least8_t buffer[buffer_size] = {0};
   const auto ret = co_csdo_dn_req(csdo, IDX, SUBIDX, buffer, buffer_size,
-                                  CoCsdoDnCon::func, nullptr);
+                                  CoCsdoDnCon::Func, nullptr);
 
   CHECK_EQUAL(0, ret);
   CHECK_EQUAL(ERRNUM_SUCCESS, get_errnum());
@@ -2403,7 +2403,7 @@ TEST(CO_Csdo, CoCsdoDnReq_DownloadInitiate) {
   CanSend::CheckMsg(DEFAULT_COBID_REQ, 0, CO_SDO_MSG_SIZE, expected.data());
 
   CoCsdoUpDnReq::AbortTransfer(net, DEFAULT_COBID_RES);
-  CHECK_EQUAL(1u, CoCsdoDnCon::num_called);
+  CHECK_EQUAL(1u, CoCsdoDnCon::GetNumCalled());
 }
 
 /// \Given a pointer to the CSDO service (co_csdo_t), the object dictionary
@@ -2429,7 +2429,7 @@ TEST(CO_Csdo, CoCsdoDnReq_Expedited) {
   uint_least8_t buffer[sizeof(sub_type)] = {0};
   stle_u16(buffer, 0x1234u);
   const auto ret = co_csdo_dn_req(csdo, IDX, SUBIDX, buffer, sizeof(sub_type),
-                                  CoCsdoDnCon::func, nullptr);
+                                  CoCsdoDnCon::Func, nullptr);
 
   CHECK_EQUAL(0, ret);
   CHECK_EQUAL(ERRNUM_SUCCESS, get_errnum());
@@ -2442,7 +2442,7 @@ TEST(CO_Csdo, CoCsdoDnReq_Expedited) {
   CanSend::CheckMsg(DEFAULT_COBID_REQ, 0, CO_SDO_MSG_SIZE, expected.data());
 
   CoCsdoUpDnReq::AbortTransfer(net, DEFAULT_COBID_RES);
-  CHECK_EQUAL(1u, CoCsdoDnCon::num_called);
+  CHECK_EQUAL(1u, CoCsdoDnCon::GetNumCalled());
 }
 
 ///@}
@@ -2471,7 +2471,7 @@ TEST(CO_Csdo, CoCsdoDnValReq_Nominal) {
   StartCSDO();
 
   const auto ret = co_csdo_dn_val_req(csdo, IDX, SUBIDX, SUB_TYPE, &VAL,
-                                      nullptr, CoCsdoDnCon::func, nullptr);
+                                      nullptr, CoCsdoDnCon::Func, nullptr);
 
   CHECK_EQUAL(0, ret);
   CHECK_EQUAL(1u, CanSend::GetNumCalled());
@@ -2502,7 +2502,7 @@ TEST(CO_Csdo, CoCsdoDnValReq_EmptyExternalBuffer) {
 
   membuf mbuf = MEMBUF_INIT;
   const auto ret = co_csdo_dn_val_req(csdo, IDX, SUBIDX, SUB_TYPE, &VAL, &mbuf,
-                                      CoCsdoDnCon::func, nullptr);
+                                      CoCsdoDnCon::Func, nullptr);
 
   CHECK_EQUAL(-1, ret);
   CHECK_EQUAL(0u, CanSend::GetNumCalled());
@@ -2544,10 +2544,10 @@ TEST(CO_Csdo, CoCsdoDnDcfReq_Nominal) {
               co_dev_write_dcf(dev, IDX, IDX, dcf.Begin(), dcf.End()));
 
   const auto ret = co_csdo_dn_dcf_req(csdo, dcf.Begin(), dcf.End(),
-                                      CoCsdoDnCon::func, nullptr);
+                                      CoCsdoDnCon::Func, nullptr);
 
   CHECK_EQUAL(0, ret);
-  CHECK_EQUAL(0u, CoCsdoDnCon::num_called);
+  CHECK_EQUAL(0u, CoCsdoDnCon::GetNumCalled());
   CHECK_EQUAL(error_num, get_errnum());
   CHECK_EQUAL(1u, CanSend::GetNumCalled());
   std::vector<uint_least8_t> expected = SdoInitExpectedData::U16(
@@ -2581,10 +2581,10 @@ TEST(CO_Csdo, CoCsdoDnDcfReq_InvalidCobidReq) {
               co_dev_write_dcf(dev, IDX, IDX, dcf.Begin(), dcf.End()));
 
   const auto ret = co_csdo_dn_dcf_req(csdo, dcf.Begin(), dcf.End(),
-                                      CoCsdoDnCon::func, nullptr);
+                                      CoCsdoDnCon::Func, nullptr);
 
   CHECK_EQUAL(-1, ret);
-  CHECK_EQUAL(0u, CoCsdoDnCon::num_called);
+  CHECK_EQUAL(0u, CoCsdoDnCon::GetNumCalled());
   CHECK_EQUAL(ERRNUM_INVAL, get_errnum());
   CHECK_EQUAL(0u, CanSend::GetNumCalled());
 }
@@ -2618,10 +2618,10 @@ TEST(CO_Csdo, CoCsdoDnDcfReq_IsNotIdle) {
               co_dev_write_dcf(dev, IDX, IDX, dcf.Begin(), dcf.End()));
 
   const auto ret = co_csdo_dn_dcf_req(csdo, dcf.Begin(), dcf.End(),
-                                      CoCsdoDnCon::func, nullptr);
+                                      CoCsdoDnCon::Func, nullptr);
 
   CHECK_EQUAL(-1, ret);
-  CHECK_EQUAL(0u, CoCsdoDnCon::num_called);
+  CHECK_EQUAL(0u, CoCsdoDnCon::GetNumCalled());
   CHECK_EQUAL(ERRNUM_INVAL, get_errnum());
   CHECK_EQUAL(0u, CanSend::GetNumCalled());
 }
@@ -2659,10 +2659,10 @@ TEST(CO_Csdo, CoCsdoDnDcfReq_TooShortBuffer) {
 
   const auto ret = co_csdo_dn_dcf_req(
       csdo, dcf.Begin(), dcf.Begin() + sizeof(co_unsigned32_t) - 1u,
-      CoCsdoDnCon::func, nullptr);
+      CoCsdoDnCon::Func, nullptr);
 
   CHECK_EQUAL(0, ret);
-  CHECK_EQUAL(1u, CoCsdoDnCon::num_called);
+  CHECK_EQUAL(1u, CoCsdoDnCon::GetNumCalled());
   CoCsdoDnCon::Check(csdo, 0x0000u, 0x00u, CO_SDO_AC_TYPE_LEN_LO, nullptr);
   CHECK_EQUAL(error_num, get_errnum());
   CHECK_EQUAL(0u, CanSend::GetNumCalled());
@@ -3342,7 +3342,7 @@ TEST(CO_Csdo, CoCsdoBlkDnReq_NotStarted) {
   uint_least8_t bytes2dn[sizeof(sub_type)] = {0};
   const auto ret =
       co_csdo_blk_dn_req(csdo, IDX, SUBIDX, bytes2dn, sizeof(sub_type),
-                         CoCsdoDnCon::func, nullptr);
+                         CoCsdoDnCon::Func, nullptr);
 
   CHECK_EQUAL(-1, ret);
   CHECK_EQUAL(0, CanSend::GetNumCalled());
@@ -3369,7 +3369,7 @@ TEST(CO_Csdo, CoCsdoBlkDnReq_Nominal) {
   uint_least8_t bytes2dn[sizeof(sub_type)] = {0};
   const auto ret =
       co_csdo_blk_dn_req(csdo, IDX, SUBIDX, bytes2dn, sizeof(sub_type),
-                         CoCsdoDnCon::func, nullptr);
+                         CoCsdoDnCon::Func, nullptr);
 
   CHECK_EQUAL(0, ret);
   CHECK_EQUAL(1, CanSend::GetNumCalled());
@@ -3404,7 +3404,7 @@ TEST(CO_Csdo, CoCsdoBlkDnReq_TimeoutSet) {
   uint_least8_t bytes2dn[sizeof(sub_type)] = {0};
   const auto ret =
       co_csdo_blk_dn_req(csdo, IDX, SUBIDX, bytes2dn, sizeof(sub_type),
-                         CoCsdoDnCon::func, nullptr);
+                         CoCsdoDnCon::Func, nullptr);
 
   CHECK_EQUAL(0, ret);
   CHECK_EQUAL(1, CanSend::GetNumCalled());
@@ -3446,7 +3446,7 @@ TEST(CO_Csdo, CoCsdoBlkDnValReq_Nominal) {
   StartCSDO();
 
   const auto ret = co_csdo_blk_dn_val_req(csdo, IDX, SUBIDX, SUB_TYPE, &VAL,
-                                          CoCsdoDnCon::func, nullptr);
+                                          CoCsdoDnCon::Func, nullptr);
 
   CHECK_EQUAL(0, ret);
   CHECK_EQUAL(1u, CanSend::GetNumCalled());
@@ -3477,7 +3477,7 @@ TEST(CO_Csdo, CoCsdoBlkDnValReq_DnEmptyArray) {
   const co_octet_string_t val2dn = arrays.Init<co_octet_string_t>();
   const auto ret =
       co_csdo_blk_dn_val_req(csdo, IDX, SUBIDX, CO_DEFTYPE_OCTET_STRING,
-                             &val2dn, CoCsdoDnCon::func, nullptr);
+                             &val2dn, CoCsdoDnCon::Func, nullptr);
 
   CHECK_EQUAL(0, ret);
   CHECK_EQUAL(1u, CanSend::GetNumCalled());
@@ -3505,7 +3505,7 @@ TEST(CO_Csdo, CoCsdoBlkDnValReq_CoValWriteFail) {
 
   LelyOverride::co_val_write(Override::NoneCallsValid);
   const auto ret = co_csdo_blk_dn_val_req(csdo, IDX, SUBIDX, SUB_TYPE, &VAL,
-                                          CoCsdoDnCon::func, nullptr);
+                                          CoCsdoDnCon::Func, nullptr);
 
   CHECK_EQUAL(-1, ret);
   CHECK_EQUAL(0, CanSend::GetNumCalled());
@@ -3529,7 +3529,7 @@ TEST(CO_Csdo, CoCsdoBlkDnValReq_SecondCoValWriteFail) {
 
   LelyOverride::co_val_write(1u);
   const auto ret = co_csdo_blk_dn_val_req(csdo, IDX, SUBIDX, SUB_TYPE, &VAL,
-                                          CoCsdoDnCon::func, nullptr);
+                                          CoCsdoDnCon::Func, nullptr);
 
   CHECK_EQUAL(-1, ret);
   CHECK_EQUAL(0, CanSend::GetNumCalled());
@@ -3551,7 +3551,7 @@ TEST(CO_Csdo, CoCsdoBlkDnValReq_MembufReserveFail) {
 
   LelyOverride::membuf_reserve(Override::NoneCallsValid);
   const auto ret = co_csdo_blk_dn_val_req(csdo, IDX, SUBIDX, SUB_TYPE, &VAL,
-                                          CoCsdoDnCon::func, nullptr);
+                                          CoCsdoDnCon::Func, nullptr);
 
   CHECK_EQUAL(-1, ret);
   CHECK_EQUAL(0, CanSend::GetNumCalled());
@@ -3579,7 +3579,7 @@ TEST(CO_Csdo, CoCsdoBlkDnIniOnRecv_IncorrectCS) {
   uint_least8_t bytes2dn[sizeof(sub_type)] = {0};
   const auto ret =
       co_csdo_blk_dn_req(csdo, IDX, SUBIDX, bytes2dn, sizeof(sub_type),
-                         CoCsdoDnCon::func, nullptr);
+                         CoCsdoDnCon::Func, nullptr);
 
   CHECK_EQUAL(0, ret);
   CHECK_EQUAL(1, CanSend::GetNumCalled());
@@ -3616,7 +3616,7 @@ TEST(CO_Csdo, CoCsdoBlkDnIniOnRecv_NoCS) {
   uint_least8_t bytes2dn[sizeof(sub_type)] = {0};
   const auto ret =
       co_csdo_blk_dn_req(csdo, IDX, SUBIDX, bytes2dn, sizeof(sub_type),
-                         CoCsdoDnCon::func, nullptr);
+                         CoCsdoDnCon::Func, nullptr);
 
   CHECK_EQUAL(0, ret);
   CHECK_EQUAL(1, CanSend::GetNumCalled());

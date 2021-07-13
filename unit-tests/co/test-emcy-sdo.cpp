@@ -166,7 +166,7 @@ TEST(CO_EmcySdo, Co1003Dn_TypeLenTooHigh) {
   const co_unsigned16_t errors = 0u;
   const auto ret =
       co_dev_dn_val_req(dev, 0x1003u, 0x00u, CO_DEFTYPE_UNSIGNED16, &errors,
-                        nullptr, CoCsdoDnCon::func, nullptr);
+                        nullptr, CoCsdoDnCon::Func, nullptr);
 
   CHECK_EQUAL(0, ret);
   CheckDnConAbortCode(0x1003u, 0x00u, CO_SDO_AC_TYPE_LEN_HI);
@@ -186,7 +186,7 @@ TEST(CO_EmcySdo, Co1003Dn_CannotWriteToNonZeroSubidx) {
   const co_unsigned32_t error = 0u;
   const auto ret =
       co_dev_dn_val_req(dev, 0x1003u, 0x01u, CO_DEFTYPE_UNSIGNED32, &error,
-                        nullptr, CoCsdoDnCon::func, nullptr);
+                        nullptr, CoCsdoDnCon::Func, nullptr);
 
   CHECK_EQUAL(0, ret);
   CheckDnConAbortCode(0x1003u, 0x01u, CO_SDO_AC_NO_WRITE);
@@ -207,7 +207,7 @@ TEST(CO_EmcySdo, Co1003Dn_NonZeroValuesNotAllowed) {
   const co_unsigned8_t errors = 1u;
   const auto ret =
       co_dev_dn_val_req(dev, 0x1003u, 0x00u, CO_DEFTYPE_UNSIGNED8, &errors,
-                        nullptr, CoCsdoDnCon::func, nullptr);
+                        nullptr, CoCsdoDnCon::Func, nullptr);
 
   CHECK_EQUAL(0, ret);
   CheckDnConAbortCode(0x1003u, 0x00u, CO_SDO_AC_PARAM_VAL);
@@ -235,7 +235,7 @@ TEST(CO_EmcySdo, Co1003Dn_ZeroResetsEmcyMessageStack) {
   const co_unsigned8_t errors = 0u;
   const auto ret =
       co_dev_dn_val_req(dev, 0x1003u, 0x00u, CO_DEFTYPE_UNSIGNED8, &errors,
-                        nullptr, CoCsdoDnCon::func, nullptr);
+                        nullptr, CoCsdoDnCon::Func, nullptr);
 
   CHECK_EQUAL(0, ret);
   CheckDnConSuccess(0x1003u, 0x00u);
@@ -283,7 +283,7 @@ TEST(CO_EmcySdo, Co1014Dn_TypeLenTooLow) {
   const co_unsigned16_t value = 0x1234u;
   const auto ret =
       co_dev_dn_val_req(dev, 0x1014u, 0x00u, CO_DEFTYPE_UNSIGNED16, &value,
-                        nullptr, CoCsdoDnCon::func, nullptr);
+                        nullptr, CoCsdoDnCon::Func, nullptr);
 
   CHECK_EQUAL(0, ret);
   CheckDnConAbortCode(0x1014u, 0x00u, CO_SDO_AC_TYPE_LEN_LO);
@@ -308,7 +308,7 @@ TEST(CO_EmcySdo, Co1014Dn_InvalidSubobject) {
   const co_unsigned16_t data = 0;
   const auto ret =
       co_dev_dn_val_req(dev, 0x1014u, 0x01u, CO_DEFTYPE_UNSIGNED16, &data,
-                        nullptr, CoCsdoDnCon::func, nullptr);
+                        nullptr, CoCsdoDnCon::Func, nullptr);
 
   CHECK_EQUAL(0, ret);
   CheckDnConAbortCode(0x1014u, 0x01u, CO_SDO_AC_NO_SUB);
@@ -329,7 +329,7 @@ TEST(CO_EmcySdo, Co1014Dn_SameAsPrevious) {
   const co_unsigned32_t cobid = EMCY_CANID;
   const auto ret =
       co_dev_dn_val_req(dev, 0x1014u, 0x00u, CO_DEFTYPE_UNSIGNED32, &cobid,
-                        nullptr, CoCsdoDnCon::func, nullptr);
+                        nullptr, CoCsdoDnCon::Func, nullptr);
 
   CHECK_EQUAL(0, ret);
   CheckDnConSuccess(0x1014u, 0x00u);
@@ -353,7 +353,7 @@ TEST(CO_EmcySdo, Co1014Dn_OldValidNewValid_DifferentCanId) {
   const co_unsigned32_t cobid = EMCY_CANID + 20u;
   const auto ret =
       co_dev_dn_val_req(dev, 0x1014u, 0x00u, CO_DEFTYPE_UNSIGNED32, &cobid,
-                        nullptr, CoCsdoDnCon::func, nullptr);
+                        nullptr, CoCsdoDnCon::Func, nullptr);
 
   CHECK_EQUAL(0, ret);
   CheckDnConAbortCode(0x1014u, 0x00u, CO_SDO_AC_PARAM_VAL);
@@ -376,7 +376,7 @@ TEST(CO_EmcySdo, Co1014Dn_OldValidNewValid_SameCanId) {
   const co_unsigned32_t cobid = EMCY_CANID | CO_EMCY_COBID_FRAME;
   const auto ret =
       co_dev_dn_val_req(dev, 0x1014u, 0x00u, CO_DEFTYPE_UNSIGNED32, &cobid,
-                        nullptr, CoCsdoDnCon::func, nullptr);
+                        nullptr, CoCsdoDnCon::Func, nullptr);
 
   CHECK_EQUAL(0, ret);
   CheckDnConSuccess(0x1014u, 0x00u);
@@ -400,7 +400,7 @@ TEST(CO_EmcySdo, Co1014Dn_OldValidNewInvalid) {
   const co_unsigned32_t cobid = EMCY_CANID | CO_EMCY_COBID_VALID;
   const auto ret =
       co_dev_dn_val_req(dev, 0x1014u, 0x00u, CO_DEFTYPE_UNSIGNED32, &cobid,
-                        nullptr, CoCsdoDnCon::func, nullptr);
+                        nullptr, CoCsdoDnCon::Func, nullptr);
 
   CHECK_EQUAL(0, ret);
   CheckDnConSuccess(0x1014u, 0x00u);
@@ -428,7 +428,7 @@ TEST(CO_EmcySdo, Co1014Dn_OldInvalidNewValid) {
   const co_unsigned32_t cobid = EMCY_CANID;
   const auto ret =
       co_dev_dn_val_req(dev, 0x1014u, 0x00u, CO_DEFTYPE_UNSIGNED32, &cobid,
-                        nullptr, CoCsdoDnCon::func, nullptr);
+                        nullptr, CoCsdoDnCon::Func, nullptr);
 
   CHECK_EQUAL(0, ret);
   CheckDnConSuccess(0x1014u, 0x00u);
@@ -456,7 +456,7 @@ TEST(CO_EmcySdo, Co1014Dn_ExtendedIdWithoutFrameBitSet) {
   const co_unsigned32_t cobid = EMCY_EID_CANID;
   const auto ret =
       co_dev_dn_val_req(dev, 0x1014u, 0x00u, CO_DEFTYPE_UNSIGNED32, &cobid,
-                        nullptr, CoCsdoDnCon::func, nullptr);
+                        nullptr, CoCsdoDnCon::Func, nullptr);
 
   CHECK_EQUAL(0, ret);
   CheckDnConAbortCode(0x1014u, 0x00u, CO_SDO_AC_PARAM_VAL);
@@ -483,7 +483,7 @@ TEST(CO_EmcySdo, Co1014Dn_ExtendedIdWithFrameBitSet) {
   const co_unsigned32_t cobid = EMCY_EID_CANID | CO_EMCY_COBID_FRAME;
   const auto ret =
       co_dev_dn_val_req(dev, 0x1014u, 0x00u, CO_DEFTYPE_UNSIGNED32, &cobid,
-                        nullptr, CoCsdoDnCon::func, nullptr);
+                        nullptr, CoCsdoDnCon::Func, nullptr);
 
   CHECK_EQUAL(0, ret);
   CheckDnConSuccess(0x1014u, 0x00u);
@@ -528,7 +528,7 @@ TEST(CO_EmcySdo, Co1028Dn_TypeLenTooLow) {
 
   const auto ret =
       co_dev_dn_val_req(dev, 0x1028u, 0x01u, CO_DEFTYPE_UNSIGNED16, &value,
-                        nullptr, CoCsdoDnCon::func, nullptr);
+                        nullptr, CoCsdoDnCon::Func, nullptr);
 
   CHECK_EQUAL(0, ret);
   CheckDnConAbortCode(0x1028u, 0x01u, CO_SDO_AC_TYPE_LEN_LO);
@@ -550,7 +550,7 @@ TEST(CO_EmcySdo, Co1028Dn_HighestSubidxIsConst) {
 
   const auto ret =
       co_dev_dn_val_req(dev, 0x1028u, 0x00u, CO_DEFTYPE_UNSIGNED8, &value,
-                        nullptr, CoCsdoDnCon::func, nullptr);
+                        nullptr, CoCsdoDnCon::Func, nullptr);
 
   CHECK_EQUAL(0, ret);
   CheckDnConAbortCode(0x1028u, 0x00u, CO_SDO_AC_NO_WRITE);
@@ -575,7 +575,7 @@ TEST(CO_EmcySdo, Co1028Dn_SubidxGreaterThanNumConsumers) {
 
   const auto ret =
       co_dev_dn_val_req(dev, 0x1028u, EXCESS_1028_SUBIDX, CO_DEFTYPE_UNSIGNED32,
-                        &cobid, nullptr, CoCsdoDnCon::func, nullptr);
+                        &cobid, nullptr, CoCsdoDnCon::Func, nullptr);
 
   CHECK_EQUAL(0, ret);
   CheckDnConAbortCode(0x1028u, EXCESS_1028_SUBIDX, CO_SDO_AC_NO_SUB);
@@ -605,7 +605,7 @@ TEST(CO_EmcySdo, Co1028Dn_SubidxGreaterThanNumNodes) {
   const co_unsigned32_t cobid = EXAMPLE_COBID;
   const auto ret =
       co_dev_dn_val_req(dev, 0x1028u, subidx, CO_DEFTYPE_UNSIGNED32, &cobid,
-                        nullptr, CoCsdoDnCon::func, nullptr);
+                        nullptr, CoCsdoDnCon::Func, nullptr);
 
   CHECK_EQUAL(0, ret);
   CheckDnConAbortCode(0x1028u, subidx, CO_SDO_AC_NO_SUB);
@@ -630,7 +630,7 @@ TEST(CO_EmcySdo, Co1028Dn_SameAsPrevious) {
 
   const auto ret =
       co_dev_dn_val_req(dev, 0x1028u, 0x01u, CO_DEFTYPE_UNSIGNED32, &cobid,
-                        nullptr, CoCsdoDnCon::func, nullptr);
+                        nullptr, CoCsdoDnCon::Func, nullptr);
 
   CHECK_EQUAL(0, ret);
   CheckDnConSuccess(0x1028u, 0x01u);
@@ -658,7 +658,7 @@ TEST(CO_EmcySdo, Co1028Dn_OldValidNewValid_DifferentCanId) {
 
   const auto ret =
       co_dev_dn_val_req(dev, 0x1028u, 0x01u, CO_DEFTYPE_UNSIGNED32, &cobid,
-                        nullptr, CoCsdoDnCon::func, nullptr);
+                        nullptr, CoCsdoDnCon::Func, nullptr);
 
   CHECK_EQUAL(0, ret);
   CheckDnConAbortCode(0x1028u, 0x01u, CO_SDO_AC_PARAM_VAL);
@@ -685,7 +685,7 @@ TEST(CO_EmcySdo, Co1028Dn_OldValidNewInvalid) {
 
   const auto ret =
       co_dev_dn_val_req(dev, 0x1028u, 0x01u, CO_DEFTYPE_UNSIGNED32, &cobid,
-                        nullptr, CoCsdoDnCon::func, nullptr);
+                        nullptr, CoCsdoDnCon::Func, nullptr);
 
   CHECK_EQUAL(0, ret);
   CheckDnConSuccess(0x1028u, 0x01u);
@@ -717,7 +717,7 @@ TEST(CO_EmcySdo, Co1028Dn_OldInvalidNewValid) {
   const co_unsigned32_t cobid = CONSUMER_COBID;
   const auto ret =
       co_dev_dn_val_req(dev, 0x1028u, 0x01u, CO_DEFTYPE_UNSIGNED32, &cobid,
-                        nullptr, CoCsdoDnCon::func, nullptr);
+                        nullptr, CoCsdoDnCon::Func, nullptr);
 
   CHECK_EQUAL(0, ret);
   CheckDnConSuccess(0x1028u, 0x01u);
@@ -746,7 +746,7 @@ TEST(CO_EmcySdo, Co1028Dn_OldValidNewValid_SameCanId) {
   const co_unsigned32_t cobid = CONSUMER_COBID | CO_EMCY_COBID_FRAME;
   const auto ret =
       co_dev_dn_val_req(dev, 0x1028u, 0x01u, CO_DEFTYPE_UNSIGNED32, &cobid,
-                        nullptr, CoCsdoDnCon::func, nullptr);
+                        nullptr, CoCsdoDnCon::Func, nullptr);
 
   CHECK_EQUAL(0, ret);
   CheckDnConSuccess(0x1028u, 0x01u);
@@ -777,7 +777,7 @@ TEST(CO_EmcySdo, Co1028Dn_ExtendedIdWithoutFrameBitSet) {
   const co_unsigned32_t cobid = EMCY_EID_CANID;
   const auto ret =
       co_dev_dn_val_req(dev, 0x1028u, 0x01u, CO_DEFTYPE_UNSIGNED32, &cobid,
-                        nullptr, CoCsdoDnCon::func, nullptr);
+                        nullptr, CoCsdoDnCon::Func, nullptr);
 
   CHECK_EQUAL(0, ret);
   CheckDnConAbortCode(0x1028u, 0x01u, CO_SDO_AC_PARAM_VAL);
@@ -808,7 +808,7 @@ TEST(CO_EmcySdo, Co1028Dn_ExtendedIdWithFrameBitSet) {
   const co_unsigned32_t cobid = EMCY_EID_CANID | CO_EMCY_COBID_FRAME;
   const auto ret =
       co_dev_dn_val_req(dev, 0x1028u, 0x01u, CO_DEFTYPE_UNSIGNED32, &cobid,
-                        nullptr, CoCsdoDnCon::func, nullptr);
+                        nullptr, CoCsdoDnCon::Func, nullptr);
 
   CHECK_EQUAL(0, ret);
   CheckDnConSuccess(0x1028u, 0x01u);

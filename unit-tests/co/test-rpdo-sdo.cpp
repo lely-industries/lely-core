@@ -196,7 +196,7 @@ TEST(CO_SdoRpdo1400, Co1400DnInd_TooLongData) {
   const co_unsigned16_t data = 0;
   const auto ret =
       co_dev_dn_val_req(dev, 0x1400u, 0x00u, CO_DEFTYPE_UNSIGNED16, &data,
-                        nullptr, CoCsdoDnCon::func, nullptr);
+                        nullptr, CoCsdoDnCon::Func, nullptr);
 
   CHECK_EQUAL(0, ret);
   CHECK(CoCsdoDnCon::Called());
@@ -210,7 +210,7 @@ TEST(CO_SdoRpdo1400, Co1400DnInd_DownloadNumOfElements) {
   const co_unsigned8_t num_of_elems = 0x7fu;
   const auto ret =
       co_dev_dn_val_req(dev, 0x1400u, 0x00u, CO_DEFTYPE_UNSIGNED8,
-                        &num_of_elems, nullptr, CoCsdoDnCon::func, nullptr);
+                        &num_of_elems, nullptr, CoCsdoDnCon::Func, nullptr);
 
   CHECK_EQUAL(0, ret);
   CHECK(CoCsdoDnCon::Called());
@@ -224,7 +224,7 @@ TEST(CO_SdoRpdo1400, Co1400DnInd_CobidSameAsPrevious) {
   const co_unsigned32_t cobid = DEV_ID;
   const auto ret =
       co_dev_dn_val_req(dev, 0x1400u, 0x01u, CO_DEFTYPE_UNSIGNED32, &cobid,
-                        nullptr, CoCsdoDnCon::func, nullptr);
+                        nullptr, CoCsdoDnCon::Func, nullptr);
 
   CHECK_EQUAL(0, ret);
   CHECK(CoCsdoDnCon::Called());
@@ -241,7 +241,7 @@ TEST(CO_SdoRpdo1400, Co1400DnInd_CobidValidToValid_NewCanId) {
   const co_unsigned32_t cobid = DEV_ID + 1u;
   const auto ret =
       co_dev_dn_val_req(dev, 0x1400u, 0x01u, CO_DEFTYPE_UNSIGNED32, &cobid,
-                        nullptr, CoCsdoDnCon::func, nullptr);
+                        nullptr, CoCsdoDnCon::Func, nullptr);
 
   CHECK_EQUAL(0, ret);
   CHECK(CoCsdoDnCon::Called());
@@ -258,7 +258,7 @@ TEST(CO_SdoRpdo1400, Co1400DnInd_CobidInvalidToValid_NewCanId) {
   const co_unsigned32_t cobid = DEV_ID + 1u;
   const auto ret =
       co_dev_dn_val_req(dev, 0x1400u, 0x01u, CO_DEFTYPE_UNSIGNED32, &cobid,
-                        nullptr, CoCsdoDnCon::func, nullptr);
+                        nullptr, CoCsdoDnCon::Func, nullptr);
 
   CHECK_EQUAL(0, ret);
   CHECK(CoCsdoDnCon::Called());
@@ -272,7 +272,7 @@ TEST(CO_SdoRpdo1400, Co1400DnInd_CobidValidToValid_FrameBit) {
   const co_unsigned32_t cobid = DEV_ID | CO_PDO_COBID_FRAME;
   const auto ret =
       co_dev_dn_val_req(dev, 0x1400u, 0x01u, CO_DEFTYPE_UNSIGNED32, &cobid,
-                        nullptr, CoCsdoDnCon::func, nullptr);
+                        nullptr, CoCsdoDnCon::Func, nullptr);
 
   CHECK_EQUAL(0, ret);
   CHECK(CoCsdoDnCon::Called());
@@ -286,7 +286,7 @@ TEST(CO_SdoRpdo1400, Co1400DnInd_CobidValidToInvalid_ExtendedId_NoFrameBit) {
   co_unsigned32_t cobid = DEV_ID | (1u << 28u) | CO_PDO_COBID_VALID;
   const auto ret =
       co_dev_dn_val_req(dev, 0x1400u, 0x01u, CO_DEFTYPE_UNSIGNED32, &cobid,
-                        nullptr, CoCsdoDnCon::func, nullptr);
+                        nullptr, CoCsdoDnCon::Func, nullptr);
 
   CHECK_EQUAL(0, ret);
   CHECK(CoCsdoDnCon::Called());
@@ -300,7 +300,7 @@ TEST(CO_SdoRpdo1400, Co1400DnInd_CobidValidToInvalid) {
   const co_unsigned32_t cobid = DEV_ID | CO_PDO_COBID_VALID;
   const auto ret =
       co_dev_dn_val_req(dev, 0x1400u, 0x01u, CO_DEFTYPE_UNSIGNED32, &cobid,
-                        nullptr, CoCsdoDnCon::func, nullptr);
+                        nullptr, CoCsdoDnCon::Func, nullptr);
 
   CHECK_EQUAL(0, ret);
   CHECK(CoCsdoDnCon::Called());
@@ -329,7 +329,7 @@ TEST(CO_SdoRpdo1400, Co1400DnInd_CobidValidToInvalid_DisableEventTimer) {
   const co_unsigned32_t cobid = DEV_ID | CO_PDO_COBID_VALID;
   CHECK_EQUAL(
       0, co_dev_dn_val_req(dev, 0x1400u, 0x01u, CO_DEFTYPE_UNSIGNED32, &cobid,
-                           nullptr, CoCsdoDnCon::func, nullptr));
+                           nullptr, CoCsdoDnCon::Func, nullptr));
 
   SetCurrentTimeMs(2u);
 
@@ -361,7 +361,7 @@ TEST(CO_SdoRpdo1400, Co1400DnInd_CobidInvalidToValid_ReenableEventTimer) {
   const co_unsigned32_t cobid = DEV_ID;
   CHECK_EQUAL(
       0, co_dev_dn_val_req(dev, 0x1400u, 0x01u, CO_DEFTYPE_UNSIGNED32, &cobid,
-                           nullptr, CoCsdoDnCon::func, nullptr));
+                           nullptr, CoCsdoDnCon::Func, nullptr));
 
   SetCurrentTimeMs(18u);
   CHECK(!CO_SdoRpdo1400Static::rpdo_err_func_called);
@@ -380,7 +380,7 @@ TEST(CO_SdoRpdo1400, Co1400DnInd_TransmissionTypeSameAsPrevious) {
   const co_unsigned8_t transmission_type = 0xfeu;
   const auto ret = co_dev_dn_val_req(dev, 0x1400u, 0x02u, CO_DEFTYPE_UNSIGNED8,
                                      &transmission_type, nullptr,
-                                     CoCsdoDnCon::func, nullptr);
+                                     CoCsdoDnCon::Func, nullptr);
 
   CHECK_EQUAL(0, ret);
   CHECK(CoCsdoDnCon::Called());
@@ -397,7 +397,7 @@ TEST(CO_SdoRpdo1400, Co1400DnInd_TransmissionTypeReserved) {
     const co_unsigned8_t transmission_type = i;
     const auto ret = co_dev_dn_val_req(dev, 0x1400u, 0x02u,
                                        CO_DEFTYPE_UNSIGNED8, &transmission_type,
-                                       nullptr, CoCsdoDnCon::func, nullptr);
+                                       nullptr, CoCsdoDnCon::Func, nullptr);
 
     CHECK_EQUAL(0, ret);
     CHECK(CoCsdoDnCon::Called());
@@ -412,7 +412,7 @@ TEST(CO_SdoRpdo1400, Co1400DnInd_TransmissionTypeMax) {
   const co_unsigned8_t transmission_type = 0xffu;
   const auto ret = co_dev_dn_val_req(dev, 0x1400u, 0x02u, CO_DEFTYPE_UNSIGNED8,
                                      &transmission_type, nullptr,
-                                     CoCsdoDnCon::func, nullptr);
+                                     CoCsdoDnCon::Func, nullptr);
 
   CHECK_EQUAL(0, ret);
   CHECK(CoCsdoDnCon::Called());
@@ -426,7 +426,7 @@ TEST(CO_SdoRpdo1400, Co1400DnInd_TransmissionType) {
   const co_unsigned8_t transmission_type = 0x35u;
   const auto ret = co_dev_dn_val_req(dev, 0x1400u, 0x02u, CO_DEFTYPE_UNSIGNED8,
                                      &transmission_type, nullptr,
-                                     CoCsdoDnCon::func, nullptr);
+                                     CoCsdoDnCon::Func, nullptr);
 
   CHECK_EQUAL(0, ret);
   CHECK(CoCsdoDnCon::Called());
@@ -443,7 +443,7 @@ TEST(CO_SdoRpdo1400, Co1400DnInd_InhibitTimeSameAsPrevious) {
   const co_unsigned16_t inhibit_time = 0x0000u;
   const auto ret =
       co_dev_dn_val_req(dev, 0x1400u, 0x03u, CO_DEFTYPE_UNSIGNED16,
-                        &inhibit_time, nullptr, CoCsdoDnCon::func, nullptr);
+                        &inhibit_time, nullptr, CoCsdoDnCon::Func, nullptr);
 
   CHECK_EQUAL(0, ret);
   CHECK(CoCsdoDnCon::Called());
@@ -457,7 +457,7 @@ TEST(CO_SdoRpdo1400, Co1400DnInd_InhibitTimeValidRPDO) {
   const co_unsigned16_t inhibit_time = 0x0001u;
   const auto ret =
       co_dev_dn_val_req(dev, 0x1400u, 0x03u, CO_DEFTYPE_UNSIGNED16,
-                        &inhibit_time, nullptr, CoCsdoDnCon::func, nullptr);
+                        &inhibit_time, nullptr, CoCsdoDnCon::Func, nullptr);
 
   CHECK_EQUAL(0, ret);
   CHECK(CoCsdoDnCon::Called());
@@ -474,7 +474,7 @@ TEST(CO_SdoRpdo1400, Co1400DnInd_InhibitTime) {
   const co_unsigned16_t inhibit_time = 0x0003u;
   const auto ret =
       co_dev_dn_val_req(dev, 0x1400u, 0x03u, CO_DEFTYPE_UNSIGNED16,
-                        &inhibit_time, nullptr, CoCsdoDnCon::func, nullptr);
+                        &inhibit_time, nullptr, CoCsdoDnCon::Func, nullptr);
 
   CHECK_EQUAL(0, ret);
   CHECK(CoCsdoDnCon::Called());
@@ -488,7 +488,7 @@ TEST(CO_SdoRpdo1400, Co1400DnInd_CompatibilityEntry) {
   const co_unsigned8_t compat = 0x44u;
   const auto ret =
       co_dev_dn_val_req(dev, 0x1400u, 0x04u, CO_DEFTYPE_UNSIGNED8, &compat,
-                        nullptr, CoCsdoDnCon::func, nullptr);
+                        nullptr, CoCsdoDnCon::Func, nullptr);
 
   CHECK_EQUAL(0, ret);
   CHECK(CoCsdoDnCon::Called());
@@ -502,7 +502,7 @@ TEST(CO_SdoRpdo1400, Co1400DnInd_EventTimerSameAsPrevious) {
   const co_unsigned16_t event_timer = 0x0000u;
   const auto ret =
       co_dev_dn_val_req(dev, 0x1400u, 0x05u, CO_DEFTYPE_UNSIGNED16,
-                        &event_timer, nullptr, CoCsdoDnCon::func, nullptr);
+                        &event_timer, nullptr, CoCsdoDnCon::Func, nullptr);
 
   CHECK_EQUAL(0, ret);
   CHECK(CoCsdoDnCon::Called());
@@ -516,7 +516,7 @@ TEST(CO_SdoRpdo1400, Co1400DnInd_EventTimer) {
   const co_unsigned16_t event_timer = 0x3456u;
   const auto ret =
       co_dev_dn_val_req(dev, 0x1400u, 0x05u, CO_DEFTYPE_UNSIGNED16,
-                        &event_timer, nullptr, CoCsdoDnCon::func, nullptr);
+                        &event_timer, nullptr, CoCsdoDnCon::Func, nullptr);
 
   CHECK_EQUAL(0, ret);
   CHECK(CoCsdoDnCon::Called());
@@ -546,7 +546,7 @@ TEST(CO_SdoRpdo1400, Co1400DnInd_EventTimerSetToNonZero_ReenableEventTimer) {
   const co_unsigned16_t event_timer = 20u;
   CHECK_EQUAL(
       0, co_dev_dn_val_req(dev, 0x1400u, 0x05u, CO_DEFTYPE_UNSIGNED16,
-                           &event_timer, nullptr, CoCsdoDnCon::func, nullptr));
+                           &event_timer, nullptr, CoCsdoDnCon::Func, nullptr));
 
   SetCurrentTimeMs(24u);
   CHECK(!CO_SdoRpdo1400Static::rpdo_err_func_called);
@@ -579,7 +579,7 @@ TEST(CO_SdoRpdo1400, Co1400DnInd_EventTimerSetToZero_DisableEventTimer) {
   const co_unsigned16_t event_timer = 0u;
   CHECK_EQUAL(
       0, co_dev_dn_val_req(dev, 0x1400u, 0x05u, CO_DEFTYPE_UNSIGNED16,
-                           &event_timer, nullptr, CoCsdoDnCon::func, nullptr));
+                           &event_timer, nullptr, CoCsdoDnCon::Func, nullptr));
 
   SetCurrentTimeMs(100u);
   CHECK(!CO_SdoRpdo1400Static::rpdo_err_func_called);
@@ -665,7 +665,7 @@ TEST(CO_SdoRpdo1600, Co1600DnInd_NumOfMappingsLenGreaterThanMax) {
   const co_unsigned8_t num_of_mappings = 1u;
   const auto ret =
       co_dev_dn_val_req(dev, 0x1600, 0x00u, CO_DEFTYPE_UNSIGNED8,
-                        &num_of_mappings, nullptr, CoCsdoDnCon::func, nullptr);
+                        &num_of_mappings, nullptr, CoCsdoDnCon::Func, nullptr);
 
   CHECK_EQUAL(0, ret);
   CHECK(CoCsdoDnCon::Called());
@@ -686,7 +686,7 @@ TEST(CO_SdoRpdo1600, Co1600DnInd_EmptyMapping) {
   const co_unsigned8_t num_of_mappings = 1u;
   const auto ret =
       co_dev_dn_val_req(dev, 0x1600, 0x00u, CO_DEFTYPE_UNSIGNED8,
-                        &num_of_mappings, nullptr, CoCsdoDnCon::func, nullptr);
+                        &num_of_mappings, nullptr, CoCsdoDnCon::Func, nullptr);
 
   CHECK_EQUAL(0, ret);
   CHECK(CoCsdoDnCon::Called());
@@ -700,7 +700,7 @@ TEST(CO_SdoRpdo1600, Co1600DnInd_NumOfMappingsRequestFailed) {
   const co_unsigned32_t data = 0;
   const auto ret =
       co_dev_dn_val_req(dev, 0x1600, 0x00u, CO_DEFTYPE_UNSIGNED32, &data,
-                        nullptr, CoCsdoDnCon::func, nullptr);
+                        nullptr, CoCsdoDnCon::Func, nullptr);
 
   CHECK_EQUAL(0, ret);
   CHECK(CoCsdoDnCon::Called());
@@ -718,7 +718,7 @@ TEST(CO_SdoRpdo1600, Co1600DnInd_NumOfMappingsNonExistingObjMapping) {
   const co_unsigned8_t num_of_mappings = 1u;
   const auto ret =
       co_dev_dn_val_req(dev, 0x1600, 0x00u, CO_DEFTYPE_UNSIGNED8,
-                        &num_of_mappings, nullptr, CoCsdoDnCon::func, nullptr);
+                        &num_of_mappings, nullptr, CoCsdoDnCon::Func, nullptr);
 
   CHECK_EQUAL(0, ret);
   CHECK(CoCsdoDnCon::Called());
@@ -735,7 +735,7 @@ TEST(CO_SdoRpdo1600, Co1600DnInd_NumOfMappingsSameAsPrevious) {
   const co_unsigned8_t num_of_mappings = CO_PDO_NUM_MAPS;
   const auto ret =
       co_dev_dn_val_req(dev, 0x1600, 0x00u, CO_DEFTYPE_UNSIGNED8,
-                        &num_of_mappings, nullptr, CoCsdoDnCon::func, nullptr);
+                        &num_of_mappings, nullptr, CoCsdoDnCon::Func, nullptr);
 
   CHECK_EQUAL(0, ret);
   CHECK(CoCsdoDnCon::Called());
@@ -749,7 +749,7 @@ TEST(CO_SdoRpdo1600, Co1600DnInd_NumOfMappingsValidRPDO) {
   const co_unsigned8_t num_of_mappings = 2u;
   const auto ret =
       co_dev_dn_val_req(dev, 0x1600, 0x00u, CO_DEFTYPE_UNSIGNED8,
-                        &num_of_mappings, nullptr, CoCsdoDnCon::func, nullptr);
+                        &num_of_mappings, nullptr, CoCsdoDnCon::Func, nullptr);
 
   CHECK_EQUAL(0, ret);
   CHECK(CoCsdoDnCon::Called());
@@ -766,7 +766,7 @@ TEST(CO_SdoRpdo1600, Co1600DnInd_NumOfMappingsTooManyObjsToMap) {
   const co_unsigned8_t num_of_mappings = CO_PDO_NUM_MAPS + 1u;
   const auto ret =
       co_dev_dn_val_req(dev, 0x1600, 0x00u, CO_DEFTYPE_UNSIGNED8,
-                        &num_of_mappings, nullptr, CoCsdoDnCon::func, nullptr);
+                        &num_of_mappings, nullptr, CoCsdoDnCon::Func, nullptr);
 
   CHECK_EQUAL(0, ret);
   CHECK(CoCsdoDnCon::Called());
@@ -780,7 +780,7 @@ TEST(CO_SdoRpdo1600, Co1600DnInd_NumOfMappingsNoMappings) {
   const co_unsigned8_t num_of_mappings = 0;
   const auto ret =
       co_dev_dn_val_req(dev, 0x1600, 0x00u, CO_DEFTYPE_UNSIGNED8,
-                        &num_of_mappings, nullptr, CoCsdoDnCon::func, nullptr);
+                        &num_of_mappings, nullptr, CoCsdoDnCon::Func, nullptr);
 
   CHECK_EQUAL(0, ret);
   CHECK(CoCsdoDnCon::Called());
@@ -801,7 +801,7 @@ TEST(CO_SdoRpdo1600, Co1600DnInd_NumOfMappings) {
   const co_unsigned8_t num_of_mappings = 1u;
   const auto ret =
       co_dev_dn_val_req(dev, 0x1600, 0x00u, CO_DEFTYPE_UNSIGNED8,
-                        &num_of_mappings, nullptr, CoCsdoDnCon::func, nullptr);
+                        &num_of_mappings, nullptr, CoCsdoDnCon::Func, nullptr);
 
   CHECK_EQUAL(0, ret);
   CHECK(CoCsdoDnCon::Called());
@@ -819,7 +819,7 @@ TEST(CO_SdoRpdo1600, Co1600DnInd_MappingNonexisting) {
   const co_unsigned32_t mapping = 0xffff0000u;
   const auto ret =
       co_dev_dn_val_req(dev, 0x1600, 0x01u, CO_DEFTYPE_UNSIGNED32, &mapping,
-                        nullptr, CoCsdoDnCon::func, nullptr);
+                        nullptr, CoCsdoDnCon::Func, nullptr);
 
   CHECK_EQUAL(0, ret);
   CHECK(CoCsdoDnCon::Called());
@@ -840,7 +840,7 @@ TEST(CO_SdoRpdo1600, Co1600DnInd_MappingSameAsPrevious) {
   const co_unsigned32_t mapping = 0x20210020u;
   const auto ret =
       co_dev_dn_val_req(dev, 0x1600, 0x01u, CO_DEFTYPE_UNSIGNED32, &mapping,
-                        nullptr, CoCsdoDnCon::func, nullptr);
+                        nullptr, CoCsdoDnCon::Func, nullptr);
 
   CHECK_EQUAL(0, ret);
   CHECK(CoCsdoDnCon::Called());
@@ -861,7 +861,7 @@ TEST(CO_SdoRpdo1600, Co1600DnInd_MappingNumOfMappingsNonzero) {
   const co_unsigned32_t mapping = 0x20210110u;
   const auto ret =
       co_dev_dn_val_req(dev, 0x1600, 0x01u, CO_DEFTYPE_UNSIGNED32, &mapping,
-                        nullptr, CoCsdoDnCon::func, nullptr);
+                        nullptr, CoCsdoDnCon::Func, nullptr);
 
   CHECK_EQUAL(0, ret);
   CHECK(CoCsdoDnCon::Called());
@@ -882,7 +882,7 @@ TEST(CO_SdoRpdo1600, Co1600DnInd_MappingValidRPDO) {
   const co_unsigned32_t mapping = 0x20210020u;
   const auto ret =
       co_dev_dn_val_req(dev, 0x1600, 0x01u, CO_DEFTYPE_UNSIGNED32, &mapping,
-                        nullptr, CoCsdoDnCon::func, nullptr);
+                        nullptr, CoCsdoDnCon::Func, nullptr);
 
   CHECK_EQUAL(0, ret);
   CHECK(CoCsdoDnCon::Called());
@@ -903,7 +903,7 @@ TEST(CO_SdoRpdo1600, Co1600DnInd_Mapping) {
   const co_unsigned32_t mapping = 0x20210020u;
   const auto ret =
       co_dev_dn_val_req(dev, 0x1600u, 0x01u, CO_DEFTYPE_UNSIGNED32, &mapping,
-                        nullptr, CoCsdoDnCon::func, nullptr);
+                        nullptr, CoCsdoDnCon::Func, nullptr);
 
   CHECK_EQUAL(0, ret);
   CHECK(CoCsdoDnCon::Called());
@@ -925,7 +925,7 @@ TEST(CO_SdoRpdo1600, Co1600DnInd_MappingZeros) {
   const co_unsigned32_t mapping = 0x00000000u;
   const auto ret =
       co_dev_dn_val_req(dev, 0x1600, 0x01, CO_DEFTYPE_UNSIGNED32, &mapping,
-                        nullptr, CoCsdoDnCon::func, nullptr);
+                        nullptr, CoCsdoDnCon::Func, nullptr);
 
   CHECK_EQUAL(0, ret);
   CHECK(CoCsdoDnCon::Called());
