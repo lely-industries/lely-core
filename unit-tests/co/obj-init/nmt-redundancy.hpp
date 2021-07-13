@@ -40,7 +40,7 @@ InsertAndSetAllSubValues(CoObjTHolder& obj_holder,
   assert(co_obj_get_idx(obj_holder.Get()) == CO_NMT_RDN_REDUNDANCY_OBJ_IDX);
 
   obj_holder.InsertAndSetSub(0x00, CO_DEFTYPE_UNSIGNED8,
-                             co_unsigned8_t(CO_NMT_REDUNDANCY_OBJ_MAX_IDX));
+                             co_unsigned8_t{CO_NMT_REDUNDANCY_OBJ_MAX_IDX});
   obj_holder.InsertAndSetSub(CO_NMT_RDN_BDEFAULT_SUBIDX, CO_DEFTYPE_UNSIGNED8,
                              bdefault);
   obj_holder.InsertAndSetSub(CO_NMT_RDN_TTOGGLE_SUBIDX, CO_DEFTYPE_UNSIGNED8,

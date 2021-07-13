@@ -80,13 +80,13 @@ TEST_BASE(CO_SdoRpdoBase) {
 
     // 0x00 - highest sub-index supported
     obj1400->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8,
-                             co_unsigned8_t(0x02u));
+                             co_unsigned8_t{0x02u});
     // 0x01 - COB-ID used by RPDO
     obj1400->InsertAndSetSub(0x01u, CO_DEFTYPE_UNSIGNED32,
-                             co_unsigned32_t(DEV_ID));
+                             co_unsigned32_t{DEV_ID});
     // 0x02 - transmission type
     obj1400->InsertAndSetSub(0x02u, CO_DEFTYPE_UNSIGNED8,
-                             co_unsigned8_t(0xfeu));  // event-driven
+                             co_unsigned8_t{0xfeu});  // event-driven
 
     rpdo = co_rpdo_create(net, dev, RPDO_NUM);
     CHECK(rpdo != nullptr);
@@ -144,13 +144,13 @@ TEST_GROUP_BASE(CO_SdoRpdo1400, CO_SdoRpdoBase) {
 
     // 0x03 - inhibit time
     obj1400->InsertAndSetSub(0x03u, CO_DEFTYPE_UNSIGNED16,
-                             co_unsigned16_t(0x0000u));  // n*100 us
+                             co_unsigned16_t{0x0000u});  // n*100 us
     // 0x04 - reserved (compatibility entry)
     obj1400->InsertAndSetSub(0x04u, CO_DEFTYPE_UNSIGNED8,
-                             co_unsigned8_t(0x00u));
+                             co_unsigned8_t{0x00u});
     // 0x05 - event-timer
     obj1400->InsertAndSetSub(0x05u, CO_DEFTYPE_UNSIGNED16,
-                             co_unsigned16_t(0x0000u));  // ms
+                             co_unsigned16_t{0x0000u});  // ms
   }
 
   TEST_SETUP() {
@@ -591,10 +591,10 @@ TEST_GROUP_BASE(CO_SdoRpdo1600, CO_SdoRpdoBase) {
   void Insert1600Values() {
     // 0x00 - number of mapped application objects in PDO
     obj1600->InsertAndSetSub(0x00, CO_DEFTYPE_UNSIGNED8,
-                             co_unsigned8_t(CO_PDO_NUM_MAPS));
+                             co_unsigned8_t{CO_PDO_NUM_MAPS});
     // 0x01-0x40 - application objects
     for (co_unsigned8_t i = 0x01u; i <= CO_PDO_NUM_MAPS; ++i) {
-      obj1600->InsertAndSetSub(i, CO_DEFTYPE_UNSIGNED32, co_unsigned32_t(0));
+      obj1600->InsertAndSetSub(i, CO_DEFTYPE_UNSIGNED32, co_unsigned32_t{0});
     }
   }
 
@@ -607,7 +607,7 @@ TEST_GROUP_BASE(CO_SdoRpdo1600, CO_SdoRpdoBase) {
     assert(obj2021->Get());
 
     obj2021->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED32,
-                             co_unsigned32_t(0xdeadbeefu));
+                             co_unsigned32_t{0xdeadbeefu});
     co_sub_t* sub2021 = obj2021->GetLastSub();
     co_sub_set_access(sub2021, CO_ACCESS_RW);
     co_sub_set_pdo_mapping(sub2021, 1);

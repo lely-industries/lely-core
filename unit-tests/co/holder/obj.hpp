@@ -45,7 +45,7 @@ class CoObjTHolder : public Holder<co_obj_t> {
 #if LELY_NO_MALLOC
 
  public:
-  explicit CoObjTHolder(co_unsigned16_t idx) {
+  explicit CoObjTHolder(const co_unsigned16_t idx) {
     co_obj_init(Get(), idx, val_data, 0);
   }
 
@@ -56,7 +56,7 @@ class CoObjTHolder : public Holder<co_obj_t> {
 #else   // !LELY_NO_MALLOC
 
  public:
-  explicit CoObjTHolder(co_unsigned16_t idx)
+  explicit CoObjTHolder(const co_unsigned16_t idx)
       : Holder<co_obj_t>(co_obj_create(idx)) {}
 
   ~CoObjTHolder() {
@@ -230,8 +230,8 @@ class CoObjTHolder : public Holder<co_obj_t> {
     // Calculate capacity needed for sub-object values.
     size_t size = 0;
     rbtree_foreach(&Get()->tree, node) {
-      co_sub_t* sub = structof(node, co_sub_t, node);
-      co_unsigned16_t type = co_sub_get_type(sub);
+      const co_sub_t* const sub = structof(node, co_sub_t, node);
+      const co_unsigned16_t type = co_sub_get_type(sub);
       size = ALIGN(size, co_type_alignof(type));
       size += co_type_sizeof(type);
     }
@@ -245,8 +245,8 @@ class CoObjTHolder : public Holder<co_obj_t> {
     // Rearrange values in the value data memory.
     size = 0;
     rbtree_foreach(&Get()->tree, node) {
-      co_sub_t* sub = structof(node, co_sub_t, node);
-      co_unsigned16_t type = co_sub_get_type(sub);
+      co_sub_t* const sub = structof(node, co_sub_t, node);
+      const co_unsigned16_t type = co_sub_get_type(sub);
 
       // Compute the offset of the sub-object.
       size = ALIGN(size, co_type_alignof(type));
@@ -255,11 +255,12 @@ class CoObjTHolder : public Holder<co_obj_t> {
       auto src = static_cast<char*>(sub->val);
       sub->val = val_data + size;
       if (src != nullptr) {
-        const int DATA_MAX_OFFSET = PREALLOCATED_OBJ_SIZE;
-        auto offset = src - val_data;
+        const ssize_t DATA_MAX_OFFSET = PREALLOCATED_OBJ_SIZE;
+        const auto offset = src - val_data;
         // If value was located within 'val_data', update the 'src' pointer
         // as value has been moved to 'old_data'.
-        if (offset >= 0 && offset < DATA_MAX_OFFSET) src = old_data + offset;
+        if ((offset >= 0) && (offset < DATA_MAX_OFFSET))
+          src = old_data + offset;
 
         co_val_move(type, sub->val, src);
       }

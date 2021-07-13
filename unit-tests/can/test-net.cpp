@@ -32,11 +32,11 @@
 #include <libtest/allocators/limited.hpp>
 
 namespace CAN_Net_Static {
-static unsigned tfunc_empty_counter = 0;
-static unsigned tfunc_err_counter = 0;
-static unsigned rfunc_empty_counter = 0;
-static unsigned rfunc_err_counter = 0;
-static unsigned sfunc_empty_counter = 0;
+static size_t tfunc_empty_counter = 0;
+static size_t tfunc_err_counter = 0;
+static size_t rfunc_empty_counter = 0;
+static size_t rfunc_err_counter = 0;
+static size_t sfunc_empty_counter = 0;
 }  // namespace CAN_Net_Static
 
 TEST_GROUP(CAN_NetAllocation) {
@@ -169,7 +169,7 @@ TEST(CAN_Net, CanNetDestroy_Nominal) {
 ///
 /// \Then nothing is changed
 TEST(CAN_Net, CanNetDestroy_Null) {
-  can_net_t* net = nullptr;
+  can_net_t* const net = nullptr;
 
   can_net_destroy(net);
 }
@@ -432,7 +432,7 @@ TEST(CAN_Net, CanNetSetTime_MultipleCallsErr) {
 ///
 /// \Then 0 is returned, the next timer callback is called once
 TEST(CAN_Net, CanNetSetTime_NextFunc) {
-  int data = 256;
+  int32_t data = 256;
   const timespec tp = {5, 30L};
   const timespec tstart1 = {5, 0L};
   const timespec tstart2 = {6, 0L};
@@ -479,7 +479,7 @@ TEST(CAN_Net, CanNetGetNextFunc_Null) {
 ///
 /// \Then requested pointers are set
 TEST(CAN_Net, CanNetSetNextFunc_Nominal) {
-  int data = 256;
+  int32_t data = 256;
 
   can_net_set_next_func(net, timer_func_empty, &data);
 
@@ -518,7 +518,7 @@ TEST(CAN_Net, CanNetGetSendFunc_Null) {
 ///
 /// \Then the requested pointers are set
 TEST(CAN_Net, CanNetSetSendFunc_Nominal) {
-  int data = 512;
+  int32_t data = 512;
 
   can_net_set_send_func(net, send_func_empty, &data);
 
@@ -696,7 +696,7 @@ TEST(CAN_Net, CanNetSend_Err) {
 ///@}
 
 namespace CAN_NetTimer_Static {
-static unsigned timer_func_counter = 0;
+static size_t timer_func_counter = 0;
 }
 
 TEST_GROUP(CAN_NetTimer) {
@@ -778,7 +778,7 @@ TEST(CAN_NetTimer, CanTimerGetFunc_Null) {
 ///
 /// \Then requested pointers are set
 TEST(CAN_NetTimer, CanTimerSetFunc_Nominal) {
-  int data = 768;
+  int32_t data = 768;
 
   can_timer_set_func(timer, timer_func, &data);
 
@@ -903,7 +903,7 @@ TEST(CAN_NetRecv, CanRecvGetAlloc) {
 ///
 /// \Then nothing is changed
 TEST(CAN_NetRecv, CanRecvDestroy_Null) {
-  can_recv_t* recv = nullptr;
+  can_recv_t* const recv = nullptr;
 
   can_recv_destroy(recv);
 }
@@ -934,7 +934,7 @@ TEST(CAN_NetRecv, CanRecvGetFunc_Null) {
 ///
 /// \Then requested pointers are set
 TEST(CAN_NetRecv, CanRecvSetFunc) {
-  int data = 1024;
+  int32_t data = 1024;
 
   can_recv_set_func(recv, recv_func, &data);
 

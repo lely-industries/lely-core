@@ -327,10 +327,10 @@ TEST(CO_RpdoCreate, CoRpdoCreate_FullRPDOMappingParamRecord) {
   dev_holder->CreateAndInsertObj(obj1600, 0x1600u);
   // 0x00 - number of mapped application objects in PDO
   obj1600->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8,
-                           co_unsigned8_t(CO_PDO_NUM_MAPS));
+                           co_unsigned8_t{CO_PDO_NUM_MAPS});
   // 0x01-0x40 - application objects
   for (co_unsigned8_t i = 0x01u; i <= CO_PDO_NUM_MAPS; ++i) {
-    obj1600->InsertAndSetSub(i, CO_DEFTYPE_UNSIGNED32, co_unsigned32_t(i - 1));
+    obj1600->InsertAndSetSub(i, CO_DEFTYPE_UNSIGNED32, co_unsigned32_t{i - 1u});
   }
 
   rpdo = co_rpdo_create(net, dev, RPDO_NUM);
@@ -357,7 +357,7 @@ TEST(CO_RpdoCreate, CoRpdoCreate_OversizedRPDOCommParamRecord) {
   SetComm06SyncStartValue(0x05u);
 
   // 0x07 - illegal sub-object
-  obj1400->InsertAndSetSub(0x07u, CO_DEFTYPE_UNSIGNED32, co_unsigned32_t(0));
+  obj1400->InsertAndSetSub(0x07u, CO_DEFTYPE_UNSIGNED32, co_unsigned32_t{0});
 
   dev_holder->CreateAndInsertObj(obj1600, 0x1600u);
 
@@ -414,7 +414,7 @@ TEST(CO_RpdoCreate, CoRpdoCreate_TimerSet) {
   dev_holder->CreateAndInsertObj(obj1007, 0x1007u);
   // 0x00 - synchronous window length
   obj1007->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED32,
-                           co_unsigned32_t(0x00000001u));
+                           co_unsigned32_t{0x00000001u});
 
   rpdo = co_rpdo_create(net, dev, RPDO_NUM);
   CHECK(rpdo != nullptr);
@@ -713,11 +713,11 @@ TEST(CO_Rpdo, CoRpdoSync_BadMapping) {
 
   // object 0x1600
   // 0x00 - number of mapped application objects in PDO
-  obj1600->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(0x01u));
+  obj1600->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t{0x01u});
 
   // 0x01 - 1st application object (idx:0x2000 subidx:0x00 len:0x00)
   obj1600->InsertAndSetSub(0x01u, CO_DEFTYPE_UNSIGNED32,
-                           co_unsigned32_t(0x20000000u));
+                           co_unsigned32_t{0x20000000u});
 
   CreateRpdo();
   int data = 0;
@@ -751,16 +751,16 @@ TEST(CO_Rpdo, CoRpdoSync_BadMappingLength) {
 
   // object 0x1600
   // 0x00 - number of mapped application objects in PDO
-  obj1600->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(0x01u));
+  obj1600->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t{0x01u});
 
   // 0x01 - 1st application object (idx:0x2000 subidx:0x00 len:0x01)
   obj1600->InsertAndSetSub(0x01u, CO_DEFTYPE_UNSIGNED32,
-                           co_unsigned32_t(0x20000001u));
+                           co_unsigned32_t{0x20000001u});
 
   // object 0x2000
   dev_holder->CreateAndInsertObj(obj2000, 0x2000u);
   // 0x00
-  obj2000->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(0x00u));
+  obj2000->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t{0x00u});
 
   CreateRpdo();
   int ind_data = 0;
@@ -799,15 +799,15 @@ TEST(CO_Rpdo, CoRpdoSync_RPDOLengthExceedsMapping) {
 
   // object 0x1600
   // 0x00 - number of mapped application objects in PDO
-  obj1600->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(0x01u));
+  obj1600->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t{0x01u});
 
   // 0x01 - 1st application object (idx:0x2000 subidx:0x00 len:0x01)
   obj1600->InsertAndSetSub(0x01u, CO_DEFTYPE_UNSIGNED32,
-                           co_unsigned32_t(0x20000001u));
+                           co_unsigned32_t{0x20000001u});
 
   dev_holder->CreateAndInsertObj(obj2000, 0x2000u);
   // 0x00
-  obj2000->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(0x00u));
+  obj2000->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t{0x00u});
   co_sub_set_pdo_mapping(obj2000->GetLastSub(), 1);
 
   CreateRpdo();
@@ -897,7 +897,7 @@ TEST(CO_Rpdo, CoRpdoRecv_ExpiredSyncWindow) {
   dev_holder->CreateAndInsertObj(obj1007, 0x1007u);
   // 0x00 - synchronous window length
   obj1007->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED32,
-                           co_unsigned32_t(0x00000001u));  // us
+                           co_unsigned32_t{0x00000001u});  // us
 
   CreateRpdo();
   co_rpdo_set_ind(rpdo, rpdo_ind_func, nullptr);
@@ -935,7 +935,7 @@ TEST(CO_Rpdo, CoRpdoRecv_NoPDOInSyncWindow_NoErrFunc) {
   dev_holder->CreateAndInsertObj(obj1007, 0x1007u);
   // 0x00 - synchronous window length
   obj1007->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED32,
-                           co_unsigned32_t(0x00000001u));  // us
+                           co_unsigned32_t{0x00000001u});  // us
 
   CreateRpdo();
   co_rpdo_set_ind(rpdo, rpdo_ind_func, nullptr);
@@ -969,7 +969,7 @@ TEST(CO_Rpdo, CoRpdoRecv_NoPDOInSyncWindow) {
   dev_holder->CreateAndInsertObj(obj1007, 0x1007u);
   // 0x00 - synchronous window length
   obj1007->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED32,
-                           co_unsigned32_t(0x00000001u));  // us
+                           co_unsigned32_t{0x00000001u});  // us
 
   CreateRpdo();
   co_rpdo_set_ind(rpdo, rpdo_ind_func, nullptr);

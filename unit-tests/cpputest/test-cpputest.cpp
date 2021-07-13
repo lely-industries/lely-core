@@ -50,22 +50,24 @@
 /* Project's headers */
 #include <lely/util/error.h>
 
+namespace {
 /* --------------- sample test code --------------- */
 struct param_struct {
-  int param1;
+  int32_t param1;
   const char* param2;
 };
 
 ssize_t
-sample_func(const struct param_struct* pc, const bool flag) {
-  if (!pc || !pc->param2) return -1;
+sample_func(const struct param_struct* const pc, const bool flag) {
+  if ((pc == nullptr) || (pc->param2 == nullptr)) return -1;
 
   if (flag)
-    return strlen(pc->param2) * pc->param1;
+    return static_cast<ssize_t>(strlen(pc->param2)) * pc->param1;
   else
-    return strlen(pc->param2) / pc->param1;
+    return static_cast<ssize_t>(strlen(pc->param2)) / pc->param1;
 }
 /* ------------ end of sample test code ----------- */
+}  // namespace
 
 /* Test groups SHOULD pertain to a single function or data structure in a given
  * module. Group name format is defined as:
@@ -91,7 +93,9 @@ TEST_GROUP(Module_SampleFunc) {
   char test_str[STR_LEN] = "testtesttest";
 
   /* helper functions */
-  void SampleHelperFunction(const int idx, const char c) { test_str[idx] = c; }
+  void SampleHelperFunction(const size_t idx, const char c) {
+    test_str[idx] = c;
+  }
 
   /* test setup/teardown */
   TEST_SETUP() {
@@ -119,7 +123,7 @@ TEST(Module_SampleFunc, InvalidArgs) {
   param.param2 = nullptr;
 
   /* act */
-  auto ret = sample_func(&param, true);
+  const auto ret = sample_func(&param, true);
 
   /* assert */
   CHECK_EQUAL(-1, ret);
@@ -129,10 +133,10 @@ TEST(Module_SampleFunc, Test_FlagTrue_1) {
   /* given */
   param.param1 = 5;
   param.param2 = test_str;
-  SampleHelperFunction(10, '\0');
+  SampleHelperFunction(10u, '\0');
 
   /* when */
-  auto ret = sample_func(&param, true);
+  const auto ret = sample_func(&param, true);
 
   /* then */
   CHECK_EQUAL(50, ret);

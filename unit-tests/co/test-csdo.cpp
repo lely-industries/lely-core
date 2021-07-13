@@ -63,7 +63,7 @@ class ConciseDcf {
   template <typename... types>
   static ConciseDcf
   MakeForEntries() {
-    return ConciseDcf({sizeof(types)...});
+    return ConciseDcf{sizeof(types)...};
   }
 
   uint_least8_t*
@@ -472,9 +472,9 @@ TEST(CO_CsdoInit, CoCsdoStart_AlreadyStarted) {
 ///       \Calls can_recv_start()
 TEST(CO_CsdoInit, CoCsdoStart_CobidRes_ExtendedId) {
   dev_holder->CreateAndInsertObj(obj1280, 0x1280u);
-  obj1280->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(0x02u));
+  obj1280->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t{0x02u});
   obj1280->InsertAndSetSub(0x01u, CO_DEFTYPE_UNSIGNED32,
-                           co_unsigned32_t(0x600u + CSDO_NUM));
+                           co_unsigned32_t{0x600u + CSDO_NUM});
   const co_unsigned32_t cobid_res = DEV_ID | (1u << 28u) | CO_SDO_COBID_FRAME;
   obj1280->InsertAndSetSub(0x02u, CO_DEFTYPE_UNSIGNED32, cobid_res);
   co_csdo_t* const csdo = co_csdo_create(net, dev, CSDO_NUM);
@@ -1331,8 +1331,9 @@ TEST(CO_Csdo, CoDevDnValReq_Nominal) {
 ///       \Calls set_errc()
 TEST(CO_Csdo, CoDevDnDcfReq_ConciseBufTooShort) {
   auto dcf = ConciseDcf::MakeForEntries<sub_type>();
+  const auto max_missing_bytes = dcf.Size() - sizeof(sub_type);
   for (size_t bytes_missing = sizeof(sub_type) + 1u;
-       bytes_missing < dcf.Size() - sizeof(sub_type); bytes_missing++) {
+       bytes_missing < max_missing_bytes; bytes_missing++) {
     const errnum_t error_num = ERRNUM_FAULT;
     set_errnum(error_num);
 
@@ -1814,9 +1815,9 @@ TEST(CO_Csdo, CoDevUpReq_ArrayObject_NoElement) {
 
   dev_holder->CreateAndInsertObj(obj2021, ARRAY_IDX);
   co_obj_set_code(obj2021->Get(), CO_OBJECT_ARRAY);
-  obj2021->InsertAndSetSub(SUBIDX, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(0x00u));
+  obj2021->InsertAndSetSub(SUBIDX, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t{0x00u});
   obj2021->InsertAndSetSub(ELEMENT_SUBIDX, CO_DEFTYPE_UNSIGNED8,
-                           co_unsigned8_t(0));
+                           co_unsigned8_t{0});
 
   const errnum_t error_num = ERRNUM_FAULT;
   set_errnum(error_num);

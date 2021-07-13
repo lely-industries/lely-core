@@ -161,7 +161,7 @@ TEST_BASE(CO_TpdoBase) {
   // obj 0x1800, sub 0x04 - reserved (compatibility entry)
   void SetComm04CompatibilityEntry() {
     obj1800->InsertAndSetSub(0x04u, CO_DEFTYPE_UNSIGNED8,
-                             co_unsigned8_t(0x00u));
+                             co_unsigned8_t{0x00u});
   }
 
   // obj 0x1800, sub 0x05 - event-timer
@@ -436,7 +436,7 @@ TEST(CO_TpdoCreate, CoTpdoStart_OversizedTPDOCommParamRecord) {
   SetComm06SyncStartValue(0x05u);
 
   // sub 0x07 - illegal sub-object
-  obj1800->InsertAndSetSub(0x07u, CO_DEFTYPE_UNSIGNED32, co_unsigned32_t(0));
+  obj1800->InsertAndSetSub(0x07u, CO_DEFTYPE_UNSIGNED32, co_unsigned32_t{0});
 
   dev_holder->CreateAndInsertObj(obj1a00, 0x1a00u);
 
@@ -511,7 +511,7 @@ TEST(CO_TpdoCreate, CoTpdoStart_TimerSet) {
   dev_holder->CreateAndInsertObj(obj1007, 0x1007u);
   // 0x00 - synchronous window length
   obj1007->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED32,
-                           co_unsigned32_t(0x00000001u));
+                           co_unsigned32_t{0x00000001u});
 
   tpdo = co_tpdo_create(net, dev, 1u);
   CHECK(tpdo != nullptr);
@@ -989,7 +989,7 @@ TEST(CO_Tpdo, CoTpdoSync_SyncRTR_StartSyncWindowTimer) {
 
   // 0x00 - synchronous window length
   obj1007.InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED32,
-                          co_unsigned32_t(1000));  // us
+                          co_unsigned32_t{1000});  // us
 
   CreateTpdo();
   co_tpdo_set_sample_ind(tpdo, CoTpdoSampleInd::func, &sind_data);
@@ -1122,7 +1122,7 @@ TEST(CO_Tpdo, CoTpdoSampleRes_SyncWindowTimeout) {
 
   // 0x00 - synchronous window length
   obj1007.InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED32,
-                          co_unsigned32_t(1000u));  // us
+                          co_unsigned32_t{1000u});  // us
 
   CreateTpdo();
   co_tpdo_set_sample_ind(tpdo, CoTpdoSampleInd::func, &sind_data);

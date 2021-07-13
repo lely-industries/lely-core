@@ -51,7 +51,7 @@ SetNthConsumerHbTime(CoObjTHolder& obj_holder, const co_unsigned8_t subidx,
 
 co_unsigned32_t
 MakeHbConsumerEntry(const co_unsigned8_t node_id, const co_unsigned16_t ms) {
-  return (co_unsigned32_t(node_id) << 16u) | ms;
+  return (co_unsigned32_t{node_id} << 16u) | ms;
 }
 }  // namespace Obj1016ConsumerHb
 

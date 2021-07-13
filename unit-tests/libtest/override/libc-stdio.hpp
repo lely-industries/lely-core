@@ -44,7 +44,7 @@ namespace LibCOverride {
 /**
  * Number of valid calls to snprintf().
  */
-static int snprintf_vc = Override::AllCallsValid;
+static int32_t snprintf_vc = Override::AllCallsValid;
 #endif
 }  // namespace LibCOverride
 
@@ -57,7 +57,8 @@ int snprintf(char* __restrict __s, size_t __maxlen,
 #endif
 
 int
-snprintf(char* s, size_t maxlen, const char* format, ...) __THROWNL {
+snprintf(char* const s, const size_t maxlen, const char* const format,
+         ...) __THROWNL {
   if (LibCOverride::snprintf_vc == Override::NoneCallsValid) return -1;
 
   if (LibCOverride::snprintf_vc > Override::NoneCallsValid)
@@ -65,7 +66,7 @@ snprintf(char* s, size_t maxlen, const char* format, ...) __THROWNL {
 
   va_list arg;
   va_start(arg, format);
-  int ret = vsnprintf(s, maxlen, format, arg);
+  const int ret = vsnprintf(s, maxlen, format, arg);
   va_end(arg);
 
   return ret;

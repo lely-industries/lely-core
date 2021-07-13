@@ -180,7 +180,7 @@ TEST(CO_NmtRdn, CoNmtRdnChkDev_NoBdefaultSub) {
 
   objNmtRedundancy->InsertAndSetSub(
       0x00u, CO_DEFTYPE_UNSIGNED8,
-      co_unsigned8_t(CO_NMT_REDUNDANCY_OBJ_MAX_IDX));
+      co_unsigned8_t{CO_NMT_REDUNDANCY_OBJ_MAX_IDX});
 
   const auto ret = co_nmt_rdn_chk_dev(dev);
 
@@ -199,9 +199,9 @@ TEST(CO_NmtRdn, CoNmtRdnChkDev_NoTtoggleSub) {
 
   objNmtRedundancy->InsertAndSetSub(
       0x00u, CO_DEFTYPE_UNSIGNED8,
-      co_unsigned8_t(CO_NMT_REDUNDANCY_OBJ_MAX_IDX));
+      co_unsigned8_t{CO_NMT_REDUNDANCY_OBJ_MAX_IDX});
   objNmtRedundancy->InsertAndSetSub(CO_NMT_RDN_BDEFAULT_SUBIDX,
-                                    CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(0));
+                                    CO_DEFTYPE_UNSIGNED8, co_unsigned8_t{0});
 
   const auto ret = co_nmt_rdn_chk_dev(dev);
 
@@ -220,11 +220,11 @@ TEST(CO_NmtRdn, CoNmtRdnChkDev_NoNtoggleSub) {
 
   objNmtRedundancy->InsertAndSetSub(
       0x00u, CO_DEFTYPE_UNSIGNED8,
-      co_unsigned8_t(CO_NMT_REDUNDANCY_OBJ_MAX_IDX));
+      co_unsigned8_t{CO_NMT_REDUNDANCY_OBJ_MAX_IDX});
   objNmtRedundancy->InsertAndSetSub(CO_NMT_RDN_BDEFAULT_SUBIDX,
-                                    CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(0));
+                                    CO_DEFTYPE_UNSIGNED8, co_unsigned8_t{0});
   objNmtRedundancy->InsertAndSetSub(CO_NMT_RDN_TTOGGLE_SUBIDX,
-                                    CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(0));
+                                    CO_DEFTYPE_UNSIGNED8, co_unsigned8_t{0});
 
   const auto ret = co_nmt_rdn_chk_dev(dev);
 
@@ -243,13 +243,13 @@ TEST(CO_NmtRdn, CoNmtRdnChkDev_NoCtoggleSub) {
 
   objNmtRedundancy->InsertAndSetSub(
       0x00u, CO_DEFTYPE_UNSIGNED8,
-      co_unsigned8_t(CO_NMT_REDUNDANCY_OBJ_MAX_IDX));
+      co_unsigned8_t{CO_NMT_REDUNDANCY_OBJ_MAX_IDX});
   objNmtRedundancy->InsertAndSetSub(CO_NMT_RDN_BDEFAULT_SUBIDX,
-                                    CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(0));
+                                    CO_DEFTYPE_UNSIGNED8, co_unsigned8_t{0});
   objNmtRedundancy->InsertAndSetSub(CO_NMT_RDN_TTOGGLE_SUBIDX,
-                                    CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(0));
+                                    CO_DEFTYPE_UNSIGNED8, co_unsigned8_t{0});
   objNmtRedundancy->InsertAndSetSub(CO_NMT_RDN_NTOGGLE_SUBIDX,
-                                    CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(0));
+                                    CO_DEFTYPE_UNSIGNED8, co_unsigned8_t{0});
 
   const auto ret = co_nmt_rdn_chk_dev(dev);
 

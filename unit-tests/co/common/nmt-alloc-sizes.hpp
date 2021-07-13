@@ -36,7 +36,7 @@
 
 namespace NmtCommon {
 size_t
-GetDcfParamsAllocSize(co_dev_t* const dev) {
+GetDcfParamsAllocSize(const co_dev_t* const dev) {
   size_t dcfs_size = 0;
   dcfs_size += co_dev_write_dcf(dev, 0x1000u, 0x1fffu, nullptr, nullptr);
 #if !LELY_NO_CO_DCF_RESTORE
@@ -64,7 +64,7 @@ GetHbConsumersAllocSize(const size_t hb_num) {
 }
 
 size_t
-GetSsdoAllocSize(size_t ssdo_num = 1u) {
+GetSsdoAllocSize(const size_t ssdo_num = 1u) {
   return ssdo_num * (sizeof(co_ssdo_t*) + co_ssdo_sizeof() + can_recv_sizeof() +
                      can_timer_sizeof());
 }

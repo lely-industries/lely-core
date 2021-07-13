@@ -64,7 +64,8 @@ TEST_GROUP(Compat_String) {
 TEST(Compat_String, LelyCompatMemcpy_NonZeroCount) {
   const char data[] = "abcde";
 
-  const void* result = lely_compat_memcpy(memory.data(), data, sizeof(data));
+  const void* const result =
+      lely_compat_memcpy(memory.data(), data, sizeof(data));
 
   POINTERS_EQUAL(memory.data(), result);
   std::copy(std::begin(data), std::end(data), std::begin(expected));
@@ -79,7 +80,7 @@ TEST(Compat_String, LelyCompatMemcpy_NonZeroCount) {
 TEST(Compat_String, LelyCompatMemcpy_ZeroCount) {
   const char data[] = "abcde";
 
-  const void* result = lely_compat_memcpy(memory.data(), data, 0u);
+  const void* const result = lely_compat_memcpy(memory.data(), data, 0u);
 
   POINTERS_EQUAL(memory.data(), result);
   CheckExpected();
@@ -100,7 +101,8 @@ TEST(Compat_String, LelyCompatMemcpy_ZeroCount) {
 TEST(Compat_String, LelyCompatMemmove_NonZeroCount) {
   const char data[] = "abcde";
 
-  const void* result = lely_compat_memmove(memory.data(), data, sizeof(data));
+  const void* const result =
+      lely_compat_memmove(memory.data(), data, sizeof(data));
 
   POINTERS_EQUAL(memory.data(), result);
   std::copy(std::begin(data), std::end(data), std::begin(expected));
@@ -115,7 +117,7 @@ TEST(Compat_String, LelyCompatMemmove_NonZeroCount) {
 TEST(Compat_String, LelyCompatMemmove_ZeroCount) {
   const char data[] = "abcde";
 
-  const void* result = lely_compat_memmove(memory.data(), data, 0u);
+  const void* const result = lely_compat_memmove(memory.data(), data, 0u);
 
   POINTERS_EQUAL(memory.data(), result);
   CheckExpected();
@@ -133,7 +135,7 @@ TEST(Compat_String, LelyCompatMemmove_SourceLarger) {
 
   const size_t offset = (totalSize / 2) - 1;  // overlapping regions
   const size_t count = (totalSize / 2) + 1;   // (moving > half bytes)
-  const void* result =
+  const void* const result =
       lely_compat_memmove(memory.data(), memory.data() + offset, count);
 
   POINTERS_EQUAL(memory.data(), result);
@@ -154,7 +156,7 @@ TEST(Compat_String, LelyCompatMemmove_TargetLarger) {
 
   const size_t offset = (totalSize / 2) - 1;  // overlapping regions
   const size_t count = (totalSize / 2) + 1;   // (moving > half bytes)
-  const void* result =
+  const void* const result =
       lely_compat_memmove(memory.data() + offset, memory.data(), count);
 
   POINTERS_EQUAL(memory.data() + offset, result);
@@ -172,7 +174,7 @@ TEST(Compat_String, LelyCompatMemmove_TargetLarger) {
 TEST(Compat_String, LelyCompatMemmove_SourceEqualTarget) {
   std::iota(std::begin(memory), std::end(memory), 0);
 
-  const void* result =
+  const void* const result =
       lely_compat_memmove(memory.data(), memory.data(), totalSize / 2);
 
   POINTERS_EQUAL(memory.data(), result);
@@ -444,7 +446,7 @@ TEST(Compat_String, LelyCompatMemset_NonZeroCount) {
   const uint8_t pattern = 0xDAu;
   const auto count = totalSize / 2;
 
-  const void* result = lely_compat_memset(memory.data(), pattern, count);
+  const void* const result = lely_compat_memset(memory.data(), pattern, count);
 
   POINTERS_EQUAL(memory.data(), result);
   std::fill_n(std::begin(expected), count, pattern);
@@ -459,7 +461,7 @@ TEST(Compat_String, LelyCompatMemset_NonZeroCount) {
 TEST(Compat_String, LelyCompatMemset_Count) {
   const uint8_t pattern = 0xDAu;
 
-  const void* result = lely_compat_memset(memory.data(), pattern, 0u);
+  const void* const result = lely_compat_memset(memory.data(), pattern, 0u);
 
   POINTERS_EQUAL(memory.data(), result);
   CheckExpected();

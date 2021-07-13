@@ -846,9 +846,7 @@ TEST_GROUP_BASE(CO_EmcyReceiver, CO_EmcyBase) {
     CHECK_EQUAL(eec, EmcyInd::last_eec);
     CHECK_EQUAL(er, EmcyInd::last_er);
 
-    for (std::size_t i = 0; i < msef.size(); ++i) {
-      CHECK_EQUAL(msef[i], EmcyInd::last_msef[i]);
-    }
+    CHECK_TRUE(msef == EmcyInd::last_msef);
   }
 
   TEST_SETUP() {

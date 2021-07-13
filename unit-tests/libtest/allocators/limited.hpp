@@ -43,7 +43,7 @@ class Limited {
   }
 
   void
-  LimitAllocationTo(size_t limit) {
+  LimitAllocationTo(const size_t limit) {
 #if LELY_NO_MALLOC
     assert(limit <= POOL_SIZE);
 #endif
@@ -62,8 +62,8 @@ class Limited {
 
  private:
   static void*
-  Alloc(alloc_t* alloc, size_t alignment, size_t size) {
-    auto this_ = Cast(alloc);
+  Alloc(alloc_t* const alloc, const size_t alignment, const size_t size) {
+    auto* const this_ = Cast(alloc);
     if (this_->allocationLimit < size) {
       set_errnum(ERRNUM_NOMEM);
       return nullptr;
@@ -76,29 +76,29 @@ class Limited {
   }
 
   static void
-  Free(alloc_t* alloc, void* ptr) {
+  Free(alloc_t* const alloc, void* const ptr) {
     mem_free(Inner(alloc), ptr);
   }
 
   static size_t
-  Size(const alloc_t* alloc) {
+  Size(const alloc_t* const alloc) {
     return mem_size(Inner(alloc));
   }
 
   static size_t
-  Capacity(const alloc_t* alloc) {
+  Capacity(const alloc_t* const alloc) {
     return mem_capacity(Inner(alloc));
   }
 
   static Limited*
-  Cast(alloc_t* alloc) {
+  Cast(alloc_t* const alloc) {
     static_assert(offsetof(Limited, alloc) == 0,
                   "alloc must remain first member");
     return const_cast<Limited*>(reinterpret_cast<const Limited*>(alloc));
   }
 
   static alloc_t*
-  Inner(alloc_t* alloc) {
+  Inner(alloc_t* const alloc) {
     // might return nullptr
     return Cast(alloc)->inner.ToAllocT();
   }
