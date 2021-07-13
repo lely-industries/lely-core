@@ -194,7 +194,7 @@ TEST(CO_CsdoInit, CoCsdoSizeof_Nominal) {
 ///       \Calls get_errc()
 ///       \Calls set_errc()
 TEST(CO_CsdoInit, CoCsdoCreate_FailCsdoAlloc) {
-  co_csdo_t* const csdo = co_csdo_create(failing_net, dev, CSDO_NUM);
+  const co_csdo_t* const csdo = co_csdo_create(failing_net, dev, CSDO_NUM);
 
   POINTERS_EQUAL(nullptr, csdo);
   CHECK_EQUAL(ERRNUM_NOMEM, get_errnum());
@@ -218,7 +218,7 @@ TEST(CO_CsdoInit, CoCsdoCreate_FailCsdoAlloc) {
 TEST(CO_CsdoInit, CoCsdoCreate_NumZero) {
   const co_unsigned8_t CSDO_NUM = 0;
 
-  co_csdo_t* const csdo = co_csdo_create(net, dev, CSDO_NUM);
+  const co_csdo_t* const csdo = co_csdo_create(net, dev, CSDO_NUM);
 
   POINTERS_EQUAL(nullptr, csdo);
   CHECK_EQUAL(ERRNUM_INVAL, get_errnum());
@@ -241,7 +241,7 @@ TEST(CO_CsdoInit, CoCsdoCreate_NumZero) {
 TEST(CO_CsdoInit, CoCsdoCreate_NumTooHigh) {
   const co_unsigned8_t CSDO_NUM = CO_NUM_SDOS + 1u;
 
-  co_csdo_t* const csdo = co_csdo_create(net, dev, CSDO_NUM);
+  const co_csdo_t* const csdo = co_csdo_create(net, dev, CSDO_NUM);
 
   POINTERS_EQUAL(nullptr, csdo);
   CHECK_EQUAL(ERRNUM_INVAL, get_errnum());
@@ -305,7 +305,7 @@ TEST(CO_CsdoInit, CoCsdoCreate_WithObj1280) {
 ///       \Calls co_csdo_get_alloc()
 ///       \Calls set_errc()
 TEST(CO_CsdoInit, CoCsdoCreate_NoServerParameterObj) {
-  co_csdo_t* const csdo = co_csdo_create(net, dev, CSDO_NUM);
+  const co_csdo_t* const csdo = co_csdo_create(net, dev, CSDO_NUM);
 
   POINTERS_EQUAL(nullptr, csdo);
   CHECK_EQUAL(ERRNUM_INVAL, get_errnum());
@@ -334,7 +334,7 @@ TEST(CO_CsdoInit, CoCsdoCreate_RecvCreateFail) {
   dev_holder->CreateAndInsertObj(obj1280, 0x1280u);
 
   limitedAllocator.LimitAllocationTo(co_csdo_sizeof());
-  co_csdo_t* const csdo = co_csdo_create(failing_net, dev, CSDO_NUM);
+  const co_csdo_t* const csdo = co_csdo_create(failing_net, dev, CSDO_NUM);
 
   POINTERS_EQUAL(nullptr, csdo);
   CHECK_EQUAL(ERRNUM_NOMEM, get_errnum());
@@ -367,7 +367,7 @@ TEST(CO_CsdoInit, CoCsdoCreate_TimerCreateFail) {
   dev_holder->CreateAndInsertObj(obj1280, 0x1280u);
 
   limitedAllocator.LimitAllocationTo(co_csdo_sizeof() + can_recv_sizeof());
-  co_csdo_t* const csdo = co_csdo_create(failing_net, dev, CSDO_NUM);
+  const co_csdo_t* const csdo = co_csdo_create(failing_net, dev, CSDO_NUM);
 
   POINTERS_EQUAL(nullptr, csdo);
   CHECK_EQUAL(ERRNUM_NOMEM, get_errnum());
@@ -670,7 +670,7 @@ TEST_BASE(CO_CsdoBase) {
 };
 
 TEST_GROUP_BASE(CoCsdoSetGet, CO_CsdoBase) {
-  int data = 0;  // clang-format fix
+  const int32_t data = 0;  // dummy data to workaround clang-format
 
   static void co_csdo_ind_func(const co_csdo_t*, co_unsigned16_t,
                                co_unsigned8_t, size_t, size_t, void*) {}
@@ -754,7 +754,7 @@ TEST(CoCsdoSetGet, CoCsdoGetPar_Nominal) {
 ///
 /// \Then null pointers are returned
 TEST(CoCsdoSetGet, CoCsdoGetDnInd_Nominal) {
-  int data = 0;
+  int32_t data = 0;
   co_csdo_ind_t* pind = co_csdo_ind_func;
   void* pdata = &data;
 
@@ -787,7 +787,7 @@ TEST(CoCsdoSetGet, CoCsdoGetDnInd_NoMemoryArea) {
 /// \Then CSDO download indication function and user-specified data pointers
 ///       are set
 TEST(CoCsdoSetGet, CoCsdoSetDnInd_Nominal) {
-  int data = 0;
+  int32_t data = 0;
 
   co_csdo_set_dn_ind(csdo, co_csdo_ind_func, &data);
 
@@ -809,7 +809,7 @@ TEST(CoCsdoSetGet, CoCsdoSetDnInd_Nominal) {
 ///
 /// \Then null pointers are returned
 TEST(CoCsdoSetGet, CoCsdoGetUpInd_Nominal) {
-  int data = 0;
+  int32_t data = 0;
   co_csdo_ind_t* pind = co_csdo_ind_func;
   void* pdata = &data;
 
@@ -841,7 +841,7 @@ TEST(CoCsdoSetGet, CoCsdoGetUpInd_NoMemoryArea) {
 /// \Then CSDO upload indication function and user-specified data pointers
 ///       are set
 TEST(CoCsdoSetGet, CoCsdoSetUpInd_Nominal) {
-  int data = 0;
+  int32_t data = 0;
 
   co_csdo_set_up_ind(csdo, co_csdo_ind_func, &data);
 
@@ -974,7 +974,7 @@ TEST_GROUP_BASE(CO_Csdo, CO_CsdoBase) {
     TEST_BASE_SETUP();
 
     dev_holder->CreateAndInsertObj(obj2020, IDX);
-    obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE, sub_type(0));
+    obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE, sub_type{0});
 
     CoCsdoUpCon::Clear();
     CanSend::Clear();
@@ -1374,7 +1374,7 @@ TEST(CO_Csdo, CoDevDnDcfReq_DatasizeMismatch) {
               co_dev_write_dcf(dev, IDX, IDX, dcf.Begin(), dcf.End()));
 
   obj2020->RemoveAndDestroyLastSub();
-  obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE, sub_type(0));
+  obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE, sub_type{0});
 
   const errnum_t error_num = ERRNUM_FAULT;
   set_errnum(error_num);
@@ -1479,7 +1479,7 @@ TEST(CO_Csdo, CoDevDnDcfReq_NoSub) {
 TEST(CO_Csdo, CoDevDnDcfReq_ManyEntriesButDnIndFail) {
   const co_unsigned16_t OTHER_IDX = 0x2021u;
   dev_holder->CreateAndInsertObj(obj2021, OTHER_IDX);
-  obj2021->InsertAndSetSub(0x00u, SUB_TYPE, sub_type(0));
+  obj2021->InsertAndSetSub(0x00u, SUB_TYPE, sub_type{0});
   auto combined_dcf = ConciseDcf::MakeForEntries<sub_type, sub_type>();
   CHECK_EQUAL(combined_dcf.Size(),
               co_dev_write_dcf(dev, IDX, OTHER_IDX, combined_dcf.Begin(),
@@ -1869,7 +1869,7 @@ TEST(CO_Csdo, CoDevUpReq_ArrayObject) {
   dev_holder->CreateAndInsertObj(obj2021, ARRAY_IDX);
   co_obj_set_code(obj2021->Get(), CO_OBJECT_ARRAY);
   obj2021->InsertAndSetSub(0x00, CO_DEFTYPE_UNSIGNED8, ELEMENT_SUBIDX);
-  obj2021->InsertAndSetSub(ELEMENT_SUBIDX, SUB_TYPE, sub_type(0x1234u));
+  obj2021->InsertAndSetSub(ELEMENT_SUBIDX, SUB_TYPE, sub_type{0x1234u});
 
   const errnum_t error_num = ERRNUM_FAULT;
   set_errnum(error_num);
@@ -2352,7 +2352,7 @@ TEST(CO_Csdo, CoCsdoDnReq_SizeZero) {
   StartCSDO();
 
   const uint_least8_t buffer_size = 0;
-  uint_least8_t* buffer = nullptr;
+  const uint_least8_t* const buffer = nullptr;
 
   const auto ret = co_csdo_dn_req(csdo, IDX, SUBIDX, buffer, buffer_size,
                                   CoCsdoDnCon::Func, nullptr);

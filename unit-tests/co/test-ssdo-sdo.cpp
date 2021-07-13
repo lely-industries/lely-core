@@ -170,7 +170,7 @@ TEST(CO_SsdoDnInd, NonZeroAbortCode) {
 ///       \Calls co_sdo_req_dn_val()
 ///       \Calls co_sub_get_subidx()
 TEST(CO_SsdoDnInd, DownloadHighestSubidx) {
-  const int data = 0;
+  const int32_t data = 0;
   const auto ret =
       co_dev_dn_val_req(dev, 0x1200u, 0x00u, CO_DEFTYPE_UNSIGNED8, &data,
                         nullptr, CoCsdoDnCon::Func, nullptr);

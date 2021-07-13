@@ -101,7 +101,7 @@ TEST_BASE(CO_SdoTpdoBase) {
 };
 
 TEST_GROUP_BASE(CO_SdoTpdo1800, CO_SdoTpdoBase) {
-  int clang_format_fix = 0;  // unused
+  int32_t clang_format_fix = 0;  // unused
 
   void Insert1800Values() {
     // adjust highest subindex supported

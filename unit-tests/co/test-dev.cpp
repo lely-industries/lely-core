@@ -75,7 +75,7 @@ TEST_GROUP(CO_DevInit) {
 #endif
   }
 
-  void CheckDevAfterInit(co_dev_t* const dev) const {
+  void CheckDevAfterInit(const co_dev_t* const dev) const {
     CHECK_EQUAL(0, co_dev_get_netid(dev));
     CHECK_EQUAL(0, co_dev_get_idx(dev, 0, nullptr));
     CHECK_EQUAL(0, co_dev_get_vendor_id(dev));
@@ -890,7 +890,7 @@ TEST(CO_Dev, CoDevFindObj_Empty_NotFound) {
 TEST(CO_Dev, CoDevFindSub_Nominal) {
   CoObjTHolder obj_holder(0x1234u);
   CoSubTHolder sub_holder(0xabu, CO_DEFTYPE_INTEGER16);
-  co_sub_t* const sub = obj_holder.InsertSub(sub_holder);
+  const co_sub_t* const sub = obj_holder.InsertSub(sub_holder);
   CHECK(sub != nullptr);
   CHECK_EQUAL(0, co_dev_insert_obj(dev, obj_holder.Take()));
 
@@ -1501,7 +1501,7 @@ TEST(CO_Dev, CoDevGetVal_Nominal) {
 /// \Then a null pointer is returned
 ///       \Calls co_sub_get_val()
 TEST(CO_Dev, CoDevGetVal_NullDev) {
-  co_dev_t* const dev = nullptr;
+  const co_dev_t* const dev = nullptr;
 
   const auto ret = co_dev_get_val(dev, 0x0000u, 0x00u);
 
@@ -2568,7 +2568,7 @@ TEST(CO_DevDCF, CoDevWriteDcf_FailedToWriteSubObject) {
 
 #if !LELY_NO_CO_TPDO
 namespace CO_DevTPDO_Static {
-static unsigned int tpdo_event_ind_counter = 0;
+static size_t tpdo_event_ind_counter = 0;
 static co_unsigned16_t tpdo_event_ind_last_pdo_num = 0;
 }  // namespace CO_DevTPDO_Static
 
@@ -2627,7 +2627,7 @@ TEST(CO_DevTpdoEventInd, CoDevGetTpdoEventInd_Null) {
 ///
 /// \Then the requested TPDO event indication function is set
 TEST(CO_DevTpdoEventInd, CoDevSetTpdoEventInd_Nominal) {
-  int data = 42;
+  int32_t data = 42;
   co_dev_set_tpdo_event_ind(dev, tpdo_event_ind, &data);
 
   co_dev_tpdo_event_ind_t* ind_ptr = nullptr;
@@ -2686,8 +2686,8 @@ TEST_GROUP_BASE(CO_DevTpdoEvent, CO_DevTpdoBase) {
                                        co_unsigned8_t num_bits) {
     co_unsigned32_t encoding = 0;
 
-    encoding |= obj_idx << 16;
-    encoding |= sub_idx << 8;
+    encoding |= co_unsigned32_t{co_unsigned32_t{obj_idx} << 16u};
+    encoding |= co_unsigned32_t{co_unsigned32_t{sub_idx} << 8u};
     encoding |= num_bits;
 
     return encoding;

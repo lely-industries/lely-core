@@ -533,9 +533,9 @@ TEST(CO_TpdoCreate, CoTpdoStart_TimerSet) {
 TEST_GROUP_BASE(CO_Tpdo, CO_TpdoBase) {
   co_tpdo_t* tpdo = nullptr;
 
-  int ind_data = 0;
-  int sind_data = 0;
-  int can_data = 0;
+  int32_t ind_data = 0;
+  int32_t sind_data = 0;
+  int32_t can_data = 0;
 
   void CreateTpdo() {
     tpdo = co_tpdo_create(net, dev, TPDO_NUM);
@@ -573,7 +573,7 @@ TEST(CO_Tpdo, CoTpdoSetInd) {
   tpdo = co_tpdo_create(net, dev, TPDO_NUM);
   CHECK(tpdo != nullptr);
 
-  int data = 0;
+  int32_t data = 0;
   co_tpdo_set_ind(tpdo, CoTpdoInd::func, &data);
 
   co_tpdo_ind_t* pind = nullptr;
@@ -604,7 +604,7 @@ TEST(CO_Tpdo, CoTpdoSetSampleInd_Null) {
 TEST(CO_Tpdo, CoTpdoSetSampleInd) {
   CreateTpdo();
 
-  int data = 0;
+  int32_t data = 0;
   co_tpdo_set_sample_ind(tpdo, CoTpdoSampleInd::func, &data);
 
   co_tpdo_sample_ind_t* pind = nullptr;

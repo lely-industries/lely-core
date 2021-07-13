@@ -295,7 +295,7 @@ TEST(CO_Sdo, CoSdoReqDn_NotAllDataAvailable) {
   const void* ibuf = nullptr;
 
   const size_t VAL_SIZE = 3u;
-  char buffer[VAL_SIZE] = {0x03, 0x04, 0x7F};
+  const uint8_t buffer[VAL_SIZE] = {0x03u, 0x04u, 0x7Fu};
   req.buf = buffer;
   req.size = VAL_SIZE;
   req.nbyte = VAL_SIZE - 1u;
@@ -330,7 +330,7 @@ TEST(CO_Sdo, CoSdoReqDn) {
   const void* ibuf = nullptr;
 
   const size_t VAL_SIZE = 3u;
-  char buffer[VAL_SIZE] = {0x03, 0x04, 0x05};
+  const uint8_t buffer[VAL_SIZE] = {0x03u, 0x04u, 0x05u};
   req.buf = buffer;
   req.size = VAL_SIZE;
   req.nbyte = VAL_SIZE;
@@ -339,7 +339,7 @@ TEST(CO_Sdo, CoSdoReqDn) {
   membuf mbuf = MEMBUF_INIT;
   req.membuf = &mbuf;
 #endif
-  char internal_buffer[VAL_SIZE] = {0};
+  uint8_t internal_buffer[VAL_SIZE] = {0u};
   membuf_init(req.membuf, &internal_buffer, VAL_SIZE);
 
   const auto ret = co_sdo_req_dn(&req, &ibuf, &nbyte, &ac);
@@ -422,7 +422,7 @@ TEST(CO_Sdo, CoSdoReqDnBuf_DataExceedsBufferSize) {
   req.offset = 5u;
   req.size = 6u;
   req.nbyte = 4u;
-  membuf_seek(req.membuf, req.offset);
+  membuf_seek(req.membuf, static_cast<ptrdiff_t>(req.offset));
 
   const auto ret = co_sdo_req_dn(&req, &ibuf, &nbyte, &ac);
 
@@ -445,7 +445,7 @@ TEST(CO_Sdo, CoSdoReqDnBuf_OffsetEqualToMembufSize) {
 #if !LELY_NO_MALLOC
   membuf_reserve(req.membuf, CO_SDO_REQ_MEMBUF_SIZE);
 #endif
-  membuf_seek(req.membuf, req.offset);
+  membuf_seek(req.membuf, static_cast<ptrdiff_t>(req.offset));
 
   const auto ret = co_sdo_req_dn(&req, &ibuf, &nbyte, &ac);
 
@@ -499,7 +499,7 @@ TEST(CO_Sdo, CoSdoReqDnVal_BasicDataType) {
   co_unsigned32_t ac = 0u;
 
   const size_t VAL_SIZE = 2u;
-  char buf[VAL_SIZE] = {0x4E, 0x7B};
+  uint8_t buf[VAL_SIZE] = {0x4Eu, 0x7Bu};
   req.buf = buf;
   req.size = VAL_SIZE;
   req.nbyte = VAL_SIZE;
@@ -521,7 +521,7 @@ TEST(CO_Sdo, CoSdoReqDnVal_DownloadTooManyBytes) {
   co_unsigned32_t ac = 0u;
 
   const size_t INVALID_VAL_SIZE = 4u;
-  char buf[INVALID_VAL_SIZE] = {0x12, 0x34, 0x56, 0x78};
+  uint8_t buf[INVALID_VAL_SIZE] = {0x12u, 0x34u, 0x56u, 0x78u};
   req.buf = buf;
   req.size = INVALID_VAL_SIZE;
   req.nbyte = INVALID_VAL_SIZE;
@@ -545,7 +545,7 @@ TEST(CO_Sdo, CoSdoReqDnVal_DownloadTooFewBytes) {
   co_unsigned32_t ac = 0u;
 
   const size_t INVALID_VAL_SIZE = 4u;
-  char buf[INVALID_VAL_SIZE] = {0x7E, 0x7B, 0x34, 0x7B};
+  const uint8_t buf[INVALID_VAL_SIZE] = {0x7Eu, 0x7Bu, 0x34u, 0x7Bu};
   req.buf = buf;
   req.size = INVALID_VAL_SIZE;
   req.nbyte = INVALID_VAL_SIZE;
@@ -568,7 +568,7 @@ TEST(CO_Sdo, CoSdoReqDnVal_DownloadTooFewBytesNoAcPointer) {
   co_unsigned16_t type = CO_DEFTYPE_UNSIGNED64;
 
   const size_t INVALID_VAL_SIZE = 4u;
-  char buf[INVALID_VAL_SIZE] = {0x5E, 0x7B, 0x34, 0x3B};
+  const uint8_t buf[INVALID_VAL_SIZE] = {0x5Eu, 0x7Bu, 0x34u, 0x3Bu};
   req.buf = buf;
   req.size = INVALID_VAL_SIZE;
   req.nbyte = INVALID_VAL_SIZE;
@@ -591,7 +591,7 @@ TEST(CO_Sdo, CoSdoReqDnVal_ArrayDataType_ReadValueFailed) {
   co_unsigned32_t ac = 0u;
 
   const size_t VAL_SIZE = 4u;
-  char buf[VAL_SIZE] = {0x01, 0x01, 0x00, 0x2B};
+  const uint8_t buf[VAL_SIZE] = {0x01u, 0x01u, 0x00u, 0x2Bu};
   req.buf = buf;
   req.size = VAL_SIZE;
   req.nbyte = VAL_SIZE;
@@ -650,7 +650,7 @@ TEST(CO_Sdo, CoSdoReqDnVal_ArrayDataType) {
 TEST(CO_Sdo, CoSdoReqUp) {
   co_sdo_req req_up = CO_SDO_REQ_INIT(req_up);
   const size_t VAL_SIZE = 2u;
-  char src_buf[VAL_SIZE] = {0x34, 0x56};
+  const uint8_t src_buf[VAL_SIZE] = {0x34u, 0x56u};
 
   co_sdo_req_up(&req_up, src_buf, 2u);
 
@@ -746,7 +746,7 @@ TEST(CO_Sdo, CoSdoReqUpVal) {
 #if !LELY_NO_MALLOC
   membuf_reserve(req.membuf, BUF_SIZE);
 #else
-  char buf[BUF_SIZE] = {0};
+  uint8_t buf[BUF_SIZE] = {0u};
   membuf_init(req.membuf, buf, BUF_SIZE);
 #endif
 
@@ -755,7 +755,7 @@ TEST(CO_Sdo, CoSdoReqUpVal) {
   CHECK_EQUAL(0, ret);
   CHECK_EQUAL(0u, ac);
   const char* const mbuf = static_cast<char*>(membuf_begin(req.membuf));
-  uint_least8_t val_buffer[VAL_SIZE] = {0};
+  uint8_t val_buffer[VAL_SIZE] = {0u};
   stle_u16(val_buffer, val);
   CHECK_EQUAL(val_buffer[0], mbuf[0]);
   CHECK_EQUAL(val_buffer[1], mbuf[1]);

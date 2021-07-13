@@ -455,7 +455,7 @@ TEST(CO_Pdo, CoDevCfgPdoComm_TransmissionTypeBroken) {
                       co_unsigned32_t{0x00000000u});
   // 0x02 - transmission type
   obj.InsertAndSetSub(0x02u, CO_DEFTYPE_UNSIGNED48,
-                      co_unsigned48_t(0x000000000000u));
+                      co_unsigned48_t{0x000000000000u});
   CHECK_EQUAL(0, co_dev_insert_obj(dev, obj.Get()));
 
   const auto ret = co_dev_cfg_rpdo_comm(dev, DEFAULT_NUM, &par);
@@ -857,7 +857,7 @@ TEST(CO_Pdo, CoDevChkTpdo_NoReadAccess) {
   CHECK(obj_default.Get() != nullptr);
   CHECK_EQUAL(0, co_dev_insert_obj(dev, obj_default.Take()));
   obj_default.InsertAndSetSub(0x00u, CO_DEFTYPE_INTEGER16,
-                              co_integer16_t(0x0000));
+                              co_integer16_t{0x0000u});
   co_sub_t* const sub = obj_default.GetLastSub();
   CHECK_EQUAL(0, co_sub_set_access(sub, CO_ACCESS_WO));
 
@@ -871,7 +871,7 @@ TEST(CO_Pdo, CoDevChkTpdo_PdoMappingFalse) {
   CHECK(obj_default.Get() != nullptr);
   CHECK_EQUAL(0, co_dev_insert_obj(dev, obj_default.Get()));
   obj_default.InsertAndSetSub(0x00u, CO_DEFTYPE_INTEGER16,
-                              co_integer16_t(0x0000));
+                              co_integer16_t{0x0000u});
 
   const auto ret = co_dev_chk_tpdo(dev, DEFAULT_OBJ_IDX, 0x00u);
 
@@ -882,7 +882,7 @@ TEST(CO_Pdo, CoDevChkTpdo_NoTPDOAccess) {
   CoObjTHolder obj_default(DEFAULT_OBJ_IDX);
   CHECK(obj_default.Get() != nullptr);
   obj_default.InsertAndSetSub(0x00u, CO_DEFTYPE_INTEGER16,
-                              co_integer16_t(0x0000));
+                              co_integer16_t{0x0000u});
   co_sub_t* const sub = obj_default.GetLastSub();
   CHECK_EQUAL(0, co_dev_insert_obj(dev, obj_default.Take()));
   CHECK_EQUAL(0, co_sub_set_access(sub, CO_ACCESS_RWW));
@@ -897,7 +897,7 @@ TEST(CO_Pdo, CoDevChkTpdo) {
   CoObjTHolder obj_default(DEFAULT_OBJ_IDX);
   CHECK(obj_default.Get() != nullptr);
   obj_default.InsertAndSetSub(0x00u, CO_DEFTYPE_INTEGER16,
-                              co_integer16_t(0x0000));
+                              co_integer16_t{0x0000u});
   co_sub_t* const sub = obj_default.GetLastSub();
   CHECK_EQUAL(0, co_dev_insert_obj(dev, obj_default.Take()));
   CHECK_EQUAL(0, co_sub_set_access(sub, CO_ACCESS_RWR));
@@ -1377,7 +1377,7 @@ TEST(CoPdo_CoPdoDn, Nominal) {
 
   CoObjTHolder obj_default(DEFAULT_OBJ_IDX);
   CHECK(obj_default.Get() != nullptr);
-  obj_default.InsertAndSetSub(0x19u, CO_DEFTYPE_INTEGER8, co_integer8_t(0x00u));
+  obj_default.InsertAndSetSub(0x19u, CO_DEFTYPE_INTEGER8, co_integer8_t{0x00u});
   CHECK_EQUAL(0, co_dev_insert_obj(dev, obj_default.Take()));
 
   CoObjTHolder obj0000(0x0000u);
