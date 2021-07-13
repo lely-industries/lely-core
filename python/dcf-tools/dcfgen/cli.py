@@ -244,7 +244,7 @@ class Slave(dcf.Device):
 
         slave.retry_factor = options["retry_factor"]
         if "retry_factor" in cfg:
-            slave.retry_factor = float(cfg["retry_factor"])
+            slave.retry_factor = int(cfg["retry_factor"])
 
         if 0x100C in slave:
             slave.guard_time = slave[0x100C][0].parse_value()
@@ -586,7 +586,7 @@ def main():
                 cfg["options"]["heartbeat_multiplier"]
             )
         if "retry_factor" in cfg["options"]:
-            options["retry_factor"] = float(cfg["options"]["retry_factor"])
+            options["retry_factor"] = int(cfg["options"]["retry_factor"])
 
     slaves = {}
     for name in cfg:
