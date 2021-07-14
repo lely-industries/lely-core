@@ -23,11 +23,13 @@
 #ifndef LELY_OVERRIDE_DEFS_HPP_
 #define LELY_OVERRIDE_DEFS_HPP_
 
+#include <cstdint>
+
 namespace Override {
 /**
  * Enumeration of function override parameters.
  */
-enum : int { AllCallsValid = -1, NoneCallsValid = 0 };
+enum : int32_t { AllCallsValid = -1, NoneCallsValid = 0 };
 
 }  // namespace Override
 

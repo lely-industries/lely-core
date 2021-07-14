@@ -28,7 +28,7 @@
 
 #include "co-nmt-rdn-ind.hpp"
 
-unsigned CoNmtRdnInd::num_called;
+size_t CoNmtRdnInd::num_called;
 co_nmt_t* CoNmtRdnInd::nmt_;
 co_unsigned8_t CoNmtRdnInd::bus_id_;
 int CoNmtRdnInd::reason_;

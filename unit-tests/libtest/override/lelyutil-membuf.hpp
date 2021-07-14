@@ -32,7 +32,7 @@ namespace LelyOverride {
 /**
  * Setups number of valid calls to membuf_reserve().
  */
-void membuf_reserve(int valid_calls);
+void membuf_reserve(int32_t valid_calls);
 
 }  // namespace LelyOverride
 

@@ -41,9 +41,9 @@ TEST_GROUP(Util_Cmp){};
 ///       returned if both arguments point to the same entity; 1 is returned if
 ///       the second argument precedes the first one
 TEST(Util_Cmp, PtrCmp) {
-  const int tab[2] = {0};
-  const int* const p1 = &tab[0];
-  const int* const p2 = &tab[1];
+  const int32_t tab[2] = {0};
+  const int32_t* const p1 = &tab[0];
+  const int32_t* const p2 = &tab[1];
 
   CHECK_EQUAL(-1, ptr_cmp(p1, p2));
   CHECK_EQUAL(0, ptr_cmp(p1, p1));
@@ -267,7 +267,7 @@ TEST(Util_Cmp, StrCaseCmp_StrLessNull) {
 ///
 /// \Then 0 is returned
 TEST(Util_Cmp, TypeCmp_Equal) {
-  int clangformat_fix = 0;
+  const int32_t clangformat_fix = 0;
   (void)clangformat_fix;
 #define LELY_UTIL_DEFINE_TYPE(name, type) \
   { \
@@ -289,7 +289,7 @@ TEST(Util_Cmp, TypeCmp_Equal) {
 ///
 /// \Then 1 is returned
 TEST(Util_Cmp, TypeCmp_FirstGreater) {
-  int clangformat_fix = 0;
+  const int32_t clangformat_fix = 0;
   (void)clangformat_fix;
 #define LELY_UTIL_DEFINE_TYPE(name, type) \
   { \
@@ -311,7 +311,7 @@ TEST(Util_Cmp, TypeCmp_FirstGreater) {
 ///
 /// \Then -1 is returned
 TEST(Util_Cmp, TypeCmp_SecondGreater) {
-  int clangformat_fix = 0;
+  const int32_t clangformat_fix = 0;
   (void)clangformat_fix;
 #define LELY_UTIL_DEFINE_TYPE(name, type) \
   { \
@@ -333,7 +333,7 @@ TEST(Util_Cmp, TypeCmp_SecondGreater) {
 ///
 /// \Then 0 is returned
 TEST(Util_Cmp, TypeCmp_PtrEqual) {
-  int clangformat_fix = 0;
+  const int32_t clangformat_fix = 0;
   (void)clangformat_fix;
 #define LELY_UTIL_DEFINE_TYPE(name, type) \
   { \
@@ -354,7 +354,7 @@ TEST(Util_Cmp, TypeCmp_PtrEqual) {
 ///
 /// \Then -1 is returned
 TEST(Util_Cmp, TypeCmp_FirstPtrNull) {
-  int clangformat_fix = 0;
+  const int32_t clangformat_fix = 0;
   (void)clangformat_fix;
 #define LELY_UTIL_DEFINE_TYPE(name, type) \
   { \
@@ -375,7 +375,7 @@ TEST(Util_Cmp, TypeCmp_FirstPtrNull) {
 ///
 /// \Then 1 is returned
 TEST(Util_Cmp, TypeCmp_SecondPtrNull) {
-  int clangformat_fix = 0;
+  const int32_t clangformat_fix = 0;
   (void)clangformat_fix;
 #define LELY_UTIL_DEFINE_TYPE(name, type) \
   { \
@@ -395,7 +395,7 @@ TEST(Util_Cmp, TypeCmp_SecondPtrNull) {
 ///
 /// \Then 0 is returned
 TEST(Util_Cmp, TypeCmp_BothPtrNull) {
-  int clangformat_fix = 0;
+  const int32_t clangformat_fix = 0;
   (void)clangformat_fix;
 #define LELY_UTIL_DEFINE_TYPE(name, type) \
   { \

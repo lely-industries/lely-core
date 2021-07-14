@@ -1475,8 +1475,8 @@ TEST(Util_Endian, StbeI64_NonZero) {
 ///
 /// \Then a signed 64-bit integer value equal to 0 is returned
 TEST(Util_Endian, LdleI64_Zero) {
-  uint_least8_t src[] = {0x00u, 0x00u, 0x00u, 0x00u,
-                         0x00u, 0x00u, 0x00u, 0x00u};
+  const uint_least8_t src[] = {0x00u, 0x00u, 0x00u, 0x00u,
+                               0x00u, 0x00u, 0x00u, 0x00u};
 
   CHECK_EQUAL(0x0000000000000000L, ldle_i64(src));
 }

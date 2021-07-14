@@ -62,9 +62,9 @@ class CoArrays {
   }
 
   bool
-  IsEmptyInitialized(void* arr) const {
+  IsEmptyInitialized(const void* const arr) const {
 #if LELY_NO_MALLOC
-    char test_buf[CO_ARRAY_CAPACITY] = {0};
+    const char test_buf[CO_ARRAY_CAPACITY] = {0};
     return memcmp(arr, test_buf, CO_ARRAY_CAPACITY) == 0;
 #else
     return arr == nullptr;

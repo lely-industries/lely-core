@@ -32,7 +32,7 @@
 
 int CanSend::ret = 0;
 void* CanSend::data = nullptr;
-unsigned int CanSend::num_called = 0;
+size_t CanSend::num_called = 0;
 can_msg CanSend::msg = CAN_MSG_INIT;
 int CanSend::bus_id = -1;
 can_msg* CanSend::msg_buf = &CanSend::msg;

@@ -49,7 +49,7 @@ TEST(Util_MemPoolInit, MemPool_Init) {
   const size_t size = 10;
   char buffer[size] = {0};
 
-  const auto* alloc = mempool_init(&pool, buffer, size);
+  const auto* const alloc = mempool_init(&pool, buffer, size);
 
   CHECK((*alloc)->alloc != nullptr);
   CHECK((*alloc)->free != nullptr);

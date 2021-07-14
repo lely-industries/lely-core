@@ -1,4 +1,3 @@
-
 /**@file
  * This file is part of the CANopen Library Unit Test Suite.
  *
@@ -28,7 +27,7 @@
 #include <lely/co/sdo.h>
 
 struct CoSubUpInd {
-  static unsigned int num_called;
+  static size_t num_called;
   static const co_sub_t* sub;
   static co_sdo_req* req;
   static co_unsigned32_t ac;

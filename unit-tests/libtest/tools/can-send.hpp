@@ -1,4 +1,3 @@
-
 /**@file
  * This file is part of the CANopen Library Unit Test Suite.
  *
@@ -41,7 +40,7 @@ class CanSend {
                        uint_least8_t len, const uint_least8_t* data_);
   static void Clear();
 
-  static inline unsigned int
+  static inline size_t
   GetNumCalled() {
     return num_called;
   }
@@ -60,6 +59,6 @@ class CanSend {
 
  private:
   static size_t buf_size;
-  static unsigned int num_called;
+  static size_t num_called;
 };
 #endif  // LELY_UNIT_TEST_CAN_SEND_HPP_

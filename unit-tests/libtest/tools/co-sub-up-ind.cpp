@@ -32,7 +32,7 @@
 
 #include "co-sub-up-ind.hpp"
 
-unsigned int CoSubUpInd::num_called = 0u;
+size_t CoSubUpInd::num_called = 0u;
 const co_sub_t* CoSubUpInd::sub = nullptr;
 co_sdo_req* CoSubUpInd::req = nullptr;
 co_unsigned32_t CoSubUpInd::ac = 0u;

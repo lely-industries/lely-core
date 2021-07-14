@@ -1,4 +1,3 @@
-
 /**@file
  * This file is part of the CANopen Library Unit Test Suite.
  *
@@ -34,7 +33,7 @@ struct CoCsdoUpCon {
   static const void* ptr;
   static size_t n;
   static void* data;
-  static unsigned int num_called;
+  static size_t num_called;
   static constexpr size_t BUFSIZE = 2u;
   static uint_least8_t buf[BUFSIZE];
 

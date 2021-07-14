@@ -142,7 +142,7 @@ TEST_GROUP(Util_MemoryDefaultAllocatorFree){};
 ///
 /// \Then nothing is changed
 TEST(Util_MemoryDefaultAllocatorFree, MemFree) {
-  int data = 42;
+  uint32_t data = 42;
   mem_free(nullptr, &data);
 }
 

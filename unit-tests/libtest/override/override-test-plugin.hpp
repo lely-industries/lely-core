@@ -41,9 +41,9 @@ class OverridePlugin : public TestPlugin {
 
   static OverridePlugin* getCurrent();
 
-  void postTestAction(UtestShell&, TestResult&) override;
+  void postTestAction(UtestShell& shell, TestResult& result) override;
 
-  void setForNextTest(int& vc, int target_value);
+  void setForNextTest(int32_t& vc, int32_t target_value);
 
  private:
   class CleanUp;

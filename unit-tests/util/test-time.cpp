@@ -155,7 +155,7 @@ TEST(Util_Time, TimespecAddNsec_Nominal) {
 ///
 /// \Then the time interval value is not changed
 TEST(Util_Time, TimespecSub_Zero) {
-  timespec dec = {0L, 0L};
+  const timespec dec = {0L, 0L};
 
   timespec_sub(&ts, &dec);
   CHECK_EQUAL(0L, ts.tv_sec);
@@ -170,7 +170,7 @@ TEST(Util_Time, TimespecSub_Zero) {
 /// \Then the time interval value is decreased by the requested value
 TEST(Util_Time, TimespecSub_OneNsec) {
   timespec_add_sec(&ts, 2L);
-  timespec dec = {0L, 1L};
+  const timespec dec = {0L, 1L};
 
   timespec_sub(&ts, &dec);
   CHECK_EQUAL(1L, ts.tv_sec);
@@ -186,7 +186,7 @@ TEST(Util_Time, TimespecSub_OneNsec) {
 /// \Then the time interval value is decreased by the requested value
 TEST(Util_Time, TimespecSub_OneSecOneNsec) {
   timespec_add_sec(&ts, 2L);
-  timespec dec = {1L, 1L};
+  const timespec dec = {1L, 1L};
 
   timespec_sub(&ts, &dec);
   CHECK_EQUAL(0L, ts.tv_sec);

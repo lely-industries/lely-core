@@ -35,7 +35,7 @@ co_unsigned32_t CoCsdoUpCon::ac = 0;
 const void* CoCsdoUpCon::ptr = nullptr;
 size_t CoCsdoUpCon::n = 0;
 void* CoCsdoUpCon::data = nullptr;
-unsigned int CoCsdoUpCon::num_called = 0;
+size_t CoCsdoUpCon::num_called = 0;
 uint_least8_t CoCsdoUpCon::buf[CoCsdoUpCon::BUFSIZE] = {0};
 
 void
