@@ -24,20 +24,26 @@
 #include <config.h>
 #endif
 
+#include <functional>
+
 #include <CppUTest/TestHarness.h>
 
 #include "co-nmt-rdn-ind.hpp"
 
-size_t CoNmtRdnInd::num_called;
-co_nmt_t* CoNmtRdnInd::nmt_;
-co_unsigned8_t CoNmtRdnInd::bus_id_;
-int CoNmtRdnInd::reason_;
-void* CoNmtRdnInd::data_;
+size_t CoNmtRdnInd::num_called_ = 0;
+co_nmt_t* CoNmtRdnInd::nmt_ = nullptr;
+co_unsigned8_t CoNmtRdnInd::bus_id_ = 0;
+int CoNmtRdnInd::reason_ = 0;
+void* CoNmtRdnInd::data_ = nullptr;
+std::function<void(co_nmt_t*, co_unsigned8_t, int, void*)>
+    CoNmtRdnInd::checkFunc_ = nullptr;
 
 void
 CoNmtRdnInd::Func(co_nmt_t* const nmt, const co_unsigned8_t bus_id,
                   const int reason, void* const data) {
-  num_called++;
+  if (checkFunc_ != nullptr) checkFunc_(nmt, bus_id, reason, data);
+
+  num_called_++;
 
   nmt_ = nmt;
   bus_id_ = bus_id;
@@ -47,12 +53,14 @@ CoNmtRdnInd::Func(co_nmt_t* const nmt, const co_unsigned8_t bus_id,
 
 void
 CoNmtRdnInd::Clear() {
-  num_called = 0;
+  num_called_ = 0;
 
   nmt_ = nullptr;
   bus_id_ = 0;
   reason_ = 0;
   data_ = nullptr;
+
+  checkFunc_ = nullptr;
 }
 
 void

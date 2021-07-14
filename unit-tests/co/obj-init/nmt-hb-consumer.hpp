@@ -23,36 +23,17 @@
 #ifndef LELY_UNIT_TEST_NMT_HB_CONSUMER_HPP_
 #define LELY_UNIT_TEST_NMT_HB_CONSUMER_HPP_
 
-#include <cassert>
-#include <memory>
+#include "obj-init/obj-init.hpp"
 
-#include <lely/co/type.h>
+// 0x1016: Consumer heartbeat time
+struct Obj1016ConsumerHb : ObjInitT<0x1016u> {
+  struct Sub00HighestSubidxSupported : SubT<0x00u, CO_DEFTYPE_UNSIGNED8> {};
+  struct SubNthConsumerHbTime : SubT<0x01u, CO_DEFTYPE_UNSIGNED32, 0, 0x01> {};
 
-#include "holder/obj.hpp"
-
-// Consumer heartbeat time
-namespace Obj1016ConsumerHb {
-void
-Set00HighestSubidxSupported(CoObjTHolder& obj_holder,
-                            const co_unsigned8_t max_subidx) {
-  assert(co_obj_get_idx(obj_holder.Get()) == 0x1016u);
-
-  obj_holder.InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, max_subidx);
-}
-
-void
-SetNthConsumerHbTime(CoObjTHolder& obj_holder, const co_unsigned8_t subidx,
-                     const co_unsigned32_t value) {
-  assert(co_obj_get_idx(obj_holder.Get()) == 0x1016u);
-  assert(subidx > 0);
-
-  obj_holder.InsertAndSetSub(subidx, CO_DEFTYPE_UNSIGNED32, value);
-}
-
-co_unsigned32_t
-MakeHbConsumerEntry(const co_unsigned8_t node_id, const co_unsigned16_t ms) {
-  return (co_unsigned32_t{node_id} << 16u) | ms;
-}
-}  // namespace Obj1016ConsumerHb
+  static SubNthConsumerHbTime::sub_type
+  MakeHbConsumerEntry(const co_unsigned8_t node_id, const co_unsigned16_t ms) {
+    return (co_unsigned32_t{node_id} << 16u) | ms;
+  }
+};
 
 #endif  // LELY_UNIT_TEST_NMT_HB_CONSUMER_HPP_

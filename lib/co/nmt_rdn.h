@@ -114,10 +114,10 @@ alloc_t *co_nmt_rdn_get_alloc(const co_nmt_rdn_t *rdn);
 void co_nmt_rdn_set_alternate_bus_id(co_nmt_rdn_t *rdn, co_unsigned8_t bus_id);
 
 /**
- * Sets the Redundancy Master node-ID.
+ * Sets the Redundancy Master's Node-ID.
  *
  * @param rdn a pointer to an NMT redundancy manager service.
- * @param id  the Redundancy Master node-ID (in the range [1..127]).
+ * @param id  the Redundancy Master's Node-ID (in the range [1..127]).
  * @param ms  the Redundancy Master's heartbeat time (in milliseconds).
  *
  * @returns 0 on success, or -1 on error. In the latter case, the error number
@@ -129,7 +129,8 @@ int co_nmt_rdn_set_master_id(
 /// Returns the Redundancy Master node-ID.
 co_unsigned8_t co_nmt_rdn_get_master_id(const co_nmt_rdn_t *rdn);
 
-/// Selects the default bus (Bdefault) as active.
+/// Selects the default bus (Bdefault) as active. For slave nodes starts bus
+/// toggle timer.
 void co_nmt_rdn_select_default_bus(co_nmt_rdn_t *rdn);
 
 /// Sets currently active bus as default (Bdefault) and reset counters.

@@ -1084,8 +1084,7 @@ co_nmt_on_hb(co_nmt_t *nmt, co_unsigned8_t id, int state, int reason)
 		return;
 
 #if !LELY_NO_CO_ECSS_REDUNDANCY
-	if (nmt->rdn_enabled && !co_nmt_is_master(nmt)
-			&& (id == co_nmt_rdn_get_master_id(nmt->rdn)))
+	if (nmt->rdn_enabled && (id == co_nmt_rdn_get_master_id(nmt->rdn)))
 		co_nmt_rdn_slave_on_master_hb(nmt, state, reason);
 #endif
 
@@ -3475,25 +3474,35 @@ co_nmt_rdn_init(co_nmt_t *nmt)
 
 	if (co_nmt_is_master(nmt)) {
 		// The Redundancy Master requires only the 'Bdefault' sub-object
-		if (max_subidx != CO_NMT_RDN_BDEFAULT_SUBIDX)
-			return;
-	} else if (max_subidx != CO_NMT_REDUNDANCY_OBJ_MAX_IDX
-			|| co_nmt_rdn_get_master_id(nmt->rdn) == 0) {
-		return;
+		if (max_subidx >= CO_NMT_RDN_BDEFAULT_SUBIDX) {
+			co_nmt_rdn_select_default_bus(nmt->rdn);
+		} else {
+			set_errnum(ERRNUM_INVAL);
+			diag(DIAG_ERROR, get_errc(),
+					"incomplete redundancy configuration for master");
+		}
+	} else {
+		// Slave requires full configuration in the Redundancy Object and
+		// the Redundancy Master Node-ID set (from object 1016h)
+		if ((max_subidx == CO_NMT_REDUNDANCY_OBJ_MAX_IDX)
+				&& (co_nmt_rdn_get_master_id(nmt->rdn) != 0)) {
+			nmt->rdn_enabled = 1;
+			co_nmt_rdn_select_default_bus(nmt->rdn);
+			co_nmt_rdn_slave_start_bus_selection(nmt);
+		} else {
+			set_errnum(ERRNUM_INVAL);
+			diag(DIAG_ERROR, get_errc(),
+					"incomplete redundancy configuration for slave");
+		}
 	}
-
-	nmt->rdn_enabled = 1;
-
-	co_nmt_rdn_select_default_bus(nmt->rdn);
-
-	if (!co_nmt_is_master(nmt))
-		co_nmt_rdn_slave_start_bus_selection(nmt);
 }
 
 static void
 co_nmt_rdn_fini(co_nmt_t *nmt)
 {
 	assert(nmt);
+
+	nmt->rdn_enabled = 0;
 
 	co_nmt_rdn_destroy(nmt->rdn);
 	nmt->rdn = NULL;
@@ -3503,7 +3512,7 @@ static void
 co_nmt_rdn_slave_start_bus_selection(co_nmt_t *nmt)
 {
 	assert(nmt);
-	assert(!co_nmt_is_master(nmt));
+	assert(!co_nmt_is_master(nmt) && nmt->rdn_enabled);
 
 	nmt->bus_selection = 1;
 	co_dev_set_val_u8(nmt->dev, CO_NMT_RDN_REDUNDANCY_OBJ_IDX,
@@ -3528,16 +3537,19 @@ co_nmt_rdn_slave_on_master_hb(co_nmt_t *nmt, int state, int reason)
 
 	if (reason == CO_NMT_EC_TIMEOUT) {
 		if (state == CO_NMT_EC_OCCURRED) {
-			if (!nmt->bus_selection) {
-				co_nmt_rdn_slave_start_bus_selection(nmt);
-				co_nmt_cs_ind(nmt, CO_NMT_CS_ENTER_PREOP);
-			}
+			assert(!nmt->bus_selection);
+
+			co_nmt_rdn_slave_start_bus_selection(nmt);
+			co_nmt_cs_ind(nmt, CO_NMT_CS_ENTER_PREOP);
 			co_nmt_rdn_slave_missed_hb(nmt->rdn);
-		} else if (state == CO_NMT_EC_RESOLVED) {
-			if (nmt->bus_selection)
-				co_nmt_rdn_slave_finish_bus_selection(nmt);
+		} else {
+			assert(state == CO_NMT_EC_RESOLVED);
+			assert(nmt->bus_selection);
+			co_nmt_rdn_slave_finish_bus_selection(nmt);
 		}
-	} else if (reason == CO_NMT_EC_STATE && state == CO_NMT_EC_OCCURRED) {
+	} else {
+		assert(reason == CO_NMT_EC_STATE
+				&& state == CO_NMT_EC_OCCURRED);
 		if (nmt->bus_selection)
 			co_nmt_rdn_slave_finish_bus_selection(nmt);
 	}
@@ -3678,8 +3690,8 @@ co_nmt_hb_init(co_nmt_t *nmt)
 		co_nmt_hb_set_1016(nmt->hbs[i], id, ms);
 
 #if !LELY_NO_CO_ECSS_REDUNDANCY
-		// For slave nodes, the first entry must hold the Master Heartbeat
-		// Consumer object
+		// For slave nodes, the first entry must hold the Redundancy Master
+		// Heartbeat Consumer object
 		if (!co_nmt_is_master(nmt) && i == CO_NMT_RDN_MASTER_HB_IDX)
 			co_nmt_rdn_set_master_id(nmt->rdn, id, ms);
 #endif

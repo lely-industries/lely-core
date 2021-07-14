@@ -23,33 +23,19 @@
 #ifndef LELY_UNIT_TEST_NMT_REDUNDANCY_HPP_
 #define LELY_UNIT_TEST_NMT_REDUNDANCY_HPP_
 
-#include <memory>
-#include <cassert>
-
+#include <lely/co/type.h>
 #include <lib/co/nmt_rdn.h>
 
-#include "holder/obj.hpp"
+#include "obj-init/obj-init.hpp"
 
-namespace ObjNmtRedundancy {
-void
-InsertAndSetAllSubValues(CoObjTHolder& obj_holder,
-                         const co_unsigned8_t bdefault,
-                         const co_unsigned8_t ttoggle,
-                         const co_unsigned8_t ntoggle,
-                         const co_unsigned8_t ctoggle) {
-  assert(co_obj_get_idx(obj_holder.Get()) == CO_NMT_RDN_REDUNDANCY_OBJ_IDX);
-
-  obj_holder.InsertAndSetSub(0x00, CO_DEFTYPE_UNSIGNED8,
-                             co_unsigned8_t{CO_NMT_REDUNDANCY_OBJ_MAX_IDX});
-  obj_holder.InsertAndSetSub(CO_NMT_RDN_BDEFAULT_SUBIDX, CO_DEFTYPE_UNSIGNED8,
-                             bdefault);
-  obj_holder.InsertAndSetSub(CO_NMT_RDN_TTOGGLE_SUBIDX, CO_DEFTYPE_UNSIGNED8,
-                             ttoggle);
-  obj_holder.InsertAndSetSub(CO_NMT_RDN_NTOGGLE_SUBIDX, CO_DEFTYPE_UNSIGNED8,
-                             ntoggle);
-  obj_holder.InsertAndSetSub(CO_NMT_RDN_CTOGGLE_SUBIDX, CO_DEFTYPE_UNSIGNED8,
-                             ctoggle);
-}
-}  // namespace ObjNmtRedundancy
+// 0x2000 (default): Redundnacy object
+struct ObjNmtRedundancy : ObjInitT<CO_NMT_RDN_REDUNDANCY_OBJ_IDX> {
+  struct Sub00HighestSubidxSupported
+      : ObjInitT::SubT<0x00u, CO_DEFTYPE_UNSIGNED8, 0x04u> {};
+  struct Sub01Bdefault : ObjInitT::SubT<0x01u, CO_DEFTYPE_UNSIGNED8> {};
+  struct Sub02Ttoggle : ObjInitT::SubT<0x02u, CO_DEFTYPE_UNSIGNED8> {};
+  struct Sub03Ntoggle : ObjInitT::SubT<0x03u, CO_DEFTYPE_UNSIGNED8> {};
+  struct Sub04Ctoggle : ObjInitT::SubT<0x04u, CO_DEFTYPE_UNSIGNED8> {};
+};
 
 #endif  // LELY_UNIT_TEST_NMT_REDUNDANCY_HPP_
