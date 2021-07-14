@@ -23,6 +23,8 @@
 #ifndef LELY_UNIT_TEST_CO_NMT_RDN_IND_HPP_
 #define LELY_UNIT_TEST_CO_NMT_RDN_IND_HPP_
 
+#include <functional>
+
 #include <lely/co/type.h>
 
 class CoNmtRdnInd {
@@ -32,17 +34,24 @@ class CoNmtRdnInd {
   static void Clear();
   static void Check(const co_nmt_t* nmt, co_unsigned8_t bus_id, int reason,
                     const void* data);
+  static inline void
+  SetCheckFunc(const std::function<void(co_nmt_t*, co_unsigned8_t, int, void*)>&
+                   checkFunc) {
+    checkFunc_ = checkFunc;
+  }
   static inline size_t
   GetNumCalled() {
-    return num_called;
+    return num_called_;
   }
 
  private:
-  static size_t num_called;
+  static size_t num_called_;
   static co_nmt_t* nmt_;
   static co_unsigned8_t bus_id_;
   static int reason_;
   static void* data_;
+
+  static std::function<void(co_nmt_t*, co_unsigned8_t, int, void*)> checkFunc_;
 };
 
 #endif  // LELY_UNIT_TEST_CO_NMT_RDN_IND_HPP_

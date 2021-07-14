@@ -29,8 +29,6 @@
 
 #include "co-csdo-dn-con.hpp"
 #include "co-csdo-up-con.hpp"
-#include "co-nmt-hb-ind.hpp"
-#include "co-nmt-rdn-ind.hpp"
 #include "co-sub-dn-ind.hpp"
 #include "co-sub-up-ind.hpp"
 #include "can-send.hpp"

@@ -23,26 +23,12 @@
 #ifndef LELY_UNIT_TEST_NMT_CONFIG_HPP_
 #define LELY_UNIT_TEST_NMT_CONFIG_HPP_
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
+#include "obj-init/obj-init.hpp"
 
-#include <cassert>
-#include <memory>
-
-#include <lely/co/type.h>
-
-#include "holder/obj.hpp"
-
-namespace Obj1f80NmtStartup {
-static const co_unsigned32_t MASTER_BIT = 0x01u;
-
-void
-SetVal(CoObjTHolder& obj_holder, const co_unsigned32_t startup) {
-  assert(co_obj_get_idx(obj_holder.Get()) == 0x1f80u);
-
-  obj_holder.InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED32, startup);
-}
-}  // namespace Obj1f80NmtStartup
+// 0x1f80: NMT Start-up
+struct Obj1f80NmtStartup : ObjValueInitT<0x1f80u, CO_DEFTYPE_UNSIGNED32> {
+  static const sub_type MASTER_BIT = 0x01u;
+  static const sub_type AUTOSTART_BIT = 0x04;
+};
 
 #endif  // LELY_UNIT_TEST_NMT_CONFIG_HPP_

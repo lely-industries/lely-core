@@ -173,6 +173,14 @@ co_nmt_rdn_select_default_bus(co_nmt_rdn_t *rdn)
 	rdn->bus_a_id = bdefault;
 
 	can_net_set_active_bus(rdn->net, bdefault);
+
+	if (co_nmt_is_master(rdn->nmt) == 0) {
+		const co_unsigned8_t ttoggle = co_dev_get_val_u8(rdn->dev,
+				CO_NMT_RDN_REDUNDANCY_OBJ_IDX,
+				CO_NMT_RDN_TTOGGLE_SUBIDX);
+		can_timer_timeout(rdn->bus_toggle_timer, rdn->net,
+				rdn->master_ms * ttoggle);
+	}
 }
 
 void
