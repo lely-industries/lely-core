@@ -1486,6 +1486,12 @@ TEST_GROUP_BASE(CoSsdoBlkDnIniOnRecv, CO_Ssdo){};
 /// @name SSDO block download initiate on receive
 ///@{
 
+/// \Given a pointer to the SSDO service (co_ssdo_t)
+///
+/// \When an SDO block download initiate request is received, but the message
+///       does not contain an index to download
+///
+/// \Then an SDO abort transfer message with CO_SDO_AC_NO_OBJ abort code is sent
 TEST(CoSsdoBlkDnIniOnRecv, NoIdxSpecified) {
   StartSSDO();
 
@@ -1499,6 +1505,12 @@ TEST(CoSsdoBlkDnIniOnRecv, NoIdxSpecified) {
   CanSend::CheckMsg(DEFAULT_COBID_RES, 0, CO_SDO_MSG_SIZE, expected.data());
 }
 
+/// \Given a pointer to the SSDO service (co_ssdo_t)
+///
+/// \When an SDO block download initiate request is received, but the message
+///       does not contain a sub-index to download
+///
+/// \Then an SDO abort transfer message with CO_SDO_AC_NO_SUB abort code is sent
 TEST(CoSsdoBlkDnIniOnRecv, NoSubidxSpecified) {
   StartSSDO();
 
@@ -1512,6 +1524,12 @@ TEST(CoSsdoBlkDnIniOnRecv, NoSubidxSpecified) {
   CanSend::CheckMsg(DEFAULT_COBID_RES, 0, CO_SDO_MSG_SIZE, expected.data());
 }
 
+/// \Given a pointer to the SSDO service (co_ssdo_t)
+///
+/// \When an SDO block download initiate request is received, but the client
+///       subcommand is incorrect
+///
+/// \Then an SDO abort transfer message with CO_SDO_AC_NO_CS abort code is sent
 TEST(CoSsdoBlkDnIniOnRecv, InvalidCS) {
   dev_holder->CreateAndInsertObj(obj2020, IDX);
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE, sub_type(0xabcdu));
@@ -1527,6 +1545,12 @@ TEST(CoSsdoBlkDnIniOnRecv, InvalidCS) {
   CanSend::CheckMsg(DEFAULT_COBID_RES, 0, CO_SDO_MSG_SIZE, expected.data());
 }
 
+/// \Given a pointer to the SSDO service (co_ssdo_t)
+///
+/// \When an SDO block download initiate request is received;
+///       CO_SDO_BLK_SIZE_IND is set
+///
+/// \Then an SDO block download response is sent with a default blocksize
 TEST(CoSsdoBlkDnIniOnRecv, BlkSizeSpecified) {
   dev_holder->CreateAndInsertObj(obj2020, IDX);
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE, sub_type(0));
@@ -1542,7 +1566,14 @@ TEST(CoSsdoBlkDnIniOnRecv, BlkSizeSpecified) {
   CanSend::CheckMsg(DEFAULT_COBID_RES, 0, CO_SDO_MSG_SIZE, expected.data());
 }
 
-TEST(CoSsdoBlkDnIniOnRecv, TimeoutTriggered) {
+/// \Given a pointer to the SSDO service (co_ssdo_t) with a timeout set,
+///        download initiate request is received
+///
+/// \When the Server-SDO timeout expires before receiving the next SDO message
+///
+/// \Then an SDO abort transfer message with CO_SDO_AC_TIMEOUT abort code is
+///       sent
+TEST(CoSsdoBlkDnIniOnRecv, TimeoutSet) {
   dev_holder->CreateAndInsertObj(obj2020, IDX);
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE, sub_type(0));
   co_ssdo_set_timeout(ssdo, 1u);  // 1 ms
@@ -1567,6 +1598,11 @@ TEST(CoSsdoBlkDnIniOnRecv, TimeoutTriggered) {
                     expected_timeout.data());
 }
 
+/// \Given a pointer to the SSDO service (co_ssdo_t)
+///
+/// \When an SDO block download initiate request is received
+///
+/// \Then an SDO block download response is sent
 TEST(CoSsdoBlkDnIniOnRecv, Nominal) {
   dev_holder->CreateAndInsertObj(obj2020, IDX);
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE, sub_type(0));
