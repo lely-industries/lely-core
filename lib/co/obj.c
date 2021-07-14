@@ -176,7 +176,7 @@ co_obj_get_subidx(const co_obj_t *obj, co_unsigned8_t maxidx,
 		maxidx = 0;
 
 	if (maxidx) {
-		struct rbnode *node = rbtree_first(&obj->tree);
+		const struct rbnode *node = rbtree_first(&obj->tree);
 		for (size_t i = 0; node && i < maxidx;
 				node = rbnode_next(node), i++)
 			subidx[i] = co_sub_get_subidx(

@@ -131,7 +131,7 @@ size_t can_buf_reserve(struct can_buf *buf, size_t n);
  * @see can_buf_read(), can_buf_write()
  */
 LELY_CAN_BUF_INLINE size_t can_buf_peek(
-		struct can_buf *buf, struct can_msg *ptr, size_t n);
+		const struct can_buf *buf, struct can_msg *ptr, size_t n);
 
 /**
  * Reads, and removes, frames from a CAN frame buffer.
@@ -201,7 +201,7 @@ can_buf_capacity(const struct can_buf *buf)
 }
 
 LELY_CAN_BUF_INLINE size_t
-can_buf_peek(struct can_buf *buf, struct can_msg *ptr, size_t n)
+can_buf_peek(const struct can_buf *buf, struct can_msg *ptr, size_t n)
 {
 	assert(buf);
 	assert(powerof2(buf->size + 1));

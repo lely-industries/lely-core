@@ -223,7 +223,7 @@ co_dev_get_idx(const co_dev_t *dev, co_unsigned16_t maxidx,
 		maxidx = 0;
 
 	if (maxidx) {
-		struct rbnode *node = rbtree_first(&dev->tree);
+		const struct rbnode *node = rbtree_first(&dev->tree);
 		for (size_t i = 0; node && i < maxidx;
 				node = rbnode_next(node), i++)
 			idx[i] = co_obj_get_idx(structof(node, co_obj_t, node));
@@ -657,7 +657,7 @@ size_t
 co_dev_write_sub(const co_dev_t *dev, co_unsigned16_t idx,
 		co_unsigned8_t subidx, uint_least8_t *begin, uint_least8_t *end)
 {
-	co_sub_t *sub = co_dev_find_sub(dev, idx, subidx);
+	const co_sub_t *sub = co_dev_find_sub(dev, idx, subidx);
 	if (!sub)
 		return 0;
 	co_unsigned16_t type = co_sub_get_type(sub);
@@ -765,14 +765,14 @@ co_dev_write_dcf(const co_dev_t *dev, co_unsigned16_t min, co_unsigned16_t max,
 	co_unsigned32_t n = 0;
 
 	// Write the sub-objects.
-	for (co_obj_t *obj = co_dev_first_obj(dev); obj;
+	for (const co_obj_t *obj = co_dev_first_obj(dev); obj;
 			obj = co_obj_next(obj)) {
 		co_unsigned16_t idx = co_obj_get_idx(obj);
 		if (idx < min)
 			continue;
 		if (idx > max)
 			break;
-		for (co_sub_t *sub = co_obj_first_sub(obj); sub;
+		for (const co_sub_t *sub = co_obj_first_sub(obj); sub;
 				sub = co_sub_next(sub), n++) {
 			co_unsigned8_t subidx = co_sub_get_subidx(sub);
 			size_t size = co_dev_write_sub(
