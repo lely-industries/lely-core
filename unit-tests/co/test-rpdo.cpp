@@ -181,7 +181,7 @@ TEST(CO_RpdoCreate, CoRpdoCreate_MinimalRPDO) {
   POINTERS_EQUAL(dev, co_rpdo_get_dev(rpdo));
   CHECK_EQUAL(RPDO_NUM, co_rpdo_get_num(rpdo));
 
-  const auto* comm = co_rpdo_get_comm_par(rpdo);
+  const auto* const comm = co_rpdo_get_comm_par(rpdo);
   CHECK_EQUAL(0, comm->n);
   CHECK_EQUAL(0, comm->cobid);
   CHECK_EQUAL(0, comm->trans);
@@ -190,7 +190,7 @@ TEST(CO_RpdoCreate, CoRpdoCreate_MinimalRPDO) {
   CHECK_EQUAL(0, comm->event);
   CHECK_EQUAL(0, comm->sync);
 
-  const auto* map = co_rpdo_get_map_par(rpdo);
+  const auto* const map = co_rpdo_get_map_par(rpdo);
   CHECK_EQUAL(0, map->n);
   for (size_t i = 0; i < CO_PDO_NUM_MAPS; ++i) CHECK_EQUAL(0, map->map[i]);
 
@@ -244,7 +244,7 @@ TEST(CO_RpdoCreate, CoRpdoStart_ExtendedFrame) {
   const auto ret = co_rpdo_start(rpdo);
   CHECK_EQUAL(0, ret);
 
-  const auto* comm = co_rpdo_get_comm_par(rpdo);
+  const auto* const comm = co_rpdo_get_comm_par(rpdo);
   CHECK_EQUAL(0x02u, comm->n);
   CHECK_EQUAL(CO_PDO_COBID_FRAME | DEV_ID, comm->cobid);
   CHECK_EQUAL(0, comm->trans);
@@ -282,7 +282,7 @@ TEST(CO_RpdoCreate, CoRpdoStart_InvalidBit) {
   const auto ret = co_rpdo_start(rpdo);
   CHECK_EQUAL(0, ret);
 
-  const auto* comm = co_rpdo_get_comm_par(rpdo);
+  const auto* const comm = co_rpdo_get_comm_par(rpdo);
   CHECK_EQUAL(0x02u, comm->n);
   CHECK_EQUAL(CO_PDO_COBID_VALID | DEV_ID, comm->cobid);
   CHECK_EQUAL(0, comm->trans);
@@ -311,7 +311,7 @@ TEST(CO_RpdoCreate, CoRpdoCreate_FullRPDOCommParamRecord) {
   const auto ret = co_rpdo_start(rpdo);
   CHECK_EQUAL(0, ret);
 
-  const auto* comm = co_rpdo_get_comm_par(rpdo);
+  const auto* const comm = co_rpdo_get_comm_par(rpdo);
   CHECK_EQUAL(0x06u, comm->n);
   CHECK_EQUAL(DEV_ID, comm->cobid);
   CHECK_EQUAL(0x01u, comm->trans);
@@ -340,7 +340,7 @@ TEST(CO_RpdoCreate, CoRpdoCreate_FullRPDOMappingParamRecord) {
   const auto ret = co_rpdo_start(rpdo);
   CHECK_EQUAL(0, ret);
 
-  const auto* map = co_rpdo_get_map_par(rpdo);
+  const auto* const map = co_rpdo_get_map_par(rpdo);
   CHECK_EQUAL(CO_PDO_NUM_MAPS, map->n);
   for (size_t i = 0; i < CO_PDO_NUM_MAPS; ++i) CHECK_EQUAL(i, map->map[i]);
 }
@@ -368,7 +368,7 @@ TEST(CO_RpdoCreate, CoRpdoCreate_OversizedRPDOCommParamRecord) {
   const auto ret = co_rpdo_start(rpdo);
   CHECK_EQUAL(0, ret);
 
-  const auto* comm = co_rpdo_get_comm_par(rpdo);
+  const auto* const comm = co_rpdo_get_comm_par(rpdo);
   CHECK_EQUAL(0x07u, comm->n);
   CHECK_EQUAL(DEV_ID, comm->cobid);
   CHECK_EQUAL(0x01u, comm->trans);
@@ -393,7 +393,7 @@ TEST(CO_RpdoCreate, CoRpdoCreate_EventDrivenTransmission) {
   const auto ret = co_rpdo_start(rpdo);
   CHECK_EQUAL(0, ret);
 
-  const auto* comm = co_rpdo_get_comm_par(rpdo);
+  const auto* const comm = co_rpdo_get_comm_par(rpdo);
   CHECK_EQUAL(0x02u, comm->n);
   CHECK_EQUAL(DEV_ID, comm->cobid);
   CHECK_EQUAL(0xfeu, comm->trans);
@@ -423,7 +423,7 @@ TEST(CO_RpdoCreate, CoRpdoCreate_TimerSet) {
   const auto ret = co_rpdo_start(rpdo);
   CHECK_EQUAL(0, ret);
 
-  const auto* comm = co_rpdo_get_comm_par(rpdo);
+  const auto* const comm = co_rpdo_get_comm_par(rpdo);
   CHECK_EQUAL(0x02u, comm->n);
   CHECK_EQUAL(DEV_ID, comm->cobid);
   CHECK_EQUAL(0, comm->trans);
@@ -460,8 +460,9 @@ static can_msg sent_msg = CAN_MSG_INIT;
 TEST_GROUP_BASE(CO_Rpdo, CO_RpdoBase) {
   co_rpdo_t* rpdo = nullptr;
 
-  static void rpdo_ind_func(co_rpdo_t * pdo, co_unsigned32_t ac,
-                            const void* ptr, size_t n, void* data) {
+  static void rpdo_ind_func(co_rpdo_t* const pdo, const co_unsigned32_t ac,
+                            const void* const ptr, const size_t n,
+                            void* const data) {
     CO_RpdoStatic::rpdo_ind_func_called = true;
     CO_RpdoStatic::rpdo_ind_args.rpdo = pdo;
     CO_RpdoStatic::rpdo_ind_args.ac = ac;
@@ -469,8 +470,8 @@ TEST_GROUP_BASE(CO_Rpdo, CO_RpdoBase) {
     CO_RpdoStatic::rpdo_ind_args.n = n;
     CO_RpdoStatic::rpdo_ind_args.data = data;
   }
-  static void rpdo_err_func(co_rpdo_t * pdo, co_unsigned16_t eec,
-                            co_unsigned8_t er, void* data) {
+  static void rpdo_err_func(co_rpdo_t* const pdo, const co_unsigned16_t eec,
+                            const co_unsigned8_t er, void* const data) {
     CO_RpdoStatic::rpdo_err_func_called = true;
     CO_RpdoStatic::rpdo_err_args.rpdo = pdo;
     CO_RpdoStatic::rpdo_err_args.eec = eec;
@@ -478,7 +479,7 @@ TEST_GROUP_BASE(CO_Rpdo, CO_RpdoBase) {
     CO_RpdoStatic::rpdo_err_args.data = data;
   }
 
-  static int can_send_func(const struct can_msg* msg, int, void*) {
+  static int can_send_func(const struct can_msg* const msg, int, void*) {
     CO_RpdoStatic::can_send_func_called = true;
     CO_RpdoStatic::sent_msg = *msg;
     return 0;

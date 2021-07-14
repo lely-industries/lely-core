@@ -47,7 +47,7 @@ struct SyncInd {
   static void* data;
 
   static void
-  func(co_sync_t* sync_, co_unsigned8_t cnt_, void* data_) {
+  func(co_sync_t* const sync_, const co_unsigned8_t cnt_, void* const data_) {
     sync = sync_;
     cnt = cnt_;
     data = data_;
@@ -78,8 +78,8 @@ struct SyncErr {
   static bool called;
 
   static inline void
-  func(co_sync_t* sync_, co_unsigned16_t eec_, co_unsigned8_t er_,
-       void* data_) {
+  func(co_sync_t* const sync_, const co_unsigned16_t eec_,
+       const co_unsigned8_t er_, void* const data_) {
     sync = sync_;
     eec = eec_;
     er = er_;
@@ -117,7 +117,7 @@ TEST_BASE(CO_SyncBase) {
   std::unique_ptr<CoObjTHolder> obj1005;
 
   // obj 0x1005, sub 0x00 contains COB-ID
-  void SetCobid(co_unsigned32_t cobid) {
+  void SetCobid(const co_unsigned32_t cobid) {
     obj1005->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED32, cobid);
   }
 
@@ -222,18 +222,18 @@ TEST_GROUP_BASE(CO_Sync, CO_SyncBase) {
   std::unique_ptr<CoObjTHolder> obj1019;
 
   // obj 0x1006, sub 0x00 contains communication cycle period in us
-  void CreateObj1006AndSetPeriod(co_unsigned32_t period) {
+  void CreateObj1006AndSetPeriod(const co_unsigned32_t period) {
     dev_holder->CreateAndInsertObj(obj1006, 0x1006u);
     obj1006->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED32, period);
   }
 
   // obj 0x1019u, sub 0x00 contains synchronous counter overflow value
-  void CreateObj1019AndSetCntOverflow(co_unsigned8_t overflow) {
+  void CreateObj1019AndSetCntOverflow(const co_unsigned8_t overflow) {
     dev_holder->CreateAndInsertObj(obj1019, 0x1019u);
     obj1019->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, overflow);
   }
 
-  void CheckSubDnIndDefault(co_unsigned16_t idx) const {
+  void CheckSubDnIndDefault(const co_unsigned16_t idx) const {
     const co_sub_t* const sub = co_dev_find_sub(dev, idx, 0x00u);
     CHECK(sub != nullptr);
     co_sub_dn_ind_t* ind = nullptr;
@@ -245,7 +245,7 @@ TEST_GROUP_BASE(CO_Sync, CO_SyncBase) {
     POINTERS_EQUAL(nullptr, data);
   }
 
-  static void CheckSubDnIndIsSet(co_unsigned16_t idx) {
+  static void CheckSubDnIndIsSet(const co_unsigned16_t idx) {
     const co_sub_t* const sub = co_dev_find_sub(dev, idx, 0x00u);
     CHECK(sub != nullptr);
     co_sub_dn_ind_t* ind = nullptr;
@@ -257,12 +257,13 @@ TEST_GROUP_BASE(CO_Sync, CO_SyncBase) {
     POINTERS_EQUAL(sync, data);
   }
 
-  void SyncSetErrSetInd(co_sync_err_t * err, co_sync_ind_t * ind) {
+  void SyncSetErrSetInd(co_sync_err_t* const err, co_sync_ind_t* const ind) {
     co_sync_set_err(sync, err, nullptr);
     co_sync_set_ind(sync, ind, nullptr);
   }
 
-  void SyncSetSendSetInd(can_send_func_t * send, co_sync_ind_t * ind) {
+  void SyncSetSendSetInd(can_send_func_t* const send,
+                         co_sync_ind_t* const ind) {
     can_net_set_send_func(net, send, nullptr);
     co_sync_set_ind(sync, ind, nullptr);
   }

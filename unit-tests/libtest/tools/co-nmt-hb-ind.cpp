@@ -31,7 +31,7 @@
 
 #include "co-nmt-hb-ind.hpp"
 
-unsigned CoNmtHbInd::num_called = 0;
+size_t CoNmtHbInd::num_called = 0;
 co_nmt_t* CoNmtHbInd::nmt_ = nullptr;
 co_unsigned8_t CoNmtHbInd::id_ = 255u;
 int CoNmtHbInd::state_ = -1;

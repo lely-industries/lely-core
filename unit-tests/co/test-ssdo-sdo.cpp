@@ -67,7 +67,7 @@ TEST_GROUP(CO_SsdoDnInd) {
   }
 
   // obj 0x1200, sub 0x00 - highest sub-index supported
-  void SetSrv00HighestSubidxSupported(co_unsigned8_t subidx) {
+  void SetSrv00HighestSubidxSupported(const co_unsigned8_t subidx) {
     co_sub_t* const sub = co_dev_find_sub(dev, 0x1200u, 0x00u);
     if (sub != nullptr)
       co_sub_set_val_u8(sub, subidx);
@@ -94,7 +94,7 @@ TEST_GROUP(CO_SsdoDnInd) {
   }
 
   // obj 0x1200, sub 0x03 - Node-ID of the SDO client
-  void SetSrv03NodeId(co_unsigned8_t id) {
+  void SetSrv03NodeId(const co_unsigned8_t id) {
     co_sub_t* const sub = co_dev_find_sub(dev, 0x1200u, 0x03u);
     if (sub != nullptr)
       co_sub_set_val_u8(sub, id);
@@ -354,7 +354,7 @@ TEST(CO_SsdoDnInd, DownloadReqCobid_OldValidNewValidOldId) {
 ///       \Calls co_sdo_req_dn_val()
 ///       \Calls co_sub_get_subidx()
 TEST(CO_SsdoDnInd, DownloadReqCobid_OldValidNewInvalidNewIdExtended) {
-  co_unsigned32_t cobid = CAN_ID_EXT | CO_SDO_COBID_VALID;
+  const co_unsigned32_t cobid = CAN_ID_EXT | CO_SDO_COBID_VALID;
   const auto ret =
       co_dev_dn_val_req(dev, 0x1200u, 0x01u, CO_DEFTYPE_UNSIGNED32, &cobid,
                         nullptr, CoCsdoDnCon::Func, nullptr);
@@ -382,7 +382,8 @@ TEST(CO_SsdoDnInd, DownloadReqCobid_OldValidNewInvalidNewIdExtended) {
 ///       \Calls co_sub_dn()
 ///       \Calls can_recv_stop()
 TEST(CO_SsdoDnInd, DownloadReqCobid_OldValidNewInvalidOldIdExtended) {
-  co_unsigned32_t cobid = CAN_ID | CO_SDO_COBID_VALID | CO_SDO_COBID_FRAME;
+  const co_unsigned32_t cobid =
+      CAN_ID | CO_SDO_COBID_VALID | CO_SDO_COBID_FRAME;
   const auto ret =
       co_dev_dn_val_req(dev, 0x1200u, 0x01u, CO_DEFTYPE_UNSIGNED32, &cobid,
                         nullptr, CoCsdoDnCon::Func, nullptr);
@@ -547,7 +548,7 @@ TEST(CO_SsdoDnInd, DownloadResCobid_OldValidNewValidOldIdExtended) {
 ///       \Calls co_sub_get_subidx()
 ///       \Calls co_sub_get_val_u32()
 TEST(CO_SsdoDnInd, DownloadResCobid_OldValidNewInvalidOldId) {
-  co_unsigned32_t cobid = CAN_ID_EXT | CO_SDO_COBID_VALID;
+  const co_unsigned32_t cobid = CAN_ID_EXT | CO_SDO_COBID_VALID;
   const auto ret =
       co_dev_dn_val_req(dev, 0x1200u, 0x02u, CO_DEFTYPE_UNSIGNED32, &cobid,
                         nullptr, CoCsdoDnCon::Func, nullptr);
@@ -575,7 +576,8 @@ TEST(CO_SsdoDnInd, DownloadResCobid_OldValidNewInvalidOldId) {
 ///       \Calls co_sub_dn()
 ///       \Calls can_recv_stop()
 TEST(CO_SsdoDnInd, DownloadResCobid_OldValidNewInvalidOldIdExtended) {
-  co_unsigned32_t cobid = CAN_ID | CO_SDO_COBID_VALID | CO_SDO_COBID_FRAME;
+  const co_unsigned32_t cobid =
+      CAN_ID | CO_SDO_COBID_VALID | CO_SDO_COBID_FRAME;
   const auto ret =
       co_dev_dn_val_req(dev, 0x1200u, 0x02u, CO_DEFTYPE_UNSIGNED32, &cobid,
                         nullptr, CoCsdoDnCon::Func, nullptr);

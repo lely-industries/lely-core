@@ -43,8 +43,8 @@ co_unsigned32_t CoSubDnInd::ac = 0u;
 void* CoSubDnInd::data = nullptr;
 
 co_unsigned32_t
-CoSubDnInd::Func(co_sub_t* sub_, co_sdo_req* req_, co_unsigned32_t ac_,
-                 void* data_) {
+CoSubDnInd::Func(co_sub_t* const sub_, co_sdo_req* const req_,
+                 co_unsigned32_t const ac_, void* const data_) {
   num_called++;
 
   sub = sub_;
@@ -69,7 +69,7 @@ template <typename Predicate>
 static void
 CheckSubDnInd(const co_dev_t* const dev, const co_unsigned16_t idx,
               Predicate pred) {
-  co_sub_t* const sub = co_dev_find_sub(dev, idx, 0x00u);
+  const co_sub_t* const sub = co_dev_find_sub(dev, idx, 0x00u);
   CHECK(sub != nullptr);
 
   co_sub_dn_ind_t* ind = nullptr;

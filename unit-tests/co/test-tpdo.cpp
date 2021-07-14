@@ -56,8 +56,8 @@ struct CoTpdoInd {
   static void* data;
 
   static void
-  func(co_tpdo_t* pdo_, co_unsigned32_t ac_, const void* ptr_, size_t n_,
-       void* data_) {
+  func(co_tpdo_t* const pdo_, const co_unsigned32_t ac_, const void* const ptr_,
+       const size_t n_, void* const data_) {
     called = true;
 
     pdo = pdo_;
@@ -95,7 +95,7 @@ struct CoTpdoSampleInd {
   static void* data;
 
   static int
-  func(co_tpdo_t* pdo_, void* data_) {
+  func(co_tpdo_t* const pdo_, void* const data_) {
     called = true;
 
     pdo = pdo_;
@@ -137,23 +137,23 @@ TEST_BASE(CO_TpdoBase) {
 
   // PDO communication parameter record
   // obj 0x1800, sub 0x00 - highest sub-index supported
-  void SetComm00HighestSubidxSupported(co_unsigned8_t subidx) {
+  void SetComm00HighestSubidxSupported(const co_unsigned8_t subidx) {
     assert(subidx >= 0x02);
     obj1800->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, subidx);
   }
 
   // obj 0x1800, sub 0x01 contains COB-ID used by TPDO
-  void SetComm01CobId(co_unsigned32_t cobid) {
+  void SetComm01CobId(const co_unsigned32_t cobid) {
     obj1800->InsertAndSetSub(0x01u, CO_DEFTYPE_UNSIGNED32, cobid);
   }
 
   // obj 0x1800, sub 0x02 - transmission type
-  void SetComm02TransmissionType(co_unsigned8_t type) {
+  void SetComm02TransmissionType(const co_unsigned8_t type) {
     obj1800->InsertAndSetSub(0x02u, CO_DEFTYPE_UNSIGNED8, type);
   }
 
   // obj 0x1800, sub 0x03 - inhibit time
-  void SetComm03InhibitTime(co_unsigned16_t inhibit_time) {
+  void SetComm03InhibitTime(const co_unsigned16_t inhibit_time) {
     obj1800->InsertAndSetSub(0x03u, CO_DEFTYPE_UNSIGNED16,
                              inhibit_time);  // n*100 us
   }
@@ -165,24 +165,25 @@ TEST_BASE(CO_TpdoBase) {
   }
 
   // obj 0x1800, sub 0x05 - event-timer
-  void SetComm05EventTimer(co_unsigned16_t timer_time) {
+  void SetComm05EventTimer(const co_unsigned16_t timer_time) {
     obj1800->InsertAndSetSub(0x05u, CO_DEFTYPE_UNSIGNED16,
                              timer_time);  // ms
   }
 
   // obj 0x1800, sub 0x06 - SYNC start value
-  void SetComm06SyncStartValue(co_unsigned8_t start_val) {
+  void SetComm06SyncStartValue(const co_unsigned8_t start_val) {
     obj1800->InsertAndSetSub(0x06u, CO_DEFTYPE_UNSIGNED8, start_val);
   }
 
   // PDO mapping parameter record
   // obj 0x1a00, sub 0x00 - number of mapped application objects in TPDO
-  void SetMapp00NumOfMappedAppObjs(co_unsigned8_t number) {
+  void SetMapp00NumOfMappedAppObjs(const co_unsigned8_t number) {
     obj1a00->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, number);
   }
 
   // obj 0x1a00, sub 0xNN - N-th application object; N must be > 0x00
-  void SetMappNthAppObject(co_unsigned8_t subidx, co_unsigned32_t mapping) {
+  void SetMappNthAppObject(const co_unsigned8_t subidx,
+                           const co_unsigned32_t mapping) {
     assert(subidx > 0x00u);
     obj1a00->InsertAndSetSub(subidx, CO_DEFTYPE_UNSIGNED32, mapping);
   }
@@ -271,7 +272,7 @@ TEST(CO_TpdoCreate, CoTpdoCreate_MinimalTPDO) {
   POINTERS_EQUAL(dev, co_tpdo_get_dev(tpdo));
   CHECK_EQUAL(TPDO_NUM, co_tpdo_get_num(tpdo));
 
-  const auto* comm = co_tpdo_get_comm_par(tpdo);
+  const auto* const comm = co_tpdo_get_comm_par(tpdo);
   CHECK_EQUAL(0u, comm->n);
   CHECK_EQUAL(0u, comm->cobid);
   CHECK_EQUAL(0u, comm->trans);
@@ -280,7 +281,7 @@ TEST(CO_TpdoCreate, CoTpdoCreate_MinimalTPDO) {
   CHECK_EQUAL(0u, comm->event);
   CHECK_EQUAL(0u, comm->sync);
 
-  const auto* map = co_tpdo_get_map_par(tpdo);
+  const auto* const map = co_tpdo_get_map_par(tpdo);
   CHECK_EQUAL(0u, map->n);
   for (size_t i = 0; i < CO_PDO_NUM_MAPS; ++i) CHECK_EQUAL(0u, map->map[i]);
 
@@ -291,7 +292,7 @@ TEST(CO_TpdoCreate, CoTpdoCreate_MinimalTPDO) {
   FUNCTIONPOINTERS_EQUAL(nullptr, pdata);
 
   co_tpdo_sample_ind_t* psind = nullptr;
-  void* psdata = nullptr;
+  void* const psdata = nullptr;
   co_tpdo_get_sample_ind(tpdo, &psind, &pdata);
   CHECK(psind != nullptr);
   FUNCTIONPOINTERS_EQUAL(nullptr, psdata);
@@ -335,7 +336,7 @@ TEST(CO_TpdoCreate, CoTpdoStart_ExtendedFrame) {
   const auto ret = co_tpdo_start(tpdo);
   CHECK_EQUAL(0, ret);
 
-  const auto* comm = co_tpdo_get_comm_par(tpdo);
+  const auto* const comm = co_tpdo_get_comm_par(tpdo);
   CHECK_EQUAL(0x02u, comm->n);
   CHECK_EQUAL(DEV_ID | CO_PDO_COBID_FRAME, comm->cobid);
   CHECK_EQUAL(0u, comm->trans);
@@ -361,7 +362,7 @@ TEST(CO_TpdoCreate, CoTpdoStart_InvalidBit) {
   const auto ret = co_tpdo_start(tpdo);
   CHECK_EQUAL(0, ret);
 
-  const auto* comm = co_tpdo_get_comm_par(tpdo);
+  const auto* const comm = co_tpdo_get_comm_par(tpdo);
   CHECK_EQUAL(0x02u, comm->n);
   CHECK_EQUAL(DEV_ID | CO_PDO_COBID_VALID, comm->cobid);
   CHECK_EQUAL(0u, comm->trans);
@@ -392,7 +393,7 @@ TEST(CO_TpdoCreate, CoTpdoStart_FullTPDOCommParamRecord) {
   const auto ret = co_tpdo_start(tpdo);
   CHECK_EQUAL(0, ret);
 
-  const auto* comm = co_tpdo_get_comm_par(tpdo);
+  const auto* const comm = co_tpdo_get_comm_par(tpdo);
   CHECK_EQUAL(0x06u, comm->n);
   CHECK_EQUAL(DEV_ID, comm->cobid);
   CHECK_EQUAL(0x01u, comm->trans);
@@ -420,7 +421,7 @@ TEST(CO_TpdoCreate, CoTpdoStart_FullTPDOMappingParamRecord) {
   const auto ret = co_tpdo_start(tpdo);
   CHECK_EQUAL(0, ret);
 
-  const auto* map = co_tpdo_get_map_par(tpdo);
+  const auto* const map = co_tpdo_get_map_par(tpdo);
   CHECK_EQUAL(CO_PDO_NUM_MAPS, map->n);
   for (size_t i = 0; i < CO_PDO_NUM_MAPS; ++i) CHECK_EQUAL(i, map->map[i]);
 }
@@ -447,7 +448,7 @@ TEST(CO_TpdoCreate, CoTpdoStart_OversizedTPDOCommParamRecord) {
   const auto ret = co_tpdo_start(tpdo);
   CHECK_EQUAL(0, ret);
 
-  const auto* comm = co_tpdo_get_comm_par(tpdo);
+  const auto* const comm = co_tpdo_get_comm_par(tpdo);
   CHECK_EQUAL(0x07u, comm->n);
   CHECK_EQUAL(DEV_ID, comm->cobid);
   CHECK_EQUAL(0x01u, comm->trans);
@@ -472,7 +473,7 @@ TEST(CO_TpdoCreate, CoTpdoStart_EventDrivenTransmission) {
   const auto ret = co_tpdo_start(tpdo);
   CHECK_EQUAL(0, ret);
 
-  const auto* comm = co_tpdo_get_comm_par(tpdo);
+  const auto* const comm = co_tpdo_get_comm_par(tpdo);
   CHECK_EQUAL(0x02u, comm->n);
   CHECK_EQUAL(DEV_ID, comm->cobid);
   CHECK_EQUAL(0xfeu, comm->trans);
@@ -520,7 +521,7 @@ TEST(CO_TpdoCreate, CoTpdoStart_TimerSet) {
   const auto ret = co_tpdo_start(tpdo);
   CHECK_EQUAL(0, ret);
 
-  const auto* comm = co_tpdo_get_comm_par(tpdo);
+  const auto* const comm = co_tpdo_get_comm_par(tpdo);
   CHECK_EQUAL(0x02u, comm->n);
   CHECK_EQUAL(DEV_ID, comm->cobid);
   CHECK_EQUAL(0u, comm->trans);

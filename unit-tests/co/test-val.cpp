@@ -71,7 +71,7 @@ TEST_GROUP(CO_Val) {
   // Returns the read/write size (in bytes) of the value of the specified type.
   // In most cases function returns the same value as co_type_sizeof(), but for
   // a few integer/unsigned types it is different than the size in the memory.
-  static size_t ValGetReadWriteSize(co_unsigned16_t type) {
+  static size_t ValGetReadWriteSize(const co_unsigned16_t type) {
     switch (type) {
       case CO_DEFTYPE_INTEGER24:
         return 3u;
@@ -123,7 +123,7 @@ TEST_GROUP(CO_Val) {
     return static_cast<co_integer8_t>(*src);
   }
   static co_integer24_t ldle_i24(const uint_least8_t src[4]) {
-    co_unsigned24_t u24 = ldle_u24(src);
+    const co_unsigned24_t u24 = ldle_u24(src);
     if (u24 > CO_INTEGER24_MAX)
       return -(static_cast<int32_t>(CO_UNSIGNED24_MAX) + 1 -
                static_cast<int32_t>(u24));
@@ -131,7 +131,7 @@ TEST_GROUP(CO_Val) {
       return static_cast<co_integer24_t>(u24);
   }
   static co_integer40_t ldle_i40(const uint_least8_t src[8]) {
-    co_unsigned40_t u40 = ldle_u40(src);
+    const co_unsigned40_t u40 = ldle_u40(src);
     if (u40 > CO_INTEGER40_MAX)
       return -(static_cast<int64_t>(CO_UNSIGNED40_MAX) + 1 -
                static_cast<int64_t>(u40));
@@ -139,7 +139,7 @@ TEST_GROUP(CO_Val) {
       return static_cast<co_integer40_t>(u40);
   }
   static co_integer48_t ldle_i48(const uint_least8_t src[8]) {
-    co_unsigned48_t u48 = ldle_u48(src);
+    const co_unsigned48_t u48 = ldle_u48(src);
     if (u48 > CO_INTEGER48_MAX)
       return -(static_cast<int64_t>(CO_UNSIGNED48_MAX) + 1 -
                static_cast<int64_t>(u48));
@@ -147,7 +147,7 @@ TEST_GROUP(CO_Val) {
       return u48;
   }
   static co_integer56_t ldle_i56(const uint_least8_t src[8]) {
-    co_unsigned56_t u56 = ldle_u56(src);
+    const co_unsigned56_t u56 = ldle_u56(src);
     if (u56 > CO_INTEGER56_MAX)
       return -(static_cast<int64_t>(CO_UNSIGNED56_MAX) + 1 -
                static_cast<int64_t>(u56));
@@ -749,7 +749,7 @@ TEST(CO_Val, CoValInitVsN_NullString) {
 ///       \Calls co_array_alloc()
 TEST(CO_Val, CoValInitVsN_NullVal) {
   co_visible_string_t val = nullptr;
-  char buf[1u] = {0};
+  const char buf[1u] = {0};
 
   const auto ret = co_val_init_vs_n(&val, buf, sizeof(buf));
 
@@ -1178,7 +1178,7 @@ TEST(CO_Val, CoValAddressof_ArrayType) {
   co_visible_string_t val = arrays.Init<co_visible_string_t>();
   co_val_init_vs(&val, TEST_STR.c_str());
 
-  const auto* ptr = co_val_addressof(CO_DEFTYPE_VISIBLE_STRING, val);
+  const auto* const ptr = co_val_addressof(CO_DEFTYPE_VISIBLE_STRING, val);
 
   POINTERS_EQUAL(*reinterpret_cast<void**>(val), ptr);
 
@@ -1196,7 +1196,7 @@ TEST(CO_Val, CoValAddressof_NonArrayType) {
   co_integer16_t val;
   co_val_init(CO_DEFTYPE_INTEGER16, &val);
 
-  const auto* ptr = co_val_addressof(CO_DEFTYPE_INTEGER16, &val);
+  const auto* const ptr = co_val_addressof(CO_DEFTYPE_INTEGER16, &val);
 
   POINTERS_EQUAL(&val, ptr);
 
@@ -1868,7 +1868,8 @@ TEST(CO_Val, CoValMove_ArrayType) {
   co_visible_string_t src = arrays.Init<co_visible_string_t>();
   CHECK_EQUAL(TEST_STR.size(), co_val_make(CO_DEFTYPE_VISIBLE_STRING, &src,
                                            TEST_STR.c_str(), 0));
-  const void* src_addr = co_val_addressof(CO_DEFTYPE_VISIBLE_STRING, &src);
+  const void* const src_addr =
+      co_val_addressof(CO_DEFTYPE_VISIBLE_STRING, &src);
   co_visible_string_t dst = arrays.Init<co_visible_string_t>();
 
   const auto ret = co_val_move(CO_DEFTYPE_VISIBLE_STRING, &dst, &src);
@@ -2773,8 +2774,8 @@ TEST(CO_Val, CoValRead_UNICODE_STRING_Nominal) {
   CHECK_EQUAL(BUFFER_SIZE, ret);
   CHECK_EQUAL(BUFFER_SIZE, co_val_sizeof(CO_DEFTYPE_UNICODE_STRING, &val));
   size_t i = 0;
-  for (size_t j = 0; i < BUFFER_SIZE / 2; ++i, j += 2)
-    CHECK_EQUAL(ldle_u16(buffer + j), val[i]);
+  for (; i < BUFFER_SIZE / 2; ++i)
+    CHECK_EQUAL(ldle_u16(buffer + (i * 2u)), val[i]);
   CHECK_EQUAL(u'\0', val[i]);
 
   co_val_fini(CO_DEFTYPE_UNICODE_STRING, &val);
@@ -2800,7 +2801,7 @@ TEST(CO_Val, CoValRead_DOMAIN_Nominal) {
 
   CHECK_EQUAL(BUFFER_SIZE, ret);
   CHECK_EQUAL(BUFFER_SIZE, co_val_sizeof(CO_DEFTYPE_DOMAIN, &val));
-  const auto* vbuf = static_cast<uint_least8_t*>(val);
+  const auto vbuf = static_cast<uint_least8_t*>(val);
   for (size_t i = 0; i < BUFFER_SIZE; ++i) CHECK_EQUAL(buffer[i], vbuf[i]);
 
   co_val_fini(CO_DEFTYPE_DOMAIN, &val);
@@ -3400,8 +3401,8 @@ TEST(CO_Val, CoValWrite_UNICODE_STRING_Nominal) {
                                 buffer + ARRAY_SIZE);
 
   CHECK_EQUAL(ARRAY_SIZE, ret);
-  for (size_t i = 0, j = 0; i < ARRAY_SIZE; i += 2u, ++j)
-    CHECK_EQUAL(ldle_u16(buffer + i), test_str[j]);
+  for (size_t i = 0; i < ARRAY_SIZE; i += 2u)
+    CHECK_EQUAL(ldle_u16(buffer + i), test_str[i / 2u]);
   CHECK_EQUAL(0xffu, buffer[ARRAY_SIZE]);
   CHECK_EQUAL(0xffu, buffer[ARRAY_SIZE + 1u]);
 
@@ -3552,7 +3553,7 @@ TEST(CO_Val, CoValWrite_DOMAIN_SizeZeroArray) {
 ///       \Calls co_type_is_array()
 ///       \Calls set_errnum()
 TEST(CO_Val, CoValWrite_INVALID_TYPE) {
-  co_integer16_t val = 0x1234;
+  const co_integer16_t val = 0x1234;
   uint_least8_t buffer[CO_MAX_VAL_SIZE] = {0x00};
 
   const auto ret = co_val_write(INVALID_TYPE, &val, buffer, buffer);

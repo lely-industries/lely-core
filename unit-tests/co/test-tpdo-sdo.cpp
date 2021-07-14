@@ -146,7 +146,7 @@ TEST_GROUP_BASE(CO_SdoTpdo1800, CO_SdoTpdoBase) {
 /// \Then the same abort code value is returned, nothing is changed
 ///       \Calls co_sub_get_type()
 TEST(CO_SdoTpdo1800, Co1800DnInd_NonZeroAbortCode) {
-  co_unsigned32_t ac = CO_SDO_AC_ERROR;
+  const co_unsigned32_t ac = CO_SDO_AC_ERROR;
 
   const auto ret = LelyUnitTest::CallDnIndWithAbortCode(dev, 0x1800u, 0x00u,
                                                         CO_SDO_AC_ERROR);
@@ -248,7 +248,7 @@ TEST(CO_SdoTpdo1800, Co1800DnInd_CobidValidToValid_FrameBit) {
 // when: COB-ID with frame bit and CO_PDO_COBID_VALID set is downloaded
 // then: CO_SDO_AC_PARAM_VAL abort code is returned
 TEST(CO_SdoTpdo1800, Co1800DnInd_CobidValidToInvalid_ExtendedId_NoFrameBit) {
-  co_unsigned32_t cobid = DEV_ID | (1u << 28u) | CO_PDO_COBID_VALID;
+  const co_unsigned32_t cobid = DEV_ID | (1u << 28u) | CO_PDO_COBID_VALID;
   const auto ret =
       co_dev_dn_val_req(dev, 0x1800u, 0x01u, CO_DEFTYPE_UNSIGNED32, &cobid,
                         nullptr, CoCsdoDnCon::Func, nullptr);
@@ -527,7 +527,7 @@ TEST_GROUP_BASE(CO_SdoTpdo1a00, CO_SdoTpdoBase) {
     }
   }
 
-  void Set1a00Sub1Mapping(co_unsigned32_t mapping) {
+  void Set1a00Sub1Mapping(const co_unsigned32_t mapping) {
     co_sub_t* const sub = co_dev_find_sub(dev, 0x1a00u, 0x01u);
     co_sub_set_val_u32(sub, mapping);
   }
@@ -537,12 +537,12 @@ TEST_GROUP_BASE(CO_SdoTpdo1a00, CO_SdoTpdoBase) {
 
     obj2021->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED32,
                              co_unsigned32_t{0xdeadbeefu});
-    co_sub_t* sub2021 = obj2021->GetLastSub();
+    co_sub_t* const sub2021 = obj2021->GetLastSub();
     co_sub_set_access(sub2021, CO_ACCESS_RW);
     co_sub_set_pdo_mapping(sub2021, 1);
   }
 
-  void SetNumOfMappings(co_unsigned8_t mappings_num) {
+  void SetNumOfMappings(const co_unsigned8_t mappings_num) {
     co_sub_t* const sub_map_n = co_dev_find_sub(dev, 0x1a00u, 0x00u);
     co_sub_set_val_u8(sub_map_n, mappings_num);
   }
@@ -572,7 +572,7 @@ TEST_GROUP_BASE(CO_SdoTpdo1a00, CO_SdoTpdoBase) {
 /// \Then the same abort code value is returned, nothing is changed
 ///       \Calls co_sub_get_type()
 TEST(CO_SdoTpdo1a00, Co1a00DnInd_NonZeroAbortCode) {
-  co_unsigned32_t ac = CO_SDO_AC_ERROR;
+  const co_unsigned32_t ac = CO_SDO_AC_ERROR;
 
   const auto ret = LelyUnitTest::CallDnIndWithAbortCode(dev, 0x1a00u, 0x00u,
                                                         CO_SDO_AC_ERROR);

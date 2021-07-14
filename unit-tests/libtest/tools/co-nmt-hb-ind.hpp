@@ -1,4 +1,3 @@
-
 /**@file
  * This file is part of the CANopen Library Unit Test Suite.
  *
@@ -33,13 +32,13 @@ class CoNmtHbInd {
   static void Clear();
   static void Check(const co_nmt_t* nmt, co_unsigned8_t id, int state,
                     int reason, const void* data);
-  static inline unsigned
+  static inline size_t
   GetNumCalled() {
     return num_called;
   }
 
  private:
-  static unsigned num_called;
+  static size_t num_called;
   static co_nmt_t* nmt_;
   static co_unsigned8_t id_;
   static int state_;

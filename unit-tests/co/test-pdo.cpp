@@ -312,7 +312,7 @@ TEST(CO_Pdo, CoDevCfgRpdoMap) {
 }
 
 TEST(CO_Pdo, CoDevCfgPdoComm_NoObj) {
-  co_pdo_comm_par par = CO_PDO_COMM_PAR_INIT;
+  const co_pdo_comm_par par = CO_PDO_COMM_PAR_INIT;
 
   CoObjTHolder obj_default(DEFAULT_OBJ_IDX);
   CHECK(obj_default.Get() != nullptr);
@@ -920,7 +920,7 @@ TEST(CO_Pdo, CoDevCfgTpdo_InvalidPdoNum) {
 TEST(CO_Pdo, CoDevCfgTpdo_NoSub) {
   co_pdo_comm_par comm = CO_PDO_COMM_PAR_INIT;
   comm.n = 0u;
-  co_pdo_map_par map = CO_PDO_MAP_PAR_INIT;
+  const co_pdo_map_par map = CO_PDO_MAP_PAR_INIT;
 
   CoObjTHolder obj1800(0x1800u);
   CHECK(obj1800.Get() != nullptr);
@@ -960,7 +960,7 @@ TEST(CO_Pdo, CoDevCfgTpdo_ReenableTpdo) {
 TEST(CO_Pdo, CoDevCfgTpdo) {
   co_pdo_comm_par comm = CO_PDO_COMM_PAR_INIT;
   comm.n = 0;
-  co_pdo_map_par map = CO_PDO_MAP_PAR_INIT;
+  const co_pdo_map_par map = CO_PDO_MAP_PAR_INIT;
 
   CoObjTHolder obj1800(0x1800u);
   CHECK(obj1800.Get() != nullptr);
@@ -1278,13 +1278,13 @@ TEST_GROUP_BASE(CoPdo_CoPdoDn, CO_PdoBase) {
   static bool co_sub_dn_ind_called;
 
   static co_unsigned32_t co_sub_dn_ind_error(co_sub_t*, struct co_sdo_req*,
-                                             co_unsigned32_t ac, void*) {
-    if (ac) return ac;
+                                             const co_unsigned32_t ac, void*) {
+    if (ac != 0) return ac;
     return CO_SDO_AC_PARAM_VAL;
   }
   static co_unsigned32_t co_sub_dn_ind_ok(co_sub_t*, co_sdo_req*,
-                                          co_unsigned32_t ac, void*) {
-    if (ac) return ac;
+                                          const co_unsigned32_t ac, void*) {
+    if (ac != 0) return ac;
     co_sub_dn_ind_called = true;
     return 0u;
   }
@@ -1292,7 +1292,7 @@ TEST_GROUP_BASE(CoPdo_CoPdoDn, CO_PdoBase) {
 bool TEST_GROUP_CppUTestGroupCoPdo_CoPdoDn::co_sub_dn_ind_called = false;
 
 TEST(CoPdo_CoPdoDn, BufBiggerThanCanMaxLen) {
-  uint_least8_t buf[1] = {0};
+  const uint_least8_t buf[1] = {0};
   const size_t n = CAN_MAX_LEN + 1u;
 
   const auto ret = co_pdo_dn(&par, dev, &req, buf, n);
@@ -1301,7 +1301,7 @@ TEST(CoPdo_CoPdoDn, BufBiggerThanCanMaxLen) {
 }
 
 TEST(CoPdo_CoPdoDn, NoParameters) {
-  uint_least8_t buf[1] = {0};
+  const uint_least8_t buf[1] = {0};
   const size_t n = 6u;
 
   const auto ret = co_pdo_dn(&par, dev, &req, buf, n);
@@ -1312,7 +1312,7 @@ TEST(CoPdo_CoPdoDn, NoParameters) {
 TEST(CoPdo_CoPdoDn, ObjectDoesNotExist) {
   par.n = 0x02u;
   par.map[0] = 0x00000001u;
-  uint_least8_t buf[1] = {0};
+  const uint_least8_t buf[1] = {0};
   const size_t n = 6u;
 
   const auto ret = co_pdo_dn(&par, dev, &req, buf, n);
@@ -1323,7 +1323,7 @@ TEST(CoPdo_CoPdoDn, ObjectDoesNotExist) {
 TEST(CoPdo_CoPdoDn, BufferTooSmall) {
   par.n = 0x03u;
   par.map[0] = 0x00000001u;
-  uint_least8_t buf[1] = {0};
+  const uint_least8_t buf[1] = {0};
   const size_t n = 0;
 
   const auto ret = co_pdo_dn(&par, dev, &req, buf, n);
@@ -1334,7 +1334,7 @@ TEST(CoPdo_CoPdoDn, BufferTooSmall) {
 TEST(CoPdo_CoPdoDn, DownloadIndicatorReturnsError) {
   par.n = 0x01u;
   par.map[0] = 0x00000001u;
-  uint_least8_t buf[1] = {0};
+  const uint_least8_t buf[1] = {0};
   const size_t n = 2u;
 
   CoObjTHolder obj_default(DEFAULT_OBJ_IDX);
@@ -1360,7 +1360,7 @@ TEST(CoPdo_CoPdoDn, DownloadIndicatorReturnsError) {
 TEST(CoPdo_CoPdoDn, AllTypesAreDummyEntries) {
   par.n = 0x02u;
   par.map[0] = 0x00010000u;
-  uint_least8_t buf[1] = {0};
+  const uint_least8_t buf[1] = {0};
   const size_t n = 2u;
   co_dev_set_dummy(dev, 0xffffffffu);
 
@@ -1372,7 +1372,7 @@ TEST(CoPdo_CoPdoDn, AllTypesAreDummyEntries) {
 TEST(CoPdo_CoPdoDn, Nominal) {
   par.n = 0x03u;
   par.map[0] = 0x00000001u;
-  uint_least8_t buf[1] = {0};
+  const uint_least8_t buf[1] = {0};
   const size_t n = 2u;
 
   CoObjTHolder obj_default(DEFAULT_OBJ_IDX);
@@ -1401,36 +1401,36 @@ TEST_GROUP_BASE(CoPdo_CoPdoUp, CO_PdoBase) {
   static bool sub_up_ind_called;
   static co_unsigned8_t reqbuf[];
 
-  static co_unsigned32_t sub_ind_not_req_first(const co_sub_t*, co_sdo_req* req,
-                                               co_unsigned32_t ac, void*) {
-    if (ac) return ac;
+  static co_unsigned32_t sub_ind_not_req_first(
+      const co_sub_t*, co_sdo_req* const req, const co_unsigned32_t ac, void*) {
+    if (ac != 0) return ac;
     req->offset = 1u;
     return 0u;
   }
-  static co_unsigned32_t sub_ind_not_req_last(const co_sub_t*, co_sdo_req* req,
-                                              co_unsigned32_t ac, void*) {
-    if (ac) return ac;
+  static co_unsigned32_t sub_ind_not_req_last(
+      const co_sub_t*, co_sdo_req* const req, const co_unsigned32_t ac, void*) {
+    if (ac != 0) return ac;
     req->offset = 1u;
     req->nbyte = 1u;
     req->size = 4u;
     return 0u;
   }
-  static co_unsigned32_t sub_ind_req_last(const co_sub_t*, co_sdo_req* req,
-                                          co_unsigned32_t ac, void*) {
-    if (ac) return ac;
+  static co_unsigned32_t sub_ind_req_last(
+      const co_sub_t*, co_sdo_req* const req, const co_unsigned32_t ac, void*) {
+    if (ac != 0) return ac;
     req->offset = 0u;
     req->nbyte = 1u;
     req->size = 4u;
     return 0u;
   }
   static co_unsigned32_t sub_ind_req_error(const co_sub_t*, co_sdo_req*,
-                                           co_unsigned32_t ac, void*) {
-    if (ac) return ac;
+                                           const co_unsigned32_t ac, void*) {
+    if (ac != 0) return ac;
     return CO_SDO_AC_ERROR;
   }
-  static co_unsigned32_t sub_up_ind(const co_sub_t*, co_sdo_req* req,
-                                    co_unsigned32_t ac, void*) {
-    if (ac) return ac;
+  static co_unsigned32_t sub_up_ind(const co_sub_t*, co_sdo_req* const req,
+                                    const co_unsigned32_t ac, void*) {
+    if (ac != 0) return ac;
     sub_up_ind_called = true;
     req->buf = reqbuf;
     return 0u;
