@@ -1204,6 +1204,18 @@ TEST_GROUP_BASE(CoSsdoDnIniOnRecv, CO_Ssdo){};
 /// @name SSDO download initiate
 ///@{
 
+/// \Given a pointer to a started SSDO service (co_ssdo_t)
+///
+/// \When an SDO download initiate request is received, but the message does
+///       not contain an index to download
+///
+/// \Then an SDO abort transfer message with CO_SDO_AC_NO_OBJ abort code is sent
+///       \Calls stle_u16()
+///       \Calls stle_u32()
+///       \Calls can_net_send()
+///       \Calls co_sdo_req_fini()
+///       \Calls co_sdo_req_init()
+///       \Calls membuf_clear()
 TEST(CoSsdoDnIniOnRecv, NoIdxSpecified) {
   StartSSDO();
 
@@ -1218,6 +1230,17 @@ TEST(CoSsdoDnIniOnRecv, NoIdxSpecified) {
   CanSend::CheckMsg(DEFAULT_COBID_RES, 0, CO_SDO_MSG_SIZE, expected.data());
 }
 
+/// \Given a pointer to a started SSDO service (co_ssdo_t)
+///
+/// \When an SDO download initiate request is received, but the message does
+///       not contain a sub-index to download
+///
+/// \Then an SDO abort transfer message with CO_SDO_AC_NO_SUB abort code is sent
+///       \Calls stle_u32()
+///       \Calls can_net_send()
+///       \Calls co_sdo_req_fini()
+///       \Calls co_sdo_req_init()
+///       \Calls membuf_clear()
 TEST(CoSsdoDnIniOnRecv, NoSubidxSpecified) {
   StartSSDO();
 
@@ -1231,7 +1254,22 @@ TEST(CoSsdoDnIniOnRecv, NoSubidxSpecified) {
   CanSend::CheckMsg(DEFAULT_COBID_RES, 0, CO_SDO_MSG_SIZE, expected.data());
 }
 
-TEST(CoSsdoDnIniOnRecv, TimeoutTriggered) {
+/// \Given a pointer to a started SSDO service (co_ssdo_t) with a timeout set,
+///        download initiate request is received
+///
+/// \When the Server-SDO timeout expires before receiving the response from
+///       a client
+///
+/// \Then an SDO abort transfer message with CO_SDO_AC_TIMEOUT abort code is
+///       sent
+///       \Calls stle_u16()
+///       \Calls stle_u32()
+///       \Calls can_net_send()
+///       \Calls can_timer_stop()
+///       \Calls co_sdo_req_fini()
+///       \Calls co_sdo_req_init()
+///       \Calls membuf_clear()
+TEST(CoSsdoDnIniOnRecv, TimeoutSet) {
   dev_holder->CreateAndInsertObj(obj2020, IDX);
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE64, sub_type64(0));
   co_ssdo_set_timeout(ssdo, 1u);  // 1 ms
@@ -1259,6 +1297,20 @@ TEST(CoSsdoDnIniOnRecv, TimeoutTriggered) {
                     expected_timeout.data());
 }
 
+/// \Given a pointer to a started SSDO service (co_ssdo_t)
+///
+/// \When an SDO expedited download initiate request for an non-existing object
+///       is received
+///
+/// \Then an SDO abort transfer message with CO_SDO_AC_NO_OBJ abort code is sent
+///       \Calls ldle_u16()
+///       \Calls co_sdo_req_fini()
+///       \Calls co_sdo_req_init()
+///       \Calls co_dev_find_obj()
+///       \Calls stle_u16()
+///       \Calls stle_u32()
+///       \Calls can_net_send()
+///       \Calls membuf_clear()
 TEST(CoSsdoDnIniOnRecv, Expedited_NoObject) {
   StartSSDO();
 
@@ -1273,6 +1325,22 @@ TEST(CoSsdoDnIniOnRecv, Expedited_NoObject) {
   CanSend::CheckMsg(DEFAULT_COBID_RES, 0, CO_SDO_MSG_SIZE, expected.data());
 }
 
+/// \Given a pointer to a started SSDO service (co_ssdo_t)
+///
+/// \When an SDO expedited download initiate request for an existing entry
+///       is received
+///
+/// \Then an SDO download initiate response is sent and the entry has
+///       the requested value
+///       \Calls ldle_u16()
+///       \Calls co_sdo_req_fini()
+///       \Calls co_sdo_req_init()
+///       \Calls co_dev_find_obj()
+///       \Calls co_obj_find_sub()
+///       \Calls co_sub_dn_ind()
+///       \Calls stle_u16()
+///       \Calls can_net_send()
+///       \Calls membuf_clear()
 TEST(CoSsdoDnIniOnRecv, Expedited) {
   dev_holder->CreateAndInsertObj(obj2020, IDX);
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE, sub_type(0));
