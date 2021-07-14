@@ -24,9 +24,9 @@
 #include <config.h>
 #endif
 
+#include <array>
 #include <memory>
 #include <vector>
-#include <array>
 
 #include <CppUTest/TestHarness.h>
 
@@ -1637,6 +1637,12 @@ TEST_GROUP_BASE(CoSsdoBlkUpIniOnRecv, CO_Ssdo) {
 /// @name SSDO block upload initiate on receive
 ///@{
 
+/// \Given a pointer to the SSDO service (co_ssdo_t)
+///
+/// \When an SDO block upload initiate request is received, but the client
+///       subcommand is incorrect
+///
+/// \Then an SDO abort transfer message with CO_SDO_AC_NO_CS abort code is sent
 TEST(CoSsdoBlkUpIniOnRecv, InvalidSC) {
   dev_holder->CreateAndInsertObj(obj2020, IDX);
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE, sub_type{0xabcdu});
@@ -1652,6 +1658,12 @@ TEST(CoSsdoBlkUpIniOnRecv, InvalidSC) {
   CanSend::CheckMsg(DEFAULT_COBID_RES, 0, CO_SDO_MSG_SIZE, expected.data());
 }
 
+/// \Given a pointer to the SSDO service (co_ssdo_t)
+///
+/// \When an SDO block upload initiate request is received, but the message
+///       does not contain an index for upload
+///
+/// \Then an SDO abort transfer message with CO_SDO_AC_NO_OBJ abort code is sent
 TEST(CoSsdoBlkUpIniOnRecv, NoIdxSpecified) {
   StartSSDO();
 
@@ -1665,6 +1677,12 @@ TEST(CoSsdoBlkUpIniOnRecv, NoIdxSpecified) {
   CanSend::CheckMsg(DEFAULT_COBID_RES, 0, CO_SDO_MSG_SIZE, expected.data());
 }
 
+/// \Given a pointer to the SSDO service (co_ssdo_t)
+///
+/// \When an SDO block upload initiate request is received, but the message
+///       does not contain a sub-index for upload
+///
+/// \Then an SDO abort transfer message with CO_SDO_AC_NO_SUB abort code is sent
 TEST(CoSsdoBlkUpIniOnRecv, NoSubidxSpecified) {
   StartSSDO();
 
@@ -1678,6 +1696,13 @@ TEST(CoSsdoBlkUpIniOnRecv, NoSubidxSpecified) {
   CanSend::CheckMsg(DEFAULT_COBID_RES, 0, CO_SDO_MSG_SIZE, expected.data());
 }
 
+/// \Given a pointer to the SSDO service (co_ssdo_t)
+///
+/// \When an SDO block upload initiate request is received, but the message
+///       does not contain a block size
+///
+/// \Then an SDO abort transfer message with CO_SDO_AC_BLK_SIZE abort code is
+///       sent
 TEST(CoSsdoBlkUpIniOnRecv, BlocksizeNotSpecified) {
   dev_holder->CreateAndInsertObj(obj2020, IDX);
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE, sub_type{0xabcdu});
@@ -1693,6 +1718,13 @@ TEST(CoSsdoBlkUpIniOnRecv, BlocksizeNotSpecified) {
   CanSend::CheckMsg(DEFAULT_COBID_RES, 0, CO_SDO_MSG_SIZE, expected.data());
 }
 
+/// \Given a pointer to the SSDO service (co_ssdo_t)
+///
+/// \When an SDO block upload initiate request is received, but the specified
+///       block size is greater than maximum block size
+///
+/// \Then an SDO abort transfer message with CO_SDO_AC_BLK_SIZE abort code is
+///       sent
 TEST(CoSsdoBlkUpIniOnRecv, BlocksizeMoreThanMaxSeqNum) {
   dev_holder->CreateAndInsertObj(obj2020, IDX);
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE, sub_type{0xabcdu});
@@ -1707,6 +1739,13 @@ TEST(CoSsdoBlkUpIniOnRecv, BlocksizeMoreThanMaxSeqNum) {
   CanSend::CheckMsg(DEFAULT_COBID_RES, 0, CO_SDO_MSG_SIZE, expected.data());
 }
 
+/// \Given a pointer to the SSDO service (co_ssdo_t)
+///
+/// \When an SDO block upload initiate request is received, but the specified
+///       block size is zero
+///
+/// \Then an SDO abort transfer message with CO_SDO_AC_BLK_SIZE abort code is
+///       sent
 TEST(CoSsdoBlkUpIniOnRecv, BlocksizeZero) {
   dev_holder->CreateAndInsertObj(obj2020, IDX);
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE, sub_type{0xabcdu});
@@ -1721,7 +1760,13 @@ TEST(CoSsdoBlkUpIniOnRecv, BlocksizeZero) {
   CanSend::CheckMsg(DEFAULT_COBID_RES, 0, CO_SDO_MSG_SIZE, expected.data());
 }
 
-TEST(CoSsdoBlkUpIniOnRecv, ProtocolSwitch) {
+/// \Given a pointer to the SSDO service (co_ssdo_t)
+///
+/// \When an SDO block upload initiate request is received, but the message
+///       does not contain a protocol switch threshold value
+///
+/// \Then an SDO block upload response is sent
+TEST(CoSsdoBlkUpIniOnRecv, MissingProtocolSwitchThreshold) {
   dev_holder->CreateAndInsertObj(obj2020, IDX);
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE, sub_type{0xabcdu});
   StartSSDO();
@@ -1737,6 +1782,12 @@ TEST(CoSsdoBlkUpIniOnRecv, ProtocolSwitch) {
   CanSend::CheckMsg(DEFAULT_COBID_RES, 0, CO_SDO_MSG_SIZE, expected.data());
 }
 
+/// \Given a pointer to the SSDO service (co_ssdo_t)
+///
+/// \When an SDO block upload initiate request for a non-existing object is
+///       received
+///
+/// \Then an SDO abort transfer message with CO_SDO_AC_NO_OBJ abort code is sent
 TEST(CoSsdoBlkUpIniOnRecv, NoObjPresent) {
   StartSSDO();
 
@@ -1749,6 +1800,12 @@ TEST(CoSsdoBlkUpIniOnRecv, NoObjPresent) {
   CanSend::CheckMsg(DEFAULT_COBID_RES, 0, CO_SDO_MSG_SIZE, expected.data());
 }
 
+/// \Given a pointer to the SSDO service (co_ssdo_t)
+///
+/// \When an SDO block upload initiate request for a non-existing sub-object is
+///       received
+///
+/// \Then an SDO abort transfer message with CO_SDO_AC_NO_SUB abort code is sent
 TEST(CoSsdoBlkUpIniOnRecv, NoSubPresent) {
   dev_holder->CreateAndInsertObj(obj2020, IDX);
   StartSSDO();
@@ -1762,23 +1819,14 @@ TEST(CoSsdoBlkUpIniOnRecv, NoSubPresent) {
   CanSend::CheckMsg(DEFAULT_COBID_RES, 0, CO_SDO_MSG_SIZE, expected.data());
 }
 
-TEST(CoSsdoBlkUpIniOnRecv, BlksizeMoreThanPst) {
-  dev_holder->CreateAndInsertObj(obj2020, IDX);
-  obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE64,
-                           sub_type64{0x0123456789abcdefuL});
-  StartSSDO();
-
-  can_msg msg = CreateBlkUp2020IniReqMsg(SUBIDX, sizeof(sub_type64));
-  CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
-
-  CHECK_EQUAL(1u, CanSend::GetNumCalled());
-  const auto expected = SdoInitExpectedData::U32(
-      CO_SDO_SCS_BLK_UP_RES | CO_SDO_BLK_SIZE_IND | CO_SDO_BLK_CRC, IDX, SUBIDX,
-      sizeof(sub_type64));
-  CanSend::CheckMsg(DEFAULT_COBID_RES, 0, CO_SDO_MSG_SIZE, expected.data());
-}
-
-TEST(CoSsdoBlkUpIniOnRecv, TimeoutTriggered) {
+/// \Given a pointer to the SSDO service (co_ssdo_t) with a timeout set,
+///        block upload request is received
+///
+/// \When the Server-SDO timeout expires before receiving the next SDO message
+///
+/// \Then an SDO abort transfer message with CO_SDO_AC_TIMEOUT abort code is
+///       sent
+TEST(CoSsdoBlkUpIniOnRecv, TimeoutSet) {
   dev_holder->CreateAndInsertObj(obj2020, IDX);
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE64, sub_type64{0uL});
   co_ssdo_set_timeout(ssdo, 1u);  // 1 ms
@@ -1798,15 +1846,19 @@ TEST(CoSsdoBlkUpIniOnRecv, TimeoutTriggered) {
   can_net_set_time(net, &tp);
 
   CHECK_EQUAL(1u, CanSend::GetNumCalled());
-  CHECK_EQUAL(DEFAULT_COBID_RES, CanSend::msg.id);
-  CHECK_EQUAL(0, CanSend::msg.flags);
-  CHECK_EQUAL(CO_SDO_MSG_SIZE, CanSend::msg.len);
-  CHECK_SDO_CAN_MSG_IDX(IDX, CanSend::msg.data);
-  CHECK_SDO_CAN_MSG_SUBIDX(SUBIDX, CanSend::msg.data);
-  CHECK_SDO_CAN_MSG_AC(CO_SDO_AC_TIMEOUT, CanSend::msg.data);
+  const auto expected_timeout =
+      SdoInitExpectedData::U32(CO_SDO_CS_ABORT, IDX, SUBIDX, CO_SDO_AC_TIMEOUT);
+  CanSend::CheckMsg(DEFAULT_COBID_RES, 0, CO_SDO_MSG_SIZE,
+                    expected_timeout.data());
 }
 
-TEST(CoSsdoBlkUpIniOnRecv, ReqSizeEqualToPst) {
+/// \Given a pointer to the SSDO service (co_ssdo_t) with no timeout set
+///
+/// \When an SDO block upload initiate request is received; protocol switch
+///       threshold value is equal to the size of the requested value in bytes
+///
+/// \Then an SDO upload initiate response is sent
+TEST(CoSsdoBlkUpIniOnRecv, ReqSizeEqualToPst_TimeoutNotSet) {
   dev_holder->CreateAndInsertObj(obj2020, IDX);
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE64, sub_type64{0uL});
   StartSSDO();
@@ -1822,6 +1874,14 @@ TEST(CoSsdoBlkUpIniOnRecv, ReqSizeEqualToPst) {
   CanSend::CheckMsg(DEFAULT_COBID_RES, 0, CO_SDO_MSG_SIZE, expected.data());
 }
 
+/// \Given a pointer to the SSDO service (co_ssdo_t) with a timeout set
+///
+/// \When an SDO block upload initiate request is received; protocol switch
+///       threshold value is equal to the size of the requested value in bytes;
+///       block size is set as lower than the size of the value to upload
+///
+/// \Then an SDO upload initiate response with SO_SDO_SC_END_BLK flag set is
+///       sent
 TEST(CoSsdoBlkUpIniOnRecv, ReqSizeEqualToPst_MoreFrames_TimeoutSet) {
   dev_holder->CreateAndInsertObj(obj2020, IDX);
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE64, sub_type64{0uL});
@@ -1839,13 +1899,21 @@ TEST(CoSsdoBlkUpIniOnRecv, ReqSizeEqualToPst_MoreFrames_TimeoutSet) {
   CanSend::CheckMsg(DEFAULT_COBID_RES, 0, CO_SDO_MSG_SIZE, expected.data());
 }
 
+/// \Given a pointer to the SSDO service (co_ssdo_t)
+///
+/// \When an SDO block upload initiate request is received; protocol switch
+///       threshold value is smaller than the size of the requested value;
+///       block size is set as lower than the size of the value to upload
+///
+/// \Then an SDO upload initiate response with SO_SDO_SC_END_BLK flag set is
+///       sent
 TEST(CoSsdoBlkUpIniOnRecv, ReqSizeMoreThanPst) {
   dev_holder->CreateAndInsertObj(obj2020, IDX);
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE64, sub_type64{0uL});
   StartSSDO();
 
-  can_msg msg = CreateBlkUp2020IniReqMsg(SUBIDX, 5u);
-  msg.data[5] = 2u;
+  can_msg msg = CreateBlkUp2020IniReqMsg(SUBIDX);
+  msg.data[5] = sizeof(sub_type64) - 6u;
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
   CHECK_EQUAL(1u, CanSend::GetNumCalled());
@@ -1855,6 +1923,11 @@ TEST(CoSsdoBlkUpIniOnRecv, ReqSizeMoreThanPst) {
   CanSend::CheckMsg(DEFAULT_COBID_RES, 0, CO_SDO_MSG_SIZE, expected.data());
 }
 
+/// \Given a pointer to the SSDO service (co_ssdo_t)
+///
+/// \When an SDO block upload initiate request for an existing entry is received
+///
+/// \Then an SDO block upload response is sent
 TEST(CoSsdoBlkUpIniOnRecv, Nominal) {
   dev_holder->CreateAndInsertObj(obj2020, IDX);
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE, sub_type{0xabcdu});
