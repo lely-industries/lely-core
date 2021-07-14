@@ -434,7 +434,7 @@ TEST(CO_EmcyMinimal, CoEmcyGetInd_DefaultNull) { CheckDefaultIndicator(emcy); }
 /// \Then the indication function and a pointer to user-specified data are set
 ///       in the EMCY service
 TEST(CO_EmcyMinimal, CoEmcySetInd_Nominal) {
-  int data = 42;
+  int32_t data = 42;
 
   co_emcy_set_ind(emcy, &EmcyInd::Func, &data);
 
@@ -834,7 +834,7 @@ TEST_GROUP_BASE(CO_EmcyInhibitTime, CO_EmcyBase) {
 
 TEST_GROUP_BASE(CO_EmcyReceiver, CO_EmcyBase) {
   co_emcy_t* emcy = nullptr;
-  int data = 42;
+  int32_t data = 42;
 
   void CheckEmcyIndCall(co_unsigned16_t eec, co_unsigned8_t er,
                         const msef_array& msef) const {
@@ -976,11 +976,13 @@ TEST(CO_Emcy, CoEmcyPush_ErrorRegister_GenericErrorBit) {
 TEST(CO_Emcy, CoEmcyPush_AtEmcyMessageLimit) {
 #if LELY_NO_MALLOC
 #ifndef CO_EMCY_MAX_NMSG
-#define CO_EMCY_MAX_NMSG 8
+  const std::size_t maxMsg = 8u;
+#else
+  const std::size_t maxMsg = CO_EMCY_MAX_NMSG;
 #endif
 #endif  // LELY_NO_MALLOC
 
-  for (std::size_t i = 0u; i < CO_EMCY_MAX_NMSG; ++i) {
+  for (std::size_t i = 0u; i < maxMsg; ++i) {
     CHECK_EQUAL(0, co_emcy_push(emcy, 0x1000u, 0x01u, nullptr));
   }
 
@@ -1333,15 +1335,17 @@ TEST(CO_EmcyInhibitTime, CoEmcyPush_MessageBufferFull) {
 
 #if LELY_NO_MALLOC
 #ifndef CO_EMCY_CAN_BUF_SIZE
-#define CO_EMCY_CAN_BUF_SIZE 16
+  const std::size_t bufSize = 16u;
+#else
+  const std::size_t bufSize = CO_EMCY_CAN_BUF_SIZE;
 #endif
 #endif  // LELY_NO_MALLOC
 
-  for (std::size_t i = 0u; i < CO_EMCY_CAN_BUF_SIZE / 2u; ++i) {
+  for (std::size_t i = 0u; i < bufSize / 2u; ++i) {
     CHECK_EQUAL(0, co_emcy_push(emcy, 0x1000u, 0x01u, nullptr));
     CHECK_EQUAL(0, co_emcy_clear(emcy));
   }
-  if (CO_EMCY_CAN_BUF_SIZE % 2u == 1u) {
+  if (bufSize % 2u == 1u) {
     CHECK_EQUAL(0, co_emcy_push(emcy, 0x1000u, 0x01u, nullptr));
   }
 

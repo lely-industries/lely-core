@@ -119,14 +119,16 @@ TEST_GROUP(CO_Val) {
   static co_unsigned56_t ldle_u56(const uint_least8_t src[8]) {
     return ldle_u64(src) & 0x00ffffffffffffff;
   }
-  static co_integer8_t ldle_i8(const uint_least8_t src[1]) { return *src; }
+  static co_integer8_t ldle_i8(const uint_least8_t src[1]) {
+    return static_cast<co_integer8_t>(*src);
+  }
   static co_integer24_t ldle_i24(const uint_least8_t src[4]) {
     co_unsigned24_t u24 = ldle_u24(src);
     if (u24 > CO_INTEGER24_MAX)
       return -(static_cast<int32_t>(CO_UNSIGNED24_MAX) + 1 -
                static_cast<int32_t>(u24));
     else
-      return u24;
+      return static_cast<co_integer24_t>(u24);
   }
   static co_integer40_t ldle_i40(const uint_least8_t src[8]) {
     co_unsigned40_t u40 = ldle_u40(src);
@@ -134,7 +136,7 @@ TEST_GROUP(CO_Val) {
       return -(static_cast<int64_t>(CO_UNSIGNED40_MAX) + 1 -
                static_cast<int64_t>(u40));
     else
-      return u40;
+      return static_cast<co_integer40_t>(u40);
   }
   static co_integer48_t ldle_i48(const uint_least8_t src[8]) {
     co_unsigned48_t u48 = ldle_u48(src);
@@ -150,7 +152,7 @@ TEST_GROUP(CO_Val) {
       return -(static_cast<int64_t>(CO_UNSIGNED56_MAX) + 1 -
                static_cast<int64_t>(u56));
     else
-      return u56;
+      return static_cast<co_integer56_t>(u56);
   }
   static co_real32_t ldle_r32(const uint_least8_t src[4]) {
     return ldle_flt32(src);
@@ -159,41 +161,59 @@ TEST_GROUP(CO_Val) {
     return ldle_flt64(src);
   }
 
-  static void stle_b(uint_least8_t dst[1], co_boolean_t val) { *dst = val; }
-  static void stle_u8(uint_least8_t dst[1], co_unsigned8_t val) { *dst = val; }
-  static void stle_u24(uint_least8_t dst[4], co_unsigned24_t val) {
+  static void stle_b(uint_least8_t dst[1], const co_boolean_t val) {
+    *dst = val ? 1u : 0u;
+  }
+  static void stle_u8(uint_least8_t dst[1], const co_unsigned8_t val) {
+    *dst = val;
+  }
+  static void stle_u24(uint_least8_t dst[4], const co_unsigned24_t val) {
     stle_u32(dst, val);
   }
-  static void stle_u40(uint_least8_t dst[8], co_unsigned40_t val) {
+  static void stle_u40(uint_least8_t dst[8], const co_unsigned40_t val) {
     stle_u64(dst, val);
   }
-  static void stle_u48(uint_least8_t dst[8], co_unsigned48_t val) {
+  static void stle_u48(uint_least8_t dst[8], const co_unsigned48_t val) {
     stle_u64(dst, val);
   }
-  static void stle_u56(uint_least8_t dst[8], co_unsigned56_t val) {
+  static void stle_u56(uint_least8_t dst[8], const co_unsigned56_t val) {
     stle_u64(dst, val);
   }
-  static void stle_i8(uint_least8_t dst[1], co_integer8_t val) { *dst = val; }
-  static void stle_i24(uint_least8_t dst[4], co_integer24_t val) {
-    if (val < 0) val = CO_UNSIGNED24_MAX + 1 + val;
-    stle_u32(dst, val);
+  static void stle_i8(uint_least8_t dst[1], const co_integer8_t val) {
+    *dst = static_cast<uint_least8_t>(val);
   }
-  static void stle_i40(uint_least8_t dst[8], co_integer40_t val) {
-    if (val < 0) val = CO_UNSIGNED40_MAX + 1 + val;
-    stle_u64(dst, val);
+  static void stle_i24(uint_least8_t dst[4], const co_integer24_t val) {
+    const auto v = (val < 0)
+                       ? static_cast<uint32_t>(
+                             static_cast<int32_t>(CO_UNSIGNED24_MAX) + 1 + val)
+                       : static_cast<uint32_t>(val);
+    stle_u32(dst, v);
   }
-  static void stle_i48(uint_least8_t dst[8], co_integer48_t val) {
-    if (val < 0) val = CO_UNSIGNED48_MAX + 1 + val;
-    stle_u64(dst, val);
+  static void stle_i40(uint_least8_t dst[8], const co_integer40_t val) {
+    const auto v = (val < 0)
+                       ? static_cast<uint64_t>(
+                             static_cast<int64_t>(CO_UNSIGNED40_MAX) + 1 + val)
+                       : static_cast<uint64_t>(val);
+    stle_u64(dst, v);
   }
-  static void stle_i56(uint_least8_t dst[8], co_integer56_t val) {
-    if (val < 0) val = CO_UNSIGNED56_MAX + 1 + val;
-    stle_u64(dst, val);
+  static void stle_i48(uint_least8_t dst[8], const co_integer48_t val) {
+    const auto v = (val < 0)
+                       ? static_cast<uint64_t>(
+                             static_cast<int64_t>(CO_UNSIGNED48_MAX) + 1 + val)
+                       : static_cast<uint64_t>(val);
+    stle_u64(dst, v);
   }
-  static void stle_r32(uint_least8_t dst[4], co_real32_t val) {
+  static void stle_i56(uint_least8_t dst[8], const co_integer56_t val) {
+    const auto v = (val < 0)
+                       ? static_cast<uint64_t>(
+                             static_cast<int64_t>(CO_UNSIGNED56_MAX) + 1 + val)
+                       : static_cast<uint64_t>(val);
+    stle_u64(dst, v);
+  }
+  static void stle_r32(uint_least8_t dst[4], const co_real32_t val) {
     stle_flt32(dst, val);
   }
-  static void stle_r64(uint_least8_t dst[8], co_real64_t val) {
+  static void stle_r64(uint_least8_t dst[8], const co_real64_t val) {
     stle_flt64(dst, val);
   }
 };
@@ -2332,8 +2352,8 @@ TEST(CO_Val, CoValCmp_DOMAIN) {
 /// \Then 0 is returned
 ///       \Calls co_type_is_array()
 TEST(CO_Val, CoValCmp_INVALID_TYPE) {
-  int val1 = 0;
-  int val2 = 0;
+  const int32_t val1 = 0;
+  const int32_t val2 = 0;
 
   CHECK_EQUAL(0, co_val_cmp(INVALID_TYPE, &val1, &val2));
 }
@@ -3571,11 +3591,8 @@ TEST(CO_Val, CoValInitArray_Nominal) {
 /// \Then nothing is changed
 TEST(CO_Val, CoValInitArray_NullValue) {
   co_array array = CO_ARRAY_INIT;
-  co_visible_string_t val = nullptr;
 
   co_val_init_array(nullptr, &array);
-
-  POINTERS_EQUAL(nullptr, val);
 }
 
 /// \Given a value of any array data type

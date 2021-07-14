@@ -156,7 +156,7 @@ TEST(CO_NmtSrv, CoNmtSrvInit_Nominal) {
 #if LELY_NO_CO_RPDO
   POINTERS_EQUAL(nullptr, co_nmt_get_rpdo(nmt, RPDO_NUM));
 #else
-  co_rpdo_t* const rpdo = co_nmt_get_rpdo(nmt, RPDO_NUM);
+  const co_rpdo_t* const rpdo = co_nmt_get_rpdo(nmt, RPDO_NUM);
   CHECK(rpdo != nullptr);
   POINTERS_EQUAL(net, co_rpdo_get_net(rpdo));
   POINTERS_EQUAL(dev, co_rpdo_get_dev(rpdo));
@@ -167,7 +167,7 @@ TEST(CO_NmtSrv, CoNmtSrvInit_Nominal) {
 #if LELY_NO_CO_TPDO
   POINTERS_EQUAL(nullptr, co_nmt_get_tpdo(nmt, TPDO_NUM));
 #else
-  co_tpdo_t* const tpdo = co_nmt_get_tpdo(nmt, TPDO_NUM);
+  const co_tpdo_t* const tpdo = co_nmt_get_tpdo(nmt, TPDO_NUM);
   CHECK(tpdo != nullptr);
   POINTERS_EQUAL(net, co_tpdo_get_net(tpdo));
   POINTERS_EQUAL(dev, co_tpdo_get_dev(tpdo));

@@ -232,15 +232,16 @@ TEST_GROUP_BASE(CO_NmtCreate, CO_NmtBase) {
   }
 
   // co_dev_write_dcf(): every <> is a call to co_val_write() when writing DCFs
-  static int GetCoDevWriteDcf_NullBuf_CoValWriteCalls(const size_t num_subs) {
+  static int32_t GetCoDevWriteDcf_NullBuf_CoValWriteCalls(
+      const size_t num_subs) {
     // <total number of subs> + NUM_SUBS * <get sub's size>
-    return 1 + static_cast<int>(num_subs);
+    return 1 + static_cast<int32_t>(num_subs);
   }
 
-  static int GetCoDevWriteDcf_CoValWriteCalls(const size_t num_subs) {
+  static int32_t GetCoDevWriteDcf_CoValWriteCalls(const size_t num_subs) {
     // <total number of subs> + NUM_SUBS * (<get sub's size> + <sub's index>
     //     + <sub's sub-index> + <sub's size> + <sub's value>)
-    return 1 + static_cast<int>(num_subs) * 5;
+    return 1 + (static_cast<int32_t>(num_subs) * 5);
   }
 
   TEST_TEARDOWN() {
@@ -1425,7 +1426,9 @@ TEST_GROUP_BASE(CO_Nmt, CO_NmtBase) {
   static void empty_sdo_ind(co_nmt_t*, co_unsigned8_t, co_unsigned16_t,
                             co_unsigned8_t, size_t, size_t, void*) {}
   static void empty_sync_ind(co_nmt_t*, co_unsigned8_t, void*) {}
-  int data = 0;
+  int32_t data = 0;
+
+  const co_unsigned8_t invalidNmtCs = co_unsigned8_t{0xffu};
 
   void CreateNmt() {
     nmt = co_nmt_create(net, dev);
@@ -2220,7 +2223,7 @@ TEST(CO_Nmt, CoNmtCsReq_InvalidCs) {
   CHECK_EQUAL(0, co_nmt_cs_ind(nmt, CO_NMT_CS_RESET_NODE));
   CanSend::Clear();
 
-  const auto ret = co_nmt_cs_req(nmt, -1, SLAVE_DEV_ID);
+  const auto ret = co_nmt_cs_req(nmt, invalidNmtCs, SLAVE_DEV_ID);
 
   CHECK_EQUAL(-1, ret);
   CHECK_EQUAL(ERRNUM_INVAL, get_errnum());
@@ -2288,7 +2291,7 @@ TEST(CO_Nmt, CoNmtCsReq_FrameBufferOverflow) {
   CreateObj1f80NmtStartup(0x01u);
   CreateNmt();
 
-  unsigned int msg_counter = 0;
+  size_t msg_counter = 0;
   CHECK_EQUAL(0, co_nmt_cs_ind(nmt, CO_NMT_CS_RESET_NODE));
   ++msg_counter;
   while (msg_counter < CO_NMT_CAN_BUF_SIZE) {
@@ -2407,7 +2410,7 @@ TEST(CO_Nmt, CoNmtChkBootup_MasterId_Booted) {
 TEST(CO_Nmt, CoNmtChkBootup_MasterId_BeforeBoot) {
   co_nmt_st_ind_t* const st_ind = [](co_nmt_t* nmt, co_unsigned8_t id,
                                      co_unsigned8_t st, void*) {
-    static unsigned int bootup_cnt = 0;
+    static size_t bootup_cnt = 0;
 
     CHECK_EQUAL(MASTER_DEV_ID, id);
 
@@ -2560,7 +2563,7 @@ TEST(CO_Nmt, CoNmtCsInd_InvalidCs) {
   CreateNmt();
   SetNmtCsStIndFunc();
 
-  const auto ret = co_nmt_cs_ind(nmt, -1);
+  const auto ret = co_nmt_cs_ind(nmt, invalidNmtCs);
 
   CHECK_EQUAL(-1, ret);
   CHECK_EQUAL(ERRNUM_INVAL, get_errnum());

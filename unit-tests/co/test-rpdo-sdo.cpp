@@ -109,7 +109,7 @@ static co_unsigned8_t rpdo_err_func_er = 0u;
 }  // namespace CO_SdoRpdo1400Static
 
 TEST_GROUP_BASE(CO_SdoRpdo1400, CO_SdoRpdoBase) {
-  int clang_format_fix = 0;  // unused
+  int32_t clang_format_fix = 0;  // dummy for workaround
 
   static void rpdo_err_func(co_rpdo_t*, co_unsigned16_t eec, co_unsigned8_t er,
                             void*) {

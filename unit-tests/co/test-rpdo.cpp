@@ -531,7 +531,7 @@ TEST(CO_Rpdo, CoRpdoGetInd_Null) {
 }
 
 TEST(CO_Rpdo, CoRpdoSetInd) {
-  int data = 0;
+  int32_t data = 0;
   CreateRpdo();
 
   co_rpdo_set_ind(rpdo, rpdo_ind_func, &data);
@@ -550,7 +550,7 @@ TEST(CO_Rpdo, CoRpdoGetErr_Null) {
 }
 
 TEST(CO_Rpdo, CoRpdoSetErr) {
-  int data = 0;
+  int32_t data = 0;
   CreateRpdo();
 
   co_rpdo_set_err(rpdo, rpdo_err_func, &data);
@@ -682,7 +682,7 @@ TEST(CO_Rpdo, CoRpdoSync_WithCallbacks) {
   SetComm02SynchronousTransmission();
 
   CreateRpdo();
-  int data = 0;
+  int32_t data = 0;
   co_rpdo_set_ind(rpdo, rpdo_ind_func, &data);
   co_rpdo_set_err(rpdo, rpdo_err_func, nullptr);
   StartRpdo();
@@ -720,7 +720,7 @@ TEST(CO_Rpdo, CoRpdoSync_BadMapping) {
                            co_unsigned32_t{0x20000000u});
 
   CreateRpdo();
-  int data = 0;
+  int32_t data = 0;
   co_rpdo_set_ind(rpdo, rpdo_ind_func, &data);
   co_rpdo_set_err(rpdo, rpdo_err_func, nullptr);
   StartRpdo();
@@ -763,9 +763,9 @@ TEST(CO_Rpdo, CoRpdoSync_BadMappingLength) {
   obj2000->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t{0x00u});
 
   CreateRpdo();
-  int ind_data = 0;
+  int32_t ind_data = 0;
   co_rpdo_set_ind(rpdo, rpdo_ind_func, &ind_data);
-  int err_data = 0;
+  int32_t err_data = 0;
   co_rpdo_set_err(rpdo, rpdo_err_func, &err_data);
   StartRpdo();
 
@@ -811,9 +811,9 @@ TEST(CO_Rpdo, CoRpdoSync_RPDOLengthExceedsMapping) {
   co_sub_set_pdo_mapping(obj2000->GetLastSub(), 1);
 
   CreateRpdo();
-  int ind_data = 0;
+  int32_t ind_data = 0;
   co_rpdo_set_ind(rpdo, rpdo_ind_func, &ind_data);
-  int err_data = 0;
+  int32_t err_data = 0;
   co_rpdo_set_err(rpdo, rpdo_err_func, &err_data);
   StartRpdo();
 
@@ -867,7 +867,7 @@ TEST(CO_Rpdo, CoRpdoRecv_EventDrivenRPDO) {
   SetComm02EventDrivenTransmission();
 
   CreateRpdo();
-  int data = 0;
+  int32_t data = 0;
   co_rpdo_set_ind(rpdo, rpdo_ind_func, &data);
   co_rpdo_set_err(rpdo, rpdo_err_func, nullptr);
   StartRpdo();
@@ -973,7 +973,7 @@ TEST(CO_Rpdo, CoRpdoRecv_NoPDOInSyncWindow) {
 
   CreateRpdo();
   co_rpdo_set_ind(rpdo, rpdo_ind_func, nullptr);
-  int data = 0;
+  int32_t data = 0;
   co_rpdo_set_err(rpdo, rpdo_err_func, &data);
   StartRpdo();
 

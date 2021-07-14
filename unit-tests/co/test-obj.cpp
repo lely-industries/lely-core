@@ -135,8 +135,8 @@ TEST(CO_ObjInit, CoObjFini_Nominal) {
 ///@}
 
 namespace CO_ObjBase_Static {
-static unsigned int dn_ind_func_counter = 0;
-static unsigned int up_ind_func_counter = 0;
+static size_t dn_ind_func_counter = 0;
+static size_t up_ind_func_counter = 0;
 }  // namespace CO_ObjBase_Static
 
 TEST_BASE(CO_ObjBase) {
@@ -370,7 +370,7 @@ TEST(CO_ObjDev, CoObjPrev_Removed) {
 ///       \Calls rbnode_prev()
 TEST(CO_ObjDev, CoObjPrev_WithPreviousObject) {
   CoObjTHolder obj2_holder(0x0001u);
-  co_obj_t* obj2 = obj2_holder.Get();
+  const co_obj_t* const obj2 = obj2_holder.Get();
   CHECK_EQUAL(0, co_dev_insert_obj(dev, obj2_holder.Take()));
 
   POINTERS_EQUAL(obj2, co_obj_prev(obj));
@@ -429,7 +429,7 @@ TEST(CO_ObjDev, CoObjNext_Removed) {
 ///       \Calls rbnode_next()
 TEST(CO_ObjDev, CoObjNext_WithNextObject) {
   CoObjTHolder obj2_holder(0x2222u);
-  co_obj_t* obj2 = obj2_holder.Get();
+  const co_obj_t* const obj2 = obj2_holder.Get();
   CHECK_EQUAL(0, co_dev_insert_obj(dev, obj2_holder.Take()));
 
   POINTERS_EQUAL(obj2, co_obj_next(obj));
@@ -798,7 +798,7 @@ TEST(CO_Obj, CoObjSetCode_Invalid) {
 ///
 /// \Then a null pointer is returned
 TEST(CO_Obj, CoObjAddressofVal_Null) {
-  co_obj_t* const obj = nullptr;
+  const co_obj_t* const obj = nullptr;
 
   POINTERS_EQUAL(nullptr, co_obj_addressof_val(obj));
 }
@@ -840,7 +840,7 @@ TEST(CO_ObjSub, CoObjAddressofVal_Nominal) {
 ///
 /// \Then 0 is returned
 TEST(CO_Obj, CoObjSizeofVal_Null) {
-  co_obj_t* const obj = nullptr;
+  const co_obj_t* const obj = nullptr;
 
   CHECK_EQUAL(0, co_obj_sizeof_val(obj));
 }
@@ -874,7 +874,7 @@ TEST(CO_ObjSub, CoObjSizeofVal_Nominal) {
 /// \Then a null pointer is returned
 ///       \Calls co_sub_get_val()
 TEST(CO_Obj, CoObjGetVal_Null) {
-  co_obj_t* const obj = nullptr;
+  const co_obj_t* const obj = nullptr;
 
   POINTERS_EQUAL(nullptr, co_obj_get_val(obj, 0x00));
 }
@@ -968,7 +968,7 @@ TEST(CO_ObjSub, CoObjSetVal_Nominal) {
 /// \Then the requested indicator and the data pointer are set
 ///       \Calls co_sub_set_dn_ind()
 TEST(CO_ObjSub, CoObjSetDnInd_Nominal) {
-  int data = 0;
+  int32_t data = 0;
 
   co_obj_set_dn_ind(obj, dn_ind_func, &data);
 
@@ -991,7 +991,7 @@ TEST(CO_ObjSub, CoObjSetDnInd_MultipleSubs) {
   CHECK(sub2_holder.Get() != nullptr);
   const auto* sub2 = obj_holder->InsertSub(sub2_holder);
   CHECK(sub2 != nullptr);
-  int data = 0;
+  int32_t data = 0;
 
   co_obj_set_dn_ind(obj, dn_ind_func, &data);
 
@@ -1030,7 +1030,7 @@ TEST(CO_Obj, CoObjSetDnInd_NoSub) { co_obj_set_dn_ind(obj, nullptr, nullptr); }
 /// \Then the requested indicator and the data pointer are set
 ///       \Calls co_sub_set_up_ind()
 TEST(CO_ObjSub, CoObjSetUpInd_Nominal) {
-  int data = 0;
+  int32_t data = 0;
 
   co_obj_set_up_ind(obj, up_ind_func, &data);
 
@@ -1053,7 +1053,7 @@ TEST(CO_ObjSub, CoObjSetUpInd_MultipleSubs) {
   CHECK(sub2_holder.Get() != nullptr);
   const auto* sub2 = obj_holder->InsertSub(sub2_holder);
   CHECK(sub2 != nullptr);
-  int data = 0;
+  int32_t data = 0;
 
   co_obj_set_up_ind(obj, up_ind_func, &data);
 
@@ -1094,7 +1094,7 @@ TEST_GROUP(CO_SubInit) {
 #endif
   }
 
-  void ReleaseCoSubT(co_sub_t * sub_) {
+  void ReleaseCoSubT(co_sub_t* const sub_) {
 #if LELY_NO_MALLOC
     POINTERS_EQUAL(&sub, sub_);
 #else
@@ -1102,7 +1102,7 @@ TEST_GROUP(CO_SubInit) {
 #endif
   }
 
-  void DestroyCoSubT(co_sub_t * sub_) {
+  void DestroyCoSubT(co_sub_t* const sub_) {
     co_sub_fini(sub_);
     ReleaseCoSubT(sub_);
   }
@@ -1561,7 +1561,7 @@ TEST(CO_Sub, CoSubGetType_Nominal) {
 /// \Then a null pointer is returned
 ///       \Calls co_val_addressof()
 TEST(CO_Sub, CoSubAddressofMin_Null) {
-  co_sub_t* const sub = nullptr;
+  const co_sub_t* const sub = nullptr;
 
   POINTERS_EQUAL(nullptr, co_sub_addressof_min(sub));
 }
@@ -1592,7 +1592,7 @@ TEST(CO_Sub, CoSubAddressofMin_Nominal) {
 /// \Then 0 is returned
 ///       \Calls co_val_sizeof()
 TEST(CO_Sub, CoSubSizeofMin_Null) {
-  co_sub_t* const sub = nullptr;
+  const co_sub_t* const sub = nullptr;
 
   CHECK_EQUAL(0, co_sub_sizeof_min(sub));
 }
@@ -1619,7 +1619,7 @@ TEST(CO_Sub, CoSubSizeofMin_Nominal) {
 ///
 /// \Then a null pointer is returned
 TEST(CO_Sub, CoSubGetMin_Null) {
-  co_sub_t* const sub = nullptr;
+  const co_sub_t* const sub = nullptr;
 
   POINTERS_EQUAL(nullptr, co_sub_get_min(sub));
 }
@@ -1658,7 +1658,7 @@ TEST(CO_Sub, CoSubSetMin_Nominal) {
 ///
 /// \Then a null pointer is returned
 TEST(CO_Sub, CoSubAddressofMax_Null) {
-  co_sub_t* const sub = nullptr;
+  const co_sub_t* const sub = nullptr;
 
   POINTERS_EQUAL(nullptr, co_sub_addressof_max(sub));
 }
@@ -1688,7 +1688,7 @@ TEST(CO_Sub, CoSubAddressofMax_Nominal) {
 ///
 /// \Then 0 is returned
 TEST(CO_Sub, CoSubSizeofMax_Null) {
-  co_sub_t* const sub = nullptr;
+  const co_sub_t* const sub = nullptr;
 
   CHECK_EQUAL(0, co_sub_sizeof_max(sub));
 }
@@ -1715,7 +1715,7 @@ TEST(CO_Sub, CoSubSizeofMax_Nominal) {
 ///
 /// \Then a null pointer is returned
 TEST(CO_Sub, CoSubGetMax_Null) {
-  co_sub_t* const sub = nullptr;
+  const co_sub_t* const sub = nullptr;
 
   POINTERS_EQUAL(nullptr, co_sub_get_max(sub));
 }
@@ -1758,7 +1758,7 @@ TEST(CO_Sub, CoSubSetMax_Nominal) {
 ///
 /// \Then a null pointer is returned
 TEST(CO_Sub, CoSubAddressofDef_Null) {
-  co_sub_t* const sub = nullptr;
+  const co_sub_t* const sub = nullptr;
 
   POINTERS_EQUAL(nullptr, co_sub_addressof_def(sub));
 }
@@ -1787,7 +1787,7 @@ TEST(CO_Sub, CoSubAddressofDef_Nominal) {
 ///
 /// \Then 0 is returned
 TEST(CO_Sub, CoSubSizeofDef_Null) {
-  co_sub_t* const sub = nullptr;
+  const co_sub_t* const sub = nullptr;
 
   CHECK_EQUAL(0, co_sub_sizeof_def(sub));
 }
@@ -1817,7 +1817,7 @@ TEST(CO_Sub, CoSubSizeofDef_Nominal) {
 ///
 /// \Then a null pointer is returned
 TEST(CO_Sub, CoSubGetDef_Null) {
-  co_sub_t* const sub = nullptr;
+  const co_sub_t* const sub = nullptr;
 
   POINTERS_EQUAL(nullptr, co_sub_get_def(sub));
 }
@@ -1859,7 +1859,7 @@ TEST(CO_Sub, CoSubSetDef_Nominal) {
 ///
 /// \Then a null pointer is returned
 TEST(CO_Sub, CoSubAddressofVal_Null) {
-  co_sub_t* const sub = nullptr;
+  const co_sub_t* const sub = nullptr;
 
   POINTERS_EQUAL(nullptr, co_sub_addressof_val(sub));
 }
@@ -1888,7 +1888,7 @@ TEST(CO_ObjSub, CoSubAddressofVal_Nominal) {
 ///
 /// \Then 0 is returned
 TEST(CO_Sub, CoSubSizeofVal_Null) {
-  co_sub_t* const sub = nullptr;
+  const co_sub_t* const sub = nullptr;
 
   CHECK_EQUAL(0, co_sub_sizeof_val(sub));
 }
@@ -1913,7 +1913,7 @@ TEST(CO_ObjSub, CoSubSizeofVal_Nominal) {
 ///
 /// \Then a null pointer is returned
 TEST(CO_Sub, CoSubGetVal_Null) {
-  co_sub_t* const sub = nullptr;
+  const co_sub_t* const sub = nullptr;
 
   POINTERS_EQUAL(nullptr, co_sub_get_val(sub));
 }
@@ -1995,7 +1995,7 @@ TEST(CO_ObjSub, CoSubSetVal_Nominal) {
 ///       \Calls co_type_is_basic()
 TEST(CO_Obj, CoSubChkVal_NotBasicType) {
   CoSubTHolder sub_holder(SUB_IDX, CO_DEFTYPE_DOMAIN);
-  co_sub_t* const sub = sub_holder.Get();
+  const co_sub_t* const sub = sub_holder.Get();
 
   const auto ret = co_sub_chk_val(sub, CO_DEFTYPE_DOMAIN, nullptr);
 
@@ -2324,7 +2324,7 @@ TEST(CO_Sub, CoSubSetDnInd_Null) {
 /// \Then the sub-object download indication function is set to the default
 ///       indication function, the custom data is set to a null pointer
 TEST(CO_Sub, CoSubSetDnInd_NullInd) {
-  int data = 0x0;
+  int32_t data = 0x0;
 
   co_sub_set_dn_ind(sub, nullptr, &data);
 
@@ -2343,7 +2343,7 @@ TEST(CO_Sub, CoSubSetDnInd_NullInd) {
 /// \Then the sub-object download indication and user-specified data are set to
 ///       requested values
 TEST(CO_ObjSub, CoSubSetDnInd_Nominal) {
-  int data = 0x0;
+  int32_t data = 0x0;
 
   co_sub_set_dn_ind(sub, dn_ind_func, &data);
 
@@ -2754,7 +2754,7 @@ TEST(CO_Sub, CoSubSetUpInd_Null) {
 ///       indication function, the user-specified data is set to a null
 ///       pointer
 TEST(CO_Sub, CoSubSetUpInd_NullInd) {
-  int data = 0x0;
+  int32_t data = 0x0;
 
   co_sub_set_up_ind(sub, nullptr, &data);
 
@@ -2773,7 +2773,7 @@ TEST(CO_Sub, CoSubSetUpInd_NullInd) {
 /// \Then the sub-object upload indication and the user-specified data are set
 ///       to requested values
 TEST(CO_ObjSub, CoSubSetUpInd_Nominal) {
-  int data = 0;
+  int32_t data = 0;
 
   co_sub_set_up_ind(sub, up_ind_func, &data);
 
@@ -2868,7 +2868,7 @@ TEST(CO_ObjSub, CoSubOnUp_Nominal) {
 ///
 /// \Then CO_SDO_AC_NO_SUB abort code is returned
 TEST(CO_Sub, CoSubUpInd_NoSub) {
-  co_sub_t* const sub = nullptr;
+  const co_sub_t* const sub = nullptr;
   co_sdo_req* const req = nullptr;
 
   CHECK_EQUAL(CO_SDO_AC_NO_SUB, co_sub_up_ind(sub, req, 0));

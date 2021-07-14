@@ -234,7 +234,7 @@ TEST_GROUP_BASE(CO_Sync, CO_SyncBase) {
   }
 
   void CheckSubDnIndDefault(co_unsigned16_t idx) const {
-    co_sub_t* const sub = co_dev_find_sub(dev, idx, 0x00u);
+    const co_sub_t* const sub = co_dev_find_sub(dev, idx, 0x00u);
     CHECK(sub != nullptr);
     co_sub_dn_ind_t* ind = nullptr;
     void* data = nullptr;
@@ -246,7 +246,7 @@ TEST_GROUP_BASE(CO_Sync, CO_SyncBase) {
   }
 
   static void CheckSubDnIndIsSet(co_unsigned16_t idx) {
-    co_sub_t* const sub = co_dev_find_sub(dev, idx, 0x00u);
+    const co_sub_t* const sub = co_dev_find_sub(dev, idx, 0x00u);
     CHECK(sub != nullptr);
     co_sub_dn_ind_t* ind = nullptr;
     void* data = nullptr;
@@ -311,7 +311,7 @@ TEST(CO_Sync, CoSyncGetInd_PointersNull) {
 /// \Then passed pointers to indication function and data are set to null
 TEST(CO_Sync, CoSyncGetInd) {
   co_sync_ind_t* ind = SyncInd::func;
-  int data = 42;
+  int32_t data = 42;
   void* dataptr = &data;
 
   co_sync_get_ind(sync, &ind, &dataptr);
@@ -333,7 +333,7 @@ TEST(CO_Sync, CoSyncGetInd) {
 /// \Then indication function and pointer to user-specified data have requested
 ///       values and can be obtained using co_sync_get_ind()
 TEST(CO_Sync, CoSyncSetInd) {
-  int data = 42;
+  int32_t data = 42;
 
   co_sync_set_ind(sync, SyncInd::func, &data);
 
@@ -366,7 +366,7 @@ TEST(CO_Sync, CoSyncGetErr_PointersNull) {
 /// \Then passed pointers to error handling function and data are set to null
 TEST(CO_Sync, CoSyncGetErr) {
   co_sync_err_t* err = SyncErr::func;
-  int data = 42;
+  int32_t data = 42;
   void* dataptr = &data;
 
   co_sync_get_err(sync, &err, &dataptr);
@@ -388,7 +388,7 @@ TEST(CO_Sync, CoSyncGetErr) {
 /// \Then error handling function and pointer to user-specified data have
 ///       requested values and can be obtained using co_sync_get_err()
 TEST(CO_Sync, CoSyncSetErr) {
-  int data = 42;
+  int32_t data = 42;
 
   co_sync_set_err(sync, SyncErr::func, &data);
 
