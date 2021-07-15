@@ -91,14 +91,15 @@ TEST_GROUP(CO_EmcySdo) {
     CHECK_EQUAL(0, co_emcy_start(emcy));
   }
 
-  static void CheckDnConAbortCode(co_unsigned16_t obj_idx,
-                                  co_unsigned8_t sub_idx, co_unsigned32_t ac) {
+  static void CheckDnConAbortCode(const co_unsigned16_t obj_idx,
+                                  const co_unsigned8_t sub_idx,
+                                  const co_unsigned32_t ac) {
     CHECK(CoCsdoDnCon::Called());
     CoCsdoDnCon::Check(nullptr, obj_idx, sub_idx, ac, nullptr);
   }
 
-  static void CheckDnConSuccess(co_unsigned16_t obj_idx,
-                                co_unsigned8_t sub_idx) {
+  static void CheckDnConSuccess(const co_unsigned16_t obj_idx,
+                                const co_unsigned8_t sub_idx) {
     CheckDnConAbortCode(obj_idx, sub_idx, 0u);
   }
 

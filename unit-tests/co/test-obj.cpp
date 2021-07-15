@@ -55,7 +55,7 @@ TEST_GROUP(CO_ObjInit) {
 #endif
   }
 
-  void ReleaseCoObjT(co_obj_t * obj) {
+  void ReleaseCoObjT(co_obj_t* const obj) {
 #if LELY_NO_MALLOC
     POINTERS_EQUAL(&object, obj);
 #else
@@ -63,7 +63,7 @@ TEST_GROUP(CO_ObjInit) {
 #endif
   }
 
-  void DestroyCoObjT(co_obj_t * obj) {
+  void DestroyCoObjT(co_obj_t* const obj) {
     co_obj_fini(obj);
     ReleaseCoObjT(obj);
   }
@@ -148,14 +148,14 @@ TEST_BASE(CO_ObjBase) {
   const char* const TEST_STR = "testtesttest";
 
   static co_unsigned32_t dn_ind_func(co_sub_t*, struct co_sdo_req*,
-                                     co_unsigned32_t ac, void*) {
-    if (ac) return ac;
+                                     const co_unsigned32_t ac, void*) {
+    if (ac != 0) return ac;
     ++CO_ObjBase_Static::dn_ind_func_counter;
     return 0;
   }
   static co_unsigned32_t up_ind_func(const co_sub_t*, struct co_sdo_req*,
-                                     co_unsigned32_t ac, void*) {
-    if (ac) return ac;
+                                     const co_unsigned32_t ac, void*) {
+    if (ac != 0) return ac;
     ++CO_ObjBase_Static::up_ind_func_counter;
     return 0;
   }
@@ -989,7 +989,7 @@ TEST(CO_ObjSub, CoObjSetDnInd_Nominal) {
 TEST(CO_ObjSub, CoObjSetDnInd_MultipleSubs) {
   CoSubTHolder sub2_holder(0x42u, CO_DEFTYPE_INTEGER16);
   CHECK(sub2_holder.Get() != nullptr);
-  const auto* sub2 = obj_holder->InsertSub(sub2_holder);
+  const auto* const sub2 = obj_holder->InsertSub(sub2_holder);
   CHECK(sub2 != nullptr);
   int32_t data = 0;
 
@@ -1051,7 +1051,7 @@ TEST(CO_ObjSub, CoObjSetUpInd_Nominal) {
 TEST(CO_ObjSub, CoObjSetUpInd_MultipleSubs) {
   CoSubTHolder sub2_holder(0x42u, CO_DEFTYPE_INTEGER16);
   CHECK(sub2_holder.Get() != nullptr);
-  const auto* sub2 = obj_holder->InsertSub(sub2_holder);
+  const auto* const sub2 = obj_holder->InsertSub(sub2_holder);
   CHECK(sub2 != nullptr);
   int32_t data = 0;
 
@@ -1419,7 +1419,7 @@ TEST(CO_ObjSub, CoSubPrev_Removed) {
 TEST(CO_ObjSub, CoSubNext_Nominal) {
   CoSubTHolder sub2_holder(0xcd, CO_DEFTYPE_INTEGER16);
   CHECK(sub2_holder.Get() != nullptr);
-  const auto* sub2 = obj_holder->InsertSub(sub2_holder);
+  const auto* const sub2 = obj_holder->InsertSub(sub2_holder);
   CHECK(sub2 != nullptr);
 
   POINTERS_EQUAL(sub2, co_sub_next(sub));
@@ -2498,7 +2498,7 @@ TEST(CO_ObjSubArray, CoSubOnDn_ArrayType) {
   CHECK_EQUAL(0, ret);
   CHECK_EQUAL(0xffffffffu, ac);
 
-  const auto* sub_value = co_sub_get_val(array_sub);
+  const auto* const sub_value = co_sub_get_val(array_sub);
   CHECK(sub_value != nullptr);
   CHECK_EQUAL(0, co_val_cmp(SUB_ARRAY_TYPE, &req_value, sub_value));
 }

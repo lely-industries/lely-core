@@ -111,8 +111,8 @@ static co_unsigned8_t rpdo_err_func_er = 0u;
 TEST_GROUP_BASE(CO_SdoRpdo1400, CO_SdoRpdoBase) {
   int32_t clang_format_fix = 0;  // dummy for workaround
 
-  static void rpdo_err_func(co_rpdo_t*, co_unsigned16_t eec, co_unsigned8_t er,
-                            void*) {
+  static void rpdo_err_func(co_rpdo_t*, const co_unsigned16_t eec,
+                            const co_unsigned8_t er, void*) {
     CO_SdoRpdo1400Static::rpdo_err_func_called = true;
     CO_SdoRpdo1400Static::rpdo_err_func_eec = eec;
     CO_SdoRpdo1400Static::rpdo_err_func_er = er;
@@ -130,7 +130,7 @@ TEST_GROUP_BASE(CO_SdoRpdo1400, CO_SdoRpdoBase) {
     CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
   }
 
-  void SetCurrentTimeMs(uint_least64_t ms) {
+  void SetCurrentTimeMs(const uint_least64_t ms) {
     timespec tp = {0, 0u};
     timespec_add_msec(&tp, ms);
     CHECK_EQUAL(0, can_net_set_time(net, &tp));
@@ -283,7 +283,7 @@ TEST(CO_SdoRpdo1400, Co1400DnInd_CobidValidToValid_FrameBit) {
 // when: COB-ID with frame bit and CO_PDO_COBID_VALID set is downloaded
 // then: CO_SDO_AC_PARAM_VAL abort code is returned
 TEST(CO_SdoRpdo1400, Co1400DnInd_CobidValidToInvalid_ExtendedId_NoFrameBit) {
-  co_unsigned32_t cobid = DEV_ID | (1u << 28u) | CO_PDO_COBID_VALID;
+  const co_unsigned32_t cobid = DEV_ID | (1u << 28u) | CO_PDO_COBID_VALID;
   const auto ret =
       co_dev_dn_val_req(dev, 0x1400u, 0x01u, CO_DEFTYPE_UNSIGNED32, &cobid,
                         nullptr, CoCsdoDnCon::Func, nullptr);
@@ -598,7 +598,7 @@ TEST_GROUP_BASE(CO_SdoRpdo1600, CO_SdoRpdoBase) {
     }
   }
 
-  void Set1600Sub1Mapping(co_unsigned32_t mapping) {
+  void Set1600Sub1Mapping(const co_unsigned32_t mapping) {
     co_sub_t* const sub = co_dev_find_sub(dev, 0x1600u, 0x01u);
     co_sub_set_val_u32(sub, mapping);
   }
@@ -608,12 +608,12 @@ TEST_GROUP_BASE(CO_SdoRpdo1600, CO_SdoRpdoBase) {
 
     obj2021->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED32,
                              co_unsigned32_t{0xdeadbeefu});
-    co_sub_t* sub2021 = obj2021->GetLastSub();
+    co_sub_t* const sub2021 = obj2021->GetLastSub();
     co_sub_set_access(sub2021, CO_ACCESS_RW);
     co_sub_set_pdo_mapping(sub2021, 1);
   }
 
-  void SetNumOfMappings(co_unsigned8_t mappings_num) {
+  void SetNumOfMappings(const co_unsigned8_t mappings_num) {
     co_sub_t* const sub_map_n = co_dev_find_sub(dev, 0x1600u, 0x00u);
     co_sub_set_val_u8(sub_map_n, mappings_num);
   }

@@ -39,9 +39,9 @@ size_t CoCsdoUpCon::num_called = 0;
 uint_least8_t CoCsdoUpCon::buf[CoCsdoUpCon::BUFSIZE] = {0};
 
 void
-CoCsdoUpCon::func(co_csdo_t* sdo_, co_unsigned16_t idx_, co_unsigned8_t subidx_,
-                  co_unsigned32_t ac_, const void* ptr_, size_t n_,
-                  void* data_) {
+CoCsdoUpCon::func(co_csdo_t* const sdo_, const co_unsigned16_t idx_,
+                  const co_unsigned8_t subidx_, const co_unsigned32_t ac_,
+                  const void* const ptr_, const size_t n_, void* const data_) {
   sdo = sdo_;
   idx = idx_;
   subidx = subidx_;
@@ -68,9 +68,10 @@ CoCsdoUpCon::Clear() {
 }
 
 void
-CoCsdoUpCon::Check(const co_csdo_t* sdo_, const co_unsigned16_t idx_,
+CoCsdoUpCon::Check(const co_csdo_t* const sdo_, const co_unsigned16_t idx_,
                    const co_unsigned8_t subidx_, const co_unsigned32_t ac_,
-                   const void* ptr_, const size_t n_, const void* data_) {
+                   const void* const ptr_, const size_t n_,
+                   const void* const data_) {
   POINTERS_EQUAL(sdo_, sdo);
   CHECK_EQUAL(idx_, idx);
   CHECK_EQUAL(subidx_, subidx);

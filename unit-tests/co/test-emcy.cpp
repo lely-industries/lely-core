@@ -63,8 +63,9 @@ struct EmcyInd {
   static void* last_data;
 
   static void
-  Func(co_emcy_t* emcy, co_unsigned8_t id, co_unsigned16_t eec,
-       co_unsigned8_t er, co_unsigned8_t* msef, void* data) {
+  Func(co_emcy_t* const emcy, const co_unsigned8_t id,
+       const co_unsigned16_t eec, const co_unsigned8_t er,
+       co_unsigned8_t* const msef, void* const data) {
     called = true;
     last_emcy = emcy;
     last_id = id;
@@ -111,7 +112,7 @@ TEST_BASE(CO_EmcyBase) {
   const co_unsigned32_t PRODUCER_CANID = 0x80u + DEV_ID;
   const co_unsigned32_t CONSUMER_CANID = PRODUCER_CANID + 1u;
 
-  void CreateObj1001ErrorRegister(co_unsigned8_t er) {
+  void CreateObj1001ErrorRegister(const co_unsigned8_t er) {
     dev_holder->CreateAndInsertObj(obj1001, 0x1001u);
     obj1001->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, er);
   }
@@ -140,14 +141,14 @@ TEST_BASE(CO_EmcyBase) {
                              co_unsigned32_t{CONSUMER_CANID});
   }
 
-  void CheckDefaultEmcyParams(const co_emcy_t* emcy) const {
+  void CheckDefaultEmcyParams(const co_emcy_t* const emcy) const {
     POINTERS_EQUAL(net, co_emcy_get_net(emcy));
     POINTERS_EQUAL(dev, co_emcy_get_dev(emcy));
 
     CheckDefaultIndicator(emcy);
   }
 
-  static void CheckDefaultIndicator(const co_emcy_t* emcy) {
+  static void CheckDefaultIndicator(const co_emcy_t* const emcy) {
     int dummy_data = 42;
     co_emcy_ind_t* ind = &EmcyInd::Func;
     void* data = &dummy_data;
@@ -157,7 +158,7 @@ TEST_BASE(CO_EmcyBase) {
     POINTERS_EQUAL(nullptr, data);
   }
 
-  void CheckEqualObj1001ErrorRegister(co_unsigned8_t er) const {
+  void CheckEqualObj1001ErrorRegister(const co_unsigned8_t er) const {
     CHECK_EQUAL(er, co_obj_get_val_u8(obj1001->Get(), 0x00u));
   }
 
@@ -377,7 +378,7 @@ TEST_GROUP_BASE(CO_EmcyMinimal, CO_EmcyBase) {
 ///
 /// \Then a pointer to the device is returned
 TEST(CO_EmcyMinimal, CoEmcyGetDev_Nominal) {
-  const co_dev_t* d = co_emcy_get_dev(emcy);
+  const co_dev_t* const d = co_emcy_get_dev(emcy);
 
   POINTERS_EQUAL(dev, d);
 }
@@ -394,7 +395,7 @@ TEST(CO_EmcyMinimal, CoEmcyGetDev_Nominal) {
 ///
 /// \Then a pointer to the network is returned
 TEST(CO_EmcyMinimal, CoEmcyGetNet_Nominal) {
-  const can_net_t* n = co_emcy_get_net(emcy);
+  const can_net_t* const n = co_emcy_get_net(emcy);
 
   POINTERS_EQUAL(net, n);
 }
@@ -503,7 +504,7 @@ TEST(CO_EmcyCreate, CoEmcyStart_Obj1028_WithMissingSubObject) {
   obj1028->InsertAndSetSub(0x01u, CO_DEFTYPE_UNSIGNED32, co_unsigned32_t{0u});
   // missing 0x02 sub-indx
 
-  auto* emcy = co_emcy_create(net, dev);
+  auto* const emcy = co_emcy_create(net, dev);
   CHECK(emcy != nullptr);
 
   const int ret = co_emcy_start(emcy);
@@ -539,7 +540,7 @@ TEST(CO_EmcyCreate, CoEmcyStart_Obj1028_BiggerThanMaxNodes) {
     obj1028->InsertAndSetSub(i + 1u, CO_DEFTYPE_UNSIGNED32,
                              co_unsigned32_t{i + 1u});
 
-  auto* emcy = co_emcy_create(net, dev);
+  auto* const emcy = co_emcy_create(net, dev);
   CHECK(emcy != nullptr);
   co_emcy_set_ind(emcy, &EmcyInd::Func, nullptr);
 
@@ -635,8 +636,8 @@ TEST(CO_EmcyMinimal, CoEmcyIsStopped_AfterStop) {
 
 struct EmcySend : CanSend {
   static void
-  CheckMsg(co_unsigned32_t msg_id, co_unsigned16_t eec, co_unsigned8_t er,
-           const co_unsigned8_t* msef) {
+  CheckMsg(const co_unsigned32_t msg_id, const co_unsigned16_t eec,
+           const co_unsigned8_t er, const co_unsigned8_t* const msef) {
     CHECK_EQUAL(1u, GetNumCalled());
     CHECK_EQUAL(msg_id, EmcySend::msg.id);
     CHECK_EQUAL(8u, EmcySend::msg.len);
@@ -648,8 +649,8 @@ struct EmcySend : CanSend {
     CHECK_EQUAL(eec_buf[1], EmcySend::msg.data[1]);
     CHECK_EQUAL(er, EmcySend::msg.data[2]);
 
-    if (!msef) {
-      co_unsigned8_t zeroes[5] = {0u};
+    if (msef == nullptr) {
+      const co_unsigned8_t zeroes[5] = {0u};
       CheckMsef(zeroes);
       return;
     }
@@ -658,7 +659,7 @@ struct EmcySend : CanSend {
   }
 
   static void
-  CheckMsef(const co_unsigned8_t* msef) {
+  CheckMsef(const co_unsigned8_t* const msef) {
     CHECK_EQUAL(msef[0], EmcySend::msg.data[3]);
     CHECK_EQUAL(msef[1], EmcySend::msg.data[4]);
     CHECK_EQUAL(msef[2], EmcySend::msg.data[5]);
@@ -797,13 +798,13 @@ TEST_GROUP_BASE(CO_EmcyInhibitTime, CO_EmcyBase) {
   std::unique_ptr<CoObjTHolder> obj1015;
   co_emcy_t* emcy = nullptr;
 
-  void CreateObj1015InhibitTimeEmcy(co_unsigned16_t time) {
+  void CreateObj1015InhibitTimeEmcy(const co_unsigned16_t time) {
     dev_holder->CreateAndInsertObj(obj1015, 0x1015u);
     obj1015->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED16,
                              time);  // N x 100us
   }
 
-  void SetCurrentTimeMs(uint_least64_t ms) {
+  void SetCurrentTimeMs(const uint_least64_t ms) {
     timespec tp = {0, 0u};
     timespec_add_msec(&tp, ms);
     CHECK_EQUAL(0, can_net_set_time(net, &tp));
@@ -836,7 +837,7 @@ TEST_GROUP_BASE(CO_EmcyReceiver, CO_EmcyBase) {
   co_emcy_t* emcy = nullptr;
   int32_t data = 42;
 
-  void CheckEmcyIndCall(co_unsigned16_t eec, co_unsigned8_t er,
+  void CheckEmcyIndCall(const co_unsigned16_t eec, const co_unsigned8_t er,
                         const msef_array& msef) const {
     CHECK_TRUE(EmcyInd::called);
     POINTERS_EQUAL(emcy, EmcyInd::last_emcy);
@@ -1056,7 +1057,7 @@ TEST(CO_Emcy, CoEmcyPush_SendMsef) {
 
   const co_unsigned16_t eec = 0x1000u;
   const co_unsigned8_t er = 0x01u;
-  co_unsigned8_t msef[5] = {0x10u, 0x11u, 0x12u, 0x13u, 0x14u};
+  const co_unsigned8_t msef[5] = {0x10u, 0x11u, 0x12u, 0x13u, 0x14u};
 
   const auto ret = co_emcy_push(emcy, eec, er, msef);
 
@@ -1223,7 +1224,7 @@ TEST(CO_Emcy, CoEmcyPush_EmptyObj1003_SendAndSetErrorRegister) {
 TEST(CO_EmcyProducerNoObj1003, CoEmcyPush_SendAndSetErrorRegister) {
   const co_unsigned16_t eec = 0x1000u;
   const co_unsigned8_t er = 0x01u;
-  co_unsigned8_t msef[5] = {0x10u, 0x11u, 0x12u, 0x13u, 0x14u};
+  const co_unsigned8_t msef[5] = {0x10u, 0x11u, 0x12u, 0x13u, 0x14u};
 
   const auto ret = co_emcy_push(emcy, eec, er, msef);
 
@@ -1878,9 +1879,9 @@ TEST_GROUP_BASE(CO_EmcyAllocation, CO_EmcyBase) {
 ///
 /// \Then a pointer to the memory allocator is returned
 TEST(CO_EmcyAllocation, CoEmcyGetAlloc_Nominal) {
-  co_emcy_t* emcy = co_emcy_create(net, dev);
+  co_emcy_t* const emcy = co_emcy_create(net, dev);
 
-  const alloc_t* alloc = co_emcy_get_alloc(emcy);
+  const alloc_t* const alloc = co_emcy_get_alloc(emcy);
 
   POINTERS_EQUAL(limitedAllocator.ToAllocT(), alloc);
 
@@ -1903,7 +1904,7 @@ TEST(CO_EmcyAllocation, CoEmcyGetAlloc_Nominal) {
 TEST(CO_EmcyAllocation, CoEmcyCreate_NoMemory) {
   limitedAllocator.LimitAllocationTo(0u);
 
-  const auto* emcy = co_emcy_create(net, dev);
+  const auto* const emcy = co_emcy_create(net, dev);
 
   POINTERS_EQUAL(nullptr, emcy);
 }
@@ -1924,7 +1925,7 @@ TEST(CO_EmcyAllocation, CoEmcyCreate_NoMemory) {
 TEST(CO_EmcyAllocation, CoEmcyCreate_MemoryOnlyForEmcy) {
   limitedAllocator.LimitAllocationTo(co_emcy_sizeof());
 
-  const auto* emcy = co_emcy_create(net, dev);
+  const auto* const emcy = co_emcy_create(net, dev);
 
   POINTERS_EQUAL(nullptr, emcy);
 }
@@ -1953,7 +1954,7 @@ TEST(CO_EmcyAllocation, CoEmcyCreate_MemoryOnlyForEmcyAndTimer) {
   CreateObj1028EmcyConsumerObject();
   limitedAllocator.LimitAllocationTo(co_emcy_sizeof() + can_timer_sizeof());
 
-  const auto* emcy = co_emcy_create(net, dev);
+  const auto* const emcy = co_emcy_create(net, dev);
 
   POINTERS_EQUAL(nullptr, emcy);
 }
@@ -1982,7 +1983,7 @@ TEST(CO_EmcyAllocation, CoEmcyCreate_ExactMemory) {
   limitedAllocator.LimitAllocationTo(co_emcy_sizeof() + can_timer_sizeof() +
                                      can_recv_sizeof());
 
-  co_emcy_t* emcy = co_emcy_create(net, dev);
+  co_emcy_t* const emcy = co_emcy_create(net, dev);
 
   CHECK(emcy != nullptr);
 

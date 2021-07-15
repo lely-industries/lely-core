@@ -39,8 +39,8 @@ co_unsigned32_t CoSubUpInd::ac = 0u;
 void* CoSubUpInd::data = nullptr;
 
 co_unsigned32_t
-CoSubUpInd::Func(const co_sub_t* sub_, co_sdo_req* req_, co_unsigned32_t ac_,
-                 void* data_) {
+CoSubUpInd::Func(const co_sub_t* const sub_, co_sdo_req* const req_,
+                 const co_unsigned32_t ac_, void* const data_) {
   num_called++;
 
   sub = sub_;

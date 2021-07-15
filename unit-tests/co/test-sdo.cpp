@@ -480,7 +480,7 @@ TEST(CO_Sdo, CoSdoReqDnBuf_EmptyRequest_NoBufferPointerNoNbytePointer) {
 // then: error is returned (CO_SDO_AC_ERROR)
 TEST(CO_Sdo, CoSdoReqDnVal_InvalidRequest) {
   co_unsigned8_t val = 0xFFu;
-  co_unsigned16_t type = CO_DEFTYPE_UNSIGNED8;
+  const co_unsigned16_t type = CO_DEFTYPE_UNSIGNED8;
   co_unsigned32_t ac = 0u;
   req.offset = 1u;
 
@@ -495,7 +495,7 @@ TEST(CO_Sdo, CoSdoReqDnVal_InvalidRequest) {
 // then: success is returned and a variable has a value specified by the buffer
 TEST(CO_Sdo, CoSdoReqDnVal_BasicDataType) {
   co_unsigned16_t val = 0u;
-  co_unsigned16_t type = CO_DEFTYPE_UNSIGNED16;
+  const co_unsigned16_t type = CO_DEFTYPE_UNSIGNED16;
   co_unsigned32_t ac = 0u;
 
   const size_t VAL_SIZE = 2u;
@@ -517,7 +517,7 @@ TEST(CO_Sdo, CoSdoReqDnVal_BasicDataType) {
 //       downloaded
 TEST(CO_Sdo, CoSdoReqDnVal_DownloadTooManyBytes) {
   co_unsigned16_t val = 0u;
-  co_unsigned16_t type = CO_DEFTYPE_UNSIGNED16;
+  const co_unsigned16_t type = CO_DEFTYPE_UNSIGNED16;
   co_unsigned32_t ac = 0u;
 
   const size_t INVALID_VAL_SIZE = 4u;
@@ -541,7 +541,7 @@ TEST(CO_Sdo, CoSdoReqDnVal_DownloadTooManyBytes) {
 // then: error is returned (CO_SDO_AC_TYPE_LEN_LO)
 TEST(CO_Sdo, CoSdoReqDnVal_DownloadTooFewBytes) {
   co_unsigned64_t val = 0u;
-  co_unsigned16_t type = CO_DEFTYPE_UNSIGNED64;
+  const co_unsigned16_t type = CO_DEFTYPE_UNSIGNED64;
   co_unsigned32_t ac = 0u;
 
   const size_t INVALID_VAL_SIZE = 4u;
@@ -565,7 +565,7 @@ TEST(CO_Sdo, CoSdoReqDnVal_DownloadTooFewBytes) {
 // then: incomplete data code is returned
 TEST(CO_Sdo, CoSdoReqDnVal_DownloadTooFewBytesNoAcPointer) {
   co_unsigned64_t val = 0u;
-  co_unsigned16_t type = CO_DEFTYPE_UNSIGNED64;
+  const co_unsigned16_t type = CO_DEFTYPE_UNSIGNED64;
 
   const size_t INVALID_VAL_SIZE = 4u;
   const uint8_t buf[INVALID_VAL_SIZE] = {0x5Eu, 0x7Bu, 0x34u, 0x3Bu};
@@ -587,7 +587,7 @@ TEST(CO_Sdo, CoSdoReqDnVal_DownloadTooFewBytesNoAcPointer) {
 // when: co_sdo_req_dn_val()
 // then: error is returned (CO_SDO_AC_NO_MEM)
 TEST(CO_Sdo, CoSdoReqDnVal_ArrayDataType_ReadValueFailed) {
-  co_unsigned16_t type = CO_DEFTYPE_OCTET_STRING;
+  const co_unsigned16_t type = CO_DEFTYPE_OCTET_STRING;
   co_unsigned32_t ac = 0u;
 
   const size_t VAL_SIZE = 4u;
@@ -621,10 +621,10 @@ TEST(CO_Sdo, CoSdoReqDnVal_ArrayDataType_ReadValueFailed) {
 // when: co_sdo_req_up_val()
 // then: success is returned
 TEST(CO_Sdo, CoSdoReqDnVal_ArrayDataType) {
-  co_unsigned16_t type = CO_DEFTYPE_OCTET_STRING;
+  const co_unsigned16_t type = CO_DEFTYPE_OCTET_STRING;
   co_unsigned32_t ac = 0u;
   const size_t VAL_SIZE = 4u;
-  uint_least8_t buf[VAL_SIZE] = {0x01u, 0x01u, 0x2Bu, 0x00u};
+  const uint_least8_t buf[VAL_SIZE] = {0x01u, 0x01u, 0x2Bu, 0x00u};
   req.buf = buf;
   req.size = VAL_SIZE;
   req.nbyte = VAL_SIZE;

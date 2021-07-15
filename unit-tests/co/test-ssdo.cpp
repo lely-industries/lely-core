@@ -300,7 +300,7 @@ TEST(CO_SsdoInit, CoSsdoCreate_DefaultSsdo_NoServerParameterObject) {
   POINTERS_EQUAL(net, co_ssdo_get_net(ssdo));
   POINTERS_EQUAL(dev, co_ssdo_get_dev(ssdo));
   CHECK_EQUAL(SDO_NUM, co_ssdo_get_num(ssdo));
-  const co_sdo_par* par = co_ssdo_get_par(ssdo);
+  const co_sdo_par* const par = co_ssdo_get_par(ssdo);
   CHECK_EQUAL(3u, par->n);
   CHECK_EQUAL(DEV_ID, par->id);
   CHECK_EQUAL(DEFAULT_COBID_REQ, par->cobid_req);
