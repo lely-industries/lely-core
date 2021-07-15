@@ -149,7 +149,7 @@ TEST_BASE(CO_EmcyBase) {
   }
 
   static void CheckDefaultIndicator(const co_emcy_t* const emcy) {
-    int dummy_data = 42;
+    int32_t dummy_data = 42;
     co_emcy_ind_t* ind = &EmcyInd::Func;
     void* data = &dummy_data;
 

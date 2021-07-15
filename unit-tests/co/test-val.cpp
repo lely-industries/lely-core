@@ -144,7 +144,7 @@ TEST_GROUP(CO_Val) {
       return -(static_cast<int64_t>(CO_UNSIGNED48_MAX) + 1 -
                static_cast<int64_t>(u48));
     else
-      return u48;
+      return static_cast<co_integer48_t>(u48);
   }
   static co_integer56_t ldle_i56(const uint_least8_t src[8]) {
     const co_unsigned56_t u56 = ldle_u56(src);

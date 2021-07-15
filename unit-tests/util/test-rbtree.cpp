@@ -727,7 +727,7 @@ TEST(Util_Rbtree, RbtreeRoot_LargerTree) {
   rbtree_insert(&tree, &nodes[1]);
   rbtree_insert(&tree, &nodes[0]);
 
-  const auto* root = rbtree_root(&tree);
+  const auto* const root = rbtree_root(&tree);
   POINTERS_EQUAL(&nodes[4], root);
   CHECK_EQUAL(0u, root->parent);
 }
@@ -823,7 +823,7 @@ TEST(Util_Rbtree, RbtreeFirst_LargerTree) {
 ///
 /// \Then no loop iterations are performed
 TEST(Util_Rbtree, RbnodeForeach_Null) {
-  unsigned node_counter = 0;
+  size_t node_counter = 0;
 
   rbnode_foreach(nullptr, current_node) { ++node_counter; }
 
