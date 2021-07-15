@@ -130,7 +130,7 @@ TEST(CO_SsdoInit, CoSsdoSizeof_Nominal) {
 /// \Given a pointer to the device (co_dev_t)
 ///
 /// \When co_ssdo_create() is called with a pointer to the network (can_net_t)
-///       with a failing allocator, the pointer to the device and an SDO number
+///       with a failing allocator, the pointer to the device and an SDO number,
 ///       but SSDO service allocation fails
 ///
 /// \Then a null pointer is returned
@@ -215,7 +215,7 @@ TEST(CO_SsdoInit, CoSsdoCreate_NonDefault_NoServerParameterObject) {
 /// \Given a pointer to the device (co_dev_t)
 ///
 /// \When co_ssdo_create() is called with a pointer to the network (can_net_t)
-///       with a failing allocator, the pointer to the device and an SDO number
+///       with a failing allocator, the pointer to the device and an SDO number,
 ///       but can_recv_create() fails
 ///
 /// \Then a null pointer is returned
@@ -242,7 +242,7 @@ TEST(CO_SsdoInit, CoSsdoCreate_RecvCreateFail) {
 /// \Given a pointer to the device (co_dev_t)
 ///
 /// \When co_ssdo_create() is called with a pointer to the network (can_net_t)
-///       with a failing allocator, the pointer to the device and an SDO number
+///       with a failing allocator, the pointer to the device and an SDO number,
 ///       but can_timer_create() fails
 ///
 /// \Then a null pointer is returned
@@ -1383,8 +1383,21 @@ TEST_GROUP_BASE(CoSsdoUpIniOnRecv, CO_Ssdo) {
 /// @name SSDO upload initiate
 ///@{
 
+/// \Given a pointer to started SSDO service (co_ssdo_t)
+///
+/// \When an SDO upload initiate request is received, but the message does not
+///       contain an index to upload
+///
+/// \Then an SDO abort transfer message with CO_SDO_AC_NO_OBJ abort code is sent
+///       \Calls stle_u32()
+///       \Calls stle_u16()
+///       \Calls can_net_send()
+///       \Calls co_sdo_req_fini()
+///       \Calls co_sdo_req_init()
+///       \Calls membuf_clear()
 TEST(CoSsdoUpIniOnRecv, NoIdxSpecified) {
   StartSSDO();
+
   can_msg msg = SdoCreateMsg::UpIniReq(0xffffu, 0xffu, DEFAULT_COBID_REQ);
   msg.len = 1u;
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
@@ -1395,6 +1408,19 @@ TEST(CoSsdoUpIniOnRecv, NoIdxSpecified) {
   CanSend::CheckMsg(DEFAULT_COBID_RES, 0, CO_SDO_MSG_SIZE, expected.data());
 }
 
+/// \Given a pointer to started SSDO service (co_ssdo_t)
+///
+/// \When an SDO upload initiate request is received, but the message does not
+///       contain a sub-index to upload
+///
+/// \Then an SDO abort transfer message with CO_SDO_AC_NO_SUB abort code is sent
+///       \Calls ldle_u16()
+///       \Calls stle_u16()
+///       \Calls stle_u32()
+///       \Calls can_net_send()
+///       \Calls co_sdo_req_fini()
+///       \Calls co_sdo_req_init()
+///       \Calls membuf_clear()
 TEST(CoSsdoUpIniOnRecv, NoSubidxSpecified) {
   StartSSDO();
 
@@ -1408,6 +1434,24 @@ TEST(CoSsdoUpIniOnRecv, NoSubidxSpecified) {
   CanSend::CheckMsg(DEFAULT_COBID_RES, 0, CO_SDO_MSG_SIZE, expected.data());
 }
 
+/// \Given a pointer to started SSDO service (co_ssdo_t)
+///
+/// \When an SDO upload initiate request is received, but the requested entry
+///       has no read access
+///
+/// \Then an SDO abort transfer message with CO_SDO_AC_NO_READ abort code is
+///       sent
+///       \Calls ldle_u16()
+///       \Calls co_sdo_req_fini()
+///       \Calls co_sdo_req_init()
+///       \Calls co_dev_find_obj()
+///       \Calls co_obj_find_sub()
+///       \Calls co_obj_get_code()
+///       \Calls co_sub_up_ind()
+///       \Calls stle_u16()
+///       \Calls stle_u32()
+///       \Calls can_net_send()
+///       \Calls membuf_clear()
 TEST(CoSsdoUpIniOnRecv, NoAccess) {
   dev_holder->CreateAndInsertObj(obj2020, IDX);
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE, sub_type{0});
@@ -1423,6 +1467,22 @@ TEST(CoSsdoUpIniOnRecv, NoAccess) {
   CanSend::CheckMsg(DEFAULT_COBID_RES, 0, CO_SDO_MSG_SIZE, expected.data());
 }
 
+/// \Given a pointer to started SSDO service (co_ssdo_t)
+///
+/// \When an SDO upload initiate request is received for an entry with zero size
+///
+/// \Then an SDO upload initiate response with an indicated size equal to 0 is
+///       sent
+///       \Calls ldle_u16()
+///       \Calls co_sdo_req_fini()
+///       \Calls co_sdo_req_init()
+///       \Calls co_dev_find_obj()
+///       \Calls co_obj_find_sub()
+///       \Calls co_obj_get_code()
+///       \Calls co_sub_up_ind()
+///       \Calls stle_u16()
+///       \Calls stle_u32()
+///       \Calls can_net_send()
 TEST(CoSsdoUpIniOnRecv, UploadToSubWithSizeZero) {
   dev_holder->CreateAndInsertObj(obj2020, IDX);
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE, sub_type{0x1234u});
@@ -1438,7 +1498,26 @@ TEST(CoSsdoUpIniOnRecv, UploadToSubWithSizeZero) {
   CanSend::CheckMsg(DEFAULT_COBID_RES, 0, CO_SDO_MSG_SIZE, expected.data());
 }
 
-TEST(CoSsdoUpIniOnRecv, TimeoutTriggered) {
+/// \Given a pointer to started SSDO service (co_ssdo_t) with a timeout set,
+///        an upload initiate request is received from the server
+///
+/// \When the Server-SDO timeout expires before receiving the segment from
+///       the client
+///
+/// \Then an SDO abort transfer message with CO_SDO_AC_TIMEOUT abort code is
+///       sent
+///       \Calls ldle_u16()
+///       \Calls co_sdo_req_fini()
+///       \Calls co_sdo_req_init()
+///       \Calls co_dev_find_obj()
+///       \Calls co_obj_find_sub()
+///       \Calls co_obj_get_code()
+///       \Calls co_sub_up_ind()
+///       \Calls stle_u16()
+///       \Calls stle_u32()
+///       \Calls can_net_send()
+///       \Calls can_timer_timeout()
+TEST(CoSsdoUpIniOnRecv, TimeoutSet) {
   dev_holder->CreateAndInsertObj(obj2020, IDX);
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE64,
                            sub_type64{0x0123456789abcdefuL});
@@ -1465,6 +1544,53 @@ TEST(CoSsdoUpIniOnRecv, TimeoutTriggered) {
                     expected_timeout.data());
 }
 
+/// \Given a pointer to started SSDO service (co_ssdo_t)
+///
+/// \When an SDO upload initiate request for a non-existing object is received
+///
+/// \Then an SDO abort transfer message with CO_SDO_AC_NO_OBJ abort code is sent
+///       \Calls ldle_u16()
+///       \Calls co_sdo_req_fini()
+///       \Calls co_sdo_req_init()
+///       \Calls co_dev_find_obj()
+///       \Calls co_obj_find_sub()
+///       \Calls stle_u16()
+///       \Calls stle_u32()
+///       \Calls can_net_send()
+///       \Calls membuf_clear()
+TEST(CoSsdoUpIniOnRecv, NoObj) {
+  StartSSDO();
+
+  const can_msg msg = SdoCreateMsg::UpIniReq(IDX, SUBIDX, DEFAULT_COBID_REQ);
+  CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
+
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
+  const auto expected =
+      SdoInitExpectedData::U32(CO_SDO_CS_ABORT, IDX, SUBIDX, CO_SDO_AC_NO_OBJ);
+  CanSend::CheckMsg(DEFAULT_COBID_RES, 0, CO_SDO_MSG_SIZE, expected.data());
+}
+
+/// \Given a pointer to started SSDO service (co_ssdo_t)
+///
+/// \When an SDO upload initiate request for an existing entry is received
+///
+/// \Then an SDO initiate upload response (expedited) with a correct entry value
+///       is sent
+///       \Calls ldle_u16()
+///       \Calls co_sdo_req_fini()
+///       \Calls co_sdo_req_init()
+///       \Calls co_dev_find_obj()
+///       \Calls co_obj_find_sub()
+///       \Calls co_obj_get_code()
+///       \Calls co_sub_up_ind()
+///       \Calls membuf_reserve()
+///       \Calls membuf_write()
+///       \Calls membuf_begin()
+///       \Calls membuf_size()
+///       \Calls stle_u16()
+///       \Calls memcpy()
+///       \Calls can_net_send()
+///       \Calls membuf_clear()
 TEST(CoSsdoUpIniOnRecv, Expedited) {
   dev_holder->CreateAndInsertObj(obj2020, IDX);
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE, sub_type{0xabcdu});
