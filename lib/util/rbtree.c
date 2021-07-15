@@ -67,7 +67,7 @@ static void rbtree_ror(struct rbtree *tree, struct rbnode *node);
  * Replaces <b>old_node</b> by <b>new_node</b> in <b>tree</b> by updating its
  * parent.
  */
-static void rbtree_replace(struct rbtree *tree, struct rbnode *old_node,
+static void rbtree_replace(struct rbtree *tree, const struct rbnode *old_node,
 		struct rbnode *new_node);
 
 struct rbnode *
@@ -447,7 +447,7 @@ rbtree_ror(struct rbtree *tree, struct rbnode *node)
 }
 
 static void
-rbtree_replace(struct rbtree *tree, struct rbnode *old_node,
+rbtree_replace(struct rbtree *tree, const struct rbnode *old_node,
 		struct rbnode *new_node)
 {
 	struct rbnode *parent = rbnode_get_parent(old_node);

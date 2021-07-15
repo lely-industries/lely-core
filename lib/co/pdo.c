@@ -52,11 +52,11 @@ co_dev_chk_rpdo(const co_dev_t *dev, co_unsigned16_t idx, co_unsigned8_t subidx)
 		if (!(co_dev_get_dummy(dev) & (1u << idx)))
 			return CO_SDO_AC_NO_OBJ;
 	} else {
-		co_obj_t *obj = co_dev_find_obj(dev, idx);
+		const co_obj_t *obj = co_dev_find_obj(dev, idx);
 		if (!obj)
 			return CO_SDO_AC_NO_OBJ;
 
-		co_sub_t *sub = co_obj_find_sub(obj, subidx);
+		const co_sub_t *sub = co_obj_find_sub(obj, subidx);
 		if (!sub)
 			return CO_SDO_AC_NO_SUB;
 
@@ -126,11 +126,11 @@ co_dev_chk_tpdo(const co_dev_t *dev, co_unsigned16_t idx, co_unsigned8_t subidx)
 {
 	assert(dev);
 
-	co_obj_t *obj = co_dev_find_obj(dev, idx);
+	const co_obj_t *obj = co_dev_find_obj(dev, idx);
 	if (!obj)
 		return CO_SDO_AC_NO_OBJ;
 
-	co_sub_t *sub = co_obj_find_sub(obj, subidx);
+	const co_sub_t *sub = co_obj_find_sub(obj, subidx);
 	if (!sub)
 		return CO_SDO_AC_NO_SUB;
 

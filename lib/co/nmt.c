@@ -823,7 +823,7 @@ co_dev_cfg_hb(co_dev_t *dev, co_unsigned8_t id, co_unsigned16_t ms)
 {
 	assert(dev);
 
-	co_obj_t *obj_1016 = co_dev_find_obj(dev, 0x1016);
+	const co_obj_t *obj_1016 = co_dev_find_obj(dev, 0x1016);
 	if (!obj_1016)
 		return CO_SDO_AC_NO_OBJ;
 
@@ -3753,7 +3753,7 @@ co_nmt_slaves_init(co_nmt_t *nmt)
 		can_recv_start(nmt->slaves[id - 1].recv, nmt->net,
 				CO_NMT_EC_CANID(id), 0);
 
-	co_obj_t *obj_1f81 = co_dev_find_obj(nmt->dev, 0x1f81);
+	const co_obj_t *obj_1f81 = co_dev_find_obj(nmt->dev, 0x1f81);
 	if (!obj_1f81)
 		return;
 

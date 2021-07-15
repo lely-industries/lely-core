@@ -566,7 +566,7 @@ static void co_ssdo_send_blk_up_end_res(co_ssdo_t *sdo);
  * @param cs  the command specifier.
  */
 static void co_ssdo_init_ini_res(
-		co_ssdo_t *sdo, struct can_msg *msg, co_unsigned8_t cs);
+		const co_ssdo_t *sdo, struct can_msg *msg, co_unsigned8_t cs);
 
 /**
  * Initializes a Server-SDO download/upload segment response CAN frame.
@@ -576,7 +576,7 @@ static void co_ssdo_init_ini_res(
  * @param cs  the command specifier.
  */
 static void co_ssdo_init_seg_res(
-		co_ssdo_t *sdo, struct can_msg *msg, co_unsigned8_t cs);
+		const co_ssdo_t *sdo, struct can_msg *msg, co_unsigned8_t cs);
 
 size_t
 co_ssdo_alignof(void)
@@ -1928,7 +1928,8 @@ co_ssdo_send_blk_up_end_res(co_ssdo_t *sdo)
 }
 
 static void
-co_ssdo_init_ini_res(co_ssdo_t *sdo, struct can_msg *msg, co_unsigned8_t cs)
+co_ssdo_init_ini_res(
+		const co_ssdo_t *sdo, struct can_msg *msg, co_unsigned8_t cs)
 {
 	assert(sdo);
 	assert(msg);
@@ -1948,7 +1949,8 @@ co_ssdo_init_ini_res(co_ssdo_t *sdo, struct can_msg *msg, co_unsigned8_t cs)
 }
 
 static void
-co_ssdo_init_seg_res(co_ssdo_t *sdo, struct can_msg *msg, co_unsigned8_t cs)
+co_ssdo_init_seg_res(
+		const co_ssdo_t *sdo, struct can_msg *msg, co_unsigned8_t cs)
 {
 	assert(sdo);
 	assert(msg);

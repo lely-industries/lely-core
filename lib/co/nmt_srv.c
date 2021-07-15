@@ -371,8 +371,8 @@ co_nmt_srv_init_pdo(struct co_nmt_srv *srv)
 
 	size_t nrpdo = 0;
 	for (co_unsigned16_t i = 0; i < CO_NUM_PDOS; i++) {
-		co_obj_t *obj_1400 = co_dev_find_obj(dev, 0x1400 + i);
-		co_obj_t *obj_1600 = co_dev_find_obj(dev, 0x1600 + i);
+		const co_obj_t *obj_1400 = co_dev_find_obj(dev, 0x1400 + i);
+		const co_obj_t *obj_1600 = co_dev_find_obj(dev, 0x1600 + i);
 		if (!obj_1400 || !obj_1600)
 			continue;
 		nrpdo = i + 1;
@@ -389,8 +389,10 @@ co_nmt_srv_init_pdo(struct co_nmt_srv *srv)
 			co_rpdo_t **ppdo = &srv->rpdos[srv->nrpdo++];
 			*ppdo = NULL;
 
-			co_obj_t *obj_1400 = co_dev_find_obj(dev, 0x1400 + i);
-			co_obj_t *obj_1600 = co_dev_find_obj(dev, 0x1600 + i);
+			const co_obj_t *obj_1400 =
+					co_dev_find_obj(dev, 0x1400 + i);
+			const co_obj_t *obj_1600 =
+					co_dev_find_obj(dev, 0x1600 + i);
 			if (!obj_1400 || !obj_1600)
 				continue;
 
@@ -407,8 +409,8 @@ co_nmt_srv_init_pdo(struct co_nmt_srv *srv)
 
 	size_t ntpdo = 0;
 	for (co_unsigned16_t i = 0; i < CO_NUM_PDOS; i++) {
-		co_obj_t *obj_1800 = co_dev_find_obj(dev, 0x1800 + i);
-		co_obj_t *obj_1a00 = co_dev_find_obj(dev, 0x1a00 + i);
+		const co_obj_t *obj_1800 = co_dev_find_obj(dev, 0x1800 + i);
+		const co_obj_t *obj_1a00 = co_dev_find_obj(dev, 0x1a00 + i);
 		if (!obj_1800 || !obj_1a00)
 			continue;
 		ntpdo = i + 1;
@@ -425,8 +427,10 @@ co_nmt_srv_init_pdo(struct co_nmt_srv *srv)
 			co_tpdo_t **ppdo = &srv->tpdos[srv->ntpdo++];
 			*ppdo = NULL;
 
-			co_obj_t *obj_1800 = co_dev_find_obj(dev, 0x1800 + i);
-			co_obj_t *obj_1a00 = co_dev_find_obj(dev, 0x1a00 + i);
+			const co_obj_t *obj_1800 =
+					co_dev_find_obj(dev, 0x1800 + i);
+			const co_obj_t *obj_1a00 =
+					co_dev_find_obj(dev, 0x1a00 + i);
 			if (!obj_1800 || !obj_1a00)
 				continue;
 
@@ -553,7 +557,7 @@ co_nmt_srv_init_sdo(struct co_nmt_srv *srv)
 
 	size_t nssdo = 0;
 	for (co_unsigned8_t i = 0; i < CO_NUM_SDOS; i++) {
-		co_obj_t *obj_1200 = co_dev_find_obj(dev, 0x1200 + i);
+		const co_obj_t *obj_1200 = co_dev_find_obj(dev, 0x1200 + i);
 		// The default Server-SDO does not have to exist in the object
 		// dictionary.
 		if (i && !obj_1200)
@@ -572,7 +576,8 @@ co_nmt_srv_init_sdo(struct co_nmt_srv *srv)
 			co_ssdo_t **psdo = &srv->ssdos[srv->nssdo++];
 			*psdo = NULL;
 
-			co_obj_t *obj_1200 = co_dev_find_obj(dev, 0x1200 + i);
+			const co_obj_t *obj_1200 =
+					co_dev_find_obj(dev, 0x1200 + i);
 			if (i && !obj_1200)
 				continue;
 
@@ -587,7 +592,7 @@ co_nmt_srv_init_sdo(struct co_nmt_srv *srv)
 
 	size_t ncsdo = 0;
 	for (co_unsigned8_t i = 0; i < CO_NUM_SDOS; i++) {
-		co_obj_t *obj_1280 = co_dev_find_obj(dev, 0x1280 + i);
+		const co_obj_t *obj_1280 = co_dev_find_obj(dev, 0x1280 + i);
 		if (!obj_1280)
 			continue;
 		ncsdo = i + 1;
@@ -604,7 +609,8 @@ co_nmt_srv_init_sdo(struct co_nmt_srv *srv)
 			co_csdo_t **psdo = &srv->csdos[srv->ncsdo++];
 			*psdo = NULL;
 
-			co_obj_t *obj_1280 = co_dev_find_obj(dev, 0x1280 + i);
+			const co_obj_t *obj_1280 =
+					co_dev_find_obj(dev, 0x1280 + i);
 			if (!obj_1280)
 				continue;
 
@@ -708,7 +714,7 @@ co_nmt_srv_init_sync(struct co_nmt_srv *srv)
 	can_net_t *net = co_nmt_get_net(srv->nmt);
 	co_dev_t *dev = co_nmt_get_dev(srv->nmt);
 
-	co_obj_t *obj_1005 = co_dev_find_obj(dev, 0x1005);
+	const co_obj_t *obj_1005 = co_dev_find_obj(dev, 0x1005);
 	if (!obj_1005)
 		return 0;
 
@@ -876,7 +882,7 @@ co_nmt_srv_init_emcy(struct co_nmt_srv *srv)
 	can_net_t *net = co_nmt_get_net(srv->nmt);
 	co_dev_t *dev = co_nmt_get_dev(srv->nmt);
 
-	co_obj_t *obj_1001 = co_dev_find_obj(dev, 0x1001);
+	const co_obj_t *obj_1001 = co_dev_find_obj(dev, 0x1001);
 	if (!obj_1001)
 		return 0;
 

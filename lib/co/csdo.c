@@ -648,7 +648,7 @@ static void co_csdo_send_blk_up_end_res(co_csdo_t *sdo);
  * @param cs  the command specifier.
  */
 static void co_csdo_init_ini_req(
-		co_csdo_t *sdo, struct can_msg *msg, co_unsigned8_t cs);
+		const co_csdo_t *sdo, struct can_msg *msg, co_unsigned8_t cs);
 
 /**
  * Initializes a Client-SDO download/upload segment request CAN frame.
@@ -658,7 +658,7 @@ static void co_csdo_init_ini_req(
  * @param cs  the command specifier.
  */
 static void co_csdo_init_seg_req(
-		co_csdo_t *sdo, struct can_msg *msg, co_unsigned8_t cs);
+		const co_csdo_t *sdo, struct can_msg *msg, co_unsigned8_t cs);
 
 /**
  * The confirmation function of a single SDO download request during a concise
@@ -785,7 +785,7 @@ co_dev_dn_dcf_req(co_dev_t *dev, const uint_least8_t *begin,
 		begin += 4;
 		if (end - begin < (ptrdiff_t)size)
 			break;
-		co_obj_t *obj = co_dev_find_obj(dev, idx);
+		const co_obj_t *obj = co_dev_find_obj(dev, idx);
 
 		if (!obj) {
 			ac = CO_SDO_AC_NO_OBJ;
@@ -1596,7 +1596,7 @@ static co_csdo_state_t *
 co_csdo_dn_seg_on_enter(co_csdo_t *sdo)
 {
 	assert(sdo);
-	struct membuf *buf = &sdo->dn_buf;
+	const struct membuf *buf = &sdo->dn_buf;
 
 	size_t n = sdo->size - membuf_size(buf);
 	// 0-byte values cannot be sent using expedited transfer, so we need to
@@ -1864,7 +1864,7 @@ static co_csdo_state_t *
 co_csdo_blk_dn_sub_on_enter(co_csdo_t *sdo)
 {
 	assert(sdo);
-	struct membuf *buf = &sdo->dn_buf;
+	const struct membuf *buf = &sdo->dn_buf;
 
 	size_t n = sdo->size - membuf_size(buf);
 	if ((n > 0 && !sdo->blksize) || sdo->blksize > CO_SDO_MAX_SEQNO)
@@ -2460,7 +2460,7 @@ static void
 co_csdo_send_blk_up_sub_res(co_csdo_t *sdo)
 {
 	assert(sdo);
-	struct membuf *buf = sdo->up_buf;
+	const struct membuf *buf = sdo->up_buf;
 	assert(buf);
 
 	co_unsigned8_t cs = CO_SDO_CCS_BLK_UP_REQ | CO_SDO_SC_BLK_RES;
@@ -2489,7 +2489,8 @@ co_csdo_send_blk_up_end_res(co_csdo_t *sdo)
 }
 
 static void
-co_csdo_init_ini_req(co_csdo_t *sdo, struct can_msg *msg, co_unsigned8_t cs)
+co_csdo_init_ini_req(
+		const co_csdo_t *sdo, struct can_msg *msg, co_unsigned8_t cs)
 {
 	assert(sdo);
 	assert(msg);
@@ -2509,7 +2510,8 @@ co_csdo_init_ini_req(co_csdo_t *sdo, struct can_msg *msg, co_unsigned8_t cs)
 }
 
 static void
-co_csdo_init_seg_req(co_csdo_t *sdo, struct can_msg *msg, co_unsigned8_t cs)
+co_csdo_init_seg_req(
+		const co_csdo_t *sdo, struct can_msg *msg, co_unsigned8_t cs)
 {
 	assert(sdo);
 	assert(msg);

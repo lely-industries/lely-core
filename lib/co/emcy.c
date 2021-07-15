@@ -744,7 +744,7 @@ co_emcy_send(co_emcy_t *emcy, co_unsigned16_t eec, co_unsigned8_t er,
 	co_sub_set_val_u8(emcy->sub_1001_00, er);
 
 	// Check whether the EMCY COB-ID exists and is valid.
-	co_obj_t *obj_1014 = co_dev_find_obj(emcy->dev, 0x1014);
+	const co_obj_t *obj_1014 = co_dev_find_obj(emcy->dev, 0x1014);
 	if (!obj_1014)
 		return 0;
 	co_unsigned32_t cobid = co_obj_get_val_u32(obj_1014, 0x00);
