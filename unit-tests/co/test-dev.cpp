@@ -1980,8 +1980,8 @@ TEST(CO_Dev, CoDevWriteSub_Nominal) {
   const auto ret = co_dev_write_sub(dev, 0x1234u, 0xabu, buf, buf + BUF_SIZE);
 
   CHECK_EQUAL(BUF_SIZE, ret);
-  uint_least8_t test_buf[] = {0x34u, 0x12u, 0xabu, 0x02u, 0x00u,
-                              0x00u, 0x00u, 0x87u, 0x09};
+  const uint_least8_t test_buf[] = {0x34u, 0x12u, 0xabu, 0x02u, 0x00u,
+                                    0x00u, 0x00u, 0x87u, 0x09};
   CheckBuffers(buf, test_buf, BUF_SIZE);
 }
 

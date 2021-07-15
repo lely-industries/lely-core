@@ -482,7 +482,7 @@ TEST(CO_NmtCreate, CoNmtCreate_DcfCommParamsWriteFail) {
 
 #if !LELY_NO_CO_DCF_RESTORE
   LelyOverride::co_val_write(
-      2u * GetCoDevWriteDcf_NullBuf_CoValWriteCalls(NUM_SUBS) +
+      2 * GetCoDevWriteDcf_NullBuf_CoValWriteCalls(NUM_SUBS) +
       GetCoDevWriteDcf_CoValWriteCalls(NUM_SUBS));
 #else
   LelyOverride::co_val_write(GetCoDevWrite_NullBuf_CoValWriteCalls(NUM_SUBS));
