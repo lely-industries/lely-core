@@ -97,12 +97,12 @@ SdoCreateMsg::BlkDnEnd(const co_unsigned16_t idx, const co_unsigned8_t subidx,
 can_msg
 SdoCreateMsg::DnIniReq(const co_unsigned16_t idx, const co_unsigned8_t subidx,
                        const uint_least32_t recipient_id,
-                       uint_least8_t buffer[CO_SDO_INI_DATA_SIZE],
+                       const uint_least8_t buf[CO_SDO_INI_DATA_SIZE],
                        const uint_least8_t cs_flags) {
   can_msg msg = SdoCreateMsg::Default(idx, subidx, recipient_id);
   msg.data[0] |= CO_SDO_CCS_DN_INI_REQ;
   msg.data[0] |= cs_flags;
-  if (buffer != nullptr) memcpy(msg.data + 4u, buffer, CO_SDO_INI_DATA_SIZE);
+  if (buf != nullptr) memcpy(msg.data + 4u, buf, CO_SDO_INI_DATA_SIZE);
 
   return msg;
 }
