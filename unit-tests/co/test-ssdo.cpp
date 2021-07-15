@@ -2099,6 +2099,12 @@ TEST_GROUP_BASE(CoSsdoDnSegOnRecv, CO_Ssdo) {
 /// @name SSDO download segment on receive
 ///@{
 
+/// \Given a pointer to the SSDO service (co_ssdo_t), segmented download
+///        transfer is in progress
+///
+/// \When an SDO message with empty data section is received
+///
+/// \Then an SDO abort transfer message with CO_SDO_AC_NO_CS abort code was sent
 TEST(CoSsdoDnSegOnRecv, NoCS) {
   dev_holder->CreateAndInsertObj(obj2020, IDX);
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE64, sub_type64{0uL});
@@ -2118,6 +2124,12 @@ TEST(CoSsdoDnSegOnRecv, NoCS) {
   CanSend::CheckMsg(DEFAULT_COBID_RES, 0, CO_SDO_MSG_SIZE, expected.data());
 }
 
+/// \Given a pointer to the SSDO service (co_ssdo_t), segmented download
+///        transfer is in progress
+///
+/// \When an SDO abort transfer message was received
+///
+/// \Then no SDO message is sent
 TEST(CoSsdoDnSegOnRecv, AbortCS) {
   dev_holder->CreateAndInsertObj(obj2020, IDX);
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE64, sub_type64{0uL});
@@ -2125,9 +2137,7 @@ TEST(CoSsdoDnSegOnRecv, AbortCS) {
 
   DownloadInitiateReq(sizeof(sub_type64));
 
-  const co_unsigned8_t val2dn[4u] = {0};
-  const can_msg msg = SdoCreateMsg::DnSeg(IDX, SUBIDX, DEFAULT_COBID_REQ,
-                                          val2dn, 4u, CO_SDO_CS_ABORT);
+  const can_msg msg = SdoCreateMsg::Abort(IDX, SUBIDX, DEFAULT_COBID_REQ);
   const auto ret_abort = can_net_recv(net, &msg, 0);
 
   CHECK_EQUAL(1, ret_abort);
@@ -2135,8 +2145,8 @@ TEST(CoSsdoDnSegOnRecv, AbortCS) {
 }
 
 /// \Given a pointer to the SSDO service (co_ssdo_t) with an object dictionary
-///        containing an entry which is at least 8 bytes long; block download
-///        transfer is in progress
+///        containing an entry which is at least 8 bytes long; segmented
+///        download transfer is in progress
 ///
 /// \When a message with CO_SDO_CS_ABORT command specifier is received
 ///
@@ -2172,8 +2182,8 @@ TEST(CoSsdoDnSegOnRecv, AbortAfterFirstSegment) {
 }
 
 /// \Given a pointer to the SSDO service (co_ssdo_t) with an object dictionary
-///        containing an entry which is at least 8 bytes long; block download
-///        transfer is in progress
+///        containing an entry which is at least 8 bytes long; segmented
+///        download transfer is in progress
 ///
 /// \When a message with CO_SDO_CS_ABORT command specifier is received;
 ///       the message's length is less than 8 bytes
@@ -2210,6 +2220,13 @@ TEST(CoSsdoDnSegOnRecv, AbortAfterFirstSegment_MsgTooShort) {
   CHECK_EQUAL(0u, co_dev_get_val_u64(dev, IDX, SUBIDX));
 }
 
+/// \Given a pointer to the SSDO service (co_ssdo_t) with an object dictionary
+///        containing an entry which is at least 8 bytes long; segmented
+///        download transfer is in progress
+///
+/// \When an SDO message with invalid command specifier is received
+///
+/// \Then an SDO abort transfer message with CO_SDO_AC_NO_CS abort code is sent
 TEST(CoSsdoDnSegOnRecv, InvalidCS) {
   dev_holder->CreateAndInsertObj(obj2020, IDX);
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE64, sub_type64{0uL});
@@ -2229,6 +2246,13 @@ TEST(CoSsdoDnSegOnRecv, InvalidCS) {
   CanSend::CheckMsg(DEFAULT_COBID_RES, 0, CO_SDO_MSG_SIZE, expected.data());
 }
 
+/// \Given a pointer to the SSDO service (co_ssdo_t) with an object dictionary
+///        containing an entry which is at least 8 bytes long; segmented
+///        download transfer is in progress
+///
+/// \When two following SDO segments are received with toggle bit not changed
+///
+/// \Then no SDO message is sent
 TEST(CoSsdoDnSegOnRecv, NoToggle) {
   dev_holder->CreateAndInsertObj(obj2020, IDX);
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE64, sub_type64{0uL});
@@ -2250,13 +2274,21 @@ TEST(CoSsdoDnSegOnRecv, NoToggle) {
   ResetCanSend();
 
   // send last segment: next 4 bytes
-  const can_msg msg_last = SdoCreateMsg::DnSeg(
-      IDX, SUBIDX, DEFAULT_COBID_REQ, val2dn + 4u, 4u, CO_SDO_SEG_LAST);
-  CHECK_EQUAL(1, can_net_recv(net, &msg_last, 0));
+  const can_msg msg2 = SdoCreateMsg::DnSeg(IDX, SUBIDX, DEFAULT_COBID_REQ,
+                                           val2dn + 4u, 4u, CO_SDO_SEG_LAST);
+  CHECK_EQUAL(1, can_net_recv(net, &msg2, 0));
 
   CHECK_EQUAL(0, CanSend::GetNumCalled());
 }
 
+/// \Given a pointer to the SSDO service (co_ssdo_t) with an object dictionary
+///        containing an entry; segmented download transfer is in progress
+///
+/// \When an SDO segment is received, but the message contains less bytes than
+///       the declared size
+///
+/// \Then an SDO abort transfer message with CO_SDO_AC_NO_CS abort code is
+///       sent
 TEST(CoSsdoDnSegOnRecv, MsgLenLessThanSegmentSize) {
   dev_holder->CreateAndInsertObj(obj2020, IDX);
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE64, sub_type64{0uL});
@@ -2275,6 +2307,14 @@ TEST(CoSsdoDnSegOnRecv, MsgLenLessThanSegmentSize) {
   CanSend::CheckMsg(DEFAULT_COBID_RES, 0, CO_SDO_MSG_SIZE, expected.data());
 }
 
+/// \Given a pointer to the SSDO service (co_ssdo_t) with an object dictionary
+///        containing an entry; segmented download transfer is in progress
+///
+/// \When an SDO segment with more bytes than expected in this transfer is
+///       received
+///
+/// \Then an SDO abort transfer message with CO_SDO_AC_TYPE_LEN_HI abort code is
+///       sent
 TEST(CoSsdoDnSegOnRecv, SegmentTooBig) {
   dev_holder->CreateAndInsertObj(obj2020, IDX);
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE, sub_type{0});
@@ -2293,7 +2333,15 @@ TEST(CoSsdoDnSegOnRecv, SegmentTooBig) {
   CanSend::CheckMsg(DEFAULT_COBID_RES, 0, CO_SDO_MSG_SIZE, expected.data());
 }
 
-TEST(CoSsdoDnSegOnRecv, SegmentTooSmall) {
+/// \Given a pointer to the SSDO service (co_ssdo_t) with an object dictionary
+///        containing an entry which is at least 8 bytes long; segmented
+///        download transfer is in progress
+///
+/// \When a too short SDO segment is received but the CO_SDO_SEG_LAST bit is set
+///
+/// \Then an SDO abort transfer message with CO_SDO_AC_TYPE_LEN_LO abort code is
+///       sent
+TEST(CoSsdoDnSegOnRecv, SegmentTooShort) {
   dev_holder->CreateAndInsertObj(obj2020, IDX);
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE64, sub_type64{0uL});
   StartSSDO();
@@ -2312,6 +2360,15 @@ TEST(CoSsdoDnSegOnRecv, SegmentTooSmall) {
   CanSend::CheckMsg(DEFAULT_COBID_RES, 0, CO_SDO_MSG_SIZE, expected.data());
 }
 
+/// \Given a pointer to the SSDO service (co_ssdo_t) with an object dictionary
+///        containing an entry which is at least 8 bytes long; segmented
+///        download transfer is in progress
+///
+/// \When an SDO segment is received but the download indication function
+///       returns an abort code
+///
+/// \Then an SDO abort transfer message with the abort code returned by
+///       the download indication function is sent
 TEST(CoSsdoDnSegOnRecv, FailDnInd) {
   dev_holder->CreateAndInsertObj(obj2020, IDX);
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE64, sub_type64{0uL});
@@ -2332,7 +2389,15 @@ TEST(CoSsdoDnSegOnRecv, FailDnInd) {
   CanSend::CheckMsg(DEFAULT_COBID_RES, 0, CO_SDO_MSG_SIZE, expected.data());
 }
 
-TEST(CoSsdoDnSegOnRecv, TimeoutTriggered) {
+/// \Given a pointer to the SSDO service (co_ssdo_t) with an object dictionary
+///        containing an entry which is at least 8 bytes long; segmented
+///        download transfer is in progress; an SSDO timeout is set
+///
+/// \When an SDO segment is received; Server-SDO timeout expires before
+///       receiving the next segment from the client
+///
+/// \Then an SDO abort message with CO_SDO_AC_TIMEOUT abort code is sent
+TEST(CoSsdoDnSegOnRecv, TimeoutSet) {
   dev_holder->CreateAndInsertObj(obj2020, IDX);
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE64, sub_type64{0uL});
   co_ssdo_set_timeout(ssdo, 1);
@@ -2363,6 +2428,14 @@ TEST(CoSsdoDnSegOnRecv, TimeoutTriggered) {
                     expected_timeout.data());
 }
 
+/// \Given a pointer to the SSDO service (co_ssdo_t) with an object dictionary
+///        containing an entry which is at least 8 bytes long; segmented
+///        download transfer is in progress
+///
+/// \When all required SDO segments with a data to download are received
+///
+/// \Then an SDO download segment reponse is sent and the entry's value is
+///       changed
 TEST(CoSsdoDnSegOnRecv, Nominal) {
   dev_holder->CreateAndInsertObj(obj2020, IDX);
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE64, sub_type64{0uL});
