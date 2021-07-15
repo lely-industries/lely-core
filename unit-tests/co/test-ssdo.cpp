@@ -345,7 +345,7 @@ TEST(CO_SsdoInit, CoSsdoCreate_DefaultSsdo_WithServerParameterObject) {
   POINTERS_EQUAL(net, co_ssdo_get_net(ssdo));
   POINTERS_EQUAL(dev, co_ssdo_get_dev(ssdo));
   CHECK_EQUAL(SDO_NUM, co_ssdo_get_num(ssdo));
-  const co_sdo_par* par = co_ssdo_get_par(ssdo);
+  const co_sdo_par* const par = co_ssdo_get_par(ssdo);
   CHECK_EQUAL(3u, par->n);
   CHECK_EQUAL(DEV_ID, par->id);
   CHECK_EQUAL(DEFAULT_COBID_REQ, par->cobid_req);
@@ -391,7 +391,7 @@ TEST(CO_SsdoInit, CoSsdoCreate_NonDefaultSsdo_WithServerParameterObject) {
   POINTERS_EQUAL(net, co_ssdo_get_net(ssdo));
   POINTERS_EQUAL(dev, co_ssdo_get_dev(ssdo));
   CHECK_EQUAL(sdo_num, co_ssdo_get_num(ssdo));
-  const co_sdo_par* par = co_ssdo_get_par(ssdo);
+  const co_sdo_par* const par = co_ssdo_get_par(ssdo);
   CHECK_EQUAL(3u, par->n);
   CHECK_EQUAL(DEV_ID, par->id);
   CHECK_EQUAL(DEFAULT_COBID_REQ, par->cobid_req);
@@ -575,14 +575,14 @@ TEST_BASE(CO_Ssdo) {
 
   static co_unsigned32_t sub_dn_failing_ind(co_sub_t*, co_sdo_req*,
                                             co_unsigned32_t ac, void*) {
-    if (ac) return ac;
+    if (ac != 0) return ac;
     return CO_SDO_AC_NO_READ;
   }
 
   void StartSSDO() { CHECK_EQUAL(0, co_ssdo_start(ssdo)); }
 
   // obj 0x1200, sub 0x00 - highest sub-index supported
-  void SetSrv00HighestSubidxSupported(co_unsigned8_t subidx) {
+  void SetSrv00HighestSubidxSupported(const co_unsigned8_t subidx) {
     co_sub_t* const sub = co_dev_find_sub(dev, 0x1200u, 0x00u);
     if (sub != nullptr)
       co_sub_set_val_u8(sub, subidx);
@@ -591,7 +591,7 @@ TEST_BASE(CO_Ssdo) {
   }
 
   // obj 0x1200, sub 0x01 - COB-ID client -> server (rx)
-  void SetSrv01CobidReq(co_unsigned32_t cobid) {
+  void SetSrv01CobidReq(const co_unsigned32_t cobid) {
     co_sub_t* const sub = co_dev_find_sub(dev, 0x1200u, 0x01u);
     if (sub != nullptr)
       co_sub_set_val_u32(sub, cobid);
@@ -600,7 +600,7 @@ TEST_BASE(CO_Ssdo) {
   }
 
   // obj 0x1200, sub 0x02 - COB-ID server -> client (tx)
-  void SetSrv02CobidRes(co_unsigned32_t cobid) {
+  void SetSrv02CobidRes(const co_unsigned32_t cobid) {
     co_sub_t* const sub = co_dev_find_sub(dev, 0x1200u, 0x02u);
     if (sub != nullptr)
       co_sub_set_val_u32(sub, cobid);
@@ -667,7 +667,7 @@ TEST_GROUP_BASE(CoSsdoSetGet, CO_Ssdo){};
 ///
 /// \Then a pointer to the network (can_net_t) of the SSDO service is returned
 TEST(CoSsdoSetGet, CoSsdoGetNet_Nominal) {
-  const auto* ret = co_ssdo_get_net(ssdo);
+  const auto* const ret = co_ssdo_get_net(ssdo);
 
   POINTERS_EQUAL(net, ret);
 }
@@ -683,7 +683,7 @@ TEST(CoSsdoSetGet, CoSsdoGetNet_Nominal) {
 ///
 /// \Then a pointer to the device (co_dev_t) of the SSDO service is returned
 TEST(CoSsdoSetGet, CoSsdoGetDev_Nominal) {
-  const auto* ret = co_ssdo_get_dev(ssdo);
+  const auto* const ret = co_ssdo_get_dev(ssdo);
 
   POINTERS_EQUAL(dev, ret);
 }
@@ -715,7 +715,7 @@ TEST(CoSsdoSetGet, CoSsdoGetNum_Nominal) {
 ///
 /// \Then a pointer to the parameter object of the SSDO service is returned
 TEST(CoSsdoSetGet, CoSsdoGetPar_Nominal) {
-  const auto* ret = co_ssdo_get_par(ssdo);
+  const auto* const ret = co_ssdo_get_par(ssdo);
 
   POINTER_NOT_NULL(ret);
   CHECK_EQUAL(3u, ret->n);
@@ -1277,8 +1277,8 @@ TEST(CoSsdoDnIniOnRecv, TimeoutSet) {
 
   co_unsigned8_t size[4] = {0};
   stle_u32(size, sizeof(sub_type64));
-  can_msg msg = SdoCreateMsg::DnIniReq(IDX, SUBIDX, DEFAULT_COBID_REQ, size,
-                                       CO_SDO_SEG_SIZE_SET(1u));
+  const can_msg msg = SdoCreateMsg::DnIniReq(IDX, SUBIDX, DEFAULT_COBID_REQ,
+                                             size, CO_SDO_SEG_SIZE_SET(1u));
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
   CHECK_EQUAL(1u, CanSend::GetNumCalled());
@@ -1314,9 +1314,9 @@ TEST(CoSsdoDnIniOnRecv, TimeoutSet) {
 TEST(CoSsdoDnIniOnRecv, Expedited_NoObject) {
   StartSSDO();
 
-  co_unsigned8_t val2dn[4] = {0};
-  can_msg msg = SdoCreateMsg::DnIniReq(IDX, SUBIDX, DEFAULT_COBID_REQ, val2dn,
-                                       CO_SDO_INI_SIZE_EXP);
+  const co_unsigned8_t val2dn[4] = {0};
+  const can_msg msg = SdoCreateMsg::DnIniReq(IDX, SUBIDX, DEFAULT_COBID_REQ,
+                                             val2dn, CO_SDO_INI_SIZE_EXP);
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
   CHECK_EQUAL(1u, CanSend::GetNumCalled());
@@ -1349,7 +1349,7 @@ TEST(CoSsdoDnIniOnRecv, Expedited) {
   co_unsigned8_t val2dn[4] = {0};
   stle_u16(val2dn, 0xabcd);
   const co_unsigned8_t cs = CO_SDO_INI_SIZE_IND | CO_SDO_INI_SIZE_EXP_SET(2u);
-  can_msg msg =
+  const can_msg msg =
       SdoCreateMsg::DnIniReq(IDX, SUBIDX, DEFAULT_COBID_REQ, val2dn, cs);
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
@@ -1371,7 +1371,7 @@ TEST_GROUP_BASE(CoSsdoUpIniOnRecv, CO_Ssdo) {
                                           co_unsigned32_t ac, void* data) {
     (void)data;
 
-    if (ac) return ac;
+    if (ac != 0) return ac;
 
     co_sub_on_up(sub, req, &ac);
     req->size = 0;
@@ -1414,7 +1414,7 @@ TEST(CoSsdoUpIniOnRecv, NoAccess) {
   co_sub_set_access(obj2020->GetLastSub(), CO_ACCESS_WO);
   StartSSDO();
 
-  can_msg msg = SdoCreateMsg::UpIniReq(IDX, SUBIDX, DEFAULT_COBID_REQ);
+  const can_msg msg = SdoCreateMsg::UpIniReq(IDX, SUBIDX, DEFAULT_COBID_REQ);
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
   CHECK_EQUAL(1u, CanSend::GetNumCalled());
@@ -1429,7 +1429,7 @@ TEST(CoSsdoUpIniOnRecv, UploadToSubWithSizeZero) {
   co_sub_set_up_ind(obj2020->GetLastSub(), up_ind_size_zero, nullptr);
   StartSSDO();
 
-  can_msg msg = SdoCreateMsg::UpIniReq(IDX, SUBIDX, DEFAULT_COBID_REQ);
+  const can_msg msg = SdoCreateMsg::UpIniReq(IDX, SUBIDX, DEFAULT_COBID_REQ);
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
   CHECK_EQUAL(1u, CanSend::GetNumCalled());
@@ -1445,7 +1445,7 @@ TEST(CoSsdoUpIniOnRecv, TimeoutTriggered) {
   co_ssdo_set_timeout(ssdo, 1u);  // 1 ms
   StartSSDO();
 
-  can_msg msg = SdoCreateMsg::UpIniReq(IDX, SUBIDX, DEFAULT_COBID_REQ);
+  const can_msg msg = SdoCreateMsg::UpIniReq(IDX, SUBIDX, DEFAULT_COBID_REQ);
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
   CHECK_EQUAL(1u, CanSend::GetNumCalled());
@@ -1470,7 +1470,7 @@ TEST(CoSsdoUpIniOnRecv, Expedited) {
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE, sub_type{0xabcdu});
   StartSSDO();
 
-  can_msg msg = SdoCreateMsg::UpIniReq(IDX, SUBIDX, DEFAULT_COBID_REQ);
+  const can_msg msg = SdoCreateMsg::UpIniReq(IDX, SUBIDX, DEFAULT_COBID_REQ);
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
   CHECK_EQUAL(1u, CanSend::GetNumCalled());
@@ -1536,7 +1536,7 @@ TEST(CoSsdoBlkDnIniOnRecv, InvalidCS) {
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE, sub_type{0xabcdu});
   StartSSDO();
 
-  can_msg msg =
+  const can_msg msg =
       SdoCreateMsg::BlkDnIniReq(IDX, SUBIDX, DEFAULT_COBID_REQ, 0x0fu);
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
@@ -1557,8 +1557,8 @@ TEST(CoSsdoBlkDnIniOnRecv, BlkSizeSpecified) {
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE, sub_type{0});
   StartSSDO();
 
-  can_msg msg = SdoCreateMsg::BlkDnIniReq(IDX, SUBIDX, DEFAULT_COBID_REQ,
-                                          CO_SDO_BLK_SIZE_IND);
+  const can_msg msg = SdoCreateMsg::BlkDnIniReq(IDX, SUBIDX, DEFAULT_COBID_REQ,
+                                                CO_SDO_BLK_SIZE_IND);
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
   CHECK_EQUAL(1u, CanSend::GetNumCalled());
@@ -1580,7 +1580,7 @@ TEST(CoSsdoBlkDnIniOnRecv, TimeoutSet) {
   co_ssdo_set_timeout(ssdo, 1u);  // 1 ms
   StartSSDO();
 
-  can_msg msg = SdoCreateMsg::BlkDnIniReq(IDX, SUBIDX, DEFAULT_COBID_REQ);
+  const can_msg msg = SdoCreateMsg::BlkDnIniReq(IDX, SUBIDX, DEFAULT_COBID_REQ);
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
   CHECK_EQUAL(1u, CanSend::GetNumCalled());
@@ -1609,7 +1609,7 @@ TEST(CoSsdoBlkDnIniOnRecv, Nominal) {
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE, sub_type{0});
   StartSSDO();
 
-  can_msg msg = SdoCreateMsg::BlkDnIniReq(IDX, SUBIDX, DEFAULT_COBID_REQ);
+  const can_msg msg = SdoCreateMsg::BlkDnIniReq(IDX, SUBIDX, DEFAULT_COBID_REQ);
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
   CHECK_EQUAL(1u, CanSend::GetNumCalled());
@@ -1627,7 +1627,7 @@ TEST_GROUP_BASE(CoSsdoBlkUpIniOnRecv, CO_Ssdo) {
   static can_msg CreateBlkUp2020IniReqMsg(
       const co_unsigned8_t subidx = SUBIDX,
       const co_unsigned8_t blksize = CO_SDO_MAX_SEQNO) {
-    can_msg msg =
+    const can_msg msg =
         SdoCreateMsg::BlkUpIniReq(IDX, subidx, DEFAULT_COBID_REQ, blksize);
 
     return msg;
@@ -1730,7 +1730,7 @@ TEST(CoSsdoBlkUpIniOnRecv, BlocksizeMoreThanMaxSeqNum) {
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE, sub_type{0xabcdu});
   StartSSDO();
 
-  can_msg msg = CreateBlkUp2020IniReqMsg(SUBIDX, CO_SDO_MAX_SEQNO + 1u);
+  const can_msg msg = CreateBlkUp2020IniReqMsg(SUBIDX, CO_SDO_MAX_SEQNO + 1u);
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
   CHECK_EQUAL(1u, CanSend::GetNumCalled());
@@ -1751,7 +1751,7 @@ TEST(CoSsdoBlkUpIniOnRecv, BlocksizeZero) {
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE, sub_type{0xabcdu});
   StartSSDO();
 
-  can_msg msg = CreateBlkUp2020IniReqMsg(SUBIDX, 0);
+  const can_msg msg = CreateBlkUp2020IniReqMsg(SUBIDX, 0);
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
   CHECK_EQUAL(1u, CanSend::GetNumCalled());
@@ -1791,7 +1791,7 @@ TEST(CoSsdoBlkUpIniOnRecv, MissingProtocolSwitchThreshold) {
 TEST(CoSsdoBlkUpIniOnRecv, NoObjPresent) {
   StartSSDO();
 
-  can_msg msg = CreateBlkUp2020IniReqMsg();
+  const can_msg msg = CreateBlkUp2020IniReqMsg();
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
   CHECK_EQUAL(1u, CanSend::GetNumCalled());
@@ -1810,7 +1810,7 @@ TEST(CoSsdoBlkUpIniOnRecv, NoSubPresent) {
   dev_holder->CreateAndInsertObj(obj2020, IDX);
   StartSSDO();
 
-  can_msg msg = CreateBlkUp2020IniReqMsg();
+  const can_msg msg = CreateBlkUp2020IniReqMsg();
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
   CHECK_EQUAL(1u, CanSend::GetNumCalled());
@@ -1832,7 +1832,7 @@ TEST(CoSsdoBlkUpIniOnRecv, TimeoutSet) {
   co_ssdo_set_timeout(ssdo, 1u);  // 1 ms
   StartSSDO();
 
-  can_msg msg = CreateBlkUp2020IniReqMsg(SUBIDX, sizeof(sub_type64));
+  const can_msg msg = CreateBlkUp2020IniReqMsg(SUBIDX, sizeof(sub_type64));
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
   CHECK_EQUAL(1u, CanSend::GetNumCalled());
@@ -1933,7 +1933,7 @@ TEST(CoSsdoBlkUpIniOnRecv, Nominal) {
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE, sub_type{0xabcdu});
   StartSSDO();
 
-  can_msg msg = CreateBlkUp2020IniReqMsg();
+  const can_msg msg = CreateBlkUp2020IniReqMsg();
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
   CHECK_EQUAL(1u, CanSend::GetNumCalled());
@@ -1999,9 +1999,9 @@ TEST(CoSsdoDnSegOnRecv, AbortCS) {
 
   DownloadInitiateReq(sizeof(sub_type64));
 
-  co_unsigned8_t val2dn[4u] = {0};
-  can_msg msg = SdoCreateMsg::DnSeg(IDX, SUBIDX, DEFAULT_COBID_REQ, val2dn, 4u,
-                                    CO_SDO_CS_ABORT);
+  const co_unsigned8_t val2dn[4u] = {0};
+  const can_msg msg = SdoCreateMsg::DnSeg(IDX, SUBIDX, DEFAULT_COBID_REQ,
+                                          val2dn, 4u, CO_SDO_CS_ABORT);
   const auto ret_abort = can_net_recv(net, &msg, 0);
 
   CHECK_EQUAL(1, ret_abort);
@@ -2026,16 +2026,16 @@ TEST(CoSsdoDnSegOnRecv, AbortAfterFirstSegment) {
   DownloadInitiateReq(sizeof(sub_type64));
 
   const uint8_t bytes_per_segment = 4u;
-  uint_least8_t val2dn[sizeof(sub_type64)] = {0x12u, 0x34u, 0x56u, 0x78u,
-                                              0x90u, 0xabu, 0xcdu, 0xefu};
+  const uint_least8_t val2dn[sizeof(sub_type64)] = {0x12u, 0x34u, 0x56u, 0x78u,
+                                                    0x90u, 0xabu, 0xcdu, 0xefu};
 
-  can_msg first_segment = SdoCreateMsg::DnSeg(IDX, SUBIDX, DEFAULT_COBID_REQ,
-                                              val2dn, bytes_per_segment);
+  const can_msg first_segment = SdoCreateMsg::DnSeg(
+      IDX, SUBIDX, DEFAULT_COBID_REQ, val2dn, bytes_per_segment);
   CHECK_EQUAL(1, can_net_recv(net, &first_segment, 0));
   CanSend::Clear();
   CoSubDnInd::Clear();
 
-  can_msg abort_transfer =
+  const can_msg abort_transfer =
       SdoCreateMsg::Abort(IDX, SUBIDX, DEFAULT_COBID_REQ, CO_SDO_AC_NO_DATA);
   CHECK_EQUAL(1, can_net_recv(net, &abort_transfer, 0));
   CHECK_EQUAL(0, CanSend::GetNumCalled());
@@ -2064,11 +2064,11 @@ TEST(CoSsdoDnSegOnRecv, AbortAfterFirstSegment_MsgTooShort) {
   DownloadInitiateReq(sizeof(sub_type64));
 
   const uint8_t bytes_per_segment = 4u;
-  uint_least8_t val2dn[sizeof(sub_type64)] = {0x12u, 0x34u, 0x56u, 0x78u,
-                                              0x90u, 0xabu, 0xcdu, 0xefu};
+  const uint_least8_t val2dn[sizeof(sub_type64)] = {0x12u, 0x34u, 0x56u, 0x78u,
+                                                    0x90u, 0xabu, 0xcdu, 0xefu};
 
-  can_msg first_segment = SdoCreateMsg::DnSeg(IDX, SUBIDX, DEFAULT_COBID_REQ,
-                                              val2dn, bytes_per_segment);
+  const can_msg first_segment = SdoCreateMsg::DnSeg(
+      IDX, SUBIDX, DEFAULT_COBID_REQ, val2dn, bytes_per_segment);
   CHECK_EQUAL(1, can_net_recv(net, &first_segment, 0));
   CanSend::Clear();
   CoSubDnInd::Clear();
@@ -2091,8 +2091,8 @@ TEST(CoSsdoDnSegOnRecv, InvalidCS) {
 
   DownloadInitiateReq(sizeof(sub_type64));
 
-  co_unsigned8_t val2dn[4u] = {0};
-  can_msg msg =
+  const co_unsigned8_t val2dn[4u] = {0};
+  const can_msg msg =
       SdoCreateMsg::DnSeg(IDX, SUBIDX, DEFAULT_COBID_REQ, val2dn, 4u, 0xffu);
   const auto ret_abort = can_net_recv(net, &msg, 0);
 
@@ -2110,11 +2110,11 @@ TEST(CoSsdoDnSegOnRecv, NoToggle) {
 
   DownloadInitiateReq(sizeof(sub_type64));
 
-  co_unsigned8_t vals2dn[sizeof(sub_type64)] = {0};
+  const co_unsigned8_t val2dn[sizeof(sub_type64)] = {0};
 
   // send first segment: 4 bytes
-  can_msg msg =
-      SdoCreateMsg::DnSeg(IDX, SUBIDX, DEFAULT_COBID_REQ, vals2dn, 4u);
+  const can_msg msg =
+      SdoCreateMsg::DnSeg(IDX, SUBIDX, DEFAULT_COBID_REQ, val2dn, 4u);
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
   CHECK_EQUAL(1u, CanSend::GetNumCalled());
@@ -2123,10 +2123,10 @@ TEST(CoSsdoDnSegOnRecv, NoToggle) {
   CanSend::CheckMsg(DEFAULT_COBID_RES, 0, CO_SDO_MSG_SIZE, expected.data());
   ResetCanSend();
 
-  // send last segment: 1 byte
-  msg = SdoCreateMsg::DnSeg(IDX, SUBIDX, DEFAULT_COBID_REQ, vals2dn + 4u, 1u,
-                            CO_SDO_SEG_LAST);
-  CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
+  // send last segment: next 4 bytes
+  const can_msg msg_last = SdoCreateMsg::DnSeg(
+      IDX, SUBIDX, DEFAULT_COBID_REQ, val2dn + 4u, 4u, CO_SDO_SEG_LAST);
+  CHECK_EQUAL(1, can_net_recv(net, &msg_last, 0));
 
   CHECK_EQUAL(0, CanSend::GetNumCalled());
 }
@@ -2138,7 +2138,7 @@ TEST(CoSsdoDnSegOnRecv, MsgLenLessThanSegmentSize) {
 
   DownloadInitiateReq(sizeof(sub_type64));
 
-  co_unsigned8_t val2dn[8] = {0};
+  const co_unsigned8_t val2dn[8] = {0};
   can_msg msg = SdoCreateMsg::DnSeg(IDX, SUBIDX, DEFAULT_COBID_REQ, val2dn, 6u);
   msg.len = 5u;
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
@@ -2156,8 +2156,9 @@ TEST(CoSsdoDnSegOnRecv, SegmentTooBig) {
 
   DownloadInitiateReq(sizeof(sub_type));
 
-  co_unsigned8_t val2dn[4] = {0};
-  can_msg msg = SdoCreateMsg::DnSeg(IDX, SUBIDX, DEFAULT_COBID_REQ, val2dn, 4u);
+  const co_unsigned8_t val2dn[4] = {0};
+  const can_msg msg =
+      SdoCreateMsg::DnSeg(IDX, SUBIDX, DEFAULT_COBID_REQ, val2dn, 4u);
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
   CHECK_EQUAL(1u, CanSend::GetNumCalled());
@@ -2173,8 +2174,8 @@ TEST(CoSsdoDnSegOnRecv, SegmentTooSmall) {
 
   DownloadInitiateReq(sizeof(sub_type64));
 
-  co_unsigned8_t val2dn[sizeof(sub_type64) - 1u] = {0};
-  can_msg msg = SdoCreateMsg::DnSeg(
+  const co_unsigned8_t val2dn[sizeof(sub_type64) - 1u] = {0};
+  const can_msg msg = SdoCreateMsg::DnSeg(
       IDX, SUBIDX, DEFAULT_COBID_REQ, val2dn,
       static_cast<uint8_t>(sizeof(sub_type64) - 1u), CO_SDO_SEG_LAST);
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
@@ -2194,10 +2195,10 @@ TEST(CoSsdoDnSegOnRecv, FailDnInd) {
 
   DownloadInitiateReq(sizeof(sub_type64));
 
-  co_unsigned8_t val2dn[4] = {0};
-  can_msg msg1 =
+  const co_unsigned8_t val2dn[4] = {0};
+  const can_msg msg =
       SdoCreateMsg::DnSeg(IDX, SUBIDX, DEFAULT_COBID_REQ, val2dn, 4u);
-  CHECK_EQUAL(1, can_net_recv(net, &msg1, 0));
+  CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
   CHECK_EQUAL(1u, CanSend::GetNumCalled());
   const auto expected =
@@ -2213,12 +2214,12 @@ TEST(CoSsdoDnSegOnRecv, TimeoutTriggered) {
 
   DownloadInitiateReq(sizeof(sub_type64));
 
-  co_unsigned8_t vals2dn[4] = {0x01u, 0x23u, 0x45u, 0x67u};
+  const co_unsigned8_t val2dn[4] = {0x01u, 0x23u, 0x45u, 0x67u};
 
   // send first segment: 4 bytes
-  can_msg msg1 =
-      SdoCreateMsg::DnSeg(IDX, SUBIDX, DEFAULT_COBID_REQ, vals2dn, 4u);
-  CHECK_EQUAL(1, can_net_recv(net, &msg1, 0));
+  const can_msg msg =
+      SdoCreateMsg::DnSeg(IDX, SUBIDX, DEFAULT_COBID_REQ, val2dn, 4u);
+  CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
   CHECK_EQUAL(1u, CanSend::GetNumCalled());
   const auto expected =
@@ -2243,13 +2244,13 @@ TEST(CoSsdoDnSegOnRecv, Nominal) {
 
   DownloadInitiateReq(sizeof(sub_type64));
 
-  co_unsigned8_t vals2dn[8] = {0x01u, 0x23u, 0x45u, 0x67u,
-                               0x89u, 0xabu, 0xcdu, 0xefu};
+  const co_unsigned8_t val2dn[8] = {0x01u, 0x23u, 0x45u, 0x67u,
+                                    0x89u, 0xabu, 0xcdu, 0xefu};
 
   // send first segment: 4 bytes
-  can_msg msg1 =
-      SdoCreateMsg::DnSeg(IDX, SUBIDX, DEFAULT_COBID_REQ, vals2dn, 4u);
-  CHECK_EQUAL(1, can_net_recv(net, &msg1, 0));
+  const can_msg msg_first =
+      SdoCreateMsg::DnSeg(IDX, SUBIDX, DEFAULT_COBID_REQ, val2dn, 4u);
+  CHECK_EQUAL(1, can_net_recv(net, &msg_first, 0));
 
   CHECK_EQUAL(1u, CanSend::GetNumCalled());
   const auto expected =
@@ -2258,10 +2259,10 @@ TEST(CoSsdoDnSegOnRecv, Nominal) {
   ResetCanSend();
 
   // send last segment: next 4 bytes
-  can_msg msg2 =
-      SdoCreateMsg::DnSeg(IDX, SUBIDX, DEFAULT_COBID_REQ, vals2dn + 4u, 4u,
+  const can_msg msg_last =
+      SdoCreateMsg::DnSeg(IDX, SUBIDX, DEFAULT_COBID_REQ, val2dn + 4u, 4u,
                           CO_SDO_SEG_LAST | CO_SDO_SEG_TOGGLE);
-  CHECK_EQUAL(1, can_net_recv(net, &msg2, 0));
+  CHECK_EQUAL(1, can_net_recv(net, &msg_last, 0));
 
   CHECK_EQUAL(1u, CanSend::GetNumCalled());
   const auto expected_response = SdoInitExpectedData::U32(
@@ -2285,7 +2286,7 @@ TEST_GROUP_BASE(CoSsdoUpSegOnRecv, CO_Ssdo) {
                                         co_unsigned32_t ac, void* data) {
     (void)data;
 
-    if (ac) return ac;
+    if (ac != 0) return ac;
 
     co_sub_on_up(sub, req, &ac);
     req->size = INVALID_REQSIZE;
@@ -2301,7 +2302,7 @@ TEST_GROUP_BASE(CoSsdoUpSegOnRecv, CO_Ssdo) {
       const co_sub_t* sub, co_sdo_req* req, co_unsigned32_t ac, void* data) {
     (void)data;
 
-    if (ac) return ac;
+    if (ac != 0) return ac;
 
     co_sub_on_up(sub, req, &ac);
     req->size = 10u;
@@ -2313,7 +2314,7 @@ TEST_GROUP_BASE(CoSsdoUpSegOnRecv, CO_Ssdo) {
   void UploadInitiateReq(const co_unsigned8_t size,
                          const co_unsigned32_t can_id = DEFAULT_COBID_RES,
                          const co_unsigned8_t flags = 0u) {
-    can_msg msg = SdoCreateMsg::UpIniReq(IDX, SUBIDX, DEFAULT_COBID_REQ);
+    const can_msg msg = SdoCreateMsg::UpIniReq(IDX, SUBIDX, DEFAULT_COBID_REQ);
 
     CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
@@ -2405,9 +2406,9 @@ TEST(CoSsdoUpSegOnRecv, NoToggle) {
   CHECK_EQUAL(0x76u, CanSend::msg.data[7]);
   ResetCanSend();
 
-  can_msg msg2 = SdoCreateMsg::Default(IDX, SUBIDX, DEFAULT_COBID_REQ);
-  msg2.data[0] = CO_SDO_CCS_UP_SEG_REQ;
-  CHECK_EQUAL(1, can_net_recv(net, &msg2, 0));
+  can_msg msg_last = SdoCreateMsg::Default(IDX, SUBIDX, DEFAULT_COBID_REQ);
+  msg_last.data[0] = CO_SDO_CCS_UP_SEG_REQ;
+  CHECK_EQUAL(1, can_net_recv(net, &msg_last, 0));
 
   CHECK_EQUAL(1u, CanSend::GetNumCalled());
   const auto expected =
@@ -2480,9 +2481,9 @@ TEST(CoSsdoUpSegOnRecv, Nominal) {
   CHECK_EQUAL(0x76u, CanSend::msg.data[7]);
   ResetCanSend();
 
-  can_msg msg2 = SdoCreateMsg::Default(IDX, SUBIDX, DEFAULT_COBID_REQ);
-  msg2.data[0] = CO_SDO_CCS_UP_SEG_REQ | CO_SDO_SEG_TOGGLE;
-  CHECK_EQUAL(1, can_net_recv(net, &msg2, 0));
+  can_msg msg_last = SdoCreateMsg::Default(IDX, SUBIDX, DEFAULT_COBID_REQ);
+  msg_last.data[0] = CO_SDO_CCS_UP_SEG_REQ | CO_SDO_SEG_TOGGLE;
+  CHECK_EQUAL(1, can_net_recv(net, &msg_last, 0));
 
   CHECK_EQUAL(1u, CanSend::GetNumCalled());
   CHECK_EQUAL(DEFAULT_COBID_RES, CanSend::msg.id);
@@ -2522,9 +2523,9 @@ TEST(CoSsdoUpSegOnRecv, CoSsdoCreateSegRes_ExtendedId) {
   CHECK_EQUAL(0x76u, CanSend::msg.data[7]);
   ResetCanSend();
 
-  can_msg msg2 = SdoCreateMsg::Default(IDX, SUBIDX, DEFAULT_COBID_REQ);
-  msg2.data[0] = CO_SDO_CCS_UP_SEG_REQ | CO_SDO_SEG_TOGGLE;
-  CHECK_EQUAL(1, can_net_recv(net, &msg2, 0));
+  can_msg msg_last = SdoCreateMsg::Default(IDX, SUBIDX, DEFAULT_COBID_REQ);
+  msg_last.data[0] = CO_SDO_CCS_UP_SEG_REQ | CO_SDO_SEG_TOGGLE;
+  CHECK_EQUAL(1, can_net_recv(net, &msg_last, 0));
 
   CHECK_EQUAL(1u, CanSend::GetNumCalled());
   CHECK_EQUAL(new_can_id, CanSend::msg.id);
@@ -2561,9 +2562,9 @@ TEST(CoSsdoUpSegOnRecv, IndError) {
   CHECK_EQUAL(0x76u, CanSend::msg.data[7]);
   ResetCanSend();
 
-  can_msg msg2 = SdoCreateMsg::Default(IDX, SUBIDX, DEFAULT_COBID_REQ);
-  msg2.data[0] = CO_SDO_CCS_UP_SEG_REQ | CO_SDO_SEG_TOGGLE;
-  CHECK_EQUAL(1, can_net_recv(net, &msg2, 0));
+  can_msg msg_last = SdoCreateMsg::Default(IDX, SUBIDX, DEFAULT_COBID_REQ);
+  msg_last.data[0] = CO_SDO_CCS_UP_SEG_REQ | CO_SDO_SEG_TOGGLE;
+  CHECK_EQUAL(1, can_net_recv(net, &msg_last, 0));
 
   CHECK_EQUAL(1u, CanSend::GetNumCalled());
   const auto expected =
@@ -2598,9 +2599,9 @@ TEST(CoSsdoUpSegOnRecv, IndReqSizeLonger) {
   CHECK_EQUAL(0x76u, CanSend::msg.data[7]);
   ResetCanSend();
 
-  can_msg msg2 = SdoCreateMsg::Default(IDX, SUBIDX, DEFAULT_COBID_REQ);
-  msg2.data[0] = CO_SDO_CCS_UP_SEG_REQ | CO_SDO_SEG_TOGGLE;
-  CHECK_EQUAL(1, can_net_recv(net, &msg2, 0));
+  can_msg msg_last = SdoCreateMsg::Default(IDX, SUBIDX, DEFAULT_COBID_REQ);
+  msg_last.data[0] = CO_SDO_CCS_UP_SEG_REQ | CO_SDO_SEG_TOGGLE;
+  CHECK_EQUAL(1, can_net_recv(net, &msg_last, 0));
 
   CHECK_EQUAL(1u, CanSend::GetNumCalled());
   CHECK_EQUAL(DEFAULT_COBID_RES, CanSend::msg.id);
@@ -2838,7 +2839,7 @@ TEST(CoSsdoBlkDn, Sub_Nominal) {
 
   InitBlkDn2020Sub00(sizeof(sub_type64));
 
-  sub_type64 val = 0xefcdab9078563412u;
+  const sub_type64 val = 0xefcdab9078563412u;
   uint_least8_t val_buf[sizeof(sub_type64)] = {0};
   stle_u64(val_buf, val);
   can_msg msg_first_blk =
@@ -3209,7 +3210,7 @@ TEST(CoSsdoBlkDn, EndRecv_FailingDnInd) {
 
   InitBlkDn2020Sub00(sizeof(sub_type64));
 
-  sub_type64 val = 0xffffffffffffffffu;
+  const sub_type64 val = 0xffffffffffffffffu;
   uint_least8_t val_buf[sizeof(sub_type64)] = {0};
   stle_u64(val_buf, val);
   can_msg msg_first_blk =
@@ -3256,9 +3257,10 @@ TEST(CoSsdoBlkDn, EndRecv_FailingDnInd) {
 TEST_GROUP_BASE(CoSsdoBlkUp, CO_Ssdo) {
   int32_t ignore = 0;  // clang-format fix
 
-  static co_unsigned32_t up_ind_inc_req_offset(
-      const co_sub_t* sub, co_sdo_req* req, co_unsigned32_t ac, void*) {
-    if (ac) return ac;
+  static co_unsigned32_t up_ind_inc_req_offset(const co_sub_t* const sub,
+                                               co_sdo_req* const req,
+                                               co_unsigned32_t ac, void*) {
+    if (ac != 0) return ac;
 
     co_sub_on_up(sub, req, &ac);
     req->offset++;
@@ -3266,18 +3268,20 @@ TEST_GROUP_BASE(CoSsdoBlkUp, CO_Ssdo) {
     return ac;
   }
 
-  static co_unsigned32_t up_ind_ret_err(const co_sub_t* sub, co_sdo_req* req,
+  static co_unsigned32_t up_ind_ret_err(const co_sub_t* const sub,
+                                        co_sdo_req* const req,
                                         co_unsigned32_t ac, void*) {
-    if (ac) return ac;
+    if (ac != 0) return ac;
 
     co_sub_on_up(sub, req, &ac);
 
     return CO_SDO_AC_DATA;
   }
 
-  static co_unsigned32_t up_ind_big_reqsiz(const co_sub_t* sub, co_sdo_req* req,
+  static co_unsigned32_t up_ind_big_reqsiz(const co_sub_t* const sub,
+                                           co_sdo_req* const req,
                                            co_unsigned32_t ac, void*) {
-    if (ac) return ac;
+    if (ac != 0) return ac;
 
     co_sub_on_up(sub, req, &ac);
     req->size = 3u;
@@ -3369,7 +3373,7 @@ TEST_GROUP_BASE(CoSsdoBlkUp, CO_Ssdo) {
 
 TEST(CoSsdoBlkUp, Sub_Nominal) {
   dev_holder->CreateAndInsertObj(obj2020, IDX);
-  sub_type64 val = 0x5423456789abcdefu;
+  const sub_type64 val = 0x5423456789abcdefu;
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE64, val);
   StartSSDO();
 
@@ -3571,7 +3575,7 @@ TEST(CoSsdoBlkUp, Sub_RequestIncremented) {
 TEST(CoSsdoBlkUp, Sub_ArrNominal) {
   dev_holder->CreateAndInsertObj(obj2020, IDX);
   obj2020->InsertAndSetSub(SUBIDX, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t{1u});
-  sub_type val = 0xabcdu;
+  const sub_type val = 0xabcdu;
   obj2020->InsertAndSetSub(0x01u, SUB_TYPE, sub_type{val});
   co_obj_set_code(co_dev_find_obj(dev, IDX), CO_OBJECT_ARRAY);
   StartSSDO();
@@ -3923,7 +3927,7 @@ TEST(CoSsdoBlkUp, Sub_CSAbort_AC) {
   ResetCanSend();
   CoSubUpInd::Clear();
 
-  can_msg msg =
+  const can_msg msg =
       SdoCreateMsg::Abort(IDX, SUBIDX, DEFAULT_COBID_REQ, CO_SDO_AC_ERROR);
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
@@ -4003,10 +4007,10 @@ TEST(CoSsdoBlkUp, Sub_NoBlkSeqNum) {
   CHECK_EQUAL(0x00u, CanSend::msg.data[7]);
   ResetCanSend();
 
-  can_msg msg2 = SdoCreateMsg::Default(IDX, SUBIDX, DEFAULT_COBID_REQ);
-  msg2.data[0] = CO_SDO_CCS_BLK_UP_REQ | CO_SDO_SC_BLK_RES;
-  msg2.len = 2u;
-  CHECK_EQUAL(1, can_net_recv(net, &msg2, 0));
+  can_msg msg_last = SdoCreateMsg::Default(IDX, SUBIDX, DEFAULT_COBID_REQ);
+  msg_last.data[0] = CO_SDO_CCS_BLK_UP_REQ | CO_SDO_SC_BLK_RES;
+  msg_last.len = 2u;
+  CHECK_EQUAL(1, can_net_recv(net, &msg_last, 0));
 
   CHECK_EQUAL(1u, CanSend::GetNumCalled());
   const auto expected =
@@ -4117,9 +4121,9 @@ TEST(CoSsdoBlkUp, Sub_StartUp_ButAlreadyStarted) {
   ResetCanSend();
 
   // client's confirmation response
-  can_msg msg2 = SdoCreateMsg::Default(IDX, SUBIDX, DEFAULT_COBID_REQ);
-  msg2.data[0] = CO_SDO_CCS_BLK_UP_REQ | CO_SDO_SC_START_UP;
-  CHECK_EQUAL(1, can_net_recv(net, &msg2, 0));
+  can_msg msg_last = SdoCreateMsg::Default(IDX, SUBIDX, DEFAULT_COBID_REQ);
+  msg_last.data[0] = CO_SDO_CCS_BLK_UP_REQ | CO_SDO_SC_START_UP;
+  CHECK_EQUAL(1, can_net_recv(net, &msg_last, 0));
 
   // server's request
   CHECK_EQUAL(1u, CanSend::GetNumCalled());
