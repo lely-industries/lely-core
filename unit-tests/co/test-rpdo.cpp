@@ -1,7 +1,7 @@
 /**@file
  * This file is part of the CANopen Library Unit Test Suite.
  *
- * @copyright 2020 N7 Space Sp. z o.o.
+ * @copyright 2020-2021 N7 Space Sp. z o.o.
  *
  * Unit Test Suite was developed under a programme of,
  * and funded by, the European Space Agency.
@@ -124,10 +124,19 @@ TEST_GROUP_BASE(CO_RpdoCreate, CO_RpdoBase) {
   }
 };
 
+/// @name co_rpdo_destroy()
+///@{
+
 TEST(CO_RpdoCreate, CoRpdoDestroy_Null) { co_rpdo_destroy(nullptr); }
+
+///@}
+
+/// @name co_rpdo_create()
+///@{
 
 TEST(CO_RpdoCreate, CoRpdoCreate_MissingObject) {
   rpdo = co_rpdo_create(net, dev, RPDO_NUM);
+
   POINTERS_EQUAL(nullptr, rpdo);
 }
 
@@ -433,6 +442,8 @@ TEST(CO_RpdoCreate, CoRpdoCreate_TimerSet) {
   CHECK_EQUAL(0, comm->sync);
 }
 
+///@}
+
 namespace CO_RpdoStatic {
 static bool rpdo_ind_func_called = false;
 static struct {
@@ -525,11 +536,19 @@ TEST_GROUP_BASE(CO_Rpdo, CO_RpdoBase) {
   }
 };
 
+/// @name co_rpdo_get_ind()
+///@{
+
 TEST(CO_Rpdo, CoRpdoGetInd_Null) {
   CreateRpdo();
 
   co_rpdo_get_ind(rpdo, nullptr, nullptr);
 }
+
+///@}
+
+/// @name co_rpdo_set_ind()
+///@{
 
 TEST(CO_Rpdo, CoRpdoSetInd) {
   int32_t data = 0;
@@ -544,11 +563,21 @@ TEST(CO_Rpdo, CoRpdoSetInd) {
   POINTERS_EQUAL(&data, pdata);
 }
 
+///@}
+
+/// @name co_rpdo_get_err()
+///@{
+
 TEST(CO_Rpdo, CoRpdoGetErr_Null) {
   CreateRpdo();
 
   co_rpdo_get_err(rpdo, nullptr, nullptr);
 }
+
+///@}
+
+/// @name co_rpdo_set_err()
+///@{
 
 TEST(CO_Rpdo, CoRpdoSetErr) {
   int32_t data = 0;
@@ -562,6 +591,11 @@ TEST(CO_Rpdo, CoRpdoSetErr) {
   FUNCTIONPOINTERS_EQUAL(rpdo_err_func, perr);
   POINTERS_EQUAL(&data, pdata);
 }
+
+///@}
+
+/// @name co_rpdo_rtr()
+///@{
 
 TEST(CO_Rpdo, CoRpdoRtr_RPDONotValid) {
   SetComm00HighestSubidxSupported(0x02u);
@@ -612,6 +646,11 @@ TEST(CO_Rpdo, CoRpdoRtr_ExtendedFrame) {
   BITS_EQUAL(CAN_FLAG_RTR, CO_RpdoStatic::sent_msg.flags, CAN_FLAG_RTR);
   BITS_EQUAL(CAN_FLAG_IDE, CO_RpdoStatic::sent_msg.flags, CAN_FLAG_IDE);
 }
+
+///@}
+
+/// @name co_rpdo_sync()
+///@{
 
 TEST(CO_Rpdo, CoRpdoSync_CounterOverLimit) {
   CreateRpdo();
@@ -842,6 +881,11 @@ TEST(CO_Rpdo, CoRpdoSync_RPDOLengthExceedsMapping) {
   POINTERS_EQUAL(&err_data, CO_RpdoStatic::rpdo_err_args.data);
 }
 
+///@}
+
+/// @name RPDO received message processing
+///@{
+
 TEST(CO_Rpdo, CoRpdoRecv_ReservedTransmissionRPDO) {
   SetComm00HighestSubidxSupported(0x02u);
   SetComm01CobId(DEV_ID);
@@ -1002,6 +1046,8 @@ TEST(CO_Rpdo, CoRpdoRecv_NoPDOInSyncWindow) {
   POINTERS_EQUAL(&data, CO_RpdoStatic::rpdo_err_args.data);
 }
 
+///@}
+
 TEST_GROUP_BASE(CO_RpdoAllocation, CO_RpdoBase) {
   Allocators::Limited limitedAllocator;
   co_rpdo_t* rpdo = nullptr;
@@ -1025,6 +1071,9 @@ TEST_GROUP_BASE(CO_RpdoAllocation, CO_RpdoBase) {
     TEST_BASE_TEARDOWN();
   }
 };
+
+/// @name co_rpdo_create()
+///@{
 
 TEST(CO_RpdoAllocation, CoRpdoCreate_NoMemoryAvailable) {
   limitedAllocator.LimitAllocationTo(0u);
@@ -1083,3 +1132,5 @@ TEST(CO_RpdoAllocation, CoRpdoCreate_AllNecessaryMemoryIsAvailable) {
 
   CHECK(rpdo != nullptr);
 }
+
+///@}

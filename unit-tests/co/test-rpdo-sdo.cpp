@@ -172,6 +172,9 @@ TEST_GROUP_BASE(CO_SdoRpdo1400, CO_SdoRpdoBase) {
   }
 };
 
+/// @name RPDO service: object 0x1400 modification using SDO
+///@{
+
 /// \Given a pointer to a device (co_dev_t), the object dictionary
 ///        contains the RPDO Communication Parameter object (0x1400)
 ///
@@ -585,6 +588,8 @@ TEST(CO_SdoRpdo1400, Co1400DnInd_EventTimerSetToZero_DisableEventTimer) {
   CHECK(!CO_SdoRpdo1400Static::rpdo_err_func_called);
 }
 
+///@}
+
 TEST_GROUP_BASE(CO_SdoRpdo1600, CO_SdoRpdoBase) {
   std::unique_ptr<CoObjTHolder> obj2021;
 
@@ -633,6 +638,9 @@ TEST_GROUP_BASE(CO_SdoRpdo1600, CO_SdoRpdoBase) {
     TEST_BASE_TEARDOWN();
   }
 };
+
+/// @name RPDO service: object 0x1600 modification using SDO
+///@{
 
 /// \Given a pointer to a device (co_dev_t), the object dictionary
 ///        contains the RPDO Mapping Parameter object (0x1600)
@@ -931,3 +939,5 @@ TEST(CO_SdoRpdo1600, Co1600DnInd_MappingZeros) {
   CHECK(CoCsdoDnCon::Called());
   CHECK_EQUAL(0, CoCsdoDnCon::ac);
 }
+
+///@}

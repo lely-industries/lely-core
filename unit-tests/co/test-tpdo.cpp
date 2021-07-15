@@ -1,7 +1,7 @@
 /**@file
  * This file is part of the CANopen Library Unit Test Suite.
  *
- * @copyright 2020 N7 Space Sp. z o.o.
+ * @copyright 2020-2021 N7 Space Sp. z o.o.
  *
  * Unit Test Suite was developed under a programme of,
  * and funded by, the European Space Agency.
@@ -214,7 +214,15 @@ TEST_GROUP_BASE(CO_TpdoCreate, CO_TpdoBase) {
   }
 };
 
+/// @name co_tpdo_destroy()
+///@{
+
 TEST(CO_TpdoCreate, CoTpdoDestroy_Null) { co_tpdo_destroy(nullptr); }
+
+///@}
+
+/// @name co_tpdo_create()
+///@{
 
 TEST(CO_TpdoCreate, CoTpdoCreate_Error) {
   tpdo = co_tpdo_create(net, dev, TPDO_NUM);
@@ -319,6 +327,11 @@ TEST(CO_TpdoCreate, CoTpdoCreate_MinimalTPDOMaxNum) {
   co_tpdo_destroy(tpdo);
   tpdo = nullptr;  // must be destroyed before objects
 }
+
+///@}
+
+/// @name co_tpdo_start()
+///@{
 
 TEST(CO_TpdoCreate, CoTpdoStart_ExtendedFrame) {
   dev_holder->CreateAndInsertObj(obj1800, 0x1800u);
@@ -531,6 +544,8 @@ TEST(CO_TpdoCreate, CoTpdoStart_TimerSet) {
   CHECK_EQUAL(0u, comm->sync);
 }
 
+///@}
+
 TEST_GROUP_BASE(CO_Tpdo, CO_TpdoBase) {
   co_tpdo_t* tpdo = nullptr;
 
@@ -564,11 +579,19 @@ TEST_GROUP_BASE(CO_Tpdo, CO_TpdoBase) {
   }
 };
 
+/// @name co_tpdo_get_ind()
+///@{
+
 TEST(CO_Tpdo, CoTpdoGetInd_Null) {
   CreateTpdo();
 
   co_tpdo_get_ind(tpdo, nullptr, nullptr);
 }
+
+///@}
+
+/// @name co_tpdo_set_ind()
+///@{
 
 TEST(CO_Tpdo, CoTpdoSetInd) {
   tpdo = co_tpdo_create(net, dev, TPDO_NUM);
@@ -583,6 +606,11 @@ TEST(CO_Tpdo, CoTpdoSetInd) {
   FUNCTIONPOINTERS_EQUAL(CoTpdoInd::func, pind);
   POINTERS_EQUAL(&data, pdata);
 }
+
+///@}
+
+/// @name co_tpdo_get_sample_ind()
+///@{
 
 TEST(CO_Tpdo, CoTpdoGetSampleInd_Null) {
   CreateTpdo();
@@ -614,6 +642,11 @@ TEST(CO_Tpdo, CoTpdoSetSampleInd) {
   FUNCTIONPOINTERS_EQUAL(CoTpdoSampleInd::func, pind);
   POINTERS_EQUAL(&data, pdata);
 }
+
+///@}
+
+/// @name co_tpdo_event()
+///@{
 
 TEST(CO_Tpdo, CoTpdoEvent_InvalidCobId) {
   SetComm00HighestSubidxSupported(0x02u);
@@ -875,11 +908,21 @@ TEST(CO_Tpdo, CoTpdoEvent_EventDriven_EventTimer_InhibitTimeNotElapsed) {
   CHECK(!CoTpdoInd::called);
 }
 
+///@}
+
+/// @name co_tpdo_get_next()
+///@{
+
 TEST(CO_Tpdo, CoTpdoGetNext_Null) {
   CreateTpdo();
 
   co_tpdo_get_next(tpdo, nullptr);
 }
+
+///@}
+
+/// @name co_tpdo_sync()
+///@{
 
 TEST(CO_Tpdo, CoTpdoSync_CounterOverLimit) {
   CreateTpdo();
@@ -1048,6 +1091,11 @@ TEST(CO_Tpdo, CoTpdoSync_SyncCyclicNoSample) {
   CHECK_EQUAL(0, ret);
   CHECK(!CoTpdoSampleInd::called);
 }
+
+///@}
+
+/// @name co_tpdo_sample_res()
+///@{
 
 TEST(CO_Tpdo, CoTpdoSampleRes_InvalidPDO) {
   SetComm00HighestSubidxSupported(0x02u);
@@ -1228,6 +1276,11 @@ TEST(CO_Tpdo, CoTpdoSampleRes) {
   POINTERS_EQUAL(&ind_data, CoTpdoInd::data);
 }
 
+///@}
+
+/// @name TPDO received message processing
+///@{
+
 TEST(CO_Tpdo, CoTpdoRecv_SyncRTR_NoBufferedFrame_ExtendedFrame) {
   SetComm00HighestSubidxSupported(0x02u);
   SetComm01CobId(DEV_ID | CO_PDO_COBID_FRAME);
@@ -1376,6 +1429,8 @@ TEST(CO_Tpdo, CoTpdoRecv_NoRTRTransmission) {
   CHECK_EQUAL(0, CanSend::GetNumCalled());
 }
 
+///@}
+
 TEST_GROUP_BASE(CO_TpdoAllocation, CO_TpdoBase) {
   Allocators::Limited limitedAllocator;
   co_tpdo_t* tpdo = nullptr;
@@ -1407,6 +1462,9 @@ TEST_GROUP_BASE(CO_TpdoAllocation, CO_TpdoBase) {
     TEST_BASE_TEARDOWN();
   }
 };
+
+/// @name co_tpdo_create()
+///@{
 
 TEST(CO_TpdoAllocation, CoTpdoCreate_NoMemoryAvailable) {
   limitedAllocator.LimitAllocationTo(0u);
@@ -1465,3 +1523,5 @@ TEST(CO_TpdoAllocation, CoTpdoCreate_AllNecessaryMemoryIsAvailable) {
 
   CHECK(tpdo != nullptr);
 }
+
+///@}

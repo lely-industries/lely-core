@@ -1,7 +1,7 @@
 /**@file
  * This file is part of the CANopen Library Unit Test Suite.
  *
- * @copyright 2020 N7 Space Sp. z o.o.
+ * @copyright 2020-2021 N7 Space Sp. z o.o.
  *
  * Unit Test Suite was developed under a programme of,
  * and funded by, the European Space Agency.
@@ -136,6 +136,9 @@ TEST_GROUP_BASE(CO_SdoTpdo1800, CO_SdoTpdoBase) {
     TEST_BASE_TEARDOWN();
   }
 };
+
+/// @name TPDO service: object 0x1800 modification using SDO
+///@{
 
 /// \Given a pointer to a device (co_dev_t), the object dictionary
 ///        contains the TPDO Communication Parameter object (0x1800)
@@ -514,6 +517,8 @@ TEST(CO_SdoTpdo1800, Co1800DnInd_SyncNewValue_TPDOInvalid) {
   CHECK_EQUAL(0, CoCsdoDnCon::ac);
 }
 
+///@}
+
 TEST_GROUP_BASE(CO_SdoTpdo1a00, CO_SdoTpdoBase) {
   std::unique_ptr<CoObjTHolder> obj2021;
 
@@ -562,6 +567,8 @@ TEST_GROUP_BASE(CO_SdoTpdo1a00, CO_SdoTpdoBase) {
     TEST_BASE_TEARDOWN();
   }
 };
+
+/// @name TPDO service: object 0x1a00 modification using SDO
 
 /// \Given a pointer to a device (co_dev_t), the object dictionary
 ///        contains the TPDO Mapping Parameter object (0x1a00)
@@ -860,3 +867,5 @@ TEST(CO_SdoTpdo1a00, Co1a00DnInd_MappingZeros) {
   CHECK(CoCsdoDnCon::Called());
   CHECK_EQUAL(0, CoCsdoDnCon::ac);
 }
+
+///@}
