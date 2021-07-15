@@ -68,6 +68,9 @@ TEST_BASE(CO_PdoBase) {
 
 TEST_GROUP_BASE(CO_Pdo, CO_PdoBase) { const co_unsigned16_t DEFAULT_NUM = 1u; };
 
+/// @name co_dev_chk_rpdo()
+///@{
+
 TEST(CO_Pdo, CoDevChkRpdo_NoObj) {
   const auto ret = co_dev_chk_rpdo(dev, DEFAULT_OBJ_IDX, 0x19u);
 
@@ -167,6 +170,11 @@ TEST(CO_Pdo, CoDevChkRpdo) {
 
   CHECK_EQUAL(0u, ret);
 }
+
+///@}
+
+/// @name co_dev_cfg_rpdo()
+///@{
 
 TEST(CO_Pdo, CoDevCfgRpdo_InvalidPdoNum) {
   const co_unsigned16_t num = CO_NUM_PDOS + 1u;
@@ -275,6 +283,11 @@ TEST(CO_Pdo, CoDevCfgRpdoComm) {
   CHECK_EQUAL(par.cobid, co_obj_get_val_u32(obj.Get(), 0x01));
 }
 
+///@}
+
+/// @name co_dev_cfg_rpdo_map()
+///@{
+
 TEST(CO_Pdo, CoDevCfgRpdoMap_NumZero) {
   const co_pdo_map_par par = CO_PDO_MAP_PAR_INIT;
   const co_unsigned16_t num = 0u;
@@ -310,6 +323,11 @@ TEST(CO_Pdo, CoDevCfgRpdoMap) {
   CHECK_EQUAL(par.n, co_obj_get_val_u8(obj.Get(), 0x00u));
   CHECK_EQUAL(par.map[0], co_obj_get_val_u32(obj.Get(), 0x01u));
 }
+
+///@}
+
+/// @name co_dev_cfg_rpdo_comm()
+///@{
 
 TEST(CO_Pdo, CoDevCfgPdoComm_NoObj) {
   const co_pdo_comm_par par = CO_PDO_COMM_PAR_INIT;
@@ -723,6 +741,11 @@ TEST(CO_Pdo, CoDevCfgPdoComm) {
   CHECK_EQUAL(par.sync, co_obj_get_val_u8(obj.Get(), 0x06u));
 }
 
+///@}
+
+/// @name co_dev_cfg_tpdo_map()
+///@{
+
 TEST(CO_Pdo, CoDevCfgPdoMap_NoObj) {
   const co_pdo_map_par par = CO_PDO_MAP_PAR_INIT;
 
@@ -836,6 +859,11 @@ TEST(CO_Pdo, CoDevCfgPdoMap) {
   CHECK_EQUAL(par.map[0], co_obj_get_val_u32(obj.Get(), 0x01u));
 }
 
+///@}
+
+/// @name co_dev_chk_tpdo()
+///@{
+
 TEST(CO_Pdo, CoDevChkTpdo_NoObj) {
   const auto ret = co_dev_chk_tpdo(dev, DEFAULT_OBJ_IDX, 0x00u);
 
@@ -908,6 +936,11 @@ TEST(CO_Pdo, CoDevChkTpdo) {
   CHECK_EQUAL(0u, ret);
 }
 
+///@}
+
+/// @name co_dev_cfg_tpdo()
+///@{
+
 TEST(CO_Pdo, CoDevCfgTpdo_InvalidPdoNum) {
   const co_unsigned16_t num = 0;
   const co_pdo_comm_par comm = CO_PDO_COMM_PAR_INIT;
@@ -977,6 +1010,11 @@ TEST(CO_Pdo, CoDevCfgTpdo) {
   CHECK_EQUAL(0u, ret);
 }
 
+///@}
+
+/// @name co_dev_cfg_tpdo_comm()
+///@{
+
 TEST(CO_Pdo, CoDevCfgTpdoComm_NumZero) {
   const co_pdo_comm_par par = CO_PDO_COMM_PAR_INIT;
   const co_unsigned16_t num = 0u;
@@ -1018,6 +1056,11 @@ TEST(CO_Pdo, CoDevCfgTpdoComm) {
   CHECK_EQUAL(par.cobid, co_obj_get_val_u32(obj.Get(), 0x01));
 }
 
+///@}
+
+/// @name co_dev_cfg_tpdo_map()
+///@{
+
 TEST(CO_Pdo, CoDevCfgTpdoMap_NumZero) {
   const co_pdo_map_par par = CO_PDO_MAP_PAR_INIT;
   const co_unsigned16_t num = 0u;
@@ -1054,6 +1097,11 @@ TEST(CO_Pdo, CoDevCfgTpdoMap) {
   CHECK_EQUAL(par.n, co_obj_get_val_u8(obj.Get(), 0x00u));
   CHECK_EQUAL(par.map[0], co_obj_get_val_u32(obj.Get(), 0x01u));
 }
+
+///@}
+
+/// @name co_pdo_map()
+///@{
 
 TEST(CO_Pdo, CoPdoMap_OversizedPdoMap) {
   co_pdo_map_par par = CO_PDO_COMM_PAR_INIT;
@@ -1184,6 +1232,11 @@ TEST(CO_Pdo, CoPdoMap) {
   CHECK_EQUAL(0x00u, buf[8]);
 }
 
+///@}
+
+/// @name co_pdo_unmap()
+///@{
+
 TEST(CO_Pdo, CoPdoUnmap_OversizedPdoMap) {
   co_pdo_map_par par = CO_PDO_MAP_PAR_INIT;
   par.n = CO_PDO_NUM_MAPS + 1u;
@@ -1272,6 +1325,8 @@ TEST(CO_Pdo, CoPdoUnmap) {
   CHECK_EQUAL(0x00000000ccccccccu, vals[1]);
 }
 
+///@}
+
 TEST_GROUP_BASE(CoPdo_CoPdoDn, CO_PdoBase) {
   co_pdo_map_par par = CO_PDO_MAP_PAR_INIT;
 
@@ -1290,6 +1345,9 @@ TEST_GROUP_BASE(CoPdo_CoPdoDn, CO_PdoBase) {
   }
 };
 bool TEST_GROUP_CppUTestGroupCoPdo_CoPdoDn::co_sub_dn_ind_called = false;
+
+/// @name co_pdo_dn()
+///@{
 
 TEST(CoPdo_CoPdoDn, BufBiggerThanCanMaxLen) {
   const uint_least8_t buf[1] = {0};
@@ -1395,6 +1453,8 @@ TEST(CoPdo_CoPdoDn, Nominal) {
   CHECK_EQUAL(true, co_sub_dn_ind_called);
 }
 
+///@}
+
 TEST_GROUP_BASE(CoPdo_CoPdoUp, CO_PdoBase) {
   co_pdo_map_par par = CO_PDO_MAP_PAR_INIT;
   co_unsigned8_t buf[12] = {0x00u};
@@ -1440,6 +1500,9 @@ bool TEST_GROUP_CppUTestGroupCoPdo_CoPdoUp::sub_up_ind_called = false;
 co_unsigned8_t TEST_GROUP_CppUTestGroupCoPdo_CoPdoUp::reqbuf[12] = {
     0xffu, 0xffu, 0xffu, 0xffu, 0xffu, 0xffu,
     0xffu, 0xffu, 0xffu, 0xffu, 0xffu, 0xffu};
+
+/// @name co_pdo_up()
+///@{
 
 TEST(CoPdo_CoPdoUp, MappingExceedsMaxPDOSize) {
   par.n = 0x01u;
@@ -1638,3 +1701,5 @@ TEST(CoPdo_CoPdoUp, Nominal) {
 }
 
 // TODO(sdo): check if buffers have correct values after the download/upload
+
+///@}
