@@ -241,7 +241,7 @@ TEST(CO_SsdoDnInd, DownloadReqCobid_SameAsOld) {
 ///       \Calls co_sdo_req_dn_val()
 ///       \Calls co_sub_get_subidx()
 ///       \Calls co_sub_get_val_u32()
-TEST(CO_SsdoDnInd, DownloadReqCobid_OldValidNewValidNewId) {
+TEST(CO_SsdoDnInd, DownloadReqCobid_OldValid_NewValid_NewId) {
   const co_unsigned32_t cobid = CAN_ID + 1u;
   const auto ret =
       co_dev_dn_val_req(dev, 0x1200u, 0x01u, CO_DEFTYPE_UNSIGNED32, &cobid,
@@ -269,7 +269,7 @@ TEST(CO_SsdoDnInd, DownloadReqCobid_OldValidNewValidNewId) {
 ///       \Calls co_sub_get_val_u32()
 ///       \Calls co_sub_dn()
 ///       \Calls can_recv_stop()
-TEST(CO_SsdoDnInd, DownloadReqCobid_OldValidNewInvalidNewId) {
+TEST(CO_SsdoDnInd, DownloadReqCobid_OldValid_NewInvalid_NewId) {
   const co_unsigned32_t cobid = (CAN_ID + 1u) | CO_SDO_COBID_VALID;
   const auto ret =
       co_dev_dn_val_req(dev, 0x1200u, 0x01u, CO_DEFTYPE_UNSIGNED32, &cobid,
@@ -297,7 +297,7 @@ TEST(CO_SsdoDnInd, DownloadReqCobid_OldValidNewInvalidNewId) {
 ///       \Calls co_sub_get_val_u32()
 ///       \Calls co_sub_dn()
 ///       \Calls can_recv_start()
-TEST(CO_SsdoDnInd, DownloadReqCobid_OldInvalidNewValidNewId) {
+TEST(CO_SsdoDnInd, DownloadReqCobid_OldInvalid_NewValid_NewId) {
   SetSrv01CobidReq(CAN_ID | CO_SDO_COBID_VALID);
   RestartSSDO();
 
@@ -328,7 +328,7 @@ TEST(CO_SsdoDnInd, DownloadReqCobid_OldInvalidNewValidNewId) {
 ///       \Calls co_sub_get_val_u32()
 ///       \Calls co_sub_dn()
 ///       \Calls can_recv_start()
-TEST(CO_SsdoDnInd, DownloadReqCobid_OldValidNewValidOldId) {
+TEST(CO_SsdoDnInd, DownloadReqCobid_OldValid_NewValid_OldId) {
   const co_unsigned32_t cobid = CAN_ID | CO_SDO_COBID_FRAME;
   const auto ret =
       co_dev_dn_val_req(dev, 0x1200u, 0x01u, CO_DEFTYPE_UNSIGNED32, &cobid,
@@ -353,7 +353,7 @@ TEST(CO_SsdoDnInd, DownloadReqCobid_OldValidNewValidOldId) {
 ///       \Calls co_sub_get_type()
 ///       \Calls co_sdo_req_dn_val()
 ///       \Calls co_sub_get_subidx()
-TEST(CO_SsdoDnInd, DownloadReqCobid_OldValidNewInvalidNewIdExtended) {
+TEST(CO_SsdoDnInd, DownloadReqCobid_OldValid_NewInvalid_NewIdExtended) {
   const co_unsigned32_t cobid = CAN_ID_EXT | CO_SDO_COBID_VALID;
   const auto ret =
       co_dev_dn_val_req(dev, 0x1200u, 0x01u, CO_DEFTYPE_UNSIGNED32, &cobid,
@@ -381,7 +381,7 @@ TEST(CO_SsdoDnInd, DownloadReqCobid_OldValidNewInvalidNewIdExtended) {
 ///       \Calls co_sub_get_val_u32()
 ///       \Calls co_sub_dn()
 ///       \Calls can_recv_stop()
-TEST(CO_SsdoDnInd, DownloadReqCobid_OldValidNewInvalidOldIdExtended) {
+TEST(CO_SsdoDnInd, DownloadReqCobid_OldValid_NewInvalid_OldIdExtended) {
   const co_unsigned32_t cobid =
       CAN_ID | CO_SDO_COBID_VALID | CO_SDO_COBID_FRAME;
   const auto ret =
@@ -433,7 +433,7 @@ TEST(CO_SsdoDnInd, DownloadResCobid_SameAsOld) {
 ///       \Calls co_sdo_req_dn_val()
 ///       \Calls co_sub_get_subidx()
 ///       \Calls co_sub_get_val_u32()
-TEST(CO_SsdoDnInd, DownloadResCobid_OldValidNewValidNewId) {
+TEST(CO_SsdoDnInd, DownloadResCobid_OldValid_NewValid_NewId) {
   const co_unsigned32_t cobid = CAN_ID + 1u;
   const auto ret =
       co_dev_dn_val_req(dev, 0x1200u, 0x02u, CO_DEFTYPE_UNSIGNED32, &cobid,
@@ -461,7 +461,7 @@ TEST(CO_SsdoDnInd, DownloadResCobid_OldValidNewValidNewId) {
 ///       \Calls co_sub_get_val_u32()
 ///       \Calls co_sub_dn()
 ///       \Calls can_recv_stop()
-TEST(CO_SsdoDnInd, DownloadResCobid_OldValidNewInvalidNewId) {
+TEST(CO_SsdoDnInd, DownloadResCobid_OldValid_NewInvalid_NewId) {
   const co_unsigned32_t cobid = CAN_ID | CO_SDO_COBID_VALID;
   const auto ret =
       co_dev_dn_val_req(dev, 0x1200u, 0x02u, CO_DEFTYPE_UNSIGNED32, &cobid,
@@ -489,7 +489,7 @@ TEST(CO_SsdoDnInd, DownloadResCobid_OldValidNewInvalidNewId) {
 ///       \Calls co_sub_get_val_u32()
 ///       \Calls co_sub_dn()
 ///       \Calls can_recv_start()
-TEST(CO_SsdoDnInd, DownloadResCobid_OldInvalidNewValidNewId) {
+TEST(CO_SsdoDnInd, DownloadResCobid_OldInvalid_NewValid_NewId) {
   SetSrv02CobidRes(CAN_ID | CO_SDO_COBID_VALID);
   RestartSSDO();
 
@@ -521,7 +521,7 @@ TEST(CO_SsdoDnInd, DownloadResCobid_OldInvalidNewValidNewId) {
 ///       \Calls co_sub_dn()
 ///       \Calls co_ssdo_update()
 ///       \Calls can_recv_start()
-TEST(CO_SsdoDnInd, DownloadResCobid_OldValidNewValidOldIdExtended) {
+TEST(CO_SsdoDnInd, DownloadResCobid_OldValid_NewValid_OldIdExtended) {
   const co_unsigned32_t cobid = CAN_ID | CO_SDO_COBID_FRAME;
   const auto ret =
       co_dev_dn_val_req(dev, 0x1200u, 0x02u, CO_DEFTYPE_UNSIGNED32, &cobid,
@@ -547,7 +547,7 @@ TEST(CO_SsdoDnInd, DownloadResCobid_OldValidNewValidOldIdExtended) {
 ///       \Calls co_sdo_req_dn_val()
 ///       \Calls co_sub_get_subidx()
 ///       \Calls co_sub_get_val_u32()
-TEST(CO_SsdoDnInd, DownloadResCobid_OldValidNewInvalidOldId) {
+TEST(CO_SsdoDnInd, DownloadResCobid_OldValid_NewInvalid_OldId) {
   const co_unsigned32_t cobid = CAN_ID_EXT | CO_SDO_COBID_VALID;
   const auto ret =
       co_dev_dn_val_req(dev, 0x1200u, 0x02u, CO_DEFTYPE_UNSIGNED32, &cobid,
@@ -575,7 +575,7 @@ TEST(CO_SsdoDnInd, DownloadResCobid_OldValidNewInvalidOldId) {
 ///       \Calls co_sub_get_val_u32()
 ///       \Calls co_sub_dn()
 ///       \Calls can_recv_stop()
-TEST(CO_SsdoDnInd, DownloadResCobid_OldValidNewInvalidOldIdExtended) {
+TEST(CO_SsdoDnInd, DownloadResCobid_OldValid_NewInvalid_OldIdExtended) {
   const co_unsigned32_t cobid =
       CAN_ID | CO_SDO_COBID_VALID | CO_SDO_COBID_FRAME;
   const auto ret =

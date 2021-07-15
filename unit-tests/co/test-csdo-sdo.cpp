@@ -98,11 +98,8 @@ TEST_GROUP(CO_CsdoDnInd) {
 /// \Given a pointer to the device (co_dev_t) with the CSDO service started
 ///        and the object dictionary containing the 0x1280 object
 ///
-/// \When co_dev_dn_val_req() is called with an index of the SDO client
-///       parameter object, a sub-index of the "highest sub-index supported"
-///       sub-object, a correct type of the entry, a pointer to a value,
-///       a null memory buffer pointer, a pointer to download confirmation
-///       function and a null user-specified data pointer
+/// \When a value is downloaded to the client parameter
+///       "Highest sub-index supported" entry (idx: 0x1280, subidx: 0x00)
 ///
 /// \Then 0 is returned, download confirmation function is called once,
 ///       CO_SDO_AC_NO_WRITE is set as the abort code, the requested entry
@@ -110,7 +107,7 @@ TEST_GROUP(CO_CsdoDnInd) {
 ///       \Calls co_sub_get_type()
 ///       \Calls co_sdo_req_dn_val()
 ///       \Calls co_sub_get_subidx()
-TEST(CO_CsdoDnInd, Co1280DnInd_NoWriteToSub00) {
+TEST(CO_CsdoDnInd, DownloadHighestSubidx) {
   StartCSDO();
 
   const co_unsigned8_t val = 0x04u;
@@ -127,18 +124,15 @@ TEST(CO_CsdoDnInd, Co1280DnInd_NoWriteToSub00) {
 /// \Given a pointer to the device (co_dev_t) with the CSDO service started
 ///        and the object dictionary containing the 0x1280 object
 ///
-/// \When co_dev_dn_val_req() is called with an index of the SDO client
-///       parameter object, a sub-index, a type of the entry (shorter than
-///       the type of the requested entry), a pointer to a value, a null memory
-///       buffer pointer, a pointer to download confirmation function and
-///       a null user-specified data pointer
+/// \When a value shorter than 4 bytes is downloaded to the client parameter
+///       "COB-ID client -> server (tx)" entry (idx: 0x1280, subidx: 0x01)
 ///
 /// \Then 0 is returned, download confirmation function is called once,
 ///       CO_SDO_AC_TYPE_LEN_LO is set as the abort code, the requested entry
 ///       is not changed
 ///       \Calls co_sub_get_type()
 ///       \Calls co_sdo_req_dn_val()
-TEST(CO_CsdoDnInd, Co1280DnInd_Sub_DnTooShort) {
+TEST(CO_CsdoDnInd, DownloadReqCobid_TooShort) {
   StartCSDO();
 
   const co_unsigned8_t val = 0u;
@@ -156,11 +150,8 @@ TEST(CO_CsdoDnInd, Co1280DnInd_Sub_DnTooShort) {
 ///        and the object dictionary containing the 0x1280 object with
 ///        a client parameter "COB-ID client -> server (tx)" entry
 ///
-/// \When co_dev_dn_val_req() is called with an index of the SDO client
-///       parameter object, a sub-index of the "COB-ID client -> server (tx)"
-///       sub-object, a correct type of the entry, a pointer to a COB-ID value
-///       equal to the old COB-ID, a null memory buffer pointer, a pointer to
-///       download confirmation function and a null user-specified data pointer
+/// \When the same COB-ID value is downloaded to the client parameter "COB-ID
+///       client -> server (tx)" entry (idx: 0x1280, subidx: 0x01)
 ///
 /// \Then 0 is returned, download confirmation function is called once,
 ///       0 is set as the abort code, the requested entry is not changed
@@ -168,7 +159,7 @@ TEST(CO_CsdoDnInd, Co1280DnInd_Sub_DnTooShort) {
 ///       \Calls co_sdo_req_dn_val()
 ///       \Calls co_sub_get_subidx()
 ///       \Calls co_sub_get_val_u32()
-TEST(CO_CsdoDnInd, Co1280DnInd_CobidReq_SameAsOld) {
+TEST(CO_CsdoDnInd, DownloadCobidReq_SameAsOld) {
   StartCSDO();
 
   const co_unsigned32_t new_cobid_req = DEFAULT_COBID_REQ;
@@ -187,12 +178,9 @@ TEST(CO_CsdoDnInd, Co1280DnInd_CobidReq_SameAsOld) {
 ///        and the object dictionary containing the 0x1280 object with
 ///        a valid client parameter "COB-ID client -> server (tx)" entry
 ///
-/// \When co_dev_dn_val_req() is called with an index of the SDO client
-///       parameter object, a sub-index of the "COB-ID client -> server (tx)"
-///       sub-object, a correct type of the entry, a pointer to a new, valid
-///       COB-ID value with a new CAN ID, a null memory buffer pointer,
-///       a pointer to download confirmation function and a null
-///       user-specified data pointer
+/// \When a new valid COB-ID with a new CAN-ID is downloaded to the client
+///       parameter "COB-ID client -> server (tx)" entry
+///       (idx: 0x1280, subidx: 0x01)
 ///
 /// \Then 0 is returned, download confirmation function is called once,
 ///       CO_SDO_AC_PARAM_VAL is set as the abort code, the requested entry
@@ -201,7 +189,7 @@ TEST(CO_CsdoDnInd, Co1280DnInd_CobidReq_SameAsOld) {
 ///       \Calls co_sdo_req_dn_val()
 ///       \Calls co_sub_get_subidx()
 ///       \Calls co_sub_get_val_u32()
-TEST(CO_CsdoDnInd, Co1280DnInd_CobidReq_OldValid_NewValid_NewCanId) {
+TEST(CO_CsdoDnInd, DownloadCobidReq_OldValid_NewValid_NewId) {
   StartCSDO();
 
   const co_unsigned32_t new_cobid_req = DEFAULT_COBID_REQ + 1u;
@@ -220,12 +208,9 @@ TEST(CO_CsdoDnInd, Co1280DnInd_CobidReq_OldValid_NewValid_NewCanId) {
 ///        and the object dictionary containing the 0x1280 object with a valid
 ///        client parameter "COB-ID client -> server (tx)" entry
 ///
-/// \When co_dev_dn_val_req() is called with an index of the SDO client
-///       parameter object, a sub-index of the "COB-ID client -> server (tx)"
-///       sub-object, a correct type of the entry, a pointer to a new, valid
-///       COB-ID value with the same CAN ID, a null memory buffer pointer,
-///       a pointer to download confirmation function and a null user-specified
-///       data pointer
+/// \When a new valid COB-ID with an old CAN-ID is downloaded to the client
+///       parameter "COB-ID client -> server (tx)" entry (idx: 0x1280,
+///       subidx: 0x01)
 ///
 /// \Then 0 is returned, download confirmation function is called once,
 ///       0 is set as the abort code, the requested entry is changed to
@@ -234,7 +219,7 @@ TEST(CO_CsdoDnInd, Co1280DnInd_CobidReq_OldValid_NewValid_NewCanId) {
 ///       \Calls co_sdo_req_dn_val()
 ///       \Calls co_sub_get_subidx()
 ///       \Calls co_sub_get_val_u32()
-TEST(CO_CsdoDnInd, Co1280DnInd_CobidReq_OldValid_NewValid_OldId) {
+TEST(CO_CsdoDnInd, DownloadCobidReq_OldValid_NewValid_OldId) {
   StartCSDO();
 
   const co_unsigned32_t new_cobid_req = DEFAULT_COBID_REQ | CO_SDO_COBID_FRAME;
@@ -253,12 +238,9 @@ TEST(CO_CsdoDnInd, Co1280DnInd_CobidReq_OldValid_NewValid_OldId) {
 ///        and the object dictionary containing the 0x1280 object with
 ///        a valid client parameter "COB-ID client -> server (tx)" entry
 ///
-/// \When co_dev_dn_val_req() is called with an index of the SDO client
-///       parameter object, a sub-index of the "COB-ID client -> server (tx)"
-///       sub-object, a correct type of the entry, a pointer to a new, invalid
-///       COB-ID value with a new extended CAN ID, a null memory buffer pointer,
-///       a pointer to download confirmation function and a null user-specified
-///       data pointer
+/// \When a new invalid COB-ID with a new extended CAN-ID is downloaded to the
+///       client parameter "COB-ID client -> server (tx)" entry
+///       (idx: 0x1280, subidx: 0x01)
 ///
 /// \Then 0 is returned, download confirmation function is called once,
 ///       CO_SDO_AC_PARAM_VAL is set as the abort code, the requested entry is
@@ -267,7 +249,7 @@ TEST(CO_CsdoDnInd, Co1280DnInd_CobidReq_OldValid_NewValid_OldId) {
 ///       \Calls co_sdo_req_dn_val()
 ///       \Calls co_sub_get_subidx()
 ///       \Calls co_sub_get_val_u32()
-TEST(CO_CsdoDnInd, Co1280DnInd_CobidReq_NewExtId_FrameBitNotSet) {
+TEST(CO_CsdoDnInd, DownloadCobidReq_FrameBitNotSet_NewIdExtended) {
   const co_unsigned32_t DEFAULT_COBID_REQ_EXT = DEFAULT_COBID_REQ | (1 << 28u);
   StartCSDO();
 
@@ -288,11 +270,9 @@ TEST(CO_CsdoDnInd, Co1280DnInd_CobidReq_NewExtId_FrameBitNotSet) {
 ///        and the object dictionary containing the 0x1280 object with
 ///        an invalid client parameter "COB-ID client -> server (tx)" entry
 ///
-/// \When co_dev_dn_val_req() is called with an index of the SDO client
-///       parameter object, a sub-index of the "COB-ID client -> server (tx)"
-///       sub-object, a correct type of the entry, a pointer to a new, valid
-///       COB-ID, a null memory buffer pointer, a pointer to download
-///       confirmation function and a null user-specified data pointer
+/// \When a new valid COB-ID with the same CAN-ID is downloaded to the client
+///       parameter "COB-ID client -> server (tx)" entry (idx: 0x1280,
+///       subidx: 0x01)
 ///
 /// \Then 0 is returned, download confirmation function is called once,
 ///       0 is set as the abort code, the requested entry is changed to
@@ -301,7 +281,7 @@ TEST(CO_CsdoDnInd, Co1280DnInd_CobidReq_NewExtId_FrameBitNotSet) {
 ///       \Calls co_sdo_req_dn_val()
 ///       \Calls co_sub_get_subidx()
 ///       \Calls co_sub_get_val_u32()
-TEST(CO_CsdoDnInd, Co1280DnInd_CobidReq_OldInvalid_NewValid) {
+TEST(CO_CsdoDnInd, DownloadCobidReq_OldInvalid_NewValid) {
   obj1280->SetSub<Sub01CobIdReq>(obj1280->GetSub<Sub01CobIdReq>() |
                                  CO_SDO_COBID_VALID);
   StartCSDO();
@@ -322,11 +302,9 @@ TEST(CO_CsdoDnInd, Co1280DnInd_CobidReq_OldInvalid_NewValid) {
 ///        and the object dictionary containing the 0x1280 object with
 ///        a valid client parameter "COB-ID client -> server (tx)" entry
 ///
-/// \When co_dev_dn_val_req() is called with an index of the SDO client
-///       parameter object, a sub-index of the "COB-ID client -> server (tx)"
-///       sub-object, a correct type of the entry, a pointer to a new, invalid
-///       COB-ID, a null memory buffer pointer, a pointer to download
-///       confirmation function and a null user-specified data pointer
+/// \When a new invalid COB-ID with the same CAN-ID is downloaded to the
+///       client parameter "COB-ID client -> server (tx)" entry
+///       (idx: 0x1280, subidx: 0x01)
 ///
 /// \Then 0 is returned, download confirmation function is called once,
 ///       0 is set as the abort code, the requested entry is changed to
@@ -335,7 +313,7 @@ TEST(CO_CsdoDnInd, Co1280DnInd_CobidReq_OldInvalid_NewValid) {
 ///       \Calls co_sdo_req_dn_val()
 ///       \Calls co_sub_get_subidx()
 ///       \Calls co_sub_get_val_u32()
-TEST(CO_CsdoDnInd, Co1280DnInd_CobidReq_OldValid_NewInvalid) {
+TEST(CO_CsdoDnInd, DownloadCobidReq_OldValid_NewInvalid) {
   StartCSDO();
 
   const co_unsigned32_t new_cobid_req = DEFAULT_COBID_REQ | CO_SDO_COBID_VALID;
@@ -348,6 +326,188 @@ TEST(CO_CsdoDnInd, Co1280DnInd_CobidReq_OldValid_NewInvalid) {
   CoCsdoDnCon::Check(nullptr, IDX, 0x01u, 0u, nullptr);
 
   CHECK_EQUAL(new_cobid_req, obj1280->GetSub<Sub01CobIdReq>());
+}
+
+/// \Given a pointer to the device (co_dev_t) with the CSDO service started
+///        and the object dictionary containing the 0x1280 object with
+///        a client parameter "COB-ID server -> client (rx)" entry
+///
+/// \When the same COB-ID value is downloaded to the client parameter "COB-ID
+///       server -> client (tx)" entry (idx: 0x1280, subidx: 0x02)
+///
+/// \Then 0 is returned, download confirmation function is called once,
+///       0 is set as the abort code, the requested entry is not changed
+///       \Calls co_sub_get_type()
+///       \Calls co_sdo_req_dn_val()
+///       \Calls co_sub_get_subidx()
+///       \Calls co_sub_get_val_u32()
+TEST(CO_CsdoDnInd, DownloadCobidRes_SameAsOld) {
+  StartCSDO();
+
+  const co_unsigned32_t new_cobid_res = DEFAULT_COBID_RES;
+  const auto ret =
+      co_dev_dn_val_req(dev, IDX, 0x02u, CO_DEFTYPE_UNSIGNED32, &new_cobid_res,
+                        nullptr, CoCsdoDnCon::Func, nullptr);
+
+  CHECK_EQUAL(0, ret);
+  CHECK_EQUAL(1u, CoCsdoDnCon::GetNumCalled());
+  CoCsdoDnCon::Check(nullptr, IDX, 0x02u, 0u, nullptr);
+
+  CHECK_EQUAL(DEFAULT_COBID_RES, obj1280->GetSub<Sub02CobIdRes>());
+}
+
+/// \Given a pointer to the device (co_dev_t) with the CSDO service started
+///        and the object dictionary containing the 0x1280 object with
+///        a valid client parameter "COB-ID server -> client (rx)" entry
+///
+/// \When a new valid COB-ID with a new CAN-ID is downloaded to the client
+///       parameter "COB-ID server -> client (tx)" entry (idx: 0x1280,
+///       subidx: 0x02)
+///
+/// \Then 0 is returned, download confirmation function is called once,
+///       CO_SDO_AC_PARAM_VAL is set as the abort code, the requested entry
+///       is not changed
+///       \Calls co_sub_get_type()
+///       \Calls co_sdo_req_dn_val()
+///       \Calls co_sub_get_subidx()
+///       \Calls co_sub_get_val_u32()
+TEST(CO_CsdoDnInd, DownloadCobidRes_OldValid_NewValid_NewId) {
+  StartCSDO();
+
+  const co_unsigned32_t new_cobid_res = DEFAULT_COBID_RES + 1u;
+  const auto ret =
+      co_dev_dn_val_req(dev, IDX, 0x02u, CO_DEFTYPE_UNSIGNED32, &new_cobid_res,
+                        nullptr, CoCsdoDnCon::Func, nullptr);
+
+  CHECK_EQUAL(0, ret);
+  CHECK_EQUAL(1u, CoCsdoDnCon::GetNumCalled());
+  CoCsdoDnCon::Check(nullptr, IDX, 0x02u, CO_SDO_AC_PARAM_VAL, nullptr);
+
+  CHECK_EQUAL(DEFAULT_COBID_RES, obj1280->GetSub<Sub02CobIdRes>());
+}
+
+/// \Given a pointer to the device (co_dev_t) with the CSDO service started
+///        and the object dictionary containing the 0x1280 object with a valid
+///        client parameter "COB-ID server -> client (rx)" entry
+///
+/// \When a new valid COB-ID with a CAN-ID with an old value but extended
+///       flag set is downloaded to the client parameter
+///       "COB-ID server -> client (tx)" entry (idx: 0x1280, subidx: 0x02)
+///
+/// \Then 0 is returned, download confirmation function is called once,
+///       0 is set as the abort code, the requested entry is changed to
+///       the requested value
+///       \Calls co_sub_get_type()
+///       \Calls co_sdo_req_dn_val()
+///       \Calls co_sub_get_subidx()
+///       \Calls co_sub_get_val_u32()
+TEST(CO_CsdoDnInd, DownloadCobidRes_OldValid_NewValid_OldIdExtended) {
+  StartCSDO();
+
+  const co_unsigned32_t new_cobid_res = DEFAULT_COBID_RES | CO_SDO_COBID_FRAME;
+  const auto ret =
+      co_dev_dn_val_req(dev, IDX, 0x02u, CO_DEFTYPE_UNSIGNED32, &new_cobid_res,
+                        nullptr, CoCsdoDnCon::Func, nullptr);
+
+  CHECK_EQUAL(0, ret);
+  CHECK_EQUAL(1u, CoCsdoDnCon::GetNumCalled());
+  CoCsdoDnCon::Check(nullptr, IDX, 0x02u, 0u, nullptr);
+
+  CHECK_EQUAL(new_cobid_res, obj1280->GetSub<Sub02CobIdRes>());
+}
+
+/// \Given a pointer to the device (co_dev_t) with the CSDO service started
+///        and the object dictionary containing the 0x1280 object with
+///        a valid client parameter "COB-ID server -> client (rx)" entry
+///
+/// \When a new invalid COB-ID with a new extended CAN-ID but extended
+///       flag not set is downloaded to the client parameter
+///       "COB-ID server -> client (tx)" entry (idx: 0x1280, subidx: 0x02)
+///
+/// \Then 0 is returned, download confirmation function is called once,
+///       CO_SDO_AC_PARAM_VAL is set as the abort code, the requested entry is
+///       not changed
+///       \Calls co_sub_get_type()
+///       \Calls co_sdo_req_dn_val()
+///       \Calls co_sub_get_subidx()
+///       \Calls co_sub_get_val_u32()
+TEST(CO_CsdoDnInd, DownloadCobidRes_NewIdExtended_FrameBitNotSet) {
+  StartCSDO();
+
+  const co_unsigned32_t DEFAULT_COBID_RES_EXT = DEFAULT_COBID_RES | (1 << 28u);
+  const co_unsigned32_t new_cobid_res =
+      DEFAULT_COBID_RES_EXT | CO_SDO_COBID_VALID;
+  const auto ret =
+      co_dev_dn_val_req(dev, IDX, 0x02u, CO_DEFTYPE_UNSIGNED32, &new_cobid_res,
+                        nullptr, CoCsdoDnCon::Func, nullptr);
+
+  CHECK_EQUAL(0, ret);
+  CHECK_EQUAL(1u, CoCsdoDnCon::GetNumCalled());
+  CoCsdoDnCon::Check(nullptr, IDX, 0x02u, CO_SDO_AC_PARAM_VAL, nullptr);
+
+  CHECK_EQUAL(DEFAULT_COBID_RES, obj1280->GetSub<Sub02CobIdRes>());
+}
+
+/// \Given a pointer to the device (co_dev_t) with the CSDO service started
+///        and the object dictionary containing the 0x1280 object with
+///        an invalid client parameter "COB-ID server -> client (rx)" entry
+///
+/// \When a new valid COB-ID with the same CAN-ID is downloaded to the client
+///       parameter "COB-ID server -> client (tx)" entry (idx: 0x1280,
+///       subidx: 0x02)
+///
+/// \Then 0 is returned, download confirmation function is called once,
+///       0 is set as the abort code, the requested entry is changed to
+///       the requested value
+///       \Calls co_sub_get_type()
+///       \Calls co_sdo_req_dn_val()
+///       \Calls co_sub_get_subidx()
+///       \Calls co_sub_get_val_u32()
+TEST(CO_CsdoDnInd, DownloadCobidRes_OldInvalid_NewValid_OldId) {
+  obj1280->SetSub<Sub02CobIdRes>(obj1280->GetSub<Sub02CobIdRes>() |
+                                 CO_SDO_COBID_VALID);
+  StartCSDO();
+
+  const co_unsigned32_t new_cobid_res = DEFAULT_COBID_RES;
+  const auto ret =
+      co_dev_dn_val_req(dev, IDX, 0x02u, CO_DEFTYPE_UNSIGNED32, &new_cobid_res,
+                        nullptr, CoCsdoDnCon::Func, nullptr);
+
+  CHECK_EQUAL(0, ret);
+  CHECK_EQUAL(1u, CoCsdoDnCon::GetNumCalled());
+  CoCsdoDnCon::Check(nullptr, IDX, 0x02u, 0u, nullptr);
+
+  CHECK_EQUAL(new_cobid_res, obj1280->GetSub<Sub02CobIdRes>());
+}
+
+/// \Given a pointer to the device (co_dev_t) with the CSDO service started
+///        and the object dictionary containing the 0x1280 object with
+///        a valid client parameter "COB-ID server -> client (rx)" entry
+///
+/// \When a new invalid COB-ID with an old CAN-ID is downloaded to the client
+///       parameter "COB-ID server -> client (tx)" entry (idx: 0x1280,
+///       subidx: 0x02)
+///
+/// \Then 0 is returned, download confirmation function is called once,
+///       0 is set as the abort code, the requested entry is changed to
+///       the requested value
+///       \Calls co_sub_get_type()
+///       \Calls co_sdo_req_dn_val()
+///       \Calls co_sub_get_subidx()
+///       \Calls co_sub_get_val_u32()
+TEST(CO_CsdoDnInd, DownloadCobidRes_OldValid_NewInvalid_OldId) {
+  StartCSDO();
+
+  const co_unsigned32_t new_cobid_res = DEFAULT_COBID_RES | CO_SDO_COBID_VALID;
+  const auto ret =
+      co_dev_dn_val_req(dev, IDX, 0x02u, CO_DEFTYPE_UNSIGNED32, &new_cobid_res,
+                        nullptr, CoCsdoDnCon::Func, nullptr);
+
+  CHECK_EQUAL(0, ret);
+  CHECK_EQUAL(1u, CoCsdoDnCon::GetNumCalled());
+  CoCsdoDnCon::Check(nullptr, IDX, 0x02u, 0u, nullptr);
+
+  CHECK_EQUAL(new_cobid_res, obj1280->GetSub<Sub02CobIdRes>());
 }
 
 ///@}
