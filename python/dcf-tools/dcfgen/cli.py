@@ -272,14 +272,13 @@ class Slave(dcf.Device):
                     warnings.warn(name + ": object 0x100D does not exist", stacklevel=2)
             slave.life_time_factor = life_time_factor
 
-        if "guard_time" in cfg and "life_time_factor" in cfg:
-            if "heartbeat_producer" in cfg:
-                warnings.warn(
-                    "Cannot use heartbeat protocol and node guarding protocol simultaneously",
-                    stacklevel=2,
-                )
-                slave.guard_time = 0
-                slave.life_time_factor = 0
+        if "guard_time" in cfg and "life_time_factor" in cfg and "heartbeat_producer" in cfg:
+            warnings.warn(
+                "Cannot use heartbeat protocol and node guarding protocol simultaneously",
+                stacklevel=2,
+            )
+            slave.guard_time = 0
+            slave.life_time_factor = 0
 
         if "error_behavior" in cfg:
             for sub_index, value in cfg["error_behavior"].items():
