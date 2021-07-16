@@ -43,9 +43,11 @@ TEST_GROUP(CO_CsdoDnInd) {
       Obj1280SdoClientPar::Sub00HighestSubidxSupported;
   using Sub01CobIdReq = Obj1280SdoClientPar::Sub01CobIdReq;
   using Sub02CobIdRes = Obj1280SdoClientPar::Sub02CobIdRes;
+  using Sub03NodeId = Obj1280SdoClientPar::Sub03NodeId;
 
   static const co_unsigned8_t DEV_ID = 0x01u;
   static const co_unsigned8_t CSDO_NUM = 0x01u;
+  static const co_unsigned32_t SERVER_NODEID = 0x42u;
   const co_unsigned16_t IDX = 0x1280u;
   const co_unsigned32_t DEFAULT_COBID_REQ = 0x600u + DEV_ID;
   const co_unsigned32_t DEFAULT_COBID_RES = 0x580u + DEV_ID;
@@ -63,6 +65,7 @@ TEST_GROUP(CO_CsdoDnInd) {
     obj1280->EmplaceSub<Sub00HighestSubidxSupported>(0x02u);
     obj1280->EmplaceSub<Sub01CobIdReq>(DEFAULT_COBID_REQ);
     obj1280->EmplaceSub<Sub02CobIdRes>(DEFAULT_COBID_RES);
+    obj1280->EmplaceSub<Sub03NodeId>(SERVER_NODEID);
   }
 
   TEST_SETUP() {
@@ -94,6 +97,26 @@ TEST_GROUP(CO_CsdoDnInd) {
 
 /// @name CSDO service: object 0x1280 modification using SDO
 ///@{
+
+/// \Given a pointer to a device (co_dev_t) with a started CSDO service,
+///        the object dictionary contains the SDO Client Parameter
+///        object (0x1280)
+///
+/// \When the download indication function for the object 0x1280 is called with
+///       a non-zero abort code
+///
+/// \Then the same abort code value is returned, nothing is changed
+///       \Calls co_sub_get_type()
+TEST(CO_CsdoDnInd, NonZeroAbortCode) {
+  StartCSDO();
+
+  const co_unsigned32_t ac = CO_SDO_AC_ERROR;
+
+  const auto ret =
+      LelyUnitTest::CallDnIndWithAbortCode(dev, 0x1280u, 0x00u, ac);
+
+  CHECK_EQUAL(ac, ret);
+}
 
 /// \Given a pointer to the device (co_dev_t) with the CSDO service started
 ///        and the object dictionary containing the 0x1280 object
@@ -508,6 +531,86 @@ TEST(CO_CsdoDnInd, DownloadCobidRes_OldValid_NewInvalid_OldId) {
   CoCsdoDnCon::Check(nullptr, IDX, 0x02u, 0u, nullptr);
 
   CHECK_EQUAL(new_cobid_res, obj1280->GetSub<Sub02CobIdRes>());
+}
+
+/// \Given a pointer to the device (co_dev_t) with the CSDO service started and
+///        the object 0x1280 inserted and a valid Node-ID
+///
+/// \When Node-ID with the same value as the current Node-ID is downloaded to
+///       the client parameter "Node-ID of the SDO server" entry (idx: 0x1280,
+///       subidx: 0x03)
+///
+/// \Then 0 is returned, confirmation function is called once with 0 as abort
+///       code and the COB-ID is not changed
+///       \Calls co_sub_get_type()
+///       \Calls co_sdo_req_dn_val()
+///       \Calls co_sub_get_subidx()
+///       \Calls co_sub_get_val_u8()
+TEST(CO_CsdoDnInd, DownloadNodeId_SameAsOld) {
+  StartCSDO();
+
+  const co_unsigned8_t new_id = SERVER_NODEID;
+  const auto ret =
+      co_dev_dn_val_req(dev, 0x1280u, 0x03u, CO_DEFTYPE_UNSIGNED8, &new_id,
+                        nullptr, CoCsdoDnCon::Func, nullptr);
+
+  CHECK_EQUAL(0, ret);
+  CHECK_EQUAL(1u, CoCsdoDnCon::GetNumCalled());
+  CoCsdoDnCon::Check(nullptr, IDX, 0x03u, 0u, nullptr);
+  CHECK_EQUAL(SERVER_NODEID, obj1280->GetSub<Sub03NodeId>());
+}
+
+/// \Given a pointer to the device (co_dev_t) with the CSDO service started and
+///        the object 0x1280 inserted and a valid Node-ID
+///
+/// \When Node-ID new value is downloaded to the client parameter "Node-ID of
+///       the SDO server" entry (idx: 0x1280, subidx: 0x03)
+///
+/// \Then 0 is returned, confirmation function is called once with 0 as abort
+///       code and the requested Node-ID value is set
+///       \Calls co_sub_get_type()
+///       \Calls co_sdo_req_dn_val()
+///       \Calls co_sub_get_subidx()
+///       \Calls co_sub_get_val_u8()
+///       \Calls co_sub_dn()
+///       \Calls can_recv_start()
+TEST(CO_CsdoDnInd, DownloadNodeId_Nominal) {
+  StartCSDO();
+
+  const co_unsigned8_t new_id = 0x01u;
+  const auto ret =
+      co_dev_dn_val_req(dev, 0x1280u, 0x03u, CO_DEFTYPE_UNSIGNED8, &new_id,
+                        nullptr, CoCsdoDnCon::Func, nullptr);
+
+  CHECK_EQUAL(0, ret);
+  CHECK_EQUAL(1u, CoCsdoDnCon::GetNumCalled());
+  CoCsdoDnCon::Check(nullptr, IDX, 0x03u, 0u, nullptr);
+  CHECK_EQUAL(new_id, obj1280->GetSub<Sub03NodeId>());
+}
+
+/// \Given a pointer to the device (co_dev_t) with the CSDO service started and
+///        the object 0x1280 inserted
+///
+/// \When a value is downloaded to an invalid sub-object entry (idx: 0x1280,
+///       subidx: 0x04)
+///
+/// \Then 0 is returned, confirmation function is called once with
+///       CO_SDO_AC_NO_SUB as abort code
+///       \Calls co_sub_get_type()
+///       \Calls co_sdo_req_dn_val()
+///       \Calls co_sub_get_subidx()
+TEST(CO_CsdoDnInd, DownloadNodeId_InvalidSubidx) {
+  obj1280->InsertAndSetSub(0x04u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t{0x00u});
+  StartCSDO();
+
+  const co_unsigned8_t data = 0;
+  const auto ret =
+      co_dev_dn_val_req(dev, 0x1280u, 0x04u, CO_DEFTYPE_UNSIGNED8, &data,
+                        nullptr, CoCsdoDnCon::Func, nullptr);
+
+  CHECK_EQUAL(0, ret);
+  CHECK_EQUAL(1u, CoCsdoDnCon::GetNumCalled());
+  CoCsdoDnCon::Check(nullptr, IDX, 0x04u, CO_SDO_AC_NO_SUB, nullptr);
 }
 
 ///@}
