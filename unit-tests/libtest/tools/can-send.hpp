@@ -30,14 +30,14 @@
 class CanSend {
  public:
   static int ret;
-  static void* data;
+  static void* user_data;
   static int bus_id;
   static can_msg msg;
   static can_msg* msg_buf;
 
   static int Func(const can_msg* msg_, int bus_id_, void* data_);
   static void CheckMsg(uint_least32_t id, uint_least8_t flags,
-                       uint_least8_t len, const uint_least8_t* data_);
+                       uint_least8_t len, const uint_least8_t* data);
   static void Clear();
 
   static inline size_t

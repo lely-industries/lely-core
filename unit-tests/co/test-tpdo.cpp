@@ -838,7 +838,7 @@ TEST(CO_Tpdo, CoTpdoEvent_EventDriven) {
   CHECK_EQUAL(0u, ts.tv_sec);
 
   CHECK_COMPARE(CanSend::GetNumCalled(), >, 0);
-  POINTERS_EQUAL(&can_data, CanSend::data);
+  POINTERS_EQUAL(&can_data, CanSend::user_data);
   CHECK_EQUAL(DEV_ID, CanSend::msg.id);
   CHECK_EQUAL(0u, CanSend::msg.flags);
   CHECK_EQUAL(0u, CanSend::msg.len);
@@ -873,7 +873,7 @@ TEST(CO_Tpdo, CoTpdoEvent_EventDriven_EventTimer) {
   CHECK_EQUAL(0, can_net_set_time(net, &ts));
 
   CHECK_COMPARE(CanSend::GetNumCalled(), >, 0);
-  POINTERS_EQUAL(&can_data, CanSend::data);
+  POINTERS_EQUAL(&can_data, CanSend::user_data);
 
   CHECK(CoTpdoInd::called);
   POINTERS_EQUAL(tpdo, CoTpdoInd::pdo);
@@ -1239,7 +1239,7 @@ TEST(CO_Tpdo, CoTpdoSampleRes_CanSendError) {
   CHECK_EQUAL(-1, ret);
 
   CHECK_COMPARE(CanSend::GetNumCalled(), >, 0);
-  POINTERS_EQUAL(&can_data, CanSend::data);
+  POINTERS_EQUAL(&can_data, CanSend::user_data);
 
   CHECK(CoTpdoInd::called);
   POINTERS_EQUAL(tpdo, CoTpdoInd::pdo);
@@ -1263,7 +1263,7 @@ TEST(CO_Tpdo, CoTpdoSampleRes) {
   CHECK_EQUAL(0, ret);
 
   CHECK_COMPARE(CanSend::GetNumCalled(), >, 0);
-  POINTERS_EQUAL(&can_data, CanSend::data);
+  POINTERS_EQUAL(&can_data, CanSend::user_data);
   CHECK_EQUAL(DEV_ID, CanSend::msg.id);
   CHECK_EQUAL(0u, CanSend::msg.flags);
   CHECK_EQUAL(0u, CanSend::msg.len);
@@ -1319,7 +1319,7 @@ TEST(CO_Tpdo, CoTpdoRecv_SynchRTR_NoInd) {
   CHECK_EQUAL(1, ret);
 
   CHECK_COMPARE(CanSend::GetNumCalled(), >, 0);
-  POINTERS_EQUAL(&can_data, CanSend::data);
+  POINTERS_EQUAL(&can_data, CanSend::user_data);
   CHECK_EQUAL(DEV_ID, CanSend::msg.id);
   CHECK_EQUAL(0u, CanSend::msg.flags);
   CHECK_EQUAL(0u, CanSend::msg.len);
@@ -1344,7 +1344,7 @@ TEST(CO_Tpdo, CoTpdoRecv_EventDrivenRTR) {
   CHECK_EQUAL(1, ret);
 
   CHECK_COMPARE(CanSend::GetNumCalled(), >, 0);
-  POINTERS_EQUAL(&can_data, CanSend::data);
+  POINTERS_EQUAL(&can_data, CanSend::user_data);
   CHECK_EQUAL(DEV_ID, CanSend::msg.id);
   CHECK_EQUAL(0u, CanSend::msg.flags);
   CHECK_EQUAL(0u, CanSend::msg.len);
