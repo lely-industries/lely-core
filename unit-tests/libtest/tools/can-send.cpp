@@ -31,7 +31,7 @@
 #include "can-send.hpp"
 
 int CanSend::ret = 0;
-void* CanSend::data = nullptr;
+void* CanSend::user_data = nullptr;
 size_t CanSend::num_called = 0;
 can_msg CanSend::msg = CAN_MSG_INIT;
 int CanSend::bus_id = -1;
@@ -43,7 +43,7 @@ CanSend::Func(const can_msg* const msg_, const int bus_id_, void* const data_) {
   assert(msg_);
 
   msg = *msg_;
-  data = data_;
+  user_data = data_;
   bus_id = bus_id_;
 
   if ((msg_buf != &msg) && (num_called < buf_size)) {
@@ -56,13 +56,13 @@ CanSend::Func(const can_msg* const msg_, const int bus_id_, void* const data_) {
 
 void
 CanSend::CheckMsg(const uint_least32_t id, const uint_least8_t flags,
-                  const uint_least8_t len, const uint_least8_t* const data_) {
+                  const uint_least8_t len, const uint_least8_t* const data) {
   CHECK_EQUAL(id, msg.id);
   CHECK_EQUAL(flags, msg.flags);
   CHECK_EQUAL(len, msg.len);
   if (data != nullptr) {
     for (uint_least8_t i = 0; i < len; ++i) {
-      CHECK_EQUAL(data_[i], msg.data[i]);
+      CHECK_EQUAL(data[i], msg.data[i]);
     }
   }
 }
@@ -70,7 +70,7 @@ CanSend::CheckMsg(const uint_least32_t id, const uint_least8_t flags,
 void
 CanSend::Clear() {
   msg = CAN_MSG_INIT;
-  data = nullptr;
+  user_data = nullptr;
   bus_id = -1;
 
   ret = 0;
