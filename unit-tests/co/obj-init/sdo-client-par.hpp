@@ -32,7 +32,7 @@ struct Obj1280SdoClientPar : ObjInitT<0x1280u, 0x1280u, 0x12ffu> {
       : SubT<0x00u, CO_DEFTYPE_UNSIGNED8, 0x03u> {};
   struct Sub01CobIdReq : SubT<0x01u, CO_DEFTYPE_UNSIGNED32> {};
   struct Sub02CobIdRes : SubT<0x02u, CO_DEFTYPE_UNSIGNED32> {};
-  struct Sub03NodeId : SubT<0x03u, CO_DEFTYPE_UNSIGNED16> {};
+  struct Sub03NodeId : SubT<0x03u, CO_DEFTYPE_UNSIGNED8, 0x01u> {};
 };
 
 #endif  // LELY_UNIT_TEST_SDO_CLIENT_PAR_HPP_
