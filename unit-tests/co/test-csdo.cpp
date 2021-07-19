@@ -2456,7 +2456,7 @@ TEST(CO_Csdo, CoCsdoDnReq_Expedited) {
 ///
 /// \When co_sdo_dn_val_req() is called with an index, a subindex, a valid type
 ///       of the value, a value, a null buffer pointer, a pointer to
-///       the confirmation function and a null user-specified data
+///       the confirmation function and a null user-specified data pointer
 ///
 /// \Then 0 is returned and the request is sent
 ///       \Calls co_val_write()
@@ -2480,6 +2480,96 @@ TEST(CO_Csdo, CoCsdoDnValReq_Nominal) {
       IDX, SUBIDX, VAL);
   CanSend::CheckMsg(DEFAULT_COBID_REQ, 0, CO_SDO_MSG_SIZE, expected.data());
 }
+
+#if HAVE_LELY_OVERRIDE
+
+/// \Given a pointer to a CSDO service (co_csdo_t) with a valid server parameter
+///        "COB-ID client -> server (rx)" and "COB-ID server -> client (tx)"
+///        entries
+///
+/// \When co_sdo_dn_val_req() is called with an index, a subindex, a valid type
+///       of the value, a value, a null buffer pointer, a pointer to
+///       the confirmation function and a null user-specified data pointer, but
+///       the first internal call to co_val_write() fails
+///
+/// \Then -1 is returned and the request is not sent
+///       \Calls co_val_write()
+///       \Calls co_val_sizeof()
+TEST(CO_Csdo, CoCsdoDnValReq_CoValWriteFail) {
+  SetCli01CobidReq(DEFAULT_COBID_REQ);
+  SetCli02CobidRes(DEFAULT_COBID_RES);
+  StartCSDO();
+
+  LelyOverride::co_val_write(Override::NoneCallsValid);
+  const auto ret = co_csdo_dn_val_req(csdo, IDX, SUBIDX, SUB_TYPE, &VAL,
+                                      nullptr, CoCsdoDnCon::Func, nullptr);
+
+  CHECK_EQUAL(-1, ret);
+  CHECK_EQUAL(0u, CanSend::GetNumCalled());
+}
+
+/// \Given a pointer to a CSDO service (co_csdo_t) with a valid server parameter
+///        "COB-ID client -> server (rx)" and "COB-ID server -> client (tx)"
+///        entries
+///
+/// \When co_sdo_dn_val_req() is called with an index, a subindex, a valid type
+///       of the value, a value, a null buffer pointer, a pointer to
+///       the confirmation function and a null user-specified data pointer, but
+///       the second internal call to co_val_write() fails
+///
+/// \Then -1 is returned and the request is not sent
+///       \Calls co_val_write()
+///       \Calls membuf_clear()
+///       \Calls membuf_reserve()
+///       \Calls membuf_alloc()
+TEST(CO_Csdo, CoCsdoDnValReq_SecondCoValWriteFail) {
+  SetCli01CobidReq(DEFAULT_COBID_REQ);
+  SetCli02CobidRes(DEFAULT_COBID_RES);
+  StartCSDO();
+
+  LelyOverride::co_val_write(1u);
+  const auto ret = co_csdo_dn_val_req(csdo, IDX, SUBIDX, SUB_TYPE, &VAL,
+                                      nullptr, CoCsdoDnCon::Func, nullptr);
+
+  CHECK_EQUAL(-1, ret);
+  CHECK_EQUAL(0u, CanSend::GetNumCalled());
+}
+
+/// \Given a pointer to a CSDO service (co_csdo_t) with a valid server parameter
+///        "COB-ID client -> server (rx)" and "COB-ID server -> client (tx)"
+///        entries
+///
+/// \When co_sdo_dn_val_req() is called with an index, a subindex, a valid array
+///       type, an empty array, a null buffer pointer, a pointer to
+///       the confirmation function and a null user-specified data pointer, but
+///       the first internal call to co_val_write() fails
+///
+/// \Then 0 is returned and the empty request is sent
+///       \Calls co_val_write()
+///       \Calls co_val_sizeof()
+///       \Calls membuf_clear()
+///       \Calls membuf_reserve()
+///       \Calls membuf_alloc()
+///       \Calls co_csdo_dn_req()
+TEST(CO_Csdo, CoCsdoDnValReq_SizeofZero) {
+  SetCli01CobidReq(DEFAULT_COBID_REQ);
+  SetCli02CobidRes(DEFAULT_COBID_RES);
+  StartCSDO();
+
+  LelyOverride::co_val_write(Override::NoneCallsValid);
+  const co_octet_string_t val2dn = arrays.Init<co_octet_string_t>();
+  const auto ret =
+      co_csdo_dn_val_req(csdo, IDX, SUBIDX, CO_DEFTYPE_OCTET_STRING, &val2dn,
+                         nullptr, CoCsdoDnCon::Func, nullptr);
+
+  CHECK_EQUAL(0, ret);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
+  const auto expected = SdoInitExpectedData::U16(
+      CO_SDO_CCS_DN_INI_REQ | CO_SDO_INI_SIZE_IND, IDX, SUBIDX, 0);
+  CanSend::CheckMsg(DEFAULT_COBID_REQ, 0, CO_SDO_MSG_SIZE, expected.data());
+}
+
+#endif  // HAVE_LELY_OVERRIDE
 
 #if LELY_NO_MALLOC
 /// \Given a pointer to a CSDO service (co_csdo_t) with a valid server parameter
