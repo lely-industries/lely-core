@@ -3640,3 +3640,63 @@ TEST(CO_Csdo, CoCsdoBlkDnIniOnRecv_NoCS) {
 }
 
 ///@}
+
+/// @name CSDO block download sub-block
+///@{
+
+/// TODO(N7S): test cases for co_csdo_blk_dn_sub_on_enter()
+/// TODO(N7S): test cases for co_csdo_blk_dn_sub_on_abort()
+/// TODO(N7S): test cases for co_csdo_blk_dn_sub_on_time()
+/// TODO(N7S): test cases for co_csdo_blk_dn_sub_on_recv()
+
+///@}
+
+/// @name CSDO block download end
+///@{
+
+/// TODO(N7S): test cases for co_csdo_blk_dn_end_on_abort()
+/// TODO(N7S): test cases for co_csdo_blk_dn_end_on_time()
+/// TODO(N7S): test cases for co_csdo_blk_dn_end_on_recv()
+
+///@}
+
+/// @name CSDO block upload sub-block
+///@{
+
+/// TODO(N7S): test cases for co_csdo_blk_up_sub_on_time()
+/// TODO(N7S): test cases for co_csdo_blk_up_sub_on_recv()
+/// TODO(N7S): test cases for co_csdo_blk_up_sub_on_recv()
+
+///@}
+
+/// @name CSDO block upload end
+///@{
+
+/// TODO(N7S): test cases for co_csdo_blk_up_end_on_abort()
+/// TODO(N7S): test cases for co_csdo_blk_up_end_on_time()
+/// TODO(N7S): test cases for co_csdo_blk_up_end_on_recv()
+
+///@}
+
+/// @name CSDO send 'download segment' request
+///@{
+
+/// TODO(N7S): test cases for co_csdo_send_dn_seg_req()
+
+///@}
+
+/// @name CSDO send 'block download sub-block' request
+///@{
+
+/// TODO(N7S): test cases for co_csdo_send_blk_dn_sub_req()
+/// TODO(N7S): test cases for co_csdo_send_blk_dn_end_req()
+
+///@}
+
+/// @name CSDO send block upload sub-block response
+///@{
+
+/// TODO(N7S): test cases for co_csdo_send_blk_up_sub_res()
+/// TODO(N7S): test cases for co_csdo_send_blk_up_end_res()
+
+///@}
