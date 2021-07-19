@@ -65,8 +65,8 @@ static co_nmt_rdn_t *co_nmt_rdn_init(
 /// Finalizes #co_nmt_rdn_t object.
 static void co_nmt_rdn_fini(co_nmt_rdn_t *rdn);
 
-/// Performs a CAN bus switch.
-static void co_nmt_rdn_switch_bus(co_nmt_rdn_t *rdn);
+/// Implements the bus toggling mechanism as defined by ECSS-E-ST-50-15C.
+static void co_nmt_rdn_toogle_bus(co_nmt_rdn_t *rdn);
 
 /**
  * The CAN bus toggle timer callback function for a redundancy manager.
@@ -178,8 +178,10 @@ co_nmt_rdn_select_default_bus(co_nmt_rdn_t *rdn)
 		const co_unsigned8_t ttoggle = co_dev_get_val_u8(rdn->dev,
 				CO_NMT_RDN_REDUNDANCY_OBJ_IDX,
 				CO_NMT_RDN_TTOGGLE_SUBIDX);
-		can_timer_timeout(rdn->bus_toggle_timer, rdn->net,
-				rdn->master_ms * ttoggle);
+		if (ttoggle != 0) {
+			can_timer_timeout(rdn->bus_toggle_timer, rdn->net,
+					rdn->master_ms * ttoggle);
+		}
 	}
 }
 
@@ -204,12 +206,11 @@ co_nmt_rdn_slave_missed_hb(co_nmt_rdn_t *rdn)
 	const co_unsigned8_t ttoggle = co_dev_get_val_u8(rdn->dev,
 			CO_NMT_RDN_REDUNDANCY_OBJ_IDX,
 			CO_NMT_RDN_TTOGGLE_SUBIDX);
+	assert(ttoggle != 0);
 
-	if (ttoggle != 0) {
-		int timeout = rdn->master_ms
-				* (ttoggle - 1u); // the first HB interval already passed
-		can_timer_timeout(rdn->bus_toggle_timer, rdn->net, timeout);
-	}
+	const int timeout = rdn->master_ms
+			* (ttoggle - 1u); // the first HB interval already passed
+	can_timer_timeout(rdn->bus_toggle_timer, rdn->net, timeout);
 }
 
 void
@@ -316,21 +317,51 @@ co_nmt_rdn_fini(co_nmt_rdn_t *rdn)
 {
 	assert(rdn);
 
-	(void)rdn;
+	can_timer_destroy(rdn->bus_toggle_timer);
 }
 
 static void
-co_nmt_rdn_switch_bus(co_nmt_rdn_t *rdn)
+co_nmt_rdn_toogle_bus(co_nmt_rdn_t *rdn)
 {
 	assert(rdn);
 
-	const int active_bus = can_net_get_active_bus(rdn->net);
-	const co_unsigned8_t new_bus = (active_bus == rdn->bus_a_id)
-			? rdn->bus_b_id
-			: rdn->bus_a_id;
+	diag(DIAG_INFO, 0, "NMT: redundancy manager performs a bus switch");
 
-	if (new_bus != active_bus)
-		can_net_set_active_bus(rdn->net, new_bus);
+	const co_unsigned8_t ntoggle = co_dev_get_val_u8(rdn->dev,
+			CO_NMT_RDN_REDUNDANCY_OBJ_IDX,
+			CO_NMT_RDN_NTOGGLE_SUBIDX);
+	const co_unsigned8_t ctoggle = co_dev_get_val_u8(rdn->dev,
+			CO_NMT_RDN_REDUNDANCY_OBJ_IDX,
+			CO_NMT_RDN_CTOGGLE_SUBIDX);
+
+	if (ctoggle < ntoggle) {
+		const int active_bus = can_net_get_active_bus(rdn->net);
+		const co_unsigned8_t new_bus = (active_bus == rdn->bus_a_id)
+				? rdn->bus_b_id
+				: rdn->bus_a_id;
+
+		if (new_bus != active_bus)
+			can_net_set_active_bus(rdn->net, new_bus);
+
+		co_dev_set_val_u8(rdn->dev, CO_NMT_RDN_REDUNDANCY_OBJ_IDX,
+				CO_NMT_RDN_CTOGGLE_SUBIDX, ctoggle + 1u);
+
+		co_nmt_ecss_rdn_ind(rdn->nmt,
+				co_nmt_get_active_bus_id(rdn->nmt),
+				CO_NMT_ECSS_RDN_BUS_SWITCH);
+
+		const co_unsigned8_t ttoggle = co_dev_get_val_u8(rdn->dev,
+				CO_NMT_RDN_REDUNDANCY_OBJ_IDX,
+				CO_NMT_RDN_TTOGGLE_SUBIDX);
+		assert(ttoggle != 0);
+		can_timer_timeout(rdn->bus_toggle_timer, rdn->net,
+				rdn->master_ms * ttoggle);
+	} else {
+		co_nmt_rdn_set_active_bus_default(rdn);
+		co_nmt_ecss_rdn_ind(rdn->nmt,
+				co_nmt_get_active_bus_id(rdn->nmt),
+				CO_NMT_ECSS_RDN_NO_MASTER);
+	}
 }
 
 static int
@@ -340,36 +371,7 @@ co_nmt_rdn_bus_toggle_timer(const struct timespec *tp, void *data)
 	co_nmt_rdn_t *rdn = data;
 	assert(rdn);
 
-	diag(DIAG_INFO, 0, "NMT: redundancy manager performs a bus switch");
-
-	const co_unsigned8_t ntoggle = co_dev_get_val_u8(rdn->dev,
-			CO_NMT_RDN_REDUNDANCY_OBJ_IDX,
-			CO_NMT_RDN_NTOGGLE_SUBIDX);
-	co_unsigned8_t ctoggle = co_dev_get_val_u8(rdn->dev,
-			CO_NMT_RDN_REDUNDANCY_OBJ_IDX,
-			CO_NMT_RDN_CTOGGLE_SUBIDX);
-
-	co_nmt_rdn_switch_bus(rdn);
-	ctoggle++;
-	co_dev_set_val_u8(rdn->dev, CO_NMT_RDN_REDUNDANCY_OBJ_IDX,
-			CO_NMT_RDN_CTOGGLE_SUBIDX, ctoggle);
-
-	co_nmt_ecss_rdn_ind(rdn->nmt, co_nmt_get_active_bus_id(rdn->nmt),
-			CO_NMT_ECSS_RDN_BUS_SWITCH);
-
-	if (ctoggle < ntoggle) {
-		const co_unsigned8_t ttoggle = co_dev_get_val_u8(rdn->dev,
-				CO_NMT_RDN_REDUNDANCY_OBJ_IDX,
-				CO_NMT_RDN_TTOGGLE_SUBIDX);
-
-		can_timer_timeout(rdn->bus_toggle_timer, rdn->net,
-				rdn->master_ms * ttoggle);
-	} else {
-		co_nmt_rdn_set_active_bus_default(rdn);
-		co_nmt_ecss_rdn_ind(rdn->nmt,
-				co_nmt_get_active_bus_id(rdn->nmt),
-				CO_NMT_ECSS_RDN_NO_MASTER);
-	}
+	co_nmt_rdn_toogle_bus(rdn);
 
 	return 0;
 }

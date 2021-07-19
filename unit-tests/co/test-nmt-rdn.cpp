@@ -175,8 +175,8 @@ TEST(CO_NmtRdnCheck, CoNmtRdnChkDev_Sub00MaxSubidx_BadType) {
 }
 
 /// \Given an initialized device (co_dev_t), the object dictionary contains
-///        the NMT redundancy object which does not have the mandatory Bdefault
-///        entry
+///        the NMT redundancy object which does not have the mandatory
+///        `Bdefault` entry
 ///
 /// \When co_nmt_rdn_chk_dev() is called with the pointer to the device
 ///
@@ -191,7 +191,7 @@ TEST(CO_NmtRdnCheck, CoNmtRdnChkDev_NoSub01Bdefault) {
 }
 
 /// \Given an initialized device (co_dev_t), the object dictionary contains
-///        the NMT redundancy object, but the Bdefault entry has an incorrect
+///        the NMT redundancy object, but the `Bdefault` entry has an incorrect
 ///        data type
 ///
 /// \When co_nmt_rdn_chk_dev() is called with the pointer to the device
@@ -209,7 +209,7 @@ TEST(CO_NmtRdnCheck, CoNmtRdnChkDev_Sub01Bdefault_BadType) {
 }
 
 /// \Given an initialized device (co_dev_t), the object dictionary contains
-///        the NMT redundancy object which does not have the Ttoggle entry
+///        the NMT redundancy object which does not have the `Ttoggle` entry
 ///
 /// \When co_nmt_rdn_chk_dev() is called with the pointer to the device
 ///
@@ -225,7 +225,7 @@ TEST(CO_NmtRdnCheck, CoNmtRdnChkDev_NoSub02Ttoggle) {
 }
 
 /// \Given an initialized device (co_dev_t), the object dictionary contains
-///        the NMT redundancy object, but the Ttoggle entry has an incorrect
+///        the NMT redundancy object, but the `Ttoggle` entry has an incorrect
 ///        data type
 ///
 /// \When co_nmt_rdn_chk_dev() is called with the pointer to the device
@@ -244,7 +244,7 @@ TEST(CO_NmtRdnCheck, CoNmtRdnChkDev_Sub02Ttoggle_BadType) {
 }
 
 /// \Given an initialized device (co_dev_t), the object dictionary contains
-///        the NMT redundancy object which does not have the Ntoggle entry
+///        the NMT redundancy object which does not have the `Ntoggle` entry
 ///
 /// \When co_nmt_rdn_chk_dev() is called with the pointer to the device
 ///
@@ -261,7 +261,7 @@ TEST(CO_NmtRdnCheck, CoNmtRdnChkDev_NoSub03Ntoggle) {
 }
 
 /// \Given an initialized device (co_dev_t), the object dictionary contains
-///        the NMT redundancy object, but the Ntoggle entry has an incorrect
+///        the NMT redundancy object, but the `Ntoggle` entry has an incorrect
 ///        data type
 ///
 /// \When co_nmt_rdn_chk_dev() is called with the pointer to the device
@@ -281,7 +281,7 @@ TEST(CO_NmtRdnCheck, CoNmtRdnChkDev_Sub03Ntoggle_BadType) {
 }
 
 /// \Given an initialized device (co_dev_t), the object dictionary contains
-///        the NMT redundancy object which does not have the Ctoggle entry
+///        the NMT redundancy object which does not have the `Ctoggle` entry
 ///
 /// \When co_nmt_rdn_chk_dev() is called with the pointer to the device
 ///
@@ -299,7 +299,7 @@ TEST(CO_NmtRdnCheck, CoNmtRdnChkDev_NoSub04Ctoggle) {
 }
 
 /// \Given an initialized device (co_dev_t), the object dictionary contains
-///        the NMT redundancy object, but the Ctoggle entry has an incorrect
+///        the NMT redundancy object, but the `Ctoggle` entry has an incorrect
 ///        data type
 ///
 /// \When co_nmt_rdn_chk_dev() is called with the pointer to the device
@@ -488,7 +488,7 @@ TEST(CO_NmtRdnAllocation, CoNmtRdnCreate_ExactMemory) {
 TEST_GROUP_BASE(CO_NmtRdn, CO_NmtRdnBase) {
   co_nmt_t* nmt = nullptr;
 
-  int data = 0;
+  int32_t data = 0;
 
   can_msg CreateHbMsg(const co_unsigned8_t id, const co_unsigned8_t st) const {
     can_msg msg = CAN_MSG_INIT;
@@ -704,8 +704,8 @@ TEST(CO_NmtRdn, CoNmtRdnInit_InvalidRdnObject) {
 ///
 /// \When the node is reset with the NMT service RESET NODE
 ///
-/// \Then the NMT service is started, but the active bus is not set to Bdefault
-///       value
+/// \Then the NMT service is started, but the active bus is not set to
+///       `Bdefault` value
 TEST(CO_NmtRdn, CoNmtRdnInit_Master_NoBdefault) {
   ConfigRdn();
   dev_holder->CreateObjValue<Obj1f80NmtStartup>(obj1f80,
@@ -729,7 +729,7 @@ TEST(CO_NmtRdn, CoNmtRdnInit_Master_NoBdefault) {
 /// \When the node is reset with the NMT service RESET NODE
 ///
 /// \Then the NMT service is started, but the NMT Redundancy manager service is
-///       disabled and the active bus is not set to Bdefault
+///       disabled and the active bus is not set to `Bdefault`
 TEST(CO_NmtRdn, CoNmtRdnInit_Slave_IncompleteRdnObject) {
   ConfigRdn();
   obj_rdn->SetSub<ObjNmtRedundancy::Sub00HighestSubidxSupported>(0);
@@ -756,7 +756,7 @@ TEST(CO_NmtRdn, CoNmtRdnInit_Slave_IncompleteRdnObject) {
 /// \When the node is reset with the NMT service RESET NODE
 ///
 /// \Then the NMT service is started, but the NMT Redundancy manager service is
-///       disabled and the active bus is not set to Bdefault
+///       disabled and the active bus is not set to `Bdefault`
 TEST(CO_NmtRdn, CoNmtRdnInit_Slave_NoMasterHbEntry) {
   ConfigRdn();
   obj_rdn->SetSub<ObjNmtRedundancy::Sub01Bdefault>(BUS_B_ID);
@@ -776,13 +776,40 @@ TEST(CO_NmtRdn, CoNmtRdnInit_Slave_NoMasterHbEntry) {
   CHECK_EQUAL(0, CoNmtRdnInd::GetNumCalled());
 }
 
+/// \Given an initialized NMT service (co_nmt_t), the object dictionary
+///        contains a Redundancy Object, but `Ttoggle` is set to 0; the node is
+///        configured as NMT slave
+///
+/// \When the node is reset with the NMT service RESET NODE
+///
+/// \Then the NMT service is started, the active bus is set to `Bdefault`, but
+///       the NMT Redundancy manager service is disabled
+TEST(CO_NmtRdn, CoNmtRdnInit_Slave_TtoggleZero) {
+  ConfigRdn();
+  obj_rdn->SetSub<ObjNmtRedundancy::Sub01Bdefault>(BUS_B_ID);
+  obj_rdn->SetSub<ObjNmtRedundancy::Sub02Ttoggle>(0);
+  CreateNmt();
+
+  CHECK_EQUAL(0, co_nmt_cs_ind(nmt, CO_NMT_CS_RESET_NODE));
+
+  CHECK_EQUAL(CO_NMT_ST_START, co_nmt_get_st(nmt));
+  CHECK_EQUAL(BUS_B_ID, co_nmt_get_active_bus_id(nmt));
+
+  timespec ts = {0, 0};
+  timespec_add_msec(&ts, HB_TIMEOUT_MS * TTOGGLE);
+  can_net_set_time(net, &ts);
+
+  CHECK_EQUAL(0, CoNmtHbInd::GetNumCalled());
+  CHECK_EQUAL(0, CoNmtRdnInd::GetNumCalled());
+}
+
 #if !LELY_NO_CO_MASTER
 /// \Given an initialized NMT service (co_nmt_t), the object dictionary
 ///        contains a Redundancy Object; the node is configured as NMT master
 ///
 /// \When the node is reset with the NMT service RESET NODE
 ///
-/// \Then the NMT service is started, the active bus is set to Bdefault value
+/// \Then the NMT service is started, the active bus is set to `Bdefault` value
 TEST(CO_NmtRdn, CoNmtRdnInit_Master_Nominal) {
   ConfigRdn();
   obj_rdn->SetSub<ObjNmtRedundancy::Sub01Bdefault>(BUS_B_ID);
@@ -803,7 +830,7 @@ TEST(CO_NmtRdn, CoNmtRdnInit_Master_Nominal) {
 /// \When the node is reset with the NMT service RESET NODE
 ///
 /// \Then the NMT service is in the NMT pre-operational state, the active bus
-///       is set to Bdefault value
+///       is set to `Bdefault` value
 TEST(CO_NmtRdn, CoNmtRdnInit_Slave_Nominal) {
   ConfigRdn();
   obj_rdn->SetSub<ObjNmtRedundancy::Sub01Bdefault>(BUS_B_ID);
@@ -953,17 +980,20 @@ TEST(CO_NmtRdn, CoNmtRdnSlaveBusSelection_Resolved) {
 }
 
 /// \Given a started NMT service (co_nmt_t) configured as NMT slave with the
-///        NMT redundancy manager configured, but `Ttoggle` is set to 0; the
-///        bus selection process is not active
+///        NMT redundancy manager configured and `Ttoggle` set to 1; the bus
+///        selection process is not active
 ///
 /// \When the NMT consumer heartbeat timer for the Redundancy Master expires
 ///
-/// \Then the bus selection process is not activated - the active bus is not
-///       switched, the NMT redundancy indication function and the NMT
-///       heartbeat indication function are not invoked
-TEST(CO_NmtRdn, CoNmtRdnSlaveBusSelection_MissedHb_ZeroTtoggle) {
+/// \Then the active bus is switched to the alternate, the NMT redundancy
+///       indication function is invoked with the alternate bus ID,
+///       CO_NMT_ECSS_RDN_BUS_SWITCH reason and a null user-specified data
+///       pointer; the NMT heartbeat indication function is invoked with the
+///       Redundancy Master's Node-ID, CO_NMT_EC_OCCURRED state,
+///       CO_NMT_EC_TIMEOUT reason and a null user-specified data pointer
+TEST(CO_NmtRdn, CoNmtRdnSlaveBusSelection_MissedHb_TtoggleOne) {
   ConfigRdn();
-  obj_rdn->SetSub<ObjNmtRedundancy::Sub02Ttoggle>(0);
+  obj_rdn->SetSub<ObjNmtRedundancy::Sub02Ttoggle>(1u);
   CreateNmtAndReset();
   co_nmt_set_hb_ind(nmt, CoNmtHbInd::Func, nullptr);
   co_nmt_set_ecss_rdn_ind(nmt, CoNmtRdnInd::Func, nullptr);
@@ -971,18 +1001,18 @@ TEST(CO_NmtRdn, CoNmtRdnSlaveBusSelection_MissedHb_ZeroTtoggle) {
 
   const can_msg msg = CreateHbMsg(MASTER_DEV_ID, CO_NMT_ST_START);
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
+  CoNmtHbInd::Clear();
 
   timespec ts = {0, 0};
   timespec_add_msec(&ts, HB_TIMEOUT_MS);
   can_net_set_time(net, &ts);
-  CoNmtHbInd::Clear();
 
-  timespec_add_msec(&ts, HB_TIMEOUT_MS);
-  can_net_set_time(net, &ts);
-
-  CHECK_EQUAL(BUS_A_ID, co_nmt_get_active_bus_id(nmt));
-  CHECK_EQUAL(0, CoNmtRdnInd::GetNumCalled());
-  CHECK_EQUAL(0, CoNmtHbInd::GetNumCalled());
+  CHECK_EQUAL(BUS_B_ID, co_nmt_get_active_bus_id(nmt));
+  CHECK_EQUAL(1u, CoNmtRdnInd::GetNumCalled());
+  CoNmtRdnInd::Check(nmt, BUS_B_ID, CO_NMT_ECSS_RDN_BUS_SWITCH, nullptr);
+  CHECK_EQUAL(1u, CoNmtHbInd::GetNumCalled());
+  CoNmtHbInd::Check(nmt, MASTER_DEV_ID, CO_NMT_EC_OCCURRED, CO_NMT_EC_TIMEOUT,
+                    nullptr);
 }
 
 ///@}
@@ -1148,7 +1178,7 @@ TEST(CO_NmtRdn, CoNmtRdnHbTimeout_NoMaster) {
 
   timespec ts = {0, 0};
 
-  for (co_unsigned8_t i = 0; i < NTOGGLE; ++i) {
+  for (co_unsigned8_t i = 0; i < (NTOGGLE + 1u); ++i) {
     timespec_add_msec(&ts, HB_TIMEOUT_MS * TTOGGLE);
     can_net_set_time(net, &ts);
   }
