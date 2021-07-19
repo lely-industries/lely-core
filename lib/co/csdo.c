@@ -1161,7 +1161,7 @@ co_csdo_dn_val_req(co_csdo_t *sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
 		return -1;
 
 	membuf_clear(buf);
-	if (!membuf_reserve(buf, n))
+	if (n && !membuf_reserve(buf, n))
 		return -1;
 	void *ptr = membuf_alloc(buf, &n);
 
