@@ -574,7 +574,7 @@ TEST_BASE(CO_Ssdo) {
   Allocators::Default defaultAllocator;
 
   static co_unsigned32_t sub_dn_failing_ind(co_sub_t*, co_sdo_req*,
-                                            co_unsigned32_t ac, void*) {
+                                            const co_unsigned32_t ac, void*) {
     if (ac != 0) return ac;
     return CO_SDO_AC_NO_READ;
   }
@@ -1367,10 +1367,9 @@ TEST(CoSsdoDnIniOnRecv, Expedited) {
 TEST_GROUP_BASE(CoSsdoUpIniOnRecv, CO_Ssdo) {
   int32_t ignore = 0;  // clang-format fix
 
-  static co_unsigned32_t up_ind_size_zero(const co_sub_t* sub, co_sdo_req* req,
-                                          co_unsigned32_t ac, void* data) {
-    (void)data;
-
+  static co_unsigned32_t up_ind_size_zero(const co_sub_t* const sub,
+                                          co_sdo_req* const req,
+                                          co_unsigned32_t ac, void*) {
     if (ac != 0) return ac;
 
     co_sub_on_up(sub, req, &ac);
@@ -2481,10 +2480,9 @@ TEST_GROUP_BASE(CoSsdoUpSegOnRecv, CO_Ssdo) {
 
   static const size_t INVALID_REQSIZE = 10u;
 
-  static co_unsigned32_t up_ind_failing(const co_sub_t* sub, co_sdo_req* req,
-                                        co_unsigned32_t ac, void* data) {
-    (void)data;
-
+  static co_unsigned32_t up_ind_failing(const co_sub_t* const sub,
+                                        co_sdo_req* const req,
+                                        co_unsigned32_t ac, void*) {
     if (ac != 0) return ac;
 
     co_sub_on_up(sub, req, &ac);
@@ -2497,10 +2495,9 @@ TEST_GROUP_BASE(CoSsdoUpSegOnRecv, CO_Ssdo) {
     return ac;
   }
 
-  static co_unsigned32_t up_ind_size_longer(
-      const co_sub_t* sub, co_sdo_req* req, co_unsigned32_t ac, void* data) {
-    (void)data;
-
+  static co_unsigned32_t up_ind_size_longer(const co_sub_t* const sub,
+                                            co_sdo_req* const req,
+                                            co_unsigned32_t ac, void*) {
     if (ac != 0) return ac;
 
     co_sub_on_up(sub, req, &ac);
@@ -3845,8 +3842,8 @@ TEST(CoSsdoBlkUp, Sub_ArrNominal) {
 ///       \Calls stle_u16()
 ///       \Calls can_net_send()
 TEST(CoSsdoBlkUp, Sub_EmptyArray) {
-  co_sub_up_ind_t* const up_ind = [](const co_sub_t* sub, co_sdo_req* req,
-                                     co_unsigned32_t ac,
+  co_sub_up_ind_t* const up_ind = [](const co_sub_t* const sub,
+                                     co_sdo_req* const req, co_unsigned32_t ac,
                                      void*) -> co_unsigned32_t {
     co_sub_on_up(sub, req, &ac);
     req->size = 0u;  // the array is empty
@@ -4009,7 +4006,7 @@ TEST(CoSsdoBlkUp, Sub_TimeoutTriggered) {
 TEST(CoSsdoBlkUp, InitIniRes_CoSdoCobidFrame) {
   dev_holder->CreateAndInsertObj(obj2020, IDX);
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE, sub_type{0xabcdu});
-  co_unsigned32_t cobid_res = DEFAULT_COBID_RES | CO_SDO_COBID_FRAME;
+  const co_unsigned32_t cobid_res = DEFAULT_COBID_RES | CO_SDO_COBID_FRAME;
   SetSrv02CobidRes(cobid_res);
   StartSSDO();
 
