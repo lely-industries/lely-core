@@ -380,6 +380,16 @@ static co_unsigned32_t co_1016_dn_ind(co_sub_t *sub, struct co_sdo_req *req,
 static co_unsigned32_t co_1017_dn_ind(co_sub_t *sub, struct co_sdo_req *req,
 		co_unsigned32_t ac, void *data);
 
+#if !LELY_NO_CO_ECSS_REDUNDANCY
+/**
+ * The download indication function for CANopen ECSS redundancy object.
+ *
+ * @see co_sub_dn_ind_t
+ */
+static co_unsigned32_t co_rdn_dn_ind(co_sub_t *sub, struct co_sdo_req *req,
+		co_unsigned32_t ac, void *data);
+#endif
+
 #if !LELY_NO_CO_NMT_CFG
 /**
  * The download indication function for (all sub-objects of) CANopen object 1F25
@@ -733,6 +743,9 @@ static void co_nmt_rdn_init(co_nmt_t *nmt);
 
 /// Finalizes the redundancy manager service. @see co_nmt_rdn_init()
 static void co_nmt_rdn_fini(co_nmt_t *nmt);
+
+/// Updates the state of the redundancy manager service.
+static void co_nmt_rdn_update(co_nmt_t *nmt);
 
 /// Processes a heartbeat event from the Redundancy Master for a slave node.
 static void co_nmt_rdn_slave_on_master_hb(co_nmt_t *nmt, int state, int reason);
@@ -2371,6 +2384,44 @@ co_1017_dn_ind(co_sub_t *sub, struct co_sdo_req *req, co_unsigned32_t ac,
 	return 0;
 }
 
+#if !LELY_NO_CO_ECSS_REDUNDANCY
+static co_unsigned32_t
+co_rdn_dn_ind(co_sub_t *sub, struct co_sdo_req *req, co_unsigned32_t ac,
+		void *data)
+{
+	assert(sub);
+	assert(co_obj_get_idx(co_sub_get_obj(sub))
+			== CO_NMT_RDN_REDUNDANCY_OBJ_IDX);
+	assert(req);
+	co_nmt_t *const nmt = data;
+	assert(nmt);
+
+	const co_unsigned16_t type = co_sub_get_type(sub);
+	assert(type == CO_DEFTYPE_UNSIGNED8);
+
+	if (ac)
+		return ac;
+
+	union co_val val;
+	if (co_sdo_req_dn_val(req, type, &val, &ac) == -1)
+		return ac;
+
+	switch (co_sub_get_subidx(sub)) {
+	case 0: return CO_SDO_AC_NO_WRITE;
+	case CO_NMT_RDN_BDEFAULT_SUBIDX:
+	case CO_NMT_RDN_TTOGGLE_SUBIDX:
+	case CO_NMT_RDN_NTOGGLE_SUBIDX:
+	case CO_NMT_RDN_CTOGGLE_SUBIDX: break;
+	default: return CO_SDO_AC_NO_SUB;
+	}
+
+	co_sub_dn(sub, &val);
+	co_nmt_rdn_update(nmt);
+
+	return 0;
+}
+#endif // !LELY_NO_CO_ECSS_REDUNDANCY
+
 #if !LELY_NO_CO_NMT_CFG
 static co_unsigned32_t
 co_1f25_dn_ind(co_sub_t *sub, struct co_sdo_req *req, co_unsigned32_t ac,
@@ -3486,9 +3537,24 @@ co_nmt_rdn_init(co_nmt_t *nmt)
 		// the Redundancy Master Node-ID set (from object 1016h)
 		if ((max_subidx == CO_NMT_REDUNDANCY_OBJ_MAX_IDX)
 				&& (co_nmt_rdn_get_master_id(nmt->rdn) != 0)) {
-			nmt->rdn_enabled = 1;
 			co_nmt_rdn_select_default_bus(nmt->rdn);
-			co_nmt_rdn_slave_start_bus_selection(nmt);
+
+			const co_unsigned8_t ttoggle = co_dev_get_val_u8(
+					nmt->dev, CO_NMT_RDN_REDUNDANCY_OBJ_IDX,
+					CO_NMT_RDN_TTOGGLE_SUBIDX);
+
+			if (ttoggle != 0) {
+#if !LELY_NO_MALLOC
+				nmt->rdn = co_nmt_rdn_create(nmt->net, nmt);
+				if (!nmt->rdn) {
+					diag(DIAG_ERROR, get_errc(),
+							"unable to create redundancy manager service");
+					return;
+				}
+#endif
+				nmt->rdn_enabled = 1;
+				co_nmt_rdn_slave_start_bus_selection(nmt);
+			}
 		} else {
 			set_errnum(ERRNUM_INVAL);
 			diag(DIAG_ERROR, get_errc(),
@@ -3503,9 +3569,30 @@ co_nmt_rdn_fini(co_nmt_t *nmt)
 	assert(nmt);
 
 	nmt->rdn_enabled = 0;
+	nmt->bus_selection = 0;
 
+	co_nmt_rdn_set_active_bus_default(nmt->rdn);
+#if !LELY_NO_MALLOC
 	co_nmt_rdn_destroy(nmt->rdn);
 	nmt->rdn = NULL;
+#endif
+}
+
+static void
+co_nmt_rdn_update(co_nmt_t *nmt)
+{
+	assert(nmt);
+
+	if (!co_nmt_is_master(nmt)) {
+		const co_unsigned8_t ttoggle = co_dev_get_val_u8(nmt->dev,
+				CO_NMT_RDN_REDUNDANCY_OBJ_IDX,
+				CO_NMT_RDN_TTOGGLE_SUBIDX);
+
+		if (nmt->rdn_enabled && (ttoggle == 0))
+			co_nmt_rdn_fini(nmt);
+		else if (!nmt->rdn_enabled && (ttoggle != 0))
+			co_nmt_rdn_init(nmt);
+	}
 }
 
 static void
@@ -4024,12 +4111,14 @@ co_nmt_init(co_nmt_t *nmt, can_net_t *net, co_dev_t *dev)
 #if !LELY_NO_CO_ECSS_REDUNDANCY
 	nmt->rdn_enabled = 0;
 	nmt->bus_selection = 0;
+#if LELY_NO_MALLOC
 	nmt->rdn = co_nmt_rdn_create(nmt->net, nmt);
 
 	if (!nmt->rdn) {
 		errc = get_errc();
 		goto error_create_rdn;
 	}
+#endif
 	nmt->rdn_ind = NULL;
 	nmt->rdn_data = NULL;
 #endif
@@ -4195,6 +4284,14 @@ co_nmt_init(co_nmt_t *nmt, can_net_t *net, co_dev_t *dev)
 	if (obj_1017)
 		co_obj_set_dn_ind(obj_1017, &co_1017_dn_ind, nmt);
 
+#if !LELY_NO_CO_ECSS_REDUNDANCY
+	// Set the download indication function for the redundancy object.
+	co_obj_t *obj_rdn = co_dev_find_obj(
+			nmt->dev, CO_NMT_RDN_REDUNDANCY_OBJ_IDX);
+	if (obj_rdn)
+		co_obj_set_dn_ind(obj_rdn, &co_rdn_dn_ind, nmt);
+#endif
+
 #if !LELY_NO_CO_NMT_CFG
 	// Set the download indication function for the configuration request
 	// value.
@@ -4240,6 +4337,10 @@ co_nmt_init(co_nmt_t *nmt, can_net_t *net, co_dev_t *dev)
 // 	if (obj_1f25)
 // 		co_obj_set_dn_ind(obj_1f25, NULL, NULL);
 // #endif
+// #if !LELY_NO_CO_ECSS_REDUNDANCY
+// 	if (obj_rdn)
+// 		co_obj_set_dn_ind(obj_rdn, NULL, NULL);
+// #endif
 // 	if (obj_1017)
 // 		co_obj_set_dn_ind(obj_1017, NULL, NULL);
 // 	if (obj_1016)
@@ -4275,7 +4376,7 @@ error_init_slave:
 error_create_cs_timer:
 	can_buf_fini(&nmt->buf);
 #endif
-#if !LELY_NO_CO_ECSS_REDUNDANCY
+#if !LELY_NO_CO_ECSS_REDUNDANCY && LELY_NO_MALLOC
 	co_nmt_rdn_destroy(nmt->rdn);
 error_create_rdn:
 #endif
@@ -4339,6 +4440,14 @@ co_nmt_fini(co_nmt_t *nmt)
 	co_obj_t *obj_1f25 = co_dev_find_obj(nmt->dev, 0x1f25);
 	if (obj_1f25)
 		co_obj_set_dn_ind(obj_1f25, NULL, NULL);
+#endif
+
+#if !LELY_NO_CO_ECSS_REDUNDANCY
+	// Remove the download indication function for the redundancy object
+	co_obj_t *obj_rdn = co_dev_find_obj(
+			nmt->dev, CO_NMT_RDN_REDUNDANCY_OBJ_IDX);
+	if (obj_rdn)
+		co_obj_set_dn_ind(obj_rdn, NULL, NULL);
 #endif
 
 	// Remove the download indication function for the producer heartbeat

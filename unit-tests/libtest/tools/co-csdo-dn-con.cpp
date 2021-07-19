@@ -62,6 +62,7 @@ void
 CoCsdoDnCon::Check(const co_csdo_t* const sdo_, const co_unsigned16_t idx_,
                    const co_unsigned8_t subidx_, const co_unsigned32_t ac_,
                    const void* const data_) {
+  CHECK_COMPARE(num_called, >, 0);
   POINTERS_EQUAL(sdo_, sdo);
   CHECK_EQUAL(idx_, idx);
   CHECK_EQUAL(subidx_, subidx);
