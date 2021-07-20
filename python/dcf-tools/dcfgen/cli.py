@@ -19,6 +19,9 @@ class Slave(dcf.Device):
         self.heartbeat_multiplier = 1
         self.heartbeat_consumer = False
         self.heartbeat_producer = 0
+        self.retry_factor = 1
+        self.life_time_factor = 0
+        self.guard_time = 0
         self.boot = True
         self.mandatory = False
         self.reset_communication = True
@@ -238,6 +241,44 @@ class Slave(dcf.Device):
                 else:
                     warnings.warn(name + ": object 0x1017 does not exist", stacklevel=2)
             slave.heartbeat_producer = heartbeat_producer
+
+        slave.retry_factor = options["retry_factor"]
+        if "retry_factor" in cfg:
+            slave.retry_factor = int(cfg["retry_factor"])
+
+        if 0x100C in slave:
+            slave.guard_time = slave[0x100C][0].parse_value()
+
+        if "guard_time" in cfg:
+            guard_time = int(cfg["guard_time"])
+            if guard_time != slave.guard_time:
+                if 0x100C in slave:
+                    sdo = slave.concise_value(0x100C, 0, guard_time)
+                    slave.sdo.append(sdo)
+                else:
+                    warnings.warn(name + ": object 0x100C does not exist", stacklevel=2)
+            slave.guard_time = guard_time
+
+        if 0x100D in slave:
+            slave.life_time_factor = slave[0x100D][0].parse_value()
+    
+        if "life_time_factor" in cfg:
+            life_time_factor = int(cfg["life_time_factor"])
+            if life_time_factor != slave.life_time_factor:
+                if 0x100D in slave:
+                    sdo = slave.concise_value(0x100D, 0, life_time_factor)
+                    slave.sdo.append(sdo)
+                else:
+                    warnings.warn(name + ": object 0x100D does not exist", stacklevel=2)
+            slave.life_time_factor = life_time_factor
+
+        if slave.guard_time != 0 and slave.life_time_factor != 0 and slave.heartbeat_producer != 0:
+            warnings.warn(
+                "Cannot use heartbeat protocol and node guarding protocol simultaneously",
+                stacklevel=2,
+            )
+            slave.guard_time = 0
+            slave.life_time_factor = 0
 
         if "error_behavior" in cfg:
             for sub_index, value in cfg["error_behavior"].items():
@@ -535,7 +576,7 @@ def main():
     with open(args.filename[0], "r") as input:
         cfg = yaml.safe_load(input)
 
-    options = {"cob_id": 0x680, "dcf_path": "", "heartbeat_multiplier": 3.0}
+    options = {"cob_id": 0x680, "dcf_path": "", "heartbeat_multiplier": 3.0, "retry_factor": 3}
     if "options" in cfg:
         if "dcf_path" in cfg["options"]:
             options["dcf_path"] = str(cfg["options"]["dcf_path"])
@@ -543,6 +584,8 @@ def main():
             options["heartbeat_multiplier"] = float(
                 cfg["options"]["heartbeat_multiplier"]
             )
+        if "retry_factor" in cfg["options"]:
+            options["retry_factor"] = int(cfg["options"]["retry_factor"])
 
     slaves = {}
     for name in cfg:
