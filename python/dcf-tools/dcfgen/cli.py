@@ -261,7 +261,7 @@ class Slave(dcf.Device):
 
         if 0x100D in slave:
             slave.life_time_factor = slave[0x100D][0].parse_value()
-    
+
         if "life_time_factor" in cfg:
             life_time_factor = int(cfg["life_time_factor"])
             if life_time_factor != slave.life_time_factor:
@@ -272,7 +272,11 @@ class Slave(dcf.Device):
                     warnings.warn(name + ": object 0x100D does not exist", stacklevel=2)
             slave.life_time_factor = life_time_factor
 
-        if slave.guard_time != 0 and slave.life_time_factor != 0 and slave.heartbeat_producer != 0:
+        if (
+            slave.guard_time != 0
+            and slave.life_time_factor != 0
+            and slave.heartbeat_producer != 0
+        ):
             warnings.warn(
                 "Cannot use heartbeat protocol and node guarding protocol simultaneously",
                 stacklevel=2,
@@ -576,7 +580,12 @@ def main():
     with open(args.filename[0], "r") as input:
         cfg = yaml.safe_load(input)
 
-    options = {"cob_id": 0x680, "dcf_path": "", "heartbeat_multiplier": 3.0, "retry_factor": 3}
+    options = {
+        "cob_id": 0x680,
+        "dcf_path": "",
+        "heartbeat_multiplier": 3.0,
+        "retry_factor": 3,
+    }
     if "options" in cfg:
         if "dcf_path" in cfg["options"]:
             options["dcf_path"] = str(cfg["options"]["dcf_path"])
