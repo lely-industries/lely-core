@@ -64,6 +64,7 @@ constexpr uint8_t CO_SDO_INI_SIZE_MASK = 0x0fu;
 
 constexpr uint8_t CO_SDO_MSG_SIZE = 8u;
 constexpr uint8_t CO_SDO_INI_DATA_SIZE = 4u;
+constexpr uint8_t CO_SDO_SEG_MAX_DATA_SIZE = 7u;
 
 constexpr uint8_t
 CO_SDO_SEG_SIZE_SET(const uint8_t n) {

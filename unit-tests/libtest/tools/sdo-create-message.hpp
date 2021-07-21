@@ -38,10 +38,14 @@ can_msg Default(co_unsigned16_t idx, co_unsigned8_t subidx,
 can_msg BlkDnIniReq(co_unsigned16_t idx, co_unsigned8_t subidx,
                     uint_least32_t recipient_id, co_unsigned8_t cs_flags = 0,
                     size_t size = 0);
-// block download sub-object request
+// block download sub-block request
 can_msg BlkDnSubReq(co_unsigned16_t idx, co_unsigned8_t subidx,
                     uint_least32_t recipient_id, co_unsigned8_t seqno,
                     co_unsigned8_t last = 0);
+// block download sub-block response
+can_msg BlkDnSubRes(co_unsigned16_t idx, co_unsigned8_t subidx,
+                    uint_least32_t recipient_id, co_unsigned8_t seqno,
+                    co_unsigned8_t cs_flags = 0, co_unsigned32_t blksize = 0);
 // block download end
 can_msg BlkDnEnd(co_unsigned16_t idx, co_unsigned8_t subidx,
                  uint_least32_t recipient_id, co_unsigned16_t crc,

@@ -37,6 +37,8 @@ std::vector<uint_least8_t> U16(uint_least8_t cs, co_unsigned16_t idx = 0,
 std::vector<uint_least8_t> U32(uint_least8_t cs, co_unsigned16_t idx = 0,
                                co_unsigned8_t subidx = 0,
                                co_unsigned32_t val = 0);
+std::vector<uint_least8_t> Segment(uint_least8_t seqno,
+                                   const std::vector<uint_least8_t>& data);
 }  // namespace SdoInitExpectedData
 
 #endif  // LELY_UNIT_TEST_SDO_INIT_EXPECTED_DATA_

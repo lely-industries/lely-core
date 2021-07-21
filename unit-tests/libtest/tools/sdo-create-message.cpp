@@ -83,12 +83,30 @@ SdoCreateMsg::BlkDnSubReq(const co_unsigned16_t idx,
 }
 
 can_msg
+SdoCreateMsg::BlkDnSubRes(const co_unsigned16_t idx,
+                          const co_unsigned8_t subidx,
+                          const uint_least32_t recipient_id,
+                          const co_unsigned8_t seqno,
+                          const co_unsigned8_t cs_flags,
+                          const co_unsigned32_t blksize) {
+  can_msg msg = SdoCreateMsg::Default(idx, subidx, recipient_id);
+  msg.data[0] = CO_SDO_SCS_BLK_DN_RES;
+  msg.data[0] |= seqno;
+  msg.data[0] |= cs_flags;
+  stle_u32(msg.data + 4u, blksize);
+
+  return msg;
+}
+
+can_msg
 SdoCreateMsg::BlkDnEnd(const co_unsigned16_t idx, const co_unsigned8_t subidx,
                        const uint_least32_t recipient_id,
                        const co_unsigned16_t crc,
                        const co_unsigned8_t cs_flags) {
   can_msg msg = SdoCreateMsg::Default(idx, subidx, recipient_id);
-  msg.data[0] = CO_SDO_CCS_BLK_DN_REQ | CO_SDO_SC_END_BLK | cs_flags;
+  msg.data[0] = CO_SDO_CCS_BLK_DN_REQ;
+  msg.data[0] |= CO_SDO_SC_END_BLK;
+  msg.data[0] |= cs_flags;
   stle_u16(msg.data + 1u, crc);
 
   return msg;
