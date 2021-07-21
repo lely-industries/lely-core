@@ -24,6 +24,9 @@
 #include <config.h>
 #endif
 
+#include <algorithm>
+#include <cassert>
+#include <iterator>
 #include <vector>
 
 #include <lely/util/endian.h>
@@ -59,6 +62,18 @@ SdoInitExpectedData::U32(const uint_least8_t cs, const co_unsigned16_t idx,
                          const co_unsigned32_t val) {
   std::vector<uint_least8_t> buffer = Empty(cs, idx, subidx);
   stle_u32(&buffer[4u], val);
+
+  return buffer;
+}
+
+std::vector<uint_least8_t>
+SdoInitExpectedData::Segment(const uint_least8_t seqno,
+                             const std::vector<uint_least8_t>& data) {
+  assert(data.size() <= CO_SDO_SEG_MAX_DATA_SIZE);
+
+  std::vector<uint_least8_t> buffer(CO_SDO_MSG_SIZE, 0);
+  buffer[0] = seqno;
+  std::copy(data.begin(), data.end(), std::next(buffer.begin()));
 
   return buffer;
 }
