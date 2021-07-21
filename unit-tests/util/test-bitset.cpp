@@ -56,18 +56,6 @@ TEST(Util_BitsetInit, BitsetSize) {
   CHECK_EQUAL(3 * INT_BIT, GetSizeForBits(2 * INT_BIT + 1));
 }
 
-IGNORE_TEST(Util_BitsetInit, BitsetInit) {
-  // TODO(N7S)
-}
-
-IGNORE_TEST(Util_BitsetInit, BitsetFini) {
-  // TODO(N7S)
-}
-
-IGNORE_TEST(Util_BitsetInit, BitsetResize) {
-  // TODO(N7S)
-}
-
 TEST_GROUP(Util_Bitset) {
   bitset set;
   const int SET_SIZE = 64;

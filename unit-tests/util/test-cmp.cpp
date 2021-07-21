@@ -102,6 +102,7 @@ TEST(Util_Cmp, StrCmp_StringsEqual) {
 ///       the first character of the second array
 ///
 /// \Then a value greater than zero is returned
+///       \Calls strcmp()
 TEST(Util_Cmp, StrCmp_StrMoreChar) {
   const char p1[] = "brhgesv";
   const char p2[] = "arhgesv";
@@ -116,6 +117,7 @@ TEST(Util_Cmp, StrCmp_StrMoreChar) {
 ///       the longer array is passed as first argument
 ///
 /// \Then a value greater than zero is returned
+///       \Calls strcmp()
 TEST(Util_Cmp, StrCmp_StrMoreNull) {
   const char p1[] = "arhgesvv";
   const char p2[] = "arhgesv";
@@ -130,6 +132,7 @@ TEST(Util_Cmp, StrCmp_StrMoreNull) {
 ///       the first character of the second array
 ///
 /// \Then a value less than zero is returned
+///       \Calls strcmp()
 TEST(Util_Cmp, StrCmp_StrLessChar) {
   const char p1[] = "brhgesv";
   const char p2[] = "hrhgesv";
@@ -144,6 +147,7 @@ TEST(Util_Cmp, StrCmp_StrLessChar) {
 ///       the shorter array is passed as first argument
 ///
 /// \Then a value less than zero is returned
+///       \Calls strcmp()
 TEST(Util_Cmp, StrCmp_StrLessNull) {
   const char p1[] = "arhgesv";
   const char p2[] = "arhgesvddd";
@@ -190,6 +194,7 @@ TEST(Util_Cmp, StrCaseCmp_PointersEqual) {
 ///       arrays of same length with same characters but of different case
 ///
 /// \Then 0 is returned
+///       \Calls strcasecmp()
 TEST(Util_Cmp, StrCaseCmp_Equal) {
   const char p1[] = "arhgesv";
   const char p2[] = "ArhGesv";
@@ -204,6 +209,7 @@ TEST(Util_Cmp, StrCaseCmp_Equal) {
 ///       different character being greater in the first array
 ///
 /// \Then a value greater than zero is returned
+///       \Calls strcasecmp()
 TEST(Util_Cmp, StrCaseCmp_StrMoreChar) {
   const char p1[] = "arhgesverh";
   const char p2[] = "ArhGesvaaa";
@@ -219,6 +225,7 @@ TEST(Util_Cmp, StrCaseCmp_StrMoreChar) {
 ///       argument
 ///
 /// \Then a value greater than zero is returned
+///       \Calls strcasecmp()
 TEST(Util_Cmp, StrCaseCmp_StrMoreNull) {
   const char p1[] = "arhgesverh";
   const char p2[] = "ArhGesv";
@@ -233,6 +240,7 @@ TEST(Util_Cmp, StrCaseCmp_StrMoreNull) {
 ///       different character being greater in the second array
 ///
 /// \Then a value less than zero is returned
+///       \Calls strcasecmp()
 TEST(Util_Cmp, StrCaseCmp_StrLessChar) {
   const char p1[] = "arhgesvaaa";
   const char p2[] = "ArhGesvegr";
@@ -248,6 +256,7 @@ TEST(Util_Cmp, StrCaseCmp_StrLessChar) {
 ///       argument
 ///
 /// \Then a value less than zero is returned
+///       \Calls strcasecmp()
 TEST(Util_Cmp, StrCaseCmp_StrLessNull) {
   const char p1[] = "arhgesv";
   const char p2[] = "ArhGesvegr";
