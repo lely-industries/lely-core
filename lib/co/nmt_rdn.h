@@ -35,7 +35,7 @@ typedef struct co_nmt_rdn co_nmt_rdn_t;
 
 /// The Redundancy Master Heartbeat Consumer index
 #ifndef CO_NMT_RDN_MASTER_HB_IDX
-#define CO_NMT_RDN_MASTER_HB_IDX 0
+#define CO_NMT_RDN_MASTER_HB_IDX 1u
 #endif
 
 /// The index of the Redundancy Object

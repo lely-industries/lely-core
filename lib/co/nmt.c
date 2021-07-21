@@ -738,11 +738,21 @@ static co_nmt_state_t *co_nmt_startup_master(co_nmt_t *nmt);
 static co_nmt_state_t *co_nmt_startup_slave(co_nmt_t *nmt);
 
 #if !LELY_NO_CO_ECSS_REDUNDANCY
-/// Initializes the redundancy manager service. @see co_nmt_rdn_fini()
+/// Initializes the NMT redundancy manager service. @see co_nmt_rdn_fini()
 static void co_nmt_rdn_init(co_nmt_t *nmt);
 
-/// Finalizes the redundancy manager service. @see co_nmt_rdn_init()
+/// Finalizes the NMT redundancy manager service. @see co_nmt_rdn_init()
 static void co_nmt_rdn_fini(co_nmt_t *nmt);
+
+/// Gets the Redundancy Master's Node-ID and heartbeat timeout.
+static void co_nmt_rdn_get_master_hb(
+		const co_nmt_t *nmt, co_unsigned8_t *pid, co_unsigned16_t *pms);
+
+/// Initializes the NMT redundancy manager master service.
+static void co_nmt_rdn_init_master(co_nmt_t *nmt);
+
+/// Initializes the NMT redundancy manager slave service.
+static void co_nmt_rdn_init_slave(co_nmt_t *nmt);
 
 /// Updates the state of the redundancy manager service.
 static void co_nmt_rdn_update(co_nmt_t *nmt);
@@ -1479,12 +1489,21 @@ co_nmt_is_master(const co_nmt_t *nmt)
 }
 
 #if !LELY_NO_CO_ECSS_REDUNDANCY
-void
+int
 co_nmt_set_alternate_bus_id(co_nmt_t *nmt, co_unsigned8_t bus_id)
 {
 	assert(nmt);
 
+#if !LELY_NO_MALLOC
+	if (!nmt->rdn) {
+		set_errnum(ERRNUM_NOSYS);
+		return -1;
+	}
+#endif
+
 	co_nmt_rdn_set_alternate_bus_id(nmt->rdn, bus_id);
+
+	return 0;
 }
 #endif
 
@@ -2344,6 +2363,12 @@ co_1016_dn_ind(co_sub_t *sub, struct co_sdo_req *req, co_unsigned32_t ac,
 	co_sub_dn(sub, &val);
 
 	co_nmt_hb_set_1016(nmt->hbs[subidx - 1], id, ms);
+
+#if !LELY_NO_CO_ECSS_REDUNDANCY
+	if (nmt->rdn_enabled && subidx == CO_NMT_RDN_MASTER_HB_IDX)
+		co_nmt_rdn_set_master_id(nmt->rdn, id, ms);
+#endif
+
 	return 0;
 }
 
@@ -3520,47 +3545,10 @@ co_nmt_rdn_init(co_nmt_t *nmt)
 {
 	assert(nmt);
 
-	const co_unsigned8_t max_subidx = co_dev_get_val_u8(
-			nmt->dev, CO_NMT_RDN_REDUNDANCY_OBJ_IDX, 0x00);
-
-	if (co_nmt_is_master(nmt)) {
-		// The Redundancy Master requires only the 'Bdefault' sub-object
-		if (max_subidx >= CO_NMT_RDN_BDEFAULT_SUBIDX) {
-			co_nmt_rdn_select_default_bus(nmt->rdn);
-		} else {
-			set_errnum(ERRNUM_INVAL);
-			diag(DIAG_ERROR, get_errc(),
-					"incomplete redundancy configuration for master");
-		}
-	} else {
-		// Slave requires full configuration in the Redundancy Object and
-		// the Redundancy Master Node-ID set (from object 1016h)
-		if ((max_subidx == CO_NMT_REDUNDANCY_OBJ_MAX_IDX)
-				&& (co_nmt_rdn_get_master_id(nmt->rdn) != 0)) {
-			co_nmt_rdn_select_default_bus(nmt->rdn);
-
-			const co_unsigned8_t ttoggle = co_dev_get_val_u8(
-					nmt->dev, CO_NMT_RDN_REDUNDANCY_OBJ_IDX,
-					CO_NMT_RDN_TTOGGLE_SUBIDX);
-
-			if (ttoggle != 0) {
-#if !LELY_NO_MALLOC
-				nmt->rdn = co_nmt_rdn_create(nmt->net, nmt);
-				if (!nmt->rdn) {
-					diag(DIAG_ERROR, get_errc(),
-							"unable to create redundancy manager service");
-					return;
-				}
-#endif
-				nmt->rdn_enabled = 1;
-				co_nmt_rdn_slave_start_bus_selection(nmt);
-			}
-		} else {
-			set_errnum(ERRNUM_INVAL);
-			diag(DIAG_ERROR, get_errc(),
-					"incomplete redundancy configuration for slave");
-		}
-	}
+	if (co_nmt_is_master(nmt))
+		co_nmt_rdn_init_master(nmt);
+	else
+		co_nmt_rdn_init_slave(nmt);
 }
 
 static void
@@ -3571,11 +3559,100 @@ co_nmt_rdn_fini(co_nmt_t *nmt)
 	nmt->rdn_enabled = 0;
 	nmt->bus_selection = 0;
 
+#if LELY_NO_MALLOC
 	co_nmt_rdn_set_active_bus_default(nmt->rdn);
-#if !LELY_NO_MALLOC
+#else
+	if (nmt->rdn != NULL)
+		co_nmt_rdn_set_active_bus_default(nmt->rdn);
+
 	co_nmt_rdn_destroy(nmt->rdn);
 	nmt->rdn = NULL;
 #endif
+}
+
+static void
+co_nmt_rdn_get_master_hb(
+		const co_nmt_t *nmt, co_unsigned8_t *pid, co_unsigned16_t *pms)
+{
+	assert(nmt);
+	assert(pid);
+	assert(pms);
+
+	const co_obj_t *const obj_1016 = co_dev_find_obj(nmt->dev, 0x1016);
+	if ((!obj_1016) || (nmt->nhb < CO_NMT_RDN_MASTER_HB_IDX))
+		return;
+
+	const co_unsigned32_t val =
+			co_obj_get_val_u32(obj_1016, CO_NMT_RDN_MASTER_HB_IDX);
+	*pid = ((val >> 16u) & 0xff);
+	*pms = val & 0xffff;
+}
+
+static void
+co_nmt_rdn_init_master(co_nmt_t *nmt)
+{
+	assert(nmt);
+
+	// The Redundancy Master requires only the 'Bdefault' sub-object
+	const co_unsigned8_t max_subidx = co_dev_get_val_u8(
+			nmt->dev, CO_NMT_RDN_REDUNDANCY_OBJ_IDX, 0x00);
+
+	if (max_subidx >= CO_NMT_RDN_BDEFAULT_SUBIDX) {
+#if !LELY_NO_MALLOC
+		nmt->rdn = co_nmt_rdn_create(nmt->net, nmt);
+		if (!nmt->rdn) {
+			diag(DIAG_ERROR, get_errc(),
+					"unable to create redundancy manager service (master)");
+			return;
+		}
+#endif
+		co_nmt_rdn_select_default_bus(nmt->rdn);
+	} else {
+		set_errnum(ERRNUM_INVAL);
+		diag(DIAG_ERROR, get_errc(),
+				"incomplete redundancy manager configuration for master");
+	}
+}
+
+static void
+co_nmt_rdn_init_slave(co_nmt_t *nmt)
+{
+	assert(nmt);
+
+	// Slave requires full configuration in the Redundancy Object and
+	// the Redundancy Master Node-ID set (from object 1016h)
+	const co_unsigned8_t max_subidx = co_dev_get_val_u8(
+			nmt->dev, CO_NMT_RDN_REDUNDANCY_OBJ_IDX, 0x00);
+
+	co_unsigned8_t master_id = 0;
+	co_unsigned16_t master_ms = 0;
+	co_nmt_rdn_get_master_hb(nmt, &master_id, &master_ms);
+
+	if ((max_subidx == CO_NMT_REDUNDANCY_OBJ_MAX_IDX) && (master_id != 0)) {
+		const co_unsigned8_t ttoggle = co_dev_get_val_u8(nmt->dev,
+				CO_NMT_RDN_REDUNDANCY_OBJ_IDX,
+				CO_NMT_RDN_TTOGGLE_SUBIDX);
+
+		if (ttoggle != 0) {
+#if !LELY_NO_MALLOC
+			nmt->rdn = co_nmt_rdn_create(nmt->net, nmt);
+			if (!nmt->rdn) {
+				diag(DIAG_ERROR, get_errc(),
+						"unable to create redundancy manager service (slave)");
+				return;
+			}
+#endif
+			nmt->rdn_enabled = 1;
+			co_nmt_rdn_set_master_id(
+					nmt->rdn, master_id, master_ms);
+			co_nmt_rdn_select_default_bus(nmt->rdn);
+			co_nmt_rdn_slave_start_bus_selection(nmt);
+		}
+	} else {
+		set_errnum(ERRNUM_INVAL);
+		diag(DIAG_ERROR, get_errc(),
+				"incomplete redundancy manager configuration for slave");
+	}
 }
 
 static void
@@ -3610,6 +3687,7 @@ static void
 co_nmt_rdn_slave_finish_bus_selection(co_nmt_t *nmt)
 {
 	assert(nmt);
+	assert(nmt->rdn);
 	assert(!co_nmt_is_master(nmt));
 
 	nmt->bus_selection = 0;
@@ -3620,6 +3698,7 @@ static void
 co_nmt_rdn_slave_on_master_hb(co_nmt_t *nmt, int state, int reason)
 {
 	assert(nmt);
+	assert(nmt->rdn);
 	assert(!co_nmt_is_master(nmt));
 
 	if (reason == CO_NMT_EC_TIMEOUT) {
@@ -3775,13 +3854,6 @@ co_nmt_hb_init(co_nmt_t *nmt)
 		co_unsigned8_t id = (val >> 16) & 0xff;
 		co_unsigned16_t ms = val & 0xffff;
 		co_nmt_hb_set_1016(nmt->hbs[i], id, ms);
-
-#if !LELY_NO_CO_ECSS_REDUNDANCY
-		// For slave nodes, the first entry must hold the Redundancy Master
-		// Heartbeat Consumer object
-		if (!co_nmt_is_master(nmt) && i == CO_NMT_RDN_MASTER_HB_IDX)
-			co_nmt_rdn_set_master_id(nmt->rdn, id, ms);
-#endif
 	}
 }
 
@@ -4111,6 +4183,7 @@ co_nmt_init(co_nmt_t *nmt, can_net_t *net, co_dev_t *dev)
 #if !LELY_NO_CO_ECSS_REDUNDANCY
 	nmt->rdn_enabled = 0;
 	nmt->bus_selection = 0;
+	nmt->rdn = NULL;
 #if LELY_NO_MALLOC
 	nmt->rdn = co_nmt_rdn_create(nmt->net, nmt);
 

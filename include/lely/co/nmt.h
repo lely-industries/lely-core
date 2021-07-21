@@ -794,8 +794,11 @@ int co_nmt_is_master(const co_nmt_t *nmt);
  *
  * @param nmt    a pointer to an NMT master service.
  * @param bus_id a CAN bus identifier.
+ *
+ * @returns 0 on success, or -1 on error. In the latter case, the error number
+ * can be obtained with get_errc().
  */
-void co_nmt_set_alternate_bus_id(co_nmt_t *nmt, co_unsigned8_t bus_id);
+int co_nmt_set_alternate_bus_id(co_nmt_t *nmt, co_unsigned8_t bus_id);
 
 /**
  * Returns the currently active CAN bus on which the NMT service operates.

@@ -233,12 +233,12 @@ TEST_GROUP_BASE(CO_NmtCreate, CO_NmtBase) {
 
   // co_dev_write_dcf(): every <> is a call to co_val_write() when writing DCFs
   static int32_t GetCoDevWriteDcf_NullBuf_CoValWriteCalls(
-      const size_t num_subs) {
+      const uint8_t num_subs) {
     // <total number of subs> + NUM_SUBS * <get sub's size>
     return 1 + static_cast<int32_t>(num_subs);
   }
 
-  static int32_t GetCoDevWriteDcf_CoValWriteCalls(const size_t num_subs) {
+  static int32_t GetCoDevWriteDcf_CoValWriteCalls(const uint8_t num_subs) {
     // <total number of subs> + NUM_SUBS * (<get sub's size> + <sub's index>
     //     + <sub's sub-index> + <sub's size> + <sub's value>)
     return 1 + (static_cast<int32_t>(num_subs) * 5);
@@ -331,31 +331,53 @@ TEST(CO_NmtCreate, CoNmtSizeof_Nominal) {
   const auto ret = co_nmt_sizeof();
 
 #if defined(__MINGW32__)
+
 #if defined(__MINGW64__)
   CHECK_EQUAL(10728u, ret);
 #else
   CHECK_EQUAL(6420u, ret);
-#endif
+#endif  // __MINGW64__
 
-#elif LELY_NO_MALLOC
+#elif LELY_NO_MALLOC  // !__MINGW32__
+
 #if LELY_NO_CO_NG && LELY_NO_CO_NMT_BOOT && LELY_NO_CO_NMT_CFG  // ECSS
+
 #if LELY_NO_CO_MASTER
   CHECK_EQUAL(1384u, ret);
 #else
   CHECK_EQUAL(4792u, ret);
-#endif
-#else
+#endif  // LELY_NO_CO_MASTER
+
+#else  // non-ECSS, LELY_NO_MALLOC
   CHECK_EQUAL(11872u, ret);
 #endif
 
-#elif LELY_NO_HOSTED
+#elif LELY_NO_HOSTED  // !LELY_NO_MALLOC
+
   CHECK_EQUAL(11872u, ret);
 
-#elif LELY_NO_CO_MASTER
+#elif LELY_NO_CO_MASTER  // !LELY_NO_HOSTED
+
+#if LELY_NO_MALLOC
   CHECK_EQUAL(400u, ret);
+#else  // !LELY_NO_MALLOC
 
+#if LELY_NO_CO_ECSS_REDUNDANCY
+  CHECK_EQUAL(400u, ret);
 #else
+  CHECK_EQUAL(424u, ret);
+#endif  // LELY_NO_CO_ECSS_REDUNDANCY
+
+#endif  // LELY_NO_MALLOC
+
+#else  // !LELY_NO_CO_MASTER
+
+#if LELY_NO_CO_ECSS_REDUNDANCY
   CHECK_EQUAL(9712u, ret);
+#else
+  CHECK_EQUAL(9736u, ret);
+#endif  // LELY_NO_CO_ECSS_REDUNDANCY
+
 #endif
 }
 
@@ -395,6 +417,7 @@ TEST(CO_NmtCreate, CoNmtAlignof_Nominal) {
 ///       \Calls can_net_get_alloc()
 ///       \Calls co_nmt_alignof()
 ///       \Calls co_nmt_sizeof()
+///       \IfCalls{!LELY_NO_CO_ECSS_REDUNDANCY, co_nmt_rdn_chk_dev()}
 ///       \Calls co_dev_get_id()
 ///       \Calls co_dev_write_dcf()
 ///       \Calls co_nmt_srv_init()
@@ -404,6 +427,7 @@ TEST(CO_NmtCreate, CoNmtAlignof_Nominal) {
 ///       \Calls can_timer_set_func()
 ///       \Calls co_dev_find_obj()
 ///       \IfCalls{LELY_NO_MALLOC, memset()}
+///       \IfCalls{!LELY_NO_CO_ECSS_REDUNDANCY, co_nmt_rdn_create()}
 ///       \IfCalls{!LELY_NO_CO_MASTER, can_buf_init()}
 ///       \IfCalls{!LELY_NO_CO_MASTER, can_net_get_time()}
 ///       \IfCalls{LELY_NO_MALLOC, co_dev_get_val_u32()}
@@ -431,6 +455,7 @@ TEST(CO_NmtCreate, CoNmtCreate_Default) {
 ///       \Calls can_net_get_alloc()
 ///       \Calls co_nmt_alignof()
 ///       \Calls co_nmt_sizeof()
+///       \IfCalls{!LELY_NO_CO_ECSS_REDUNDANCY, co_nmt_rdn_chk_dev()}
 ///       \Calls co_dev_get_id()
 ///       \Calls co_dev_write_dcf()
 ///       \Calls mem_free()
@@ -466,6 +491,7 @@ TEST(CO_NmtCreate, CoNmtCreate_DcfAppParamsWriteFail) {
 ///       \Calls can_net_get_alloc()
 ///       \Calls co_nmt_alignof()
 ///       \Calls co_nmt_sizeof()
+///       \IfCalls{!LELY_NO_CO_ECSS_REDUNDANCY, co_nmt_rdn_chk_dev()}
 ///       \Calls co_dev_get_id()
 ///       \Calls co_dev_write_dcf()
 ///       \Calls mem_free()
@@ -510,6 +536,7 @@ TEST(CO_NmtCreate, CoNmtCreate_DcfCommParamsWriteFail) {
 ///       \Calls can_net_get_alloc()
 ///       \Calls co_nmt_alignof()
 ///       \Calls co_nmt_sizeof()
+///       \IfCalls{!LELY_NO_CO_ECSS_REDUNDANCY, co_nmt_rdn_chk_dev()}
 ///       \Calls co_dev_get_id()
 ///       \Calls co_dev_write_dcf()
 ///       \Calls co_nmt_srv_init()
@@ -521,6 +548,7 @@ TEST(CO_NmtCreate, CoNmtCreate_DcfCommParamsWriteFail) {
 ///       \IfCalls{LELY_NO_MALLOC, memset()}
 ///       \IfCalls{LELY_NO_MALLOC, co_obj_find_sub()}
 ///       \IfCalls{LELY_NO_MALLOC, co_nmt_hb_create()}
+///       \IfCalls{!LELY_NO_CO_ECSS_REDUNDANCY, co_nmt_rdn_create()}
 ///       \IfCalls{!LELY_NO_CO_MASTER, can_buf_init()}
 ///       \IfCalls{!LELY_NO_CO_MASTER, can_net_get_time()}
 ///       \IfCalls{LELY_NO_MALLOC, co_dev_get_val_u32()}
@@ -550,6 +578,7 @@ TEST(CO_NmtCreate, CoNmtCreate_WithObj1016_LessThanMaxEntries) {
 ///       \Calls can_net_get_alloc()
 ///       \Calls co_nmt_alignof()
 ///       \Calls co_nmt_sizeof()
+///       \IfCalls{!LELY_NO_CO_ECSS_REDUNDANCY, co_nmt_rdn_chk_dev()}
 ///       \Calls co_dev_get_id()
 ///       \Calls co_dev_write_dcf()
 ///       \Calls co_nmt_srv_init()
@@ -561,6 +590,7 @@ TEST(CO_NmtCreate, CoNmtCreate_WithObj1016_LessThanMaxEntries) {
 ///       \IfCalls{LELY_NO_MALLOC, memset()}
 ///       \IfCalls{LELY_NO_MALLOC, co_obj_find_sub()}
 ///       \IfCalls{LELY_NO_MALLOC, co_nmt_hb_create()}
+///       \IfCalls{!LELY_NO_CO_ECSS_REDUNDANCY, co_nmt_rdn_create()}
 ///       \IfCalls{!LELY_NO_CO_MASTER, can_buf_init()}
 ///       \IfCalls{!LELY_NO_CO_MASTER, can_net_get_time()}
 ///       \IfCalls{LELY_NO_MALLOC, co_dev_get_val_u32()}
@@ -594,6 +624,7 @@ TEST(CO_NmtCreate, CoNmtCreate_WithObj1f81) {
 ///       \Calls can_net_get_alloc()
 ///       \Calls co_nmt_alignof()
 ///       \Calls co_nmt_sizeof()
+///       \IfCalls{!LELY_NO_CO_ECSS_REDUNDANCY, co_nmt_rdn_chk_dev()}
 ///       \Calls co_dev_get_id()
 ///       \Calls co_dev_write_dcf()
 ///       \Calls co_nmt_srv_init()
@@ -605,6 +636,7 @@ TEST(CO_NmtCreate, CoNmtCreate_WithObj1f81) {
 ///       \IfCalls{LELY_NO_MALLOC, memset()}
 ///       \IfCalls{LELY_NO_MALLOC, co_obj_find_sub()}
 ///       \IfCalls{LELY_NO_MALLOC, co_nmt_hb_create()}
+///       \IfCalls{!LELY_NO_CO_ECSS_REDUNDANCY, co_nmt_rdn_create()}
 ///       \IfCalls{!LELY_NO_CO_MASTER, can_buf_init()}
 ///       \IfCalls{!LELY_NO_CO_MASTER, can_net_get_time()}
 ///       \IfCalls{LELY_NO_MALLOC, co_dev_get_val_u32()}
@@ -791,6 +823,7 @@ TEST(CO_NmtAllocation, CoNmtCreate_NoMemory) {
 ///       \Calls can_net_get_alloc()
 ///       \Calls co_nmt_alignof()
 ///       \Calls co_nmt_sizeof()
+///       \IfCalls{!LELY_NO_CO_ECSS_REDUNDANCY, co_nmt_rdn_chk_dev()}
 ///       \Calls co_dev_get_id()
 ///       \Calls co_dev_write_dcf()
 ///       \Calls get_errc()
@@ -819,6 +852,7 @@ TEST(CO_NmtAllocation, CoNmtCreate_NoMemoryForDcfParams) {
 ///       \Calls can_net_get_alloc()
 ///       \Calls co_nmt_alignof()
 ///       \Calls co_nmt_sizeof()
+///       \IfCalls{!LELY_NO_CO_ECSS_REDUNDANCY, co_nmt_rdn_chk_dev()}
 ///       \Calls co_dev_get_id()
 ///       \Calls co_dev_write_dcf()
 ///       \Calls get_errc()
@@ -852,6 +886,7 @@ TEST(CO_NmtAllocation, CoNmtCreate_NoMemoryForDcfCommParams) {
 ///       \Calls can_net_get_alloc()
 ///       \Calls co_nmt_alignof()
 ///       \Calls co_nmt_sizeof()
+///       \IfCalls{!LELY_NO_CO_ECSS_REDUNDANCY, co_nmt_rdn_chk_dev()}
 ///       \Calls co_dev_get_id()
 ///       \Calls co_dev_write_dcf()
 ///       \Calls co_nmt_srv_init()
@@ -885,6 +920,7 @@ TEST(CO_NmtAllocation, CoNmtCreate_NoMemoryForDefaultServices) {
 ///       \Calls can_net_get_alloc()
 ///       \Calls co_nmt_alignof()
 ///       \Calls co_nmt_sizeof()
+///       \IfCalls{!LELY_NO_CO_ECSS_REDUNDANCY, co_nmt_rdn_chk_dev()}
 ///       \Calls co_dev_get_id()
 ///       \Calls co_dev_write_dcf()
 ///       \Calls co_nmt_srv_init()
@@ -919,6 +955,7 @@ TEST(CO_NmtAllocation, CoNmtCreate_NoMemoryForNmtRecv) {
 ///       \Calls can_net_get_alloc()
 ///       \Calls co_nmt_alignof()
 ///       \Calls co_nmt_sizeof()
+///       \IfCalls{!LELY_NO_CO_ECSS_REDUNDANCY, co_nmt_rdn_chk_dev()}
 ///       \Calls co_dev_get_id()
 ///       \Calls co_dev_write_dcf()
 ///       \Calls co_nmt_srv_init()
@@ -954,6 +991,7 @@ TEST(CO_NmtAllocation, CoNmtCreate_NoMemoryForEcRecv) {
 ///       \Calls can_net_get_alloc()
 ///       \Calls co_nmt_alignof()
 ///       \Calls co_nmt_sizeof()
+///       \IfCalls{!LELY_NO_CO_ECSS_REDUNDANCY, co_nmt_rdn_chk_dev()}
 ///       \Calls co_dev_get_id()
 ///       \Calls co_dev_write_dcf()
 ///       \Calls co_nmt_srv_init()
@@ -976,7 +1014,7 @@ TEST(CO_NmtAllocation, CoNmtCreate_NoMemoryForEcTimer) {
   CHECK_EQUAL(0, limitedAllocator.GetAllocationLimit());
 }
 
-#if !LELY_NO_CO_ECSS_REDUNDANCY
+#if !LELY_NO_CO_ECSS_REDUNDANCY && LELY_NO_MALLOC
 /// \Given initialized device (co_dev_t) and network (can_net_t) with a memory
 ///        allocator limited to only allocate the NMT service instance, DCFs
 ///        for application/communication parameters, the default services
@@ -991,6 +1029,7 @@ TEST(CO_NmtAllocation, CoNmtCreate_NoMemoryForEcTimer) {
 ///       \Calls can_net_get_alloc()
 ///       \Calls co_nmt_alignof()
 ///       \Calls co_nmt_sizeof()
+///       \IfCalls{!LELY_NO_CO_ECSS_REDUNDANCY, co_nmt_rdn_chk_dev()}
 ///       \Calls co_dev_get_id()
 ///       \Calls co_dev_write_dcf()
 ///       \Calls co_nmt_srv_init()
@@ -1003,6 +1042,7 @@ TEST(CO_NmtAllocation, CoNmtCreate_NoMemoryForEcTimer) {
 ///       \Calls co_dev_find_obj()
 ///       \Calls co_nmt_rdn_create()
 ///       \IfCalls{LELY_NO_MALLOC, memset()}
+///       \IfCalls{!LELY_NO_CO_ECSS_REDUNDANCY, co_nmt_rdn_create()}
 ///       \Calls get_errc()
 ///       \Calls mem_free()
 ///       \Calls set_errc()
@@ -1035,6 +1075,7 @@ TEST(CO_NmtAllocation, CoNmtCreate_NoMemoryForRedundancy) {
 ///       \Calls can_net_get_alloc()
 ///       \Calls co_nmt_alignof()
 ///       \Calls co_nmt_sizeof()
+///       \IfCalls{!LELY_NO_CO_ECSS_REDUNDANCY, co_nmt_rdn_chk_dev()}
 ///       \Calls co_dev_get_id()
 ///       \Calls co_dev_write_dcf()
 ///       \Calls co_nmt_srv_init()
@@ -1047,6 +1088,7 @@ TEST(CO_NmtAllocation, CoNmtCreate_NoMemoryForRedundancy) {
 ///       \Calls co_dev_find_obj()
 ///       \Calls co_nmt_rdn_create()
 ///       \IfCalls{LELY_NO_MALLOC, memset()}
+///       \IfCalls{!LELY_NO_CO_ECSS_REDUNDANCY, co_nmt_rdn_create()}
 ///       \Calls get_errc()
 ///       \Calls mem_free()
 ///       \Calls set_errc()
@@ -1078,6 +1120,7 @@ TEST(CO_NmtAllocation, CoNmtCreate_NoMemoryForCsTimer) {
 ///       \Calls can_net_get_alloc()
 ///       \Calls co_nmt_alignof()
 ///       \Calls co_nmt_sizeof()
+///       \IfCalls{!LELY_NO_CO_ECSS_REDUNDANCY, co_nmt_rdn_chk_dev()}
 ///       \Calls co_dev_get_id()
 ///       \Calls co_dev_write_dcf()
 ///       \Calls co_nmt_srv_init()
@@ -1124,6 +1167,7 @@ TEST(CO_NmtAllocation, CoNmtCreate_NoMemoryForHbSrv_WithObj1016) {
 ///       \Calls can_net_get_alloc()
 ///       \Calls co_nmt_alignof()
 ///       \Calls co_nmt_sizeof()
+///       \IfCalls{!LELY_NO_CO_ECSS_REDUNDANCY, co_nmt_rdn_chk_dev()}
 ///       \Calls co_dev_get_id()
 ///       \Calls co_dev_write_dcf()
 ///       \Calls co_nmt_srv_init()
@@ -1135,6 +1179,7 @@ TEST(CO_NmtAllocation, CoNmtCreate_NoMemoryForHbSrv_WithObj1016) {
 ///       \Calls can_timer_destroy()
 ///       \Calls co_dev_find_obj()
 ///       \IfCalls{LELY_NO_MALLOC, memset()}
+///       \IfCalls{!LELY_NO_CO_ECSS_REDUNDANCY, co_nmt_rdn_create()}
 ///       \Calls get_errc()
 ///       \Calls mem_free()
 ///       \Calls set_errc()
@@ -1165,6 +1210,7 @@ TEST(CO_NmtAllocation, CoNmtCreate_NoMemoryForNmtSlaveRecvs) {
 ///       \Calls can_net_get_alloc()
 ///       \Calls co_nmt_alignof()
 ///       \Calls co_nmt_sizeof()
+///       \IfCalls{!LELY_NO_CO_ECSS_REDUNDANCY, co_nmt_rdn_chk_dev()}
 ///       \Calls co_dev_get_id()
 ///       \Calls co_dev_write_dcf()
 ///       \Calls co_nmt_srv_init()
@@ -1174,6 +1220,7 @@ TEST(CO_NmtAllocation, CoNmtCreate_NoMemoryForNmtSlaveRecvs) {
 ///       \Calls can_timer_set_func()
 ///       \Calls co_dev_find_obj()
 ///       \IfCalls{LELY_NO_MALLOC, memset()}
+///       \IfCalls{!LELY_NO_CO_ECSS_REDUNDANCY, co_nmt_rdn_create()}
 ///       \IfCalls{!LELY_NO_CO_MASTER, can_buf_init()}
 ///       \IfCalls{!LELY_NO_CO_MASTER, can_net_get_time()}
 ///       \IfCalls{LELY_NO_MALLOC, co_dev_get_val_u32()}
@@ -1207,6 +1254,7 @@ TEST(CO_NmtAllocation, CoNmtCreate_ExactMemory) {
 ///       \Calls can_net_get_alloc()
 ///       \Calls co_nmt_alignof()
 ///       \Calls co_nmt_sizeof()
+///       \IfCalls{!LELY_NO_CO_ECSS_REDUNDANCY, co_nmt_rdn_chk_dev()}
 ///       \Calls co_dev_get_id()
 ///       \Calls co_dev_write_dcf()
 ///       \Calls co_nmt_srv_init()
@@ -1216,6 +1264,7 @@ TEST(CO_NmtAllocation, CoNmtCreate_ExactMemory) {
 ///       \Calls can_timer_set_func()
 ///       \Calls co_dev_find_obj()
 ///       \IfCalls{LELY_NO_MALLOC, memset()}
+///       \IfCalls{!LELY_NO_CO_ECSS_REDUNDANCY, co_nmt_rdn_create()}
 ///       \IfCalls{LELY_NO_MALLOC, co_obj_find_sub()}
 ///       \IfCalls{LELY_NO_MALLOC, co_nmt_hb_create()}
 ///       \IfCalls{!LELY_NO_CO_MASTER, can_buf_init()}
