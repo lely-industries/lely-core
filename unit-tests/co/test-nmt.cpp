@@ -43,6 +43,7 @@
 #include "holder/obj.hpp"
 #include "holder/sub.hpp"
 #include "common/nmt-alloc-sizes.hpp"
+#include "obj-init/nmt-hb-consumer.hpp"
 
 #include <lib/co/nmt_hb.h>
 #if !LELY_NO_CO_NMT_BOOT
@@ -102,16 +103,16 @@ TEST_BASE(CO_NmtBase) {
     assert(num <= CO_NMT_MAX_NHB);
 #endif
 
-    dev_holder->CreateAndInsertObj(obj1016, 0x1016u);
+    dev_holder->CreateObj<Obj1016ConsumerHb>(obj1016);
 
     // 0x00 - Highest sub-index supported
-    obj1016->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t{num});
-    // 0x01-0x7f - Consumer heartbeat time
-    for (co_unsigned8_t i = 0; i < num; ++i) {
-      obj1016->InsertAndSetSub(
-          i + 1, CO_DEFTYPE_UNSIGNED32,
-          co_unsigned32_t{co_unsigned32_t{SLAVE_DEV_ID} << 16u} |
-              co_unsigned32_t{0x0001u});  //  1 ms
+    obj1016->EmplaceSub<Obj1016ConsumerHb::Sub00HighestSubidxSupported>(
+        co_unsigned8_t{num});
+    // 0x01-0x7f - Consumer Heartbeat Time
+    for (co_unsigned8_t i = 1; i <= num; ++i) {
+      obj1016->EmplaceSub<Obj1016ConsumerHb::SubNthConsumerHbTime>(
+          i,
+          Obj1016ConsumerHb::MakeHbConsumerEntry(SLAVE_DEV_ID, 1u));  //  1 ms
     }
   }
 
@@ -3487,6 +3488,256 @@ TEST(CO_Nmt, CoNmtCsInd_WithoutCsInd) {
   CHECK_EQUAL(0, co_nmt_cs_ind(nmt, CO_NMT_CS_STOP));
 
   CHECK_EQUAL(stSeq.size(), CoNmtStInd::GetNumCalled());
+}
+
+///@}
+
+/// @name co_dev_cfg_hb()
+///@{
+
+/// \Given a pointer to an initialized device (co_dev_t), the object dictionary
+///        does not contain the Consumer Heartbeat Time object (0x1016)
+///
+/// \When co_dev_cfg_hb() is called with pointer to the device and with other
+///       arguments having any value
+///
+/// \Then CO_SDO_AC_NO_OBJ is returned, the device is not modified
+///       \Calls co_dev_find_obj()
+TEST(CO_Nmt, CoDevCfgHb_Missing1016) {
+  CreateNmt();
+
+  const auto ret = co_dev_cfg_hb(dev, 0u, 0u);
+
+  CHECK_EQUAL(CO_SDO_AC_NO_OBJ, ret);
+  POINTERS_EQUAL(nullptr, co_dev_find_obj(dev, 0x1016u));
+}
+
+/// \Given a pointer to an initialized device (co_dev_t), the object dictionary
+///        contains the Consumer Heartbeat Time object (0x1016) but without any
+///        sub-objects
+///
+/// \When co_dev_cfg_hb() is called with pointer to the device and with other
+///       arguments having any correct value
+///
+/// \Then CO_SDO_AC_NO_SUB is returned, the device is not modified
+///       \Calls co_dev_find_obj()
+///       \Calls co_obj_get_val_u8()
+TEST(CO_Nmt, CoDevCfgHb_NoSubObjectsIn1016) {
+  CreateNmt();
+  dev_holder->CreateObj<Obj1016ConsumerHb>(obj1016);
+  const co_unsigned8_t nodeId = 1u;
+
+  const auto ret = co_dev_cfg_hb(dev, nodeId, 1u);
+
+  CHECK_EQUAL(CO_SDO_AC_NO_SUB, ret);
+}
+
+/// \Given a pointer to an initialized device (co_dev_t), the object dictionary
+///        contains the Consumer Heartbeat Time object (0x1016) with Highest
+///        sub-index supported sub-object (0x00) set to a value greater than
+///        zero but without any other sub-objects (a malformed object).
+///
+/// \When co_dev_cfg_hb() is called with pointer to the device and with other
+///       arguments having any correct value
+///
+/// \Then CO_SDO_AC_NO_SUB is returned, the device is not modified
+///       \Calls co_dev_find_obj()
+///       \Calls co_obj_get_val_u8()
+///       \Calls co_obj_find_sub()
+TEST(CO_Nmt, CoDevCfgHb_MissingSubObjectIn1016) {
+  CreateNmt();
+  dev_holder->CreateObj<Obj1016ConsumerHb>(obj1016);
+  const co_unsigned8_t highestIdx = 1u;
+  obj1016->EmplaceSub<Obj1016ConsumerHb::Sub00HighestSubidxSupported>(
+      highestIdx);
+  const co_unsigned8_t nodeId = 1u;
+
+  const auto ret = co_dev_cfg_hb(dev, nodeId, 1u);
+
+  CHECK_EQUAL(CO_SDO_AC_NO_SUB, ret);
+}
+
+/// \Given a pointer to an initialized device (co_dev_t), the object dictionary
+///        contains the Consumer Heartbeat Time object (0x1016)
+///
+/// \When co_dev_cfg_hb() is called with pointer to the device, an incorrect
+///       Node-ID (zero) and any correct heartbeat time
+///
+/// \Then CO_SDO_AC_PARAM_LO is returned, the device is not modified
+///       \Calls co_dev_find_obj()
+TEST(CO_Nmt, CoDevCfgHb_NodeIdZero) {
+  CreateNmt();
+  dev_holder->CreateObj<Obj1016ConsumerHb>(obj1016);
+
+  const auto ret = co_dev_cfg_hb(dev, 0u, 1u);
+
+  CHECK_EQUAL(CO_SDO_AC_PARAM_LO, ret);
+}
+
+/// \Given a pointer to an initialized device (co_dev_t), the object dictionary
+///        contains the Consumer Heartbeat Time object (0x1016)
+///
+/// \When co_dev_cfg_hb() is called with pointer to the device, an incorrect
+///       Node-ID (larger than CO_NUM_NODES) and any correct heartbeat time
+///
+/// \Then CO_SDO_AC_PARAM_HI is returned, the device is not modified
+///       \Calls co_dev_find_obj()
+TEST(CO_Nmt, CoDevCfgHb_NodeIdTooBig) {
+  CreateNmt();
+  dev_holder->CreateObj<Obj1016ConsumerHb>(obj1016);
+
+  const auto ret = co_dev_cfg_hb(dev, CO_NUM_NODES + 1u, 1u);
+
+  CHECK_EQUAL(CO_SDO_AC_PARAM_HI, ret);
+}
+
+/// \Given a pointer to an initialized device (co_dev_t), the object dictionary
+///        contains the Consumer Heartbeat Time object (0x1016) with multiple
+///        Consumer Heartbeat Time sub-objects, one containing an incorrect
+///        Node-ID (zero)
+///
+/// \Wen co_dev_cfg_hb() is called with pointer to the device, a selected
+///       Node-ID and a heartbeat time
+///
+/// \Then 0 is returned and the requested value is assigned to the sub-object
+///       with an incorrect Node-ID
+///       \Calls co_dev_find_obj()
+///       \Calls co_obj_get_val_u8()
+///       \Calls co_obj_find_sub()
+///       \Calls co_sub_dn_ind_val()
+TEST(CO_Nmt, CoDevCfgHb_SubObjectIn1016WithNoId) {
+  CreateNmt();
+  const co_unsigned8_t highestIdx = 10u;
+  const co_unsigned8_t selectedIdx = 7u;
+  CreateObj1016ConsumerHbTimeN(highestIdx);
+  obj1016->SetSub<Obj1016ConsumerHb::SubNthConsumerHbTime>(selectedIdx, 0u);
+
+  const co_unsigned8_t nodeId = 42u;
+  const co_unsigned16_t ms = 1410u;
+  const auto ret = co_dev_cfg_hb(dev, nodeId, ms);
+
+  CHECK_EQUAL(0u, ret);
+  CHECK_EQUAL(
+      Obj1016ConsumerHb::MakeHbConsumerEntry(nodeId, ms),
+      obj1016->GetSub<Obj1016ConsumerHb::SubNthConsumerHbTime>(selectedIdx));
+}
+
+/// \Given a pointer to an initialized device (co_dev_t), the object dictionary
+///        contains the Consumer Heartbeat Time object (0x1016) with multiple
+///        Consumer Heartbeat Time sub-objects, one containing an incorrect
+///        Node-ID (larger than CO_NUM_NODES)
+///
+/// \When co_dev_cfg_hb() is called with pointer to the device, selected Node-ID
+///       and heartbeat time
+///
+/// \Then 0 is returned and a requested value is assigned to the sub-object with
+///       an incorrect Node-ID
+///       \Calls co_dev_find_obj()
+///       \Calls co_obj_get_val_u8()
+///       \Calls co_obj_find_sub()
+///       \Calls co_sub_dn_ind_val()
+TEST(CO_Nmt, CoDevCfgHb_SubObjectIn1016WithIncorrectId) {
+  CreateNmt();
+  const co_unsigned8_t highestIdx = 10u;
+  const co_unsigned8_t selectedIdx = 7u;
+  CreateObj1016ConsumerHbTimeN(highestIdx);
+  obj1016->SetSub<Obj1016ConsumerHb::SubNthConsumerHbTime>(
+      selectedIdx,
+      Obj1016ConsumerHb::MakeHbConsumerEntry(CO_NUM_NODES + 1u, 0u));
+
+  const co_unsigned8_t nodeId = 42u;
+  const co_unsigned16_t ms = 1410u;
+  const auto ret = co_dev_cfg_hb(dev, nodeId, ms);
+
+  CHECK_EQUAL(0u, ret);
+  CHECK_EQUAL(
+      Obj1016ConsumerHb::MakeHbConsumerEntry(nodeId, ms),
+      obj1016->GetSub<Obj1016ConsumerHb::SubNthConsumerHbTime>(selectedIdx));
+}
+
+/// \Given a pointer to an initialized device (co_dev_t), the object dictionary
+///        contains the Consumer Heartbeat Time object (0x1016) with multiple
+///        Consumer Heartbeat Time sub-objects, one containing a selected
+///        Node-ID.
+///
+/// \When co_dev_cfg_hb() is called with pointer to the device, the selected
+///       Node-ID and a heartbeat time
+///
+/// \Then 0 is returned and the Consumer Heartbeat Time sub-object containing
+///       the selected Node-ID is updated
+///       \Calls co_dev_find_obj()
+///       \Calls co_obj_get_val_u8()
+///       \Calls co_obj_find_sub()
+///       \Calls co_sub_dn_ind_val()
+TEST(CO_Nmt, CoDevCfgHb_SubObjectIn1016WithSelectedId) {
+  CreateNmt();
+  const co_unsigned8_t highestIdx = 10u;
+  const co_unsigned8_t selectedIdx = 8u;
+  CreateObj1016ConsumerHbTimeN(highestIdx);
+  obj1016->SetSub<Obj1016ConsumerHb::SubNthConsumerHbTime>(
+      selectedIdx, Obj1016ConsumerHb::MakeHbConsumerEntry(DEV_ID, 0u));
+
+  const co_unsigned16_t ms = 1410u;
+  const auto ret = co_dev_cfg_hb(dev, DEV_ID, ms);
+
+  CHECK_EQUAL(0u, ret);
+  CHECK_EQUAL(
+      Obj1016ConsumerHb::MakeHbConsumerEntry(DEV_ID, ms),
+      obj1016->GetSub<Obj1016ConsumerHb::SubNthConsumerHbTime>(selectedIdx));
+}
+
+/// \Given a pointer to an initialized device (co_dev_t), the object dictionary
+///        contains the Consumer Heartbeat Time object (0x1016) with multiple
+///        Consumer Heartbeat Time sub-objects, one containing selected Node-ID.
+///
+/// \When co_dev_cfg_hb() is called with pointer to the device, the selected
+///       Node-ID and a heartbeat time equal 0
+///
+/// \Then 0 is returned and the Consumer Heartbeat Time sub-object containing
+///       the selected Node-ID is marked as "unused" (zero)
+///       \Calls co_dev_find_obj()
+///       \Calls co_obj_get_val_u8()
+///       \Calls co_obj_find_sub()
+///       \Calls co_sub_dn_ind_val()
+TEST(CO_Nmt, CoDevCfgHb_ZeroHeartbeatTime) {
+  CreateNmt();
+  const co_unsigned8_t highestIdx = 10u;
+  const co_unsigned8_t selectedIdx = 4u;
+  CreateObj1016ConsumerHbTimeN(highestIdx);
+  obj1016->SetSub<Obj1016ConsumerHb::SubNthConsumerHbTime>(
+      selectedIdx, Obj1016ConsumerHb::MakeHbConsumerEntry(DEV_ID, 0u));
+
+  const auto ret = co_dev_cfg_hb(dev, DEV_ID, 0u);
+
+  CHECK_EQUAL(0u, ret);
+  CHECK_EQUAL(0u, obj1016->GetSub<Obj1016ConsumerHb::SubNthConsumerHbTime>(
+                      selectedIdx));
+}
+
+/// \Given a pointer to an initialized device (co_dev_t), the object dictionary
+///        contains the Consumer Heartbeat Time object (0x1016) with multiple
+///        Consumer Heartbeat Time sub-objects, none containing a selected
+///        Node-ID.
+///
+/// \When co_dev_cfg_hb() is called with pointer to the device, the selected
+///       Node-ID and a heartbeat time equal 0
+///
+/// \Then 0 is returned and sub-objects are not modified
+///       \Calls co_dev_find_obj()
+///       \Calls co_obj_get_val_u8()
+///       \Calls co_obj_find_sub()
+TEST(CO_Nmt, CoDevCfgHb_ZeroHeartbeatTimeForNonExistingItem) {
+  CreateNmt();
+  const co_unsigned8_t highestIdx = 10u;
+  CreateObj1016ConsumerHbTimeN(highestIdx);
+
+  const auto ret = co_dev_cfg_hb(dev, DEV_ID, 0u);
+
+  CHECK_EQUAL(0u, ret);
+  for (co_unsigned8_t i = 1; i <= highestIdx; ++i) {
+    CHECK_COMPARE(obj1016->GetSub<Obj1016ConsumerHb::SubNthConsumerHbTime>(i),
+                  !=, 0u);
+  }
 }
 
 ///@}
