@@ -131,6 +131,8 @@ TEST_GROUP_BASE(CO_NmtRdnSdo, CO_NmtSdo) {
   }
 
   void CheckRdnService(const bool enabled, const co_unsigned8_t ttoggle = 1u) {
+    if (enabled) co_nmt_set_alternate_bus_id(nmt, BUS_B_ID);
+
     can_msg msg = CAN_MSG_INIT;
     msg.id = CO_NMT_EC_CANID(MASTER_DEV_ID);
     msg.len = 1u;
@@ -165,7 +167,6 @@ TEST_GROUP_BASE(CO_NmtRdnSdo, CO_NmtSdo) {
 
     co_nmt_set_hb_ind(nmt, CoNmtHbInd::Func, nullptr);
     co_nmt_set_ecss_rdn_ind(nmt, CoNmtRdnInd::Func, nullptr);
-    co_nmt_set_alternate_bus_id(nmt, BUS_B_ID);
   }
 
   TEST_SETUP() {

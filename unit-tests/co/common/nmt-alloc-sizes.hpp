@@ -95,7 +95,7 @@ GetNmtRecvsAllocSize() {
 size_t
 GetNmtRedundancyAllocSize() {
   size_t size = 0;
-#if !LELY_NO_CO_ECSS_REDUNDANCY
+#if !LELY_NO_CO_ECSS_REDUNDANCY && LELY_NO_MALLOC
   size += co_nmt_rdn_sizeof();
   size += can_timer_sizeof();
 #endif

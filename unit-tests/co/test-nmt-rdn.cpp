@@ -123,6 +123,9 @@ TEST_GROUP_BASE(CO_NmtRdnCheck, CO_NmtRdnBase){};
 /// \When co_nmt_rdn_chk_dev() is called with the pointer to the device
 ///
 /// \Then 1 is returned
+///       \Calls co_dev_find_obj()
+///       \Calls co_obj_find_sub()
+///       \Calls co_sub_get_type()
 TEST(CO_NmtRdnCheck, CoNmtRdnChkDev_Nominal) {
   ConfigRdn();
 
@@ -137,6 +140,7 @@ TEST(CO_NmtRdnCheck, CoNmtRdnChkDev_Nominal) {
 /// \When co_nmt_rdn_chk_dev() is called with the pointer to the device
 ///
 /// \Then 1 is returned
+///       \Calls co_dev_find_obj()
 TEST(CO_NmtRdnCheck, CoNmtRdnChkDev_NoObject) {
   const auto ret = co_nmt_rdn_chk_dev(dev);
 
@@ -150,6 +154,9 @@ TEST(CO_NmtRdnCheck, CoNmtRdnChkDev_NoObject) {
 /// \When co_nmt_rdn_chk_dev() is called with the pointer to the device
 ///
 /// \Then 0 is returned
+///       \Calls co_dev_find_obj()
+///       \Calls co_obj_find_sub()
+///       \Calls diag()
 TEST(CO_NmtRdnCheck, CoNmtRdnChkDev_NoSub00MaxSubidx) {
   dev_holder->CreateObj<ObjNmtRedundancy>(obj_rdn);
 
@@ -165,6 +172,10 @@ TEST(CO_NmtRdnCheck, CoNmtRdnChkDev_NoSub00MaxSubidx) {
 /// \When co_nmt_rdn_chk_dev() is called with the pointer to the device
 ///
 /// \Then 0 is returned
+///       \Calls co_dev_find_obj()
+///       \Calls co_obj_find_sub()
+///       \Calls co_sub_get_type()
+///       \Calls diag()
 TEST(CO_NmtRdnCheck, CoNmtRdnChkDev_Sub00MaxSubidx_BadType) {
   dev_holder->CreateObj<ObjNmtRedundancy>(obj_rdn);
   obj_rdn->InsertAndSetSub(0x00, CO_DEFTYPE_UNSIGNED32, co_unsigned32_t{0});
@@ -181,6 +192,10 @@ TEST(CO_NmtRdnCheck, CoNmtRdnChkDev_Sub00MaxSubidx_BadType) {
 /// \When co_nmt_rdn_chk_dev() is called with the pointer to the device
 ///
 /// \Then 0 is returned
+///       \Calls co_dev_find_obj()
+///       \Calls co_obj_find_sub()
+///       \Calls co_sub_get_type()
+///       \Calls diag()
 TEST(CO_NmtRdnCheck, CoNmtRdnChkDev_NoSub01Bdefault) {
   dev_holder->CreateObj<ObjNmtRedundancy>(obj_rdn);
   obj_rdn->EmplaceSub<ObjNmtRedundancy::Sub00HighestSubidxSupported>();
@@ -197,6 +212,10 @@ TEST(CO_NmtRdnCheck, CoNmtRdnChkDev_NoSub01Bdefault) {
 /// \When co_nmt_rdn_chk_dev() is called with the pointer to the device
 ///
 /// \Then 0 is returned
+///       \Calls co_dev_find_obj()
+///       \Calls co_obj_find_sub()
+///       \Calls co_sub_get_type()
+///       \Calls diag()
 TEST(CO_NmtRdnCheck, CoNmtRdnChkDev_Sub01Bdefault_BadType) {
   dev_holder->CreateObj<ObjNmtRedundancy>(obj_rdn);
   obj_rdn->EmplaceSub<ObjNmtRedundancy::Sub00HighestSubidxSupported>();
@@ -214,6 +233,9 @@ TEST(CO_NmtRdnCheck, CoNmtRdnChkDev_Sub01Bdefault_BadType) {
 /// \When co_nmt_rdn_chk_dev() is called with the pointer to the device
 ///
 /// \Then 1 is returned
+///       \Calls co_dev_find_obj()
+///       \Calls co_obj_find_sub()
+///       \Calls co_sub_get_type()
 TEST(CO_NmtRdnCheck, CoNmtRdnChkDev_NoSub02Ttoggle) {
   dev_holder->CreateObj<ObjNmtRedundancy>(obj_rdn);
   obj_rdn->EmplaceSub<ObjNmtRedundancy::Sub00HighestSubidxSupported>();
@@ -231,6 +253,10 @@ TEST(CO_NmtRdnCheck, CoNmtRdnChkDev_NoSub02Ttoggle) {
 /// \When co_nmt_rdn_chk_dev() is called with the pointer to the device
 ///
 /// \Then 0 is returned
+///       \Calls co_dev_find_obj()
+///       \Calls co_obj_find_sub()
+///       \Calls co_sub_get_type()
+///       \Calls diag()
 TEST(CO_NmtRdnCheck, CoNmtRdnChkDev_Sub02Ttoggle_BadType) {
   dev_holder->CreateObj<ObjNmtRedundancy>(obj_rdn);
   obj_rdn->EmplaceSub<ObjNmtRedundancy::Sub00HighestSubidxSupported>();
@@ -249,6 +275,9 @@ TEST(CO_NmtRdnCheck, CoNmtRdnChkDev_Sub02Ttoggle_BadType) {
 /// \When co_nmt_rdn_chk_dev() is called with the pointer to the device
 ///
 /// \Then 1 is returned
+///       \Calls co_dev_find_obj()
+///       \Calls co_obj_find_sub()
+///       \Calls co_sub_get_type()
 TEST(CO_NmtRdnCheck, CoNmtRdnChkDev_NoSub03Ntoggle) {
   dev_holder->CreateObj<ObjNmtRedundancy>(obj_rdn);
   obj_rdn->EmplaceSub<ObjNmtRedundancy::Sub00HighestSubidxSupported>();
@@ -267,6 +296,10 @@ TEST(CO_NmtRdnCheck, CoNmtRdnChkDev_NoSub03Ntoggle) {
 /// \When co_nmt_rdn_chk_dev() is called with the pointer to the device
 ///
 /// \Then 0 is returned
+///       \Calls co_dev_find_obj()
+///       \Calls co_obj_find_sub()
+///       \Calls co_sub_get_type()
+///       \Calls diag()
 TEST(CO_NmtRdnCheck, CoNmtRdnChkDev_Sub03Ntoggle_BadType) {
   dev_holder->CreateObj<ObjNmtRedundancy>(obj_rdn);
   obj_rdn->EmplaceSub<ObjNmtRedundancy::Sub00HighestSubidxSupported>();
@@ -286,6 +319,9 @@ TEST(CO_NmtRdnCheck, CoNmtRdnChkDev_Sub03Ntoggle_BadType) {
 /// \When co_nmt_rdn_chk_dev() is called with the pointer to the device
 ///
 /// \Then 1 is returned
+///       \Calls co_dev_find_obj()
+///       \Calls co_obj_find_sub()
+///       \Calls co_sub_get_type()
 TEST(CO_NmtRdnCheck, CoNmtRdnChkDev_NoSub04Ctoggle) {
   dev_holder->CreateObj<ObjNmtRedundancy>(obj_rdn);
   obj_rdn->EmplaceSub<ObjNmtRedundancy::Sub00HighestSubidxSupported>();
@@ -305,6 +341,10 @@ TEST(CO_NmtRdnCheck, CoNmtRdnChkDev_NoSub04Ctoggle) {
 /// \When co_nmt_rdn_chk_dev() is called with the pointer to the device
 ///
 /// \Then 0 is returned
+///       \Calls co_dev_find_obj()
+///       \Calls co_obj_find_sub()
+///       \Calls co_sub_get_type()
+///       \Calls diag()
 TEST(CO_NmtRdnCheck, CoNmtRdnChkDev_Sub04Ctoggle_BadType) {
   dev_holder->CreateObj<ObjNmtRedundancy>(obj_rdn);
   obj_rdn->EmplaceSub<ObjNmtRedundancy::Sub00HighestSubidxSupported>();
@@ -384,6 +424,14 @@ TEST(CO_NmtRdnCreate, CoNmtRdnAlignof_Nominal) {
 ///       service
 ///
 /// \Then a pointer to a created NMT redundancy manager service is returned
+///       \Calls mem_alloc()
+///       \Calls can_net_get_alloc()
+///       \Calls co_nmt_alignof()
+///       \Calls co_nmt_sizeof()
+///       \Calls co_nmt_get_dev()
+///       \Calls co_dev_get_val_u8()
+///       \Calls can_timer_create()
+///       \Calls can_timer_set_func()
 TEST(CO_NmtRdnCreate, CoNmtRdnCreate_Default) {
   rdn = co_nmt_rdn_create(net, nmt);
 
@@ -411,6 +459,9 @@ TEST(CO_NmtRdnCreate, CoNmtRdnDestroy_Null) { co_nmt_rdn_destroy(nullptr); }
 /// \When co_nmt_rdn_destroy() is called with a pointer to the service
 ///
 /// \Then the service is finalized and freed
+///       \Calls can_timer_destroy()
+///       \Calls mem_free()
+///       \Calls co_nmt_rdn_get_alloc()
 TEST(CO_NmtRdnCreate, CoNmtRdnDestroy_Nominal) {
   rdn = co_nmt_rdn_create(net, nmt);
   CHECK(rdn != nullptr);
@@ -458,6 +509,17 @@ TEST_GROUP_BASE(CO_NmtRdnAllocation, CO_NmtRdnBase) {
 ///
 /// \Then a null pointer is returned, the NMT redundancy manager service is not
 ///       created and the error number is set to ERRNUM_NOMEM
+///       \Calls mem_alloc()
+///       \Calls can_net_get_alloc()
+///       \Calls co_nmt_alignof()
+///       \Calls co_nmt_sizeof()
+///       \Calls co_nmt_get_dev()
+///       \Calls co_dev_get_val_u8()
+///       \Calls can_timer_create()
+///       \Calls get_errc()
+///       \Calls set_errc()
+///       \Calls mem_free()
+///       \Calls co_nmt_rdn_get_alloc()
 TEST(CO_NmtRdnAllocation, CoNmtRdnCreate_InitAllocationFailed) {
   limitedAllocator.LimitAllocationTo(co_nmt_rdn_sizeof());
   rdn = co_nmt_rdn_create(net, nmt);
@@ -475,6 +537,14 @@ TEST(CO_NmtRdnAllocation, CoNmtRdnCreate_InitAllocationFailed) {
 ///       service
 ///
 /// \Then a pointer to a created NMT redundancy manager service is returned
+///       \Calls mem_alloc()
+///       \Calls can_net_get_alloc()
+///       \Calls co_nmt_alignof()
+///       \Calls co_nmt_sizeof()
+///       \Calls co_nmt_get_dev()
+///       \Calls co_dev_get_val_u8()
+///       \Calls can_timer_create()
+///       \Calls can_timer_set_func()
 TEST(CO_NmtRdnAllocation, CoNmtRdnCreate_ExactMemory) {
   limitedAllocator.LimitAllocationTo(co_nmt_rdn_sizeof() + can_timer_sizeof());
   rdn = co_nmt_rdn_create(net, nmt);
@@ -507,6 +577,25 @@ TEST_GROUP_BASE(CO_NmtRdn, CO_NmtRdnBase) {
   void CreateNmtAndReset() {
     CreateNmt();
     CHECK_EQUAL(0, co_nmt_cs_ind(nmt, CO_NMT_CS_RESET_NODE));
+  }
+
+  void CreateNmtResetAndSet(const bool alternate = true) {
+    CreateNmtAndReset();
+    co_nmt_set_hb_ind(nmt, CoNmtHbInd::Func, nullptr);
+    co_nmt_set_ecss_rdn_ind(nmt, CoNmtRdnInd::Func, nullptr);
+    if (alternate) CHECK_EQUAL(0, co_nmt_set_alternate_bus_id(nmt, BUS_B_ID));
+  }
+
+  void CreateNmtResetAndInit(const bool alternate = true) {
+    CreateNmtResetAndSet(alternate);
+
+    const can_msg msg = CreateHbMsg(MASTER_DEV_ID, CO_NMT_ST_START);
+    CHECK_EQUAL(1, can_net_recv(net, &msg, BUS_A_ID));
+    CHECK_EQUAL(1u, CoNmtHbInd::GetNumCalled());
+    CoNmtHbInd::Check(nmt, MASTER_DEV_ID, CO_NMT_EC_OCCURRED, CO_NMT_EC_STATE,
+                      nullptr);
+
+    CoNmtHbInd::Clear();
   }
 
   TEST_TEARDOWN() {
@@ -634,6 +723,62 @@ TEST(CO_NmtRdn, CoNmtRdnInd_NoRdnInd) {
 
 ///@}
 
+/// @name co_nmt_set_alternate_bus_id()
+///@{
+
+#if !LELY_NO_MALLOC
+/// \Given a started NMT service (co_nmt_t) configured as NMT slave with the
+///        NMT Redundancy manager service disabled
+///
+/// \When co_nmt_set_alternate_bus_id() is called with a bus identifier
+///
+/// \Then -1 is returned, the error number is set to ERRNUM_NOSYS and the
+///       alternate bus is not changed
+///       \Calls set_errnum();
+TEST(CO_NmtRdn, CoNmtSetAlternateBusId_RdnDisabled) {
+  CreateNmtAndReset();
+
+  const auto ret = co_nmt_set_alternate_bus_id(nmt, BUS_B_ID);
+
+  CHECK_EQUAL(-1, ret);
+  CHECK_EQUAL(ERRNUM_NOSYS, get_errnum());
+
+  timespec ts = {0, 0};
+  timespec_add_msec(&ts, HB_TIMEOUT_MS * TTOGGLE);
+  can_net_set_time(net, &ts);
+
+  CHECK_EQUAL(BUS_A_ID, co_nmt_get_active_bus_id(nmt));
+  CHECK_EQUAL(0, CoNmtHbInd::GetNumCalled());
+  CHECK_EQUAL(0, CoNmtRdnInd::GetNumCalled());
+}
+#endif
+
+/// \Given a started NMT service (co_nmt_t) configured as NMT slave with the
+///        NMT Redundancy manager service enabled
+///
+/// \When co_nmt_set_alternate_bus_id() is called with a bus identifier
+///
+/// \Then 0 is returned, the alternate bus is set to a requested value
+TEST(CO_NmtRdn, CoNmtSetAlternateBusId_Nominal) {
+  ConfigRdn();
+  CreateNmtResetAndSet(false);
+
+  const auto ret = co_nmt_set_alternate_bus_id(nmt, BUS_B_ID);
+
+  CHECK_EQUAL(0, ret);
+
+  timespec ts = {0, 0};
+  timespec_add_msec(&ts, HB_TIMEOUT_MS * TTOGGLE);
+  can_net_set_time(net, &ts);
+
+  CHECK_EQUAL(BUS_B_ID, co_nmt_get_active_bus_id(nmt));
+  CHECK_EQUAL(0, CoNmtHbInd::GetNumCalled());
+  CHECK_EQUAL(1u, CoNmtRdnInd::GetNumCalled());
+  CoNmtRdnInd::Check(nmt, BUS_B_ID, CO_NMT_ECSS_RDN_BUS_SWITCH, nullptr);
+}
+
+///@}
+
 #if !LELY_NO_CO_MASTER
 
 /// @name co_nmt_set_active_bus()
@@ -662,6 +807,7 @@ TEST(CO_NmtRdn, CoNmtSetActiveBus_Master) {
 ///
 /// \Then -1 is returned, the error number is set to ERRNUM_PERM and the
 ///       active bus is not changed
+///       \Calls set_errnum();
 TEST(CO_NmtRdn, CoNmtSetActiveBus_Slave) {
   CreateNmtAndReset();
 
@@ -687,6 +833,15 @@ TEST(CO_NmtRdn, CoNmtSetActiveBus_Slave) {
 ///
 /// \Then a null pointer is returned, an NMT service is not created and the
 ///       error number is set to ERRNUM_INVAL
+///       \Calls mem_alloc()
+///       \Calls can_net_get_alloc()
+///       \Calls co_nmt_alignof()
+///       \Calls co_nmt_sizeof()
+///       \IfCalls{!LELY_NO_CO_ECSS_REDUNDANCY, co_nmt_rdn_chk_dev()}
+///       \Calls errnum2c()
+///       \Calls set_errc()
+///       \Calls get_errc()
+///       \Calls mem_free()
 TEST(CO_NmtRdn, CoNmtRdnInit_InvalidRdnObject) {
   dev_holder->CreateObj<ObjNmtRedundancy>(obj_rdn);
 
@@ -704,8 +859,13 @@ TEST(CO_NmtRdn, CoNmtRdnInit_InvalidRdnObject) {
 ///
 /// \When the node is reset with the NMT service RESET NODE
 ///
-/// \Then the NMT service is started, but the active bus is not set to
+/// \Then the NMT service is started, but the active bus is not set to the
 ///       `Bdefault` value
+///       \Calls co_nmt_is_master()
+///       \Calls co_dev_get_val_u8()
+///       \Calls set_errnum()
+///       \Calls get_errc()
+///       \Calls diag()
 TEST(CO_NmtRdn, CoNmtRdnInit_Master_NoBdefault) {
   ConfigRdn();
   dev_holder->CreateObjValue<Obj1f80NmtStartup>(obj1f80,
@@ -729,14 +889,19 @@ TEST(CO_NmtRdn, CoNmtRdnInit_Master_NoBdefault) {
 /// \When the node is reset with the NMT service RESET NODE
 ///
 /// \Then the NMT service is started, but the NMT Redundancy manager service is
-///       disabled and the active bus is not set to `Bdefault`
+///       disabled and the active bus is not set to the `Bdefault` value
+///       \Calls co_nmt_is_master()
+///       \Calls co_dev_get_val_u8()
+///       \Calls co_dev_find_obj()
+///       \Calls co_obj_get_val_u32()
+///       \Calls set_errnum()
+///       \Calls get_errc()
+///       \Calls diag()
 TEST(CO_NmtRdn, CoNmtRdnInit_Slave_IncompleteRdnObject) {
   ConfigRdn();
   obj_rdn->SetSub<ObjNmtRedundancy::Sub00HighestSubidxSupported>(0);
   obj_rdn->SetSub<ObjNmtRedundancy::Sub01Bdefault>(BUS_B_ID);
-  CreateNmt();
-
-  CHECK_EQUAL(0, co_nmt_cs_ind(nmt, CO_NMT_CS_RESET_NODE));
+  CreateNmtAndReset();
 
   CHECK_EQUAL(CO_NMT_ST_START, co_nmt_get_st(nmt));
   CHECK_EQUAL(0, co_nmt_get_active_bus_id(nmt));
@@ -756,7 +921,14 @@ TEST(CO_NmtRdn, CoNmtRdnInit_Slave_IncompleteRdnObject) {
 /// \When the node is reset with the NMT service RESET NODE
 ///
 /// \Then the NMT service is started, but the NMT Redundancy manager service is
-///       disabled and the active bus is not set to `Bdefault`
+///       disabled and the active bus is not set to the `Bdefault` value
+///       \Calls co_nmt_is_master()
+///       \Calls co_dev_get_val_u8()
+///       \Calls co_dev_find_obj()
+///       \Calls co_obj_get_val_u32()
+///       \Calls set_errnum()
+///       \Calls get_errc()
+///       \Calls diag()
 TEST(CO_NmtRdn, CoNmtRdnInit_Slave_NoMasterHbEntry) {
   ConfigRdn();
   obj_rdn->SetSub<ObjNmtRedundancy::Sub01Bdefault>(BUS_B_ID);
@@ -782,18 +954,20 @@ TEST(CO_NmtRdn, CoNmtRdnInit_Slave_NoMasterHbEntry) {
 ///
 /// \When the node is reset with the NMT service RESET NODE
 ///
-/// \Then the NMT service is started, the active bus is set to `Bdefault`, but
-///       the NMT Redundancy manager service is disabled
+/// \Then the NMT service is started, but the active bus is not set to the
+///       `Bdefault` value and the NMT Redundancy manager service is disabled
+///       \Calls co_nmt_is_master()
+///       \Calls co_dev_get_val_u8()
+///       \Calls co_dev_find_obj()
+///       \Calls co_obj_get_val_u32()
 TEST(CO_NmtRdn, CoNmtRdnInit_Slave_TtoggleZero) {
   ConfigRdn();
   obj_rdn->SetSub<ObjNmtRedundancy::Sub01Bdefault>(BUS_B_ID);
   obj_rdn->SetSub<ObjNmtRedundancy::Sub02Ttoggle>(0);
-  CreateNmt();
-
-  CHECK_EQUAL(0, co_nmt_cs_ind(nmt, CO_NMT_CS_RESET_NODE));
+  CreateNmtAndReset();
 
   CHECK_EQUAL(CO_NMT_ST_START, co_nmt_get_st(nmt));
-  CHECK_EQUAL(BUS_B_ID, co_nmt_get_active_bus_id(nmt));
+  CHECK_EQUAL(BUS_A_ID, co_nmt_get_active_bus_id(nmt));
 
   timespec ts = {0, 0};
   timespec_add_msec(&ts, HB_TIMEOUT_MS * TTOGGLE);
@@ -809,15 +983,18 @@ TEST(CO_NmtRdn, CoNmtRdnInit_Slave_TtoggleZero) {
 ///
 /// \When the node is reset with the NMT service RESET NODE
 ///
-/// \Then the NMT service is started, the active bus is set to `Bdefault` value
+/// \Then the NMT service is started, the active bus is set to the `Bdefault`
+///       value
+///       \Calls co_nmt_is_master()
+///       \Calls co_dev_get_val_u8()
+///       \Calls co_nmt_rdn_create()
+///       \Calls co_nmt_rdn_select_default_bus()
 TEST(CO_NmtRdn, CoNmtRdnInit_Master_Nominal) {
   ConfigRdn();
   obj_rdn->SetSub<ObjNmtRedundancy::Sub01Bdefault>(BUS_B_ID);
   dev_holder->CreateObjValue<Obj1f80NmtStartup>(obj1f80,
                                                 Obj1f80NmtStartup::MASTER_BIT);
-  CreateNmt();
-
-  CHECK_EQUAL(0, co_nmt_cs_ind(nmt, CO_NMT_CS_RESET_NODE));
+  CreateNmtAndReset();
 
   CHECK_EQUAL(CO_NMT_ST_START, co_nmt_get_st(nmt));
   CHECK_EQUAL(BUS_B_ID, co_nmt_get_active_bus_id(nmt));
@@ -830,13 +1007,19 @@ TEST(CO_NmtRdn, CoNmtRdnInit_Master_Nominal) {
 /// \When the node is reset with the NMT service RESET NODE
 ///
 /// \Then the NMT service is in the NMT pre-operational state, the active bus
-///       is set to `Bdefault` value
+///       is set to the `Bdefault` value
+///       \Calls co_nmt_is_master()
+///       \Calls co_dev_get_val_u8()
+///       \Calls co_dev_find_obj()
+///       \Calls co_obj_get_val_u32()
+///       \Calls co_nmt_rdn_create()
+///       \Calls co_nmt_rdn_set_master_id()
+///       \Calls co_nmt_rdn_select_default_bus()
+///       \Calls co_dev_set_val_u8()
 TEST(CO_NmtRdn, CoNmtRdnInit_Slave_Nominal) {
   ConfigRdn();
   obj_rdn->SetSub<ObjNmtRedundancy::Sub01Bdefault>(BUS_B_ID);
-  CreateNmt();
-
-  CHECK_EQUAL(0, co_nmt_cs_ind(nmt, CO_NMT_CS_RESET_NODE));
+  CreateNmtAndReset();
 
   CHECK_EQUAL(CO_NMT_ST_PREOP, co_nmt_get_st(nmt));
   CHECK_EQUAL(BUS_B_ID, co_nmt_get_active_bus_id(nmt));
@@ -858,18 +1041,12 @@ TEST(CO_NmtRdn, CoNmtRdnInit_Slave_Nominal) {
 ///       function is not invoked, the NMT heartbeat indication function is
 ///       invoked with the Redundancy Master's Node-ID, CO_NMT_EC_OCCURRED
 ///       state, CO_NMT_EC_STATE reason and a null user-specified data pointer
+///       \Calls co_nmt_rdn_get_master_id()
 TEST(CO_NmtRdn, CoNmtRdnSlaveOnMasterHb_MasterStateChange) {
   ConfigRdn();
-  CreateNmtAndReset();
-  co_nmt_set_hb_ind(nmt, CoNmtHbInd::Func, nullptr);
-  co_nmt_set_ecss_rdn_ind(nmt, CoNmtRdnInd::Func, nullptr);
-  co_nmt_set_alternate_bus_id(nmt, BUS_B_ID);
+  CreateNmtResetAndInit();
 
-  can_msg msg = CreateHbMsg(MASTER_DEV_ID, CO_NMT_ST_START);
-  CHECK_EQUAL(1, can_net_recv(net, &msg, BUS_A_ID));
-  CoNmtHbInd::Clear();
-
-  msg = CreateHbMsg(MASTER_DEV_ID, CO_NMT_ST_STOP);
+  const can_msg msg = CreateHbMsg(MASTER_DEV_ID, CO_NMT_ST_STOP);
   CHECK_EQUAL(1, can_net_recv(net, &msg, BUS_A_ID));
 
   CHECK_EQUAL(BUS_A_ID, co_nmt_get_active_bus_id(nmt));
@@ -894,21 +1071,20 @@ TEST(CO_NmtRdn, CoNmtRdnSlaveOnMasterHb_MasterStateChange) {
 ///       function is not invoked, the NMT heartbeat indication function is
 ///       invoked with the Redundancy Master's Node-ID, CO_NMT_EC_OCCURRED
 ///       state, CO_NMT_EC_STATE reason and a null user-specified data pointer
+///       \Calls co_nmt_rdn_get_master_id()
+///       \Calls co_nmt_rdn_set_active_bus_default()
 TEST(CO_NmtRdn, CoNmtRdnSlaveBusSelection_InitToNormalOperation) {
   ConfigRdn();
-  CreateNmtAndReset();
-  co_nmt_set_hb_ind(nmt, CoNmtHbInd::Func, nullptr);
-  co_nmt_set_ecss_rdn_ind(nmt, CoNmtRdnInd::Func, nullptr);
-  co_nmt_set_alternate_bus_id(nmt, BUS_B_ID);
+  CreateNmtResetAndSet();
 
   const can_msg msg = CreateHbMsg(MASTER_DEV_ID, CO_NMT_ST_START);
   CHECK_EQUAL(1, can_net_recv(net, &msg, BUS_A_ID));
 
   CHECK_EQUAL(BUS_A_ID, co_nmt_get_active_bus_id(nmt));
+  CHECK_EQUAL(0u, CoNmtRdnInd::GetNumCalled());
   CHECK_EQUAL(1u, CoNmtHbInd::GetNumCalled());
   CoNmtHbInd::Check(nmt, MASTER_DEV_ID, CO_NMT_EC_OCCURRED, CO_NMT_EC_STATE,
                     nullptr);
-  CHECK_EQUAL(0u, CoNmtRdnInd::GetNumCalled());
 }
 
 /// \Given a started NMT service (co_nmt_t) configured as NMT slave with the
@@ -922,16 +1098,14 @@ TEST(CO_NmtRdn, CoNmtRdnSlaveBusSelection_InitToNormalOperation) {
 ///       invoked with the Redundancy Master's Node-ID, CO_NMT_EC_OCCURRED
 ///       state, CO_NMT_EC_TIMEOUT reason and a null user-specified data
 ///       pointer
+///       \Calls co_nmt_rdn_get_master_id()
+///       \Calls co_dev_set_val_u8()
+///       \Calls co_nmt_cs_ind()
+///       \Calls co_dev_get_val_u8()
+///       \Calls can_timer_timeout()
 TEST(CO_NmtRdn, CoNmtRdnSlaveBusSelection_MissedHb) {
   ConfigRdn();
-  CreateNmtAndReset();
-  co_nmt_set_hb_ind(nmt, CoNmtHbInd::Func, nullptr);
-  co_nmt_set_ecss_rdn_ind(nmt, CoNmtRdnInd::Func, nullptr);
-  co_nmt_set_alternate_bus_id(nmt, BUS_B_ID);
-
-  const can_msg msg = CreateHbMsg(MASTER_DEV_ID, CO_NMT_ST_START);
-  CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
-  CoNmtHbInd::Clear();
+  CreateNmtResetAndInit();
 
   timespec ts = {0, 0};
   timespec_add_msec(&ts, HB_TIMEOUT_MS);
@@ -955,22 +1129,19 @@ TEST(CO_NmtRdn, CoNmtRdnSlaveBusSelection_MissedHb) {
 ///       invoked with the Redundancy Master's Node-ID, CO_NMT_EC_RESOLVED
 ///       state, CO_NMT_EC_TIMEOUT reason and a null user-specified data
 ///       pointer
+///       \Calls co_nmt_rdn_get_master_id()
+///       \Calls co_nmt_rdn_set_active_bus_default()
 TEST(CO_NmtRdn, CoNmtRdnSlaveBusSelection_Resolved) {
   ConfigRdn();
-  CreateNmtAndReset();
-  co_nmt_set_hb_ind(nmt, CoNmtHbInd::Func, nullptr);
-  co_nmt_set_ecss_rdn_ind(nmt, CoNmtRdnInd::Func, nullptr);
-  co_nmt_set_alternate_bus_id(nmt, BUS_B_ID);
-
-  const can_msg msg = CreateHbMsg(MASTER_DEV_ID, CO_NMT_ST_START);
-  CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
+  CreateNmtResetAndInit();
 
   timespec ts = {0, 0};
   timespec_add_msec(&ts, HB_TIMEOUT_MS);
   can_net_set_time(net, &ts);
   CoNmtHbInd::Clear();
 
-  CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
+  const can_msg msg = CreateHbMsg(MASTER_DEV_ID, CO_NMT_ST_START);
+  CHECK_EQUAL(1, can_net_recv(net, &msg, BUS_A_ID));
 
   CHECK_EQUAL(BUS_A_ID, co_nmt_get_active_bus_id(nmt));
   CHECK_EQUAL(0, CoNmtRdnInd::GetNumCalled());
@@ -991,17 +1162,18 @@ TEST(CO_NmtRdn, CoNmtRdnSlaveBusSelection_Resolved) {
 ///       pointer; the NMT heartbeat indication function is invoked with the
 ///       Redundancy Master's Node-ID, CO_NMT_EC_OCCURRED state,
 ///       CO_NMT_EC_TIMEOUT reason and a null user-specified data pointer
+///       \Calls co_nmt_rdn_get_master_id()
+///       \Calls co_dev_set_val_u8()
+///       \Calls co_nmt_cs_ind()
+///       \Calls co_dev_get_val_u8()
+///       \Calls can_timer_timeout()
+///       \Calls can_net_get_active_bus()
+///       \Calls can_net_set_active_bus()
+///       \Calls co_nmt_ecss_rdn_ind()
 TEST(CO_NmtRdn, CoNmtRdnSlaveBusSelection_MissedHb_TtoggleOne) {
   ConfigRdn();
   obj_rdn->SetSub<ObjNmtRedundancy::Sub02Ttoggle>(1u);
-  CreateNmtAndReset();
-  co_nmt_set_hb_ind(nmt, CoNmtHbInd::Func, nullptr);
-  co_nmt_set_ecss_rdn_ind(nmt, CoNmtRdnInd::Func, nullptr);
-  co_nmt_set_alternate_bus_id(nmt, BUS_B_ID);
-
-  const can_msg msg = CreateHbMsg(MASTER_DEV_ID, CO_NMT_ST_START);
-  CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
-  CoNmtHbInd::Clear();
+  CreateNmtResetAndInit();
 
   timespec ts = {0, 0};
   timespec_add_msec(&ts, HB_TIMEOUT_MS);
@@ -1030,12 +1202,15 @@ TEST(CO_NmtRdn, CoNmtRdnSlaveBusSelection_MissedHb_TtoggleOne) {
 ///       indication function is invoked with the alternate bus ID,
 ///       CO_NMT_ECSS_RDN_BUS_SWITCH reason and a null user-specified data
 ///       pointer, the NMT heartbeat indication function is not invoked
+///       \Calls co_dev_get_val_u8()
+///       \Calls can_net_get_active_bus()
+///       \Calls can_net_set_active_bus()
+///       \Calls co_dev_set_val_u8()
+///       \Calls co_nmt_ecss_rdn_ind()
+///       \Calls can_timer_timeout()
 TEST(CO_NmtRdn, CoNmtRdnHbTimeout_SwitchBus_OnInit) {
   ConfigRdn();
-  CreateNmtAndReset();
-  co_nmt_set_hb_ind(nmt, CoNmtHbInd::Func, nullptr);
-  co_nmt_set_ecss_rdn_ind(nmt, CoNmtRdnInd::Func, nullptr);
-  co_nmt_set_alternate_bus_id(nmt, BUS_B_ID);
+  CreateNmtResetAndSet();
 
   timespec ts = {0, 0};
   timespec_add_msec(&ts, HB_TIMEOUT_MS * TTOGGLE);
@@ -1048,7 +1223,7 @@ TEST(CO_NmtRdn, CoNmtRdnHbTimeout_SwitchBus_OnInit) {
 }
 
 /// \Given a started NMT service (co_nmt_t) configured as NMT slave with the
-///        NMT redundancy manager configured, but not alternate bus is set; the
+///        NMT redundancy manager configured, but alternate bus is not set; the
 ///        initial bus selection process is active
 ///
 /// \When the NMT redundancy bus toggle timer expires
@@ -1057,6 +1232,11 @@ TEST(CO_NmtRdn, CoNmtRdnHbTimeout_SwitchBus_OnInit) {
 ///       function is invoked with the primary bus ID,
 ///       CO_NMT_ECSS_RDN_BUS_SWITCH reason and a null user-specified data
 ///       pointer, the NMT heartbeat indication function is not invoked
+///       \Calls co_dev_get_val_u8()
+///       \Calls can_net_get_active_bus()
+///       \Calls co_dev_set_val_u8()
+///       \Calls co_nmt_ecss_rdn_ind()
+///       \Calls can_timer_timeout()
 TEST(CO_NmtRdn, CoNmtRdnHbTimeout_SwitchBus_OnInitSameBus) {
   ConfigRdn();
   CreateNmtAndReset();
@@ -1082,15 +1262,15 @@ TEST(CO_NmtRdn, CoNmtRdnHbTimeout_SwitchBus_OnInitSameBus) {
 ///       indication function is invoked with the alternate bus ID,
 ///       CO_NMT_ECSS_RDN_BUS_SWITCH reason and a null user-specified data
 ///       pointer, the NMT heartbeat indication function is not invoked
+///       \Calls co_dev_get_val_u8()
+///       \Calls can_net_get_active_bus()
+///       \Calls can_net_set_active_bus()
+///       \Calls co_dev_set_val_u8()
+///       \Calls co_nmt_ecss_rdn_ind()
+///       \Calls can_timer_timeout()
 TEST(CO_NmtRdn, CoNmtRdnHbTimeout_SwitchBus) {
   ConfigRdn();
-  CreateNmtAndReset();
-  co_nmt_set_hb_ind(nmt, CoNmtHbInd::Func, nullptr);
-  co_nmt_set_ecss_rdn_ind(nmt, CoNmtRdnInd::Func, nullptr);
-  co_nmt_set_alternate_bus_id(nmt, BUS_B_ID);
-
-  const can_msg msg = CreateHbMsg(MASTER_DEV_ID, CO_NMT_ST_START);
-  CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
+  CreateNmtResetAndInit();
 
   timespec ts = {0, 0};
   timespec_add_msec(&ts, HB_TIMEOUT_MS);
@@ -1116,12 +1296,11 @@ TEST(CO_NmtRdn, CoNmtRdnHbTimeout_SwitchBus) {
 ///       function is not invoked, the NMT heartbeat indication function is
 ///       invoked with the Redundancy Master's Node-ID, CO_NMT_EC_OCCURRED
 ///       state, CO_NMT_EC_STATE reason and a null user-specified data pointer
+///       \Calls co_nmt_rdn_get_master_id()
+///       \Calls co_nmt_rdn_set_active_bus_default()
 TEST(CO_NmtRdn, CoNmtRdnHbTimeout_ResolvedAfterSwitchBus) {
   ConfigRdn();
-  CreateNmtAndReset();
-  co_nmt_set_hb_ind(nmt, CoNmtHbInd::Func, nullptr);
-  co_nmt_set_ecss_rdn_ind(nmt, CoNmtRdnInd::Func, nullptr);
-  co_nmt_set_alternate_bus_id(nmt, BUS_B_ID);
+  CreateNmtResetAndSet();
 
   timespec ts = {0, 0};
   timespec_add_msec(&ts, HB_TIMEOUT_MS * TTOGGLE);
@@ -1149,12 +1328,13 @@ TEST(CO_NmtRdn, CoNmtRdnHbTimeout_ResolvedAfterSwitchBus) {
 ///       alternating between the primary and the alternate,
 ///       CO_NMT_ECSS_RDN_BUS_SWITCH reason and a null user-specified data
 ///       pointer, the NMT heartbeat indication function is not invoked
+///       \Calls co_dev_get_val_u8()
+///       \Calls co_nmt_rdn_set_active_bus_default()
+///       \Calls co_nmt_ecss_rdn_ind()
+///       \Calls co_nmt_get_active_bus_id()
 TEST(CO_NmtRdn, CoNmtRdnHbTimeout_NoMaster) {
   ConfigRdn();
-  CreateNmtAndReset();
-  co_nmt_set_hb_ind(nmt, CoNmtHbInd::Func, nullptr);
-  co_nmt_set_ecss_rdn_ind(nmt, CoNmtRdnInd::Func, nullptr);
-  co_nmt_set_alternate_bus_id(nmt, BUS_B_ID);
+  CreateNmtResetAndSet();
 
   co_unsigned8_t bus_id = BUS_A_ID;
   CoNmtRdnInd::SetCheckFunc(
@@ -1201,14 +1381,7 @@ TEST(CO_NmtRdn, CoNmtRdnHbTimeout_NoMaster) {
 ///       redundancy bus toggle time have passed
 TEST(CO_NmtRdn, CoNmtRdnHbTimeout_RdnNotEnabled) {
   ConfigRdnMasterHb();
-  CreateNmtAndReset();
-  co_nmt_set_hb_ind(nmt, CoNmtHbInd::Func, nullptr);
-  co_nmt_set_ecss_rdn_ind(nmt, CoNmtRdnInd::Func, nullptr);
-  co_nmt_set_alternate_bus_id(nmt, BUS_B_ID);
-
-  const can_msg msg = CreateHbMsg(MASTER_DEV_ID, CO_NMT_ST_START);
-  CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
-  CoNmtHbInd::Clear();
+  CreateNmtResetAndInit(false);
 
   timespec ts = {0, 0};
   timespec_add_msec(&ts, HB_TIMEOUT_MS);
@@ -1246,15 +1419,9 @@ TEST(CO_NmtRdn, CoNmtRdnHbTimeout_OtherNodeHb) {
   obj1016->EmplaceSub<Obj1016ConsumerHb::SubNthConsumerHbTime>(
       0x02u, Obj1016ConsumerHb::MakeHbConsumerEntry(other_id, other_hb_timout));
 
-  CreateNmtAndReset();
-  co_nmt_set_hb_ind(nmt, CoNmtHbInd::Func, nullptr);
-  co_nmt_set_ecss_rdn_ind(nmt, CoNmtRdnInd::Func, nullptr);
-  co_nmt_set_alternate_bus_id(nmt, BUS_B_ID);
-
-  can_msg msg = CreateHbMsg(MASTER_DEV_ID, CO_NMT_ST_START);
-  CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
-  msg = CreateHbMsg(other_id, CO_NMT_ST_START);
-  CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
+  CreateNmtResetAndInit();
+  const can_msg msg = CreateHbMsg(other_id, CO_NMT_ST_START);
+  CHECK_EQUAL(1, can_net_recv(net, &msg, BUS_A_ID));
   CoNmtHbInd::Clear();
 
   timespec ts = {0, 0};
@@ -1320,6 +1487,7 @@ TEST(CO_NmtRdnPriv, CoNmtRdnGetMasterId_Default) {
 /// \When co_nmt_rdn_get_master_id() is called
 ///
 /// \Then the master's Node-ID is returned
+///       \Calls co_nmt_get_id()
 TEST(CO_NmtRdnPriv, CoNmtRdnGetMasterId_Master) {
   dev_holder->CreateObjValue<Obj1f80NmtStartup>(obj1f80,
                                                 Obj1f80NmtStartup::MASTER_BIT);
@@ -1345,6 +1513,8 @@ TEST(CO_NmtRdnPriv, CoNmtRdnGetMasterId_Master) {
 ///
 /// \Then -1 is returned, the error number is set to ERRNUM_PERM, the
 ///       Redundancy Master's Node-ID is not modified
+///       \Calls co_nmt_is_master()
+///       \Calls set_errnum()
 TEST(CO_NmtRdnPriv, CoNmtRdnSetMasterId_Master) {
   dev_holder->CreateObjValue<Obj1f80NmtStartup>(obj1f80,
                                                 Obj1f80NmtStartup::MASTER_BIT);
@@ -1366,6 +1536,8 @@ TEST(CO_NmtRdnPriv, CoNmtRdnSetMasterId_Master) {
 ///
 /// \Then -1 is returned, the error number is set to ERRNUM_INVAL, the
 ///       Redundancy Master's Node-ID is not modified
+///       \Calls co_nmt_is_master()
+///       \Calls set_errnum()
 TEST(CO_NmtRdnPriv, CoNmtRdnSetMasterId_ZeroId) {
   CreateNmtRdnAndReset();
   CHECK_EQUAL(0, co_nmt_rdn_set_master_id(rdn, MASTER_DEV_ID, 0));
@@ -1385,6 +1557,8 @@ TEST(CO_NmtRdnPriv, CoNmtRdnSetMasterId_ZeroId) {
 ///
 /// \Then -1 is returned, the error number is set to ERRNUM_INVAL, the
 ///       Redundancy Master's Node-ID is not modified
+///       \Calls co_nmt_is_master()
+///       \Calls set_errnum()
 TEST(CO_NmtRdnPriv, CoNmtRdnSetMasterId_OverMaxId) {
   CreateNmtRdnAndReset();
 
@@ -1402,6 +1576,7 @@ TEST(CO_NmtRdnPriv, CoNmtRdnSetMasterId_OverMaxId) {
 ///       time
 ///
 /// \Then 0 is returned, the Redundancy Master's Node-ID is set
+///       \Calls co_nmt_is_master()
 TEST(CO_NmtRdnPriv, CoNmtRdnSetMasterId_Nominal) {
   CreateNmtRdnAndReset();
 

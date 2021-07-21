@@ -151,6 +151,8 @@ build:configure:
         - --disable-malloc
         - --disable-master
         - --disable-stdio
+        - --enable-ecss-redundancy --disable-tests
+        - --enable-ecss-redundancy --disable-master --disable-tests
         - --enable-ecss-compliance
         - --enable-ecss-compliance --disable-master
 
@@ -183,6 +185,16 @@ test:configure:disable-stdio:
   extends: .test
   image: $REGISTRY/gcc:10
   needs: ["build:configure: [--disable-stdio]"]
+
+test:configure:enable-ecss-redundancy:
+  extends: .test
+  image: $REGISTRY/gcc:10
+  needs: ["build:configure: [--enable-ecss-redundancy --disable-tests]"]
+
+test:configure:enable-ecss-redundancy-no-master:
+  extends: .test
+  image: $REGISTRY/gcc:10
+  needs: ["build:configure: [--enable-ecss-redundancy --disable-master --disable-tests]"]
 
 test:configure:enable-ecss-compliance:
   extends: .test
@@ -399,6 +411,26 @@ valgrind:
       when: always
     - when: manual
       allow_failure: true
+
+valgrind:redundancy:
+  stage: test
+  tags:
+    - docker
+    - linux
+  image: $REGISTRY/valgrind:bullseye
+  needs: []
+  script:
+    - autoreconf -i
+    - ./configure --disable-cython --enable-ecss-redundancy --disable-tests
+    - make
+    - make check-valgrind-memcheck
+  artifacts:
+    when: always
+    paths:
+      - test/test-*.log
+      - unit-tests/*/test-*.log
+      - unit-tests/*/unit-test-*.log
+    expire_in: 1 week
 
 valgrind:ecss:
   stage: test
