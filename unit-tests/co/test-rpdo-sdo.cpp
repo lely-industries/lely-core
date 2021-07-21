@@ -40,6 +40,7 @@
 
 #include "holder/dev.hpp"
 #include "holder/obj.hpp"
+#include "obj-init/rpdo-comm-par.hpp"
 
 TEST_BASE(CO_SdoRpdoBase) {
   TEST_BASE_SUPER(CO_SdoRpdoBase);
@@ -110,6 +111,13 @@ static co_unsigned8_t rpdo_err_func_er = 0u;
 
 TEST_GROUP_BASE(CO_SdoRpdo1400, CO_SdoRpdoBase) {
   int32_t clang_format_fix = 0;  // dummy for workaround
+
+  using Sub00HighestSubidxSupported =
+      Obj1400RpdoCommPar::Sub00HighestSubidxSupported;
+  using Sub01CobId = Obj1400RpdoCommPar::Sub01CobId;
+  using Sub02TransmissionType = Obj1400RpdoCommPar::Sub02TransmissionType;
+  using Sub03InhibitTime = Obj1400RpdoCommPar::Sub03InhibitTime;
+  using Sub04Reserved = Obj1400RpdoCommPar::Sub04Reserved;
 
   static void rpdo_err_func(co_rpdo_t*, const co_unsigned16_t eec,
                             const co_unsigned8_t er, void*) {
@@ -192,10 +200,17 @@ TEST(CO_SdoRpdo1400, Co1400DnInd_NonZeroAbortCode) {
   CHECK_EQUAL(ac, ret);
 }
 
-// given: valid RPDO
-// when: co_1400_dn_ind(), co_val_read() fails
-// then: CO_SDO_AC_TYPE_LEN_HI abort code is returned
+/// \Given a pointer to a device (co_dev_t), the object dictionary
+///        contains the RPDO Communication Parameter object (0x1400)
+///
+/// \When a too long value is downloaded to the RPDO Communication Parameter
+///       "Highest sub-index supported" entry (idx: 0x1400, subidx: 0x00)
+///
+/// \Then download confirmation function is called once, CO_SDO_AC_TYPE_LEN_HI
+///       is set as the abort code, the requested entry is not changed
 TEST(CO_SdoRpdo1400, Co1400DnInd_TooLongData) {
+  const auto val = obj1400->GetSub<Sub00HighestSubidxSupported>();
+
   const co_unsigned16_t data = 0;
   const auto ret =
       co_dev_dn_val_req(dev, 0x1400u, 0x00u, CO_DEFTYPE_UNSIGNED16, &data,
@@ -204,12 +219,20 @@ TEST(CO_SdoRpdo1400, Co1400DnInd_TooLongData) {
   CHECK_EQUAL(0, ret);
   CHECK(CoCsdoDnCon::Called());
   CHECK_EQUAL(CO_SDO_AC_TYPE_LEN_HI, CoCsdoDnCon::ac);
+  CHECK_EQUAL(val, obj1400->GetSub<Sub00HighestSubidxSupported>());
 }
 
-// given: valid RPDO
-// when: co_1400_dn_ind()
-// then: CO_SDO_AC_NO_WRITE abort code is returned
+/// \Given a pointer to a device (co_dev_t), the object dictionary
+///        contains the RPDO Communication Parameter object (0x1400)
+///
+/// \When a value is downloaded to the RPDO Communication Parameter
+///       "Highest sub-index supported" entry (idx: 0x1400, subidx: 0x00)
+///
+/// \Then download confirmation function is called once, CO_SDO_AC_NO_WRITE
+///       is set as the abort code, the requested entry is not changed
 TEST(CO_SdoRpdo1400, Co1400DnInd_DownloadNumOfElements) {
+  const auto val = obj1400->GetSub<Sub00HighestSubidxSupported>();
+
   const co_unsigned8_t num_of_elems = 0x7fu;
   const auto ret =
       co_dev_dn_val_req(dev, 0x1400u, 0x00u, CO_DEFTYPE_UNSIGNED8,
@@ -218,12 +241,20 @@ TEST(CO_SdoRpdo1400, Co1400DnInd_DownloadNumOfElements) {
   CHECK_EQUAL(0, ret);
   CHECK(CoCsdoDnCon::Called());
   CHECK_EQUAL(CO_SDO_AC_NO_WRITE, CoCsdoDnCon::ac);
+  CHECK_EQUAL(val, obj1400->GetSub<Sub00HighestSubidxSupported>());
 }
 
-// given: valid RPDO
-// when: co_1400_dn_ind()
-// then: 0 abort code is returned
+/// \Given a pointer to a device (co_dev_t), the object dictionary
+///        contains the RPDO Communication Parameter object (0x1400)
+///
+/// \When a value is downloaded to the RPDO Communication Parameter
+///       "COB-ID used by RPDO" entry (idx: 0x1400, subidx: 0x01)
+///
+/// \Then download confirmation function is called once, 0 is set as the abort
+///       code, the requested entry is not changed
 TEST(CO_SdoRpdo1400, Co1400DnInd_CobidSameAsPrevious) {
+  const auto val = obj1400->GetSub<Sub01CobId>();
+
   const co_unsigned32_t cobid = DEV_ID;
   const auto ret =
       co_dev_dn_val_req(dev, 0x1400u, 0x01u, CO_DEFTYPE_UNSIGNED32, &cobid,
@@ -232,6 +263,7 @@ TEST(CO_SdoRpdo1400, Co1400DnInd_CobidSameAsPrevious) {
   CHECK_EQUAL(0, ret);
   CHECK(CoCsdoDnCon::Called());
   CHECK_EQUAL(0, CoCsdoDnCon::ac);
+  CHECK_EQUAL(val, obj1400->GetSub<Sub01CobId>());
 }
 
 // given: valid RPDO
