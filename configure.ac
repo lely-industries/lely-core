@@ -58,22 +58,6 @@ AS_IF([test "$host_cpu" != "$build_cpu"], [
 	AC_CHECK_PROGS([BINFMT_EXEC], [qemu-$host_cpu qemu-$host_cpu-static])
 ])
 
-RT_LIBS=
-AM_CONDITIONAL([NO_RT], [false])
-AC_ARG_ENABLE([rt],
-	AS_HELP_STRING([--disable-rt], [disable Realtime Extensions]))
-AS_IF([test "$enable_rt" != "no"], [
-	AS_IF([test "$platform_win32" == "yes"], [
-		AC_CHECK_LIB([pthread], [clock_gettime], [RT_LIBS="-lpthread"])
-	], [
-		AC_CHECK_LIB([rt], [timer_create], [RT_LIBS="-lrt"])
-	])
-], [
-	AM_CONDITIONAL([NO_RT], [true])
-	AC_DEFINE([LELY_NO_RT], [1], [Define to 1 if Realtime Extensions are disabled.])
-])
-AC_SUBST([RT_LIBS])
-
 CFLAGS="$CFLAGS -Wall -Wextra -pedantic -Werror"
 
 AM_CONDITIONAL([ECSS_COMPLIANCE], [false])
@@ -91,6 +75,23 @@ AS_IF([test "$enable_hosted" == "no"], [
 	AM_CONDITIONAL([NO_HOSTED], [true])
 	AC_DEFINE([LELY_NO_HOSTED], [1], [Define to 1 if a freestanding instead of a hosted environment is used.])
 ])
+
+RT_LIBS=
+AM_CONDITIONAL([NO_RT], [false])
+AC_ARG_ENABLE([rt],
+	AS_HELP_STRING([--disable-rt], [disable Realtime Extensions]))
+AS_IF([test "$enable_hosted" == "no"], [enable_rt=no])
+AS_IF([test "$enable_rt" != "no"], [
+	AS_IF([test "$platform_win32" == "yes"], [
+		AC_CHECK_LIB([pthread], [clock_gettime], [RT_LIBS="-lpthread"])
+	], [
+		AC_CHECK_LIB([rt], [timer_create], [RT_LIBS="-lrt"])
+	])
+], [
+	AM_CONDITIONAL([NO_RT], [true])
+	AC_DEFINE([LELY_NO_RT], [1], [Define to 1 if Realtime Extensions are disabled.])
+])
+AC_SUBST([RT_LIBS])
 
 AM_CONDITIONAL([NO_THREADS], [false])
 AM_CONDITIONAL([HAVE_PTHREAD], [false])
@@ -644,7 +645,6 @@ AC_CONFIG_FILES([
 	pkgconfig/liblely-io.pc
 	pkgconfig/liblely-io2.pc
 	pkgconfig/liblely-compat.pc
-	pkgconfig/liblely-compat_rt.pc
 	pkgconfig/liblely-tap.pc
 	pkgconfig/liblely-util.pc
 	pkgconfig/Makefile

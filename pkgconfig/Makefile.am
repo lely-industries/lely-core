@@ -11,9 +11,6 @@ pkgconfig_DATA += liblely-io.pc
 pkgconfig_DATA += liblely-io2.pc
 endif
 pkgconfig_DATA += liblely-compat.pc
-if !NO_RT
-pkgconfig_DATA += liblely-compat_rt.pc
-endif
 if !ECSS_COMPLIANCE
 pkgconfig_DATA += liblely-tap.pc
 endif
