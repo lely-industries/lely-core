@@ -7,6 +7,5 @@ Name: liblely-compat
 Description: Lely C11 and POSIX compatibility library
 URL: https://gitlab.com/lely_industries/@PACKAGE@
 Version: @PACKAGE_VERSION@
-Requires: liblely-compat_rt >= @PACKAGE_VERSION@
 Cflags: -I${includedir}
-Libs: -L${libdir} -llely-compat
+Libs: -L${libdir} -llely-compat @RT_LIBS@
