@@ -842,44 +842,54 @@ static int co_nmt_chk_bootup_slaves(const co_nmt_t *nmt);
 #define CO_NMT_STOP_SRV CO_NMT_SRV_LSS
 
 co_unsigned32_t
-co_dev_cfg_hb(co_dev_t *dev, co_unsigned8_t id, co_unsigned16_t ms)
+co_dev_cfg_hb(co_dev_t *const dev, const co_unsigned8_t id,
+		const co_unsigned16_t ms)
 {
 	assert(dev);
 
-	const co_obj_t *obj_1016 = co_dev_find_obj(dev, 0x1016);
+	co_obj_t *const obj_1016 = co_dev_find_obj(dev, 0x1016);
 	if (!obj_1016)
 		return CO_SDO_AC_NO_OBJ;
 
-	co_unsigned8_t n = co_obj_get_val_u8(obj_1016, 0x00);
-	co_unsigned8_t i = 0;
-	// If the node-ID is valid, find an existing heartbeat consumer with the
-	// same ID.
-	if (id && id <= CO_NUM_NODES) {
-		for (i = 1; i <= n; i++) {
-			co_unsigned32_t val_i = co_obj_get_val_u32(obj_1016, i);
-			co_unsigned8_t id_i = (val_i >> 16) & 0xff;
-			if (id_i == id)
-				break;
-		}
+	if (!id)
+		return CO_SDO_AC_PARAM_LO;
+	if (id > CO_NUM_NODES)
+		return CO_SDO_AC_PARAM_HI;
+
+	const co_unsigned8_t n = co_obj_get_val_u8(obj_1016, 0x00);
+
+	// Find an existing heartbeat consumer with the same ID.
+	co_unsigned8_t i = 1;
+	for (; i <= n; i++) {
+		const co_unsigned32_t val_i = co_obj_get_val_u32(obj_1016, i);
+		const co_unsigned8_t id_i = (val_i >> 16) & 0xff;
+		if (id_i == id)
+			break;
 	}
-	// If the node-ID is invalid or no heartbeat consumer exists, find an
-	// unused consumer.
-	if (!i || i > n) {
+
+	// If no matching consumer exists, find an unused consumer.
+	if (i > n) {
+		// No need to find an unused entry if it is going to be cleared.
+		if (!ms)
+			return 0;
 		for (i = 1; i <= n; i++) {
-			co_unsigned32_t val_i = co_obj_get_val_u32(obj_1016, i);
-			co_unsigned8_t id_i = (val_i >> 16) & 0xff;
+			const co_unsigned32_t val_i =
+					co_obj_get_val_u32(obj_1016, i);
+			const co_unsigned8_t id_i = (val_i >> 16) & 0xff;
 			if (!id_i || id_i > CO_NUM_NODES)
 				break;
 		}
 	}
 
-	if (!i || i > n)
+	if (i > n)
 		return CO_SDO_AC_NO_SUB;
-	co_sub_t *sub = co_obj_find_sub(obj_1016, i);
+	co_sub_t *const sub = co_obj_find_sub(obj_1016, i);
 	if (!sub)
 		return CO_SDO_AC_NO_SUB;
 
-	co_unsigned32_t val = ((co_unsigned32_t)id << 16) | ms;
+	// Update entry. If the heartbeat time is 0 - clear the entry.
+	const co_unsigned32_t val =
+			ms ? (((co_unsigned32_t)id << 16) | ms) : 0u;
 	return co_sub_dn_ind_val(sub, CO_DEFTYPE_UNSIGNED32, &val, NULL);
 }
 
