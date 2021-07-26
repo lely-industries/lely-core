@@ -3658,6 +3658,13 @@ TEST(CO_Csdo, CoCsdoBlkDnValReq_MembufReserveFail) {
 
 ///@}
 
+/// @name CSDO send 'download initiate' request
+///@{
+
+/// TODO(N7s): test cases for co_csdo_send_dn_ini_req()
+
+///@}
+
 /// @name CSDO block download initiate
 ///@{
 
@@ -3963,6 +3970,13 @@ TEST(CO_Csdo, CoCsdoBlkDnIniOnRecv_Nominal) {
 
 ///@}
 
+/// @name CSDO send 'block download sub-block' request
+///@{
+
+/// TODO(N7S): test cases for co_csdo_send_blk_dn_sub_req()
+
+///@}
+
 /// @name CSDO block download sub-block
 ///@{
 
@@ -3970,6 +3984,13 @@ TEST(CO_Csdo, CoCsdoBlkDnIniOnRecv_Nominal) {
 /// TODO(N7S): test cases for co_csdo_blk_dn_sub_on_abort()
 /// TODO(N7S): test cases for co_csdo_blk_dn_sub_on_time()
 /// TODO(N7S): test cases for co_csdo_blk_dn_sub_on_recv()
+
+///@}
+
+/// @name CSDO send 'block download end' request
+///@{
+
+/// TODO(N7S): test cases for co_csdo_send_blk_dn_end_req()
 
 ///@}
 
@@ -4007,11 +4028,12 @@ TEST(CO_Csdo, CoCsdoBlkDnIniOnRecv_Nominal) {
 
 ///@}
 
-/// @name CSDO send 'block download sub-block' request
+/// @name CSDO download segment
 ///@{
 
-/// TODO(N7S): test cases for co_csdo_send_blk_dn_sub_req()
-/// TODO(N7S): test cases for co_csdo_send_blk_dn_end_req()
+/// TODO(N7S): test cases for co_csdo_dn_seg_on_enter()
+/// TODO(N7S): test cases for co_csdo_dn_seg_on_recv()
+/// TODO(N7S): test cases for co_csdo_dn_seg_on_abort()
 
 ///@}
 
@@ -4020,5 +4042,21 @@ TEST(CO_Csdo, CoCsdoBlkDnIniOnRecv_Nominal) {
 
 /// TODO(N7S): test cases for co_csdo_send_blk_up_sub_res()
 /// TODO(N7S): test cases for co_csdo_send_blk_up_end_res()
+/// TODO(N7S): test cases for co_csdo_blk_up_end_res()
+
+///@}
+
+/// @name CSDO send start upload request
+///@{
+
+/// TODO(N7S): test cases for co_csdo_send_start_up_req()
+
+///@}
+
+/// @name CSDO upload segment
+///@{
+
+/// TODO(N7S): test cases for co_csdo_up_seg_on_time()
+/// TODO(N7S): test cases for co_csdo_up_seg_on_recv()
 
 ///@}
