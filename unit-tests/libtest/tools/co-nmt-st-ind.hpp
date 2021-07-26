@@ -20,45 +20,38 @@
  * limitations under the License.
  */
 
-#ifndef LELY_UNIT_TEST_CO_NMT_HB_IND_HPP_
-#define LELY_UNIT_TEST_CO_NMT_HB_IND_HPP_
+#ifndef LELY_UNIT_TEST_CO_NMT_ST_IND_HPP_
+#define LELY_UNIT_TEST_CO_NMT_ST_IND_HPP_
 
 #include <lely/co/type.h>
+#include <lely/co/nmt.h>
 
-class CoNmtHbInd {
+#include <vector>
+
+using NmtStSeq = std::vector<co_unsigned8_t>;
+
+class CoNmtStInd {
  public:
-  static void Func(co_nmt_t* nmt, co_unsigned8_t id, int state, int reason,
+  static void Func(co_nmt_t* nmt, co_unsigned8_t id, co_unsigned8_t st,
                    void* data);
   static void Clear();
-  static void Check(const co_nmt_t* nmt, co_unsigned8_t id, int state,
-                    int reason, const void* data);
+  static void Check(const co_nmt_t* nmt, co_unsigned8_t id, co_unsigned8_t st,
+                    const void* data);
   static inline size_t
   GetNumCalled() {
     return num_called;
   }
-
-  static void SkipCallToDefaultInd();
+  static void SetCheckSeq(const co_nmt_t* const nmt, const co_unsigned8_t id,
+                          const NmtStSeq& stSeq);
 
  private:
   static size_t num_called;
   static co_nmt_t* nmt_;
   static co_unsigned8_t id_;
-  static int state_;
-  static int reason_;
+  static co_unsigned8_t st_;
   static void* data_;
 
-  static bool skipCallToDefaultInd;
+  static std::function<co_nmt_st_ind_t> checkFunc;
 };
 
-class CoNmtHbIndMock {
- public:
-  co_nmt_hb_ind_t* GetFunc();
-  void* GetData();
-
-  void Expect(co_nmt_t* nmt, co_unsigned8_t id, int state, int reason);
-
- private:
-  uint32_t indData = 0;
-};
-
-#endif  // LELY_UNIT_TEST_CO_NMT_HB_IND_HPP_
+#endif  // LELY_UNIT_TEST_CO_NMT_ST_IND_HPP_

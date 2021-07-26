@@ -21,9 +21,10 @@
  */
 
 #include <CppUTest/CommandLineTestRunner.h>
+#include <CppUTest/TestRegistry.h>
+#include <CppUTestExt/MockSupportPlugin.h>
 
 #if !defined(__MINGW32__)
-#include <CppUTest/TestRegistry.h>
 #include <libtest/override/override-test-plugin.hpp>
 #endif
 
@@ -33,5 +34,9 @@ main(int ac, char** av) {
   Override::OverridePlugin plugin;
   TestRegistry::getCurrentRegistry()->installPlugin(&plugin);
 #endif
+
+  MockSupportPlugin mockPlugin;
+  TestRegistry::getCurrentRegistry()->installPlugin(&mockPlugin);
+
   return RUN_ALL_TESTS(ac, av);
 }

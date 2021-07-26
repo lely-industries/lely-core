@@ -39,6 +39,7 @@
 #include <libtest/tools/can-send.hpp>
 #include <libtest/tools/lely-cpputest-ext.hpp>
 #include <libtest/tools/lely-unit-test.hpp>
+#include <libtest/tools/co-nmt-st-ind.hpp>
 
 #include "holder/dev.hpp"
 #include "holder/obj.hpp"
@@ -70,7 +71,6 @@
 #endif  // LELY_NO_MALLOC
 
 using NmtCsSeq = std::vector<co_unsigned8_t>;
-using NmtStSeq = std::vector<co_unsigned8_t>;
 
 TEST_BASE(CO_NmtBase) {
   TEST_BASE_SUPER(CO_NmtBase);
@@ -1373,98 +1373,6 @@ std::function<void(co_nmt_t*, co_unsigned8_t, void*)> CoNmtCsInd::checkFunc =
 size_t CoNmtCsInd::checkSeqNumCalled_ = 0;
 const co_nmt_t* CoNmtCsInd::checkSeqNmt_ = nullptr;
 const co_unsigned8_t* CoNmtCsInd::checkSeqCs_ = nullptr;
-
-class CoNmtStInd {
- public:
-  static void
-  Func(co_nmt_t* nmt, co_unsigned8_t id, co_unsigned8_t st, void* data) {
-    if (checkFunc != nullptr) checkFunc(nmt, id, st, data);
-
-    ++num_called_;
-
-    nmt_ = nmt;
-    id_ = id;
-    st_ = st;
-    data_ = data;
-  }
-
-  static void
-  Clear() {
-    num_called_ = 0;
-
-    nmt_ = nullptr;
-    id_ = 0;
-    st_ = 0;
-    data_ = nullptr;
-
-    checkFunc = nullptr;
-
-    checkSeqNmt_ = nullptr;
-    checkSeqId_ = 0;
-    checkSeqSt_ = nullptr;
-  }
-
-  static size_t
-  GetNumCalled() {
-    return num_called_;
-  }
-
-  static void
-  Check(const co_nmt_t* const nmt, const co_unsigned8_t id,
-        const co_unsigned8_t st, const void* const data) {
-    POINTERS_EQUAL(nmt, nmt_);
-    CHECK_EQUAL(id, id_);
-    CHECK_EQUAL(st, st_);
-    POINTERS_EQUAL(data, data_);
-  }
-
-  static void
-  SetCheckSeq(const co_nmt_t* const nmt, const co_unsigned8_t id,
-              const NmtStSeq& stSeq) {
-    checkSeqNumCalled_ = stSeq.size();
-    checkSeqNmt_ = nmt;
-    checkSeqId_ = id;
-    checkSeqSt_ = stSeq.data();
-
-    checkFunc = [](const co_nmt_t* const service, const co_unsigned8_t seqId,
-                   const co_unsigned8_t st, const void* const data) {
-      CHECK(num_called_ < checkSeqNumCalled_);
-      POINTERS_EQUAL(checkSeqNmt_, service);
-      CHECK_EQUAL(checkSeqId_, seqId);
-      CHECK_EQUAL(checkSeqSt_[num_called_], st);
-      POINTERS_EQUAL(nullptr, data);
-    };
-  }
-
- private:
-  static size_t num_called_;
-
-  static const co_nmt_t* nmt_;
-  static co_unsigned8_t id_;
-  static co_unsigned8_t st_;
-  static const void* data_;
-
-  static std::function<void(co_nmt_t*, co_unsigned8_t, co_unsigned8_t, void*)>
-      checkFunc;
-
-  static size_t checkSeqNumCalled_;
-  static const co_nmt_t* checkSeqNmt_;
-  static co_unsigned8_t checkSeqId_;
-  static const co_unsigned8_t* checkSeqSt_;
-};
-
-size_t CoNmtStInd::num_called_ = 0;
-const co_nmt_t* CoNmtStInd::nmt_ = nullptr;
-co_unsigned8_t CoNmtStInd::id_ = 0;
-co_unsigned8_t CoNmtStInd::st_ = 0;
-const void* CoNmtStInd::data_ = nullptr;
-std::function<void(co_nmt_t*, co_unsigned8_t, co_unsigned8_t, void*)>
-    CoNmtStInd::checkFunc = nullptr;
-
-size_t CoNmtStInd::checkSeqNumCalled_ = 0;
-const co_nmt_t* CoNmtStInd::checkSeqNmt_ = nullptr;
-co_unsigned8_t CoNmtStInd::checkSeqId_ = 0;
-const co_unsigned8_t* CoNmtStInd::checkSeqSt_ = nullptr;
 
 TEST_GROUP_BASE(CO_Nmt, CO_NmtBase) {
   co_nmt_t* nmt = nullptr;
