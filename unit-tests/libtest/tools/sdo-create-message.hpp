@@ -23,9 +23,10 @@
 #ifndef LELY_UNIT_TEST_SDO_CREATE_MESSAGE_HPP_
 #define LELY_UNIT_TEST_SDO_CREATE_MESSAGE_HPP_
 
+#include <vector>
+
 #include <lely/can/msg.h>
 #include <lely/co/type.h>
-#include <cstdint>
 
 #include "sdo-consts.hpp"
 
@@ -64,6 +65,10 @@ can_msg UpIniReq(co_unsigned16_t idx, co_unsigned8_t subidx,
 // upload initiate response
 can_msg UpIniRes(co_unsigned16_t idx, co_unsigned8_t subidx,
                  uint_least32_t recipient_id);
+// upload segment request
+can_msg UpSeg(uint_least32_t recipient_id, uint_least8_t seqno,
+              const std::vector<uint_least8_t>& data,
+              co_unsigned8_t cs_flags = 0);
 // block upload initiate request
 can_msg BlkUpIniReq(co_unsigned16_t idx, co_unsigned8_t subidx,
                     uint_least32_t recipient_id,

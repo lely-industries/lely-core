@@ -24,6 +24,7 @@
 #include <config.h>
 #endif
 
+#include <algorithm>
 #include <initializer_list>
 #include <memory>
 #include <numeric>
@@ -927,9 +928,12 @@ TEST(CoCsdoSetGet, CoCsdoSetTimeout_UpdateTimeout) {
 TEST_GROUP_BASE(CO_Csdo, CO_CsdoBase) {
   CoArrays arrays;
 
+  using sub_type64 = co_unsigned64_t;
+
   static membuf ind_mbuf;
   static size_t num_called;
   static const co_unsigned16_t SUB_TYPE = CO_DEFTYPE_UNSIGNED16;
+  static const co_unsigned16_t SUB_TYPE64 = CO_DEFTYPE_UNSIGNED64;
   static const co_unsigned16_t IDX = 0x2020u;
   static const co_unsigned8_t SUBIDX = 0x00u;
   static const co_unsigned16_t INVALID_IDX = 0xffffu;
@@ -974,6 +978,18 @@ TEST_GROUP_BASE(CO_Csdo, CO_CsdoBase) {
                                     const sub_type val = 0) {
     CHECK_EQUAL(0, co_csdo_blk_dn_val_req(csdo, idx, subidx, SUB_TYPE, &val,
                                           CoCsdoDnCon::Func, nullptr));
+    CanSend::Clear();
+  }
+
+  void InitiateBlockUploadRequest(
+      const co_unsigned16_t idx = IDX, const co_unsigned8_t subidx = SUBIDX,
+      const co_unsigned32_t size = sizeof(sub_type)) {
+    CHECK_EQUAL(0, co_csdo_blk_up_req(csdo, idx, subidx, 0, nullptr,
+                                      CoCsdoUpCon::func, nullptr));
+
+    const can_msg msg_res =
+        SdoCreateMsg::BlkUpIniRes(idx, subidx, DEFAULT_COBID_RES, size);
+    CHECK_EQUAL(1, can_net_recv(net, &msg_res, 0));
     CanSend::Clear();
   }
 
@@ -2960,7 +2976,7 @@ TEST(CO_Csdo, CoCsdoBlkUpReq_TimeoutSet) {
 /// @name CSDO: block upload initiate on receive
 ///@{
 
-/// \Given a pointer to the CSDO service (co_csdo_t) which have initiated block
+/// \Given a pointer to the CSDO service (co_csdo_t) which has initiated block
 ///        upload transfer (the correct request was sent by the client)
 ///
 /// \When a correct block upload initiate response is received
@@ -2995,7 +3011,7 @@ TEST(CO_Csdo, CoCsdoBlkUpIniOnRecv_Nominal) {
   CanSend::CheckMsg(DEFAULT_COBID_REQ, 0, CO_SDO_MSG_SIZE, expected_res.data());
 }
 
-/// \Given a pointer to the CSDO service (co_csdo_t) which have initiated block
+/// \Given a pointer to the CSDO service (co_csdo_t) which has initiated block
 ///        upload transfer (the correct request was sent by the client)
 ///
 /// \When an SDO message with a length 0 is received
@@ -3027,7 +3043,7 @@ TEST(CO_Csdo, CoCsdoBlkUpIniOnRecv_NoCS) {
   CanSend::CheckMsg(DEFAULT_COBID_REQ, 0, CO_SDO_MSG_SIZE, expected_res.data());
 }
 
-/// \Given a pointer to the CSDO service (co_csdo_t) which have initiated block
+/// \Given a pointer to the CSDO service (co_csdo_t) which has initiated block
 ///        upload transfer (the correct request was sent by the client)
 ///
 /// \When a correct upload initiate response is received
@@ -3059,7 +3075,7 @@ TEST(CO_Csdo, CoCsdoBlkUpIniOnRecv_ProtocolSwitch) {
   CanSend::CheckMsg(DEFAULT_COBID_REQ, 0, CO_SDO_MSG_SIZE, expected_res.data());
 }
 
-/// \Given a pointer to the CSDO service (co_csdo_t) which have initiated block
+/// \Given a pointer to the CSDO service (co_csdo_t) which has initiated block
 ///        upload transfer (the correct request was sent by the client)
 ///
 /// \When a correct block upload initiate response is received with a data size
@@ -3092,7 +3108,7 @@ TEST(CO_Csdo, CoCsdoBlkUpIniOnRecv_Nominal_SizeIsZero) {
   CanSend::CheckMsg(DEFAULT_COBID_REQ, 0, CO_SDO_MSG_SIZE, expected_res.data());
 }
 
-/// \Given a pointer to the CSDO service (co_csdo_t) which have initiated block
+/// \Given a pointer to the CSDO service (co_csdo_t) which has initiated block
 ///        upload transfer (the correct request was sent by the client)
 ///
 /// \When an abort transfer SDO message with a non-zero abort code is received
@@ -3119,7 +3135,7 @@ TEST(CO_Csdo, CoCsdoBlkUpIniOnRecv_AcNonZero) {
   CHECK_EQUAL(0, CanSend::GetNumCalled());
 }
 
-/// \Given a pointer to the CSDO service (co_csdo_t) which have initiated block
+/// \Given a pointer to the CSDO service (co_csdo_t) which has initiated block
 ///        upload transfer (the correct request was sent by the client)
 ///
 /// \When an abort transfer SDO message with abort code equal to zero is
@@ -3147,7 +3163,7 @@ TEST(CO_Csdo, CoCsdoBlkUpIniOnRecv_AcZero) {
   CHECK_EQUAL(0, CanSend::GetNumCalled());
 }
 
-/// \Given a pointer to the CSDO service (co_csdo_t) which have initiated block
+/// \Given a pointer to the CSDO service (co_csdo_t) which has initiated block
 ///        upload transfer (the correct request was sent by the client)
 ///
 /// \When an abort transfer SDO message with no abort code is received
@@ -3173,7 +3189,7 @@ TEST(CO_Csdo, CoCsdoBlkUpIniOnRecv_AcNone) {
   CHECK_EQUAL(0, CanSend::GetNumCalled());
 }
 
-/// \Given a pointer to the CSDO service (co_csdo_t) which have initiated block
+/// \Given a pointer to the CSDO service (co_csdo_t) which has initiated block
 ///        upload transfer (the correct request was sent by the client)
 ///
 /// \When an SDO message with an incorrect command specifier is received
@@ -3205,7 +3221,7 @@ TEST(CO_Csdo, CoCsdoBlkUpIniOnRecv_IncorrectCS) {
   CanSend::CheckMsg(DEFAULT_COBID_REQ, 0, CO_SDO_MSG_SIZE, expected_res.data());
 }
 
-/// \Given a pointer to the CSDO service (co_csdo_t) which have initiated block
+/// \Given a pointer to the CSDO service (co_csdo_t) which has initiated block
 ///        upload transfer (the correct request was sent by the client)
 ///
 /// \When an SDO block upload initiate response with an incorrect server
@@ -3239,7 +3255,7 @@ TEST(CO_Csdo, CoCsdoBlkUpIniOnRecv_IncorrectSC) {
   CanSend::CheckMsg(DEFAULT_COBID_REQ, 0, CO_SDO_MSG_SIZE, expected_res.data());
 }
 
-/// \Given a pointer to the CSDO service (co_csdo_t) which have initiated block
+/// \Given a pointer to the CSDO service (co_csdo_t) which has initiated block
 ///        upload transfer (the correct request was sent by the client)
 ///
 /// \When an SDO block upload initiate response with too little bytes is
@@ -3273,7 +3289,7 @@ TEST(CO_Csdo, CoCsdoBlkUpIniOnRecv_TooShortMsg) {
   CanSend::CheckMsg(DEFAULT_COBID_REQ, 0, CO_SDO_MSG_SIZE, expected_res.data());
 }
 
-/// \Given a pointer to the CSDO service (co_csdo_t) which have initiated block
+/// \Given a pointer to the CSDO service (co_csdo_t) which has initiated block
 ///        upload transfer (the correct request was sent by the client)
 ///
 /// \When an SDO block upload reponse with an index not matching the requested
@@ -3307,7 +3323,7 @@ TEST(CO_Csdo, CoCsdoBlkUpIniOnRecv_IncorrectIdx) {
   CanSend::CheckMsg(DEFAULT_COBID_REQ, 0, CO_SDO_MSG_SIZE, expected_res.data());
 }
 
-/// \Given a pointer to the CSDO service (co_csdo_t) which have initiated block
+/// \Given a pointer to the CSDO service (co_csdo_t) which has initiated block
 ///        upload transfer (the correct request was sent by the client)
 ///
 /// \When an SDO block upload reponse with a sub-index not matching
@@ -3342,7 +3358,7 @@ TEST(CO_Csdo, CoCsdoBlkUpIniOnRecv_IncorrectSubidx) {
 }
 
 #if HAVE_LELY_OVERRIDE
-/// \Given a pointer to the CSDO service (co_csdo_t) which have initiated block
+/// \Given a pointer to the CSDO service (co_csdo_t) which has initiated block
 ///        upload transfer (the correct request was sent by the client)
 ///
 /// \When a correct block upload initiate response is received, but the internal
@@ -3381,7 +3397,7 @@ TEST(CO_Csdo, CoCsdoBlkUpIniOnRecv_MembufReserveFail) {
 }
 #endif  // HAVE_LELY_OVERRIDE
 
-/// \Given a pointer to the CSDO service (co_csdo_t) which have initiated block
+/// \Given a pointer to the CSDO service (co_csdo_t) which has initiated block
 ///        upload transfer (the correct request was sent by the client);
 ///        the service has a timeout set
 ///
@@ -3668,7 +3684,7 @@ TEST(CO_Csdo, CoCsdoBlkDnValReq_MembufReserveFail) {
 /// @name CSDO block download initiate
 ///@{
 
-/// \Given a pointer to the CSDO service (co_csdo_t) which have initiated block
+/// \Given a pointer to the CSDO service (co_csdo_t) which has initiated block
 ///        download transfer (the correct request was sent by the client)
 ///
 /// \When an SDO message with an incorrect command specifier
@@ -3706,7 +3722,7 @@ TEST(CO_Csdo, CoCsdoBlkDnIniOnRecv_IncorrectCS) {
                     expected_abort.data());
 }
 
-/// \Given a pointer to the CSDO service (co_csdo_t) which have initiated block
+/// \Given a pointer to the CSDO service (co_csdo_t) which has initiated block
 ///        download transfer (the correct request was sent by the client)
 ///
 /// \When an SDO block download sub-block response with an incorrect
@@ -3734,7 +3750,7 @@ TEST(CO_Csdo, CoCsdoBlkDnIniOnRecv_IncorrectSC) {
                     expected_abort.data());
 }
 
-/// \Given a pointer to the CSDO service (co_csdo_t) which have initiated block
+/// \Given a pointer to the CSDO service (co_csdo_t) which has initiated block
 ///        download transfer (the correct request was sent by the client)
 ///
 /// \When an SDO block download sub-block response is received, but
@@ -3762,7 +3778,7 @@ TEST(CO_Csdo, CoCsdoBlkDnIniOnRecv_IncorrectSubidx) {
                     expected_abort.data());
 }
 
-/// \Given a pointer to the CSDO service (co_csdo_t) which have initiated block
+/// \Given a pointer to the CSDO service (co_csdo_t) which has initiated block
 ///        download transfer (the correct request was sent by the client)
 ///
 /// \When an SDO abort transfer message is received, abort code is zero
@@ -3783,7 +3799,7 @@ TEST(CO_Csdo, CoCsdoBlkDnIniOnRecv_CSAbort_AcZero) {
   CHECK_EQUAL(0u, CanSend::GetNumCalled());
 }
 
-/// \Given a pointer to the CSDO service (co_csdo_t) which have initiated block
+/// \Given a pointer to the CSDO service (co_csdo_t) which has initiated block
 ///        download transfer (the correct request was sent by the client)
 ///
 /// \When an SDO abort transfer message is received, abort code is not zero
@@ -3805,7 +3821,7 @@ TEST(CO_Csdo, CoCsdoBlkDnIniOnRecv_CSAbort_AcNonzero) {
   CHECK_EQUAL(0u, CanSend::GetNumCalled());
 }
 
-/// \Given a pointer to the CSDO service (co_csdo_t) which have initiated block
+/// \Given a pointer to the CSDO service (co_csdo_t) which has initiated block
 ///        download transfer (the correct request was sent by the client)
 ///
 /// \When an SDO abort transfer message is received, but does not contain
@@ -3828,7 +3844,7 @@ TEST(CO_Csdo, CoCsdoBlkDnIniOnRecv_CSAbort_MissingAc) {
   CHECK_EQUAL(0u, CanSend::GetNumCalled());
 }
 
-/// \Given a pointer to the CSDO service (co_csdo_t) which have initiated block
+/// \Given a pointer to the CSDO service (co_csdo_t) which has initiated block
 ///        download transfer (the correct request was sent by the client)
 ///
 /// \When an SDO block download sub-block response is received, but the message
@@ -3856,7 +3872,7 @@ TEST(CO_Csdo, CoCsdoBlkDnIniOnRecv_MissingIdx) {
                     expected_abort.data());
 }
 
-/// \Given a pointer to the CSDO service (co_csdo_t) which have initiated block
+/// \Given a pointer to the CSDO service (co_csdo_t) which has initiated block
 ///        download transfer (the correct request was sent by the client)
 ///
 /// \When an SDO block download sub-block response is received, but the index
@@ -3884,7 +3900,7 @@ TEST(CO_Csdo, CoCsdoBlkDnIniOnRecv_IncorrectIdx) {
                     expected_abort.data());
 }
 
-/// \Given a pointer to the CSDO service (co_csdo_t) which have initiated block
+/// \Given a pointer to the CSDO service (co_csdo_t) which has initiated block
 ///        download transfer (the correct request was sent by the client)
 ///
 /// \When an SDO block download sub-block response is received, but the message
@@ -3913,7 +3929,7 @@ TEST(CO_Csdo, CoCsdoBlkDnIniOnRecv_MissingNumOfSegments) {
                     expected_abort.data());
 }
 
-/// \Given a pointer to the CSDO service (co_csdo_t) which have initiated block
+/// \Given a pointer to the CSDO service (co_csdo_t) which has initiated block
 ///        download transfer (the correct request was sent by the client)
 ///
 /// \When an SDO message with no command specifier is received
@@ -3938,7 +3954,7 @@ TEST(CO_Csdo, CoCsdoBlkDnIniOnRecv_NoCS) {
                     expected_abort.data());
 }
 
-/// \Given a pointer to the CSDO service (co_csdo_t) which have initiated block
+/// \Given a pointer to the CSDO service (co_csdo_t) which has initiated block
 ///        download transfer (the correct request was sent by the client)
 ///
 /// \When an SDO block download sub-block response is received
@@ -4006,9 +4022,166 @@ TEST(CO_Csdo, CoCsdoBlkDnIniOnRecv_Nominal) {
 /// @name CSDO block upload sub-block
 ///@{
 
+class CoCsdoInd {
+ public:
+  static void
+  Func(const co_csdo_t* const csdo, const co_unsigned16_t idx,
+       const co_unsigned8_t subidx, const size_t size, const size_t nbyte,
+       void* const data) {
+    num_called++;
+
+    csdo_ = csdo;
+    idx_ = idx;
+    subidx_ = subidx;
+    size_ = size;
+    nbyte_ = nbyte;
+    data_ = data;
+  }
+
+  static void
+  Check(const co_csdo_t* const csdo, const co_unsigned16_t idx,
+        const co_unsigned8_t subidx, const size_t size, const size_t nbyte,
+        void* const data) {
+    POINTERS_EQUAL(csdo, csdo_);
+    CHECK_EQUAL(idx, idx_);
+    CHECK_EQUAL(subidx, subidx_);
+    CHECK_EQUAL(size, size_);
+    CHECK_EQUAL(nbyte, nbyte_);
+    if ((data != nullptr) && (data_ != nullptr)) {
+      for (size_t i = 0; i < nbyte; i++) {
+        CHECK_EQUAL(static_cast<uint_least8_t*>(data)[i],
+                    static_cast<uint_least8_t*>(data_)[i]);
+      }
+    }
+  }
+
+  static size_t
+  GetNumCalled() {
+    return num_called;
+  }
+
+  static void
+  Clear() {
+    num_called = 0;
+
+    csdo_ = nullptr;
+    idx_ = 0;
+    subidx_ = 0;
+    size_ = 0;
+    nbyte_ = 0;
+    data_ = nullptr;
+  }
+
+ private:
+  static const co_csdo_t* csdo_;
+  static co_unsigned16_t idx_;
+  static co_unsigned8_t subidx_;
+  static size_t size_;
+  static size_t nbyte_;
+  static void* data_;
+  static size_t num_called;
+};
+const co_csdo_t* CoCsdoInd::csdo_ = nullptr;
+co_unsigned16_t CoCsdoInd::idx_ = 0;
+co_unsigned8_t CoCsdoInd::subidx_ = 0;
+size_t CoCsdoInd::size_ = 0;
+size_t CoCsdoInd::nbyte_ = 0;
+void* CoCsdoInd::data_ = nullptr;
+size_t CoCsdoInd::num_called = 0;
+
+class SampleValue {
+  using sub_type64 = co_unsigned64_t;
+  using segment_data_t = std::vector<uint_least8_t>;
+
+ public:
+  static segment_data_t
+  GetFirstSegment() {
+    segment_data_t segment(CO_SDO_SEG_MAX_DATA_SIZE, 0);
+    std::copy(val2dn.begin(),
+              std::next(val2dn.begin(), CO_SDO_SEG_MAX_DATA_SIZE),
+              segment.begin());
+
+    return segment;
+  }
+
+  static segment_data_t
+  GetLastSegment() {
+    return segment_data_t(1u, val2dn.back());
+  }
+
+  static std::array<uint_least8_t, sizeof(sub_type64)>
+  StLe64InArray(const sub_type64 val) {
+    std::array<uint_least8_t, sizeof(sub_type64)> array = {0};
+    stle_u64(array.data(), val);
+
+    return array;
+  }
+
+  static void*
+  GetVal2DnPtr() {
+    return val2dn.data();
+  }
+
+ private:
+  static const sub_type64 VAL = 0x1234567890abcdefu;
+  static std::array<uint_least8_t, sizeof(sub_type64)> val2dn;
+};
+std::array<uint_least8_t, sizeof(SampleValue::sub_type64)> SampleValue::val2dn =
+    SampleValue::StLe64InArray(SampleValue::VAL);
+
+/// \Given a pointer to the CSDO service (co_csdo_t) which has initiated block
+///        upload transfer (the correct request was sent by the client)
+///
+/// \When all required SDO segments are received
+///
+/// \Then an SDO message with a client command specifier block upload request
+///       and a subcommand block upload response, last received sequence number
+///       and the block size is sent; custom CSDO block upload indication
+///       function is called with a pointer to the buffer containing
+///       the received bytes
+TEST(CO_Csdo, CoCsdoBlkUpSubOnRecv_Nominal) {
+  const co_unsigned8_t subidx_u64 = SUBIDX + 1u;
+  obj2020->InsertAndSetSub(subidx_u64, SUB_TYPE64, co_unsigned64_t{0});
+  co_csdo_set_up_ind(csdo, CoCsdoInd::Func, nullptr);
+  StartCSDO();
+
+  InitiateBlockUploadRequest(IDX, subidx_u64, sizeof(sub_type64));
+  CHECK_EQUAL(1, CoCsdoInd::GetNumCalled());
+  CoCsdoInd::Check(csdo, IDX, subidx_u64, sizeof(sub_type64), 0, nullptr);
+  CoCsdoInd::Clear();
+
+  co_unsigned8_t seqno = 1u;
+  const can_msg msg = SdoCreateMsg::UpSeg(DEFAULT_COBID_RES, seqno,
+                                          SampleValue::GetFirstSegment());
+  CHECK_EQUAL(1u, can_net_recv(net, &msg, 0));
+
+  CHECK_EQUAL(0, CanSend::GetNumCalled());
+  CHECK_EQUAL(0, CoCsdoInd::GetNumCalled());
+
+  ++seqno;
+
+  can_msg last_msg = SdoCreateMsg::UpSeg(DEFAULT_COBID_RES, seqno,
+                                         SampleValue::GetLastSegment());
+  last_msg.data[0] |= CO_SDO_SEQ_LAST;
+  CHECK_EQUAL(1u, can_net_recv(net, &last_msg, 0));
+
+  CHECK_EQUAL(1, CanSend::GetNumCalled());
+  auto last_expected =
+      SdoInitExpectedData::Empty(CO_SDO_CCS_BLK_UP_REQ | CO_SDO_SC_BLK_RES);
+  last_expected[1] = seqno;
+  last_expected[2] = CO_SDO_MAX_SEQNO;
+  CanSend::CheckMsg(DEFAULT_COBID_REQ, 0, CO_SDO_MSG_SIZE,
+                    last_expected.data());
+
+  CHECK_EQUAL(1, CoCsdoInd::GetNumCalled());
+  CoCsdoInd::Check(csdo, IDX, subidx_u64, sizeof(sub_type64),
+                   sizeof(sub_type64), SampleValue::GetVal2DnPtr());
+  CoCsdoInd::Clear();
+}
+
 /// TODO(N7S): test cases for co_csdo_blk_up_sub_on_time()
 /// TODO(N7S): test cases for co_csdo_blk_up_sub_on_recv()
-/// TODO(N7S): test cases for co_csdo_blk_up_sub_on_recv()
+/// TODO(N7S): test cases for co_csdo_blk_up_sub_on_abort()
 
 ///@}
 
