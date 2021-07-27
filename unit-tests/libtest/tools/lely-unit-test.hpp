@@ -31,7 +31,6 @@
 #include "co-csdo-up-con.hpp"
 #include "co-sub-dn-ind.hpp"
 #include "co-sub-up-ind.hpp"
-#include "can-send.hpp"
 #include "sdo-create-message.hpp"
 #include "sdo-consts.hpp"
 #include "sdo-init-expected-data.hpp"

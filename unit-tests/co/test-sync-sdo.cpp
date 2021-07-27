@@ -34,6 +34,7 @@
 #include <lely/co/val.h>
 
 #include <libtest/allocators/default.hpp>
+#include <libtest/tools/can-send.hpp>
 #include <libtest/tools/lely-cpputest-ext.hpp>
 #include <libtest/tools/lely-unit-test.hpp>
 

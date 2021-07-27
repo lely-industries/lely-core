@@ -46,6 +46,7 @@
 #include <libtest/override/lelyco-val.hpp>
 #include <libtest/tools/lely-cpputest-ext.hpp>
 #include <libtest/tools/lely-unit-test.hpp>
+#include <libtest/tools/can-send.hpp>
 
 #include "holder/dev.hpp"
 #include "holder/obj.hpp"
