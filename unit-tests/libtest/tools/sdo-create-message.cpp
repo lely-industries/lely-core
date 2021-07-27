@@ -24,7 +24,9 @@
 #include <config.h>
 #endif
 
+#include <algorithm>
 #include <cassert>
+#include <vector>
 
 #include <lely/util/endian.h>
 
@@ -153,6 +155,21 @@ SdoCreateMsg::UpIniRes(const co_unsigned16_t idx, const co_unsigned8_t subidx,
                        const uint_least32_t recipient_id) {
   can_msg msg = SdoCreateMsg::Default(idx, subidx, recipient_id);
   msg.data[0] = CO_SDO_SCS_UP_INI_RES;
+
+  return msg;
+}
+
+can_msg
+SdoCreateMsg::UpSeg(const uint_least32_t recipient_id,
+                    const uint_least8_t seqno,
+                    const std::vector<uint_least8_t>& data,
+                    const co_unsigned8_t cs_flags) {
+  assert(data.size() <= CO_SDO_SEG_MAX_DATA_SIZE);
+
+  can_msg msg = SdoCreateMsg::Default(0, 0, recipient_id);
+  msg.data[0] = seqno;
+  msg.data[0] |= cs_flags;
+  std::copy(data.begin(), data.end(), msg.data + 1u);
 
   return msg;
 }
