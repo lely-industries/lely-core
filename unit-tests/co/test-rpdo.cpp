@@ -273,7 +273,7 @@ TEST(CO_RpdoCreate, CoRpdoStart_AlreadyStarted) {
   const auto ret = co_rpdo_start(rpdo);
 
   CHECK_EQUAL(0, ret);
-  CHECK_EQUAL(0, co_rpdo_is_stopped(rpdo));
+  CHECK_FALSE(co_rpdo_is_stopped(rpdo));
 }
 
 TEST(CO_RpdoCreate, CoRpdoStart_InvalidBit) {
@@ -502,9 +502,9 @@ TEST_GROUP_BASE(CO_Rpdo, CO_RpdoBase) {
   }
 
   void StartRpdo() {
-    CHECK_EQUAL(1, co_rpdo_is_stopped(rpdo));
+    CHECK(co_rpdo_is_stopped(rpdo));
     CHECK_EQUAL(0, co_rpdo_start(rpdo));
-    CHECK_EQUAL(0, co_rpdo_is_stopped(rpdo));
+    CHECK_FALSE(co_rpdo_is_stopped(rpdo));
   }
 
   TEST_SETUP() {
@@ -848,7 +848,7 @@ TEST(CO_Rpdo, CoRpdoSync_RPDOLengthExceedsMapping) {
   dev_holder->CreateAndInsertObj(obj2000, 0x2000u);
   // 0x00
   obj2000->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t{0x00u});
-  co_sub_set_pdo_mapping(obj2000->GetLastSub(), 1);
+  co_sub_set_pdo_mapping(obj2000->GetLastSub(), true);
 
   CreateRpdo();
   int32_t ind_data = 0;

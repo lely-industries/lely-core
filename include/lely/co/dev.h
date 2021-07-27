@@ -412,8 +412,11 @@ co_unsigned16_t co_dev_get_rate(const co_dev_t *dev);
  */
 void co_dev_set_rate(co_dev_t *dev, co_unsigned16_t rate);
 
-/// Returns 1 if LSS is supported and 0 if not. @see co_dev_set_lss()
-int co_dev_get_lss(const co_dev_t *dev);
+/** Returns <b>true</b> if LSS is supported and <b>false</b> if
+ *  not.
+ * @see co_dev_set_lss()
+ */
+bool co_dev_get_lss(const co_dev_t *dev);
 
 /// Sets the LSS support flag. @see co_dev_get_lss()
 void co_dev_set_lss(co_dev_t *dev, int lss);

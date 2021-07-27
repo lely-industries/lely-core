@@ -47,7 +47,7 @@ struct co_rpdo {
 	/// The PDO number.
 	co_unsigned16_t num;
 	/// A flag specifying whether the Receive-PDO service is stopped.
-	int stopped;
+	bool stopped;
 	/// The PDO communication parameter.
 	struct co_pdo_comm_par comm;
 	/// The PDO mapping parameter.
@@ -241,7 +241,7 @@ co_rpdo_start(co_rpdo_t *pdo)
 
 	co_rpdo_init_recv(pdo);
 
-	pdo->stopped = 0;
+	pdo->stopped = false;
 
 	return 0;
 }
@@ -271,10 +271,10 @@ co_rpdo_stop(co_rpdo_t *pdo)
 	assert(obj_1400);
 	co_obj_set_dn_ind(obj_1400, NULL, NULL);
 
-	pdo->stopped = 1;
+	pdo->stopped = true;
 }
 
-int
+bool
 co_rpdo_is_stopped(const co_rpdo_t *pdo)
 {
 	assert(pdo);
@@ -804,7 +804,7 @@ co_rpdo_init(co_rpdo_t *pdo, can_net_t *net, co_dev_t *dev, co_unsigned16_t num)
 	pdo->dev = dev;
 	pdo->num = num;
 
-	pdo->stopped = 1;
+	pdo->stopped = true;
 
 	memset(&pdo->comm, 0, sizeof(pdo->comm));
 	memset(&pdo->map, 0, sizeof(pdo->map));

@@ -29,6 +29,8 @@
 #include "co.h"
 #include <lely/co/nmt.h>
 
+#include <stdbool.h>
+
 struct co_nmt_rdn;
 /// An opaque CANopen NMT redundancy manager type.
 typedef struct co_nmt_rdn co_nmt_rdn_t;
@@ -69,10 +71,10 @@ void co_nmt_ecss_rdn_ind(co_nmt_t *nmt, co_unsigned8_t bus_id, int reason);
  *
  * @param dev a pointer to a CANopen device.
  *
- * @returns 1 if the Redundancy Object is conformant (or not present), and 0
- * if not.
+ * @returns <b>true</b> if the Redundancy Object is conformant (or not
+ *           present), and <b>false</b> if not.
  */
-int co_nmt_rdn_chk_dev(const co_dev_t *dev);
+bool co_nmt_rdn_chk_dev(const co_dev_t *dev);
 
 /// Returns the alignment (in bytes) of the #co_nmt_rdn_t structure.
 size_t co_nmt_rdn_alignof(void);

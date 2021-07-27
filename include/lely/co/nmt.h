@@ -25,6 +25,8 @@
 #include <lely/can/net.h>
 #include <lely/co/type.h>
 
+#include <stdbool.h>
+
 #ifndef LELY_CO_NMT_TIMEOUT
 /**
  * The default SDO timeout (in milliseconds) for the NMT 'boot slave' and
@@ -785,8 +787,11 @@ int co_nmt_set_id(co_nmt_t *nmt, co_unsigned8_t id);
  */
 co_unsigned8_t co_nmt_get_st(const co_nmt_t *nmt);
 
-/// Returns 1 if the specified CANopen NMT service is a master, and 0 if not.
-int co_nmt_is_master(const co_nmt_t *nmt);
+/**
+ * Returns <b>true</b> if the specified CANopen NMT service is a
+ * master, and <b>false</b> if not.
+ */
+bool co_nmt_is_master(const co_nmt_t *nmt);
 
 /**
  * Sets the alternate CAN bus identifier which the NMT redundancy manager
@@ -872,10 +877,10 @@ int co_nmt_lss_con(co_nmt_t *nmt);
 int co_nmt_boot_req(co_nmt_t *nmt, co_unsigned8_t id, int timeout);
 
 /**
- * Returns 1 if the NMT 'boot slave' process is currently running for the
- * specified node, and 0 if not.
+ * Returns <b>true</b> if the NMT 'boot slave' process is currently
+ * running for the specified node, and <b>false</b> if not.
  */
-int co_nmt_is_booting(const co_nmt_t *nmt, co_unsigned8_t id);
+bool co_nmt_is_booting(const co_nmt_t *nmt, co_unsigned8_t id);
 
 /**
  * Checks if a boot-up message has been received from the specified node(s).

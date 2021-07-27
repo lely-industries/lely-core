@@ -24,27 +24,27 @@
 #include "co.h"
 #include <lely/co/type.h>
 
-int
+bool
 co_type_is_basic(co_unsigned16_t type)
 {
 	switch (type) {
 #define LELY_CO_DEFINE_TYPE(a, b, c, d) case CO_DEFTYPE_##a:
 #include <lely/co/def/basic.def>
 #undef LELY_CO_DEFINE_TYPE
-		return 1;
-	default: return 0;
+		return true;
+	default: return false;
 	}
 }
 
-int
+bool
 co_type_is_array(co_unsigned16_t type)
 {
 	switch (type) {
 	case CO_DEFTYPE_VISIBLE_STRING:
 	case CO_DEFTYPE_OCTET_STRING:
 	case CO_DEFTYPE_UNICODE_STRING:
-	case CO_DEFTYPE_DOMAIN: return 1;
-	default: return 0;
+	case CO_DEFTYPE_DOMAIN: return true;
+	default: return false;
 	}
 }
 

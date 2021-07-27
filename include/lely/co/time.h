@@ -106,7 +106,7 @@ void co_time_destroy(co_time_t *time);
 /**
  * Starts a TIME service.
  *
- * @post on success, co_time_is_stopped() returns 0.
+ * @post on success, co_time_is_stopped() returns <b>false</b>.
  *
  * @returns 0 on success, or -1 on error. In the latter case, the error number
  * can be obtained with get_errc().
@@ -119,20 +119,21 @@ int co_time_start(co_time_t *time);
  * Stops a TIME service. This function invokes co_time_stop_prod() to stop the
  * TIME producer, if necessary.
  *
- * @post co_time_is_stopped() returns 1.
+ * @post co_time_is_stopped() returns <b>true</b>.
  *
  * @see co_time_start()
  */
 void co_time_stop(co_time_t *time);
 
 /**
- * Retuns 1 if the specified TIME service is stopped, and 0 if not.
+ * Returns <b>true</b> if the specified TIME service is stopped, and
+ * <b>false</b> if not.
  *
  * @see co_time_start, co_time_stop()
  */
-int co_time_is_stopped(const co_time_t *time);
+bool co_time_is_stopped(const co_time_t *time);
 
-/*
+/**
  * Returns a pointer to the allocator used to allocate a TIME producer/consumer
  * service.
  *

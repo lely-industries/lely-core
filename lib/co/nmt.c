@@ -191,7 +191,7 @@ struct co_nmt {
 	co_unsigned32_t startup;
 #if !LELY_NO_CO_MASTER
 	/// A flag specifying whether the NMT service is a master or a slave.
-	int master;
+	bool master;
 #endif
 	/// A pointer to the CAN frame receiver for NMT messages.
 	can_recv_t *recv_000;
@@ -824,9 +824,10 @@ static int co_nmt_slaves_boot(co_nmt_t *nmt);
 /**
  * Checks if boot-up messages have been received from all mandatory slaves.
  *
- * @returns 1 if all boot-up messages were received, 0 if not.
- */
-static int co_nmt_chk_bootup_slaves(const co_nmt_t *nmt);
+ * @returns <b>true</b> if all boot-up messages were received,
+ *          <b>false</b> if not.
+*/
+static bool co_nmt_chk_bootup_slaves(const co_nmt_t *nmt);
 
 #endif
 
@@ -1484,7 +1485,7 @@ co_nmt_get_st(const co_nmt_t *nmt)
 	return nmt->st & ~CO_NMT_ST_TOGGLE;
 }
 
-int
+bool
 co_nmt_is_master(const co_nmt_t *nmt)
 {
 #if LELY_NO_CO_MASTER
@@ -1702,16 +1703,16 @@ error_param:
 	return -1;
 }
 
-int
+bool
 co_nmt_is_booting(const co_nmt_t *nmt, co_unsigned8_t id)
 {
 	assert(nmt);
 
 	if (!nmt->master)
-		return 0;
+		return false;
 
 	if (!id || id > CO_NUM_NODES || id == co_dev_get_id(nmt->dev))
-		return 0;
+		return false;
 
 	return !!nmt->slaves[id - 1].boot;
 }
@@ -4016,7 +4017,7 @@ co_nmt_slaves_boot(co_nmt_t *nmt)
 }
 #endif
 
-static int
+static bool
 co_nmt_chk_bootup_slaves(const co_nmt_t *nmt)
 {
 	for (co_unsigned8_t node_id = 1; node_id <= CO_NUM_NODES; node_id++) {
@@ -4030,9 +4031,9 @@ co_nmt_chk_bootup_slaves(const co_nmt_t *nmt)
 			continue;
 		// Check if we have received a boot-up message from a slave.
 		if (!slave->bootup)
-			return 0;
+			return false;
 	}
-	return 1;
+	return true;
 }
 
 #endif // !LELY_NO_CO_MASTER
@@ -4122,7 +4123,7 @@ co_nmt_init(co_nmt_t *nmt, can_net_t *net, co_dev_t *dev)
 
 	nmt->startup = 0;
 #if !LELY_NO_CO_MASTER
-	nmt->master = 0;
+	nmt->master = false;
 #endif
 
 	// Create the CAN frame receiver for NMT messages.

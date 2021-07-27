@@ -403,7 +403,7 @@ TEST(CO_TpdoCreate, CoTpdoStart_FullTPDOCommParamRecord) {
   CHECK(tpdo != nullptr);
   CHECK_EQUAL(TPDO_NUM, co_tpdo_get_num(tpdo));
 
-  CHECK_EQUAL(1, co_tpdo_is_stopped(tpdo));
+  CHECK(co_tpdo_is_stopped(tpdo));
   const auto ret = co_tpdo_start(tpdo);
   CHECK_EQUAL(0, ret);
 
@@ -415,7 +415,7 @@ TEST(CO_TpdoCreate, CoTpdoStart_FullTPDOCommParamRecord) {
   CHECK_EQUAL(0x00u, comm->reserved);
   CHECK_EQUAL(0x0004u, comm->event);
   CHECK_EQUAL(0x05u, comm->sync);
-  CHECK_EQUAL(0, co_tpdo_is_stopped(tpdo));
+  CHECK_FALSE(co_tpdo_is_stopped(tpdo));
 }
 
 TEST(CO_TpdoCreate, CoTpdoStart_FullTPDOMappingParamRecord) {

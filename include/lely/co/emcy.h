@@ -25,6 +25,8 @@
 #include <lely/can/net.h>
 #include <lely/co/type.h>
 
+#include <stdbool.h>
+
 /// The bit in the EMCY COB-ID specifying whether the EMCY exists and is valid.
 #define CO_EMCY_COBID_VALID UINT32_C(0x80000000)
 
@@ -79,7 +81,7 @@ void co_emcy_destroy(co_emcy_t *emcy);
 /**
  * Starts an EMCY service.
  *
- * @post on success, co_emcy_is_stopped() returns 0.
+ * @post on success, co_emcy_is_stopped() returns <b>false</b>.
  *
  * @returns 0 on success, or -1 on error. In the latter case, the error number
  * can be obtained with get_errc().
@@ -91,20 +93,21 @@ int co_emcy_start(co_emcy_t *emcy);
 /**
  * Stops an EMCY service.
  *
- * @post co_emcy_is_stopped() returns 1.
+ * @post co_emcy_is_stopped() returns <b>true</b>.
  *
  * @see co_emcy_start()
  */
 void co_emcy_stop(co_emcy_t *emcy);
 
 /**
- * Retuns 1 if the specified EMCY service is stopped, and 0 if not.
+ * Returns <b>true</b> if the specified EMCY service is stopped, and
+ * <b>false</b> if not.
  *
  * @see co_emcy_start, co_emcy_stop()
  */
-int co_emcy_is_stopped(const co_emcy_t *emcy);
+bool co_emcy_is_stopped(const co_emcy_t *emcy);
 
-/*
+/**
  * Returns a pointer to the allocator used to allocate an EMCY producer/consumer
  * service.
  *

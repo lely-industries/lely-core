@@ -86,7 +86,7 @@ void co_sync_destroy(co_sync_t *sync);
 /**
  * Starts a SYNC service.
  *
- * @post on success, co_sync_is_stopped() returns 0.
+ * @post on success, co_sync_is_stopped() returns <b>false</b>.
  *
  * @returns 0 on success, or -1 on error. In the latter case, the error number
  * can be obtained with get_errc().
@@ -98,18 +98,19 @@ int co_sync_start(co_sync_t *sync);
 /**
  * Stops a SYNC service.
  *
- * @post co_sync_is_stopped() returns 1.
+ * @post co_sync_is_stopped() returns <b>true</b>.
  *
  * @see co_sync_start()
  */
 void co_sync_stop(co_sync_t *sync);
 
 /**
- * Retuns 1 if the specified SYNC service is stopped, and 0 if not.
+ * Returns <b>true</b> if the specified SYNC service is stopped, and
+ * <b>false</b> if not.
  *
  * @see co_sync_start, co_sync_stop()
  */
-int co_sync_is_stopped(const co_sync_t *sync);
+bool co_sync_is_stopped(const co_sync_t *sync);
 
 /*
  * Returns a pointer to the allocator used to allocate a SYNC producer/consumer

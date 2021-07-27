@@ -25,6 +25,8 @@
 #include <lely/can/net.h>
 #include <lely/co/sdo.h>
 
+#include <stdbool.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -58,7 +60,7 @@ void co_ssdo_destroy(co_ssdo_t *sdo);
 /**
  * Starts a Server-SDO service.
  *
- * @post on success, co_ssdo_is_stopped() returns 0.
+ * @post on success, co_ssdo_is_stopped() returns <b>false</b>.
  *
  * @returns 0 on success, or -1 on error. In the latter case, the error number
  * can be obtained with get_errc().
@@ -70,18 +72,19 @@ int co_ssdo_start(co_ssdo_t *sdo);
 /**
  * Stops a Server-SDO service. Any ongoing request is aborted.
  *
- * @post co_ssdo_is_stopped() returns 1.
+ * @post co_ssdo_is_stopped() returns <b>true</b>.
  *
  * @see co_ssdo_start()
  */
 void co_ssdo_stop(co_ssdo_t *sdo);
 
 /**
- * Retuns 1 if the specified Server-SDO service is stopped, and 0 if not.
+ * Returns <b>true</b> if the specified Server-SDO service is stopped,
+ * and <b>false</b> if not.
  *
  * @see co_ssdo_start, co_ssdo_stop()
  */
-int co_ssdo_is_stopped(const co_ssdo_t *sdo);
+bool co_ssdo_is_stopped(const co_ssdo_t *sdo);
 
 /*
  * Returns a pointer to the allocator used to allocate a Server-SDO.

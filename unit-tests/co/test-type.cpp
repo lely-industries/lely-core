@@ -39,24 +39,24 @@ TEST_GROUP(CO_Type) { static const co_unsigned16_t INVALID_TYPE = 0xffff; };
 ///
 /// \Then 1 is returned
 TEST(CO_Type, CoTypeIsBasic_True) {
-  CHECK_EQUAL(1, co_type_is_basic(CO_DEFTYPE_BOOLEAN));
-  CHECK_EQUAL(1, co_type_is_basic(CO_DEFTYPE_INTEGER8));
-  CHECK_EQUAL(1, co_type_is_basic(CO_DEFTYPE_INTEGER16));
-  CHECK_EQUAL(1, co_type_is_basic(CO_DEFTYPE_INTEGER32));
-  CHECK_EQUAL(1, co_type_is_basic(CO_DEFTYPE_UNSIGNED8));
-  CHECK_EQUAL(1, co_type_is_basic(CO_DEFTYPE_UNSIGNED16));
-  CHECK_EQUAL(1, co_type_is_basic(CO_DEFTYPE_UNSIGNED32));
-  CHECK_EQUAL(1, co_type_is_basic(CO_DEFTYPE_REAL32));
-  CHECK_EQUAL(1, co_type_is_basic(CO_DEFTYPE_REAL64));
-  CHECK_EQUAL(1, co_type_is_basic(CO_DEFTYPE_INTEGER40));
-  CHECK_EQUAL(1, co_type_is_basic(CO_DEFTYPE_INTEGER48));
-  CHECK_EQUAL(1, co_type_is_basic(CO_DEFTYPE_INTEGER56));
-  CHECK_EQUAL(1, co_type_is_basic(CO_DEFTYPE_INTEGER64));
-  CHECK_EQUAL(1, co_type_is_basic(CO_DEFTYPE_UNSIGNED24));
-  CHECK_EQUAL(1, co_type_is_basic(CO_DEFTYPE_UNSIGNED40));
-  CHECK_EQUAL(1, co_type_is_basic(CO_DEFTYPE_UNSIGNED48));
-  CHECK_EQUAL(1, co_type_is_basic(CO_DEFTYPE_UNSIGNED56));
-  CHECK_EQUAL(1, co_type_is_basic(CO_DEFTYPE_UNSIGNED64));
+  CHECK(co_type_is_basic(CO_DEFTYPE_BOOLEAN));
+  CHECK(co_type_is_basic(CO_DEFTYPE_INTEGER8));
+  CHECK(co_type_is_basic(CO_DEFTYPE_INTEGER16));
+  CHECK(co_type_is_basic(CO_DEFTYPE_INTEGER32));
+  CHECK(co_type_is_basic(CO_DEFTYPE_UNSIGNED8));
+  CHECK(co_type_is_basic(CO_DEFTYPE_UNSIGNED16));
+  CHECK(co_type_is_basic(CO_DEFTYPE_UNSIGNED32));
+  CHECK(co_type_is_basic(CO_DEFTYPE_REAL32));
+  CHECK(co_type_is_basic(CO_DEFTYPE_REAL64));
+  CHECK(co_type_is_basic(CO_DEFTYPE_INTEGER40));
+  CHECK(co_type_is_basic(CO_DEFTYPE_INTEGER48));
+  CHECK(co_type_is_basic(CO_DEFTYPE_INTEGER56));
+  CHECK(co_type_is_basic(CO_DEFTYPE_INTEGER64));
+  CHECK(co_type_is_basic(CO_DEFTYPE_UNSIGNED24));
+  CHECK(co_type_is_basic(CO_DEFTYPE_UNSIGNED40));
+  CHECK(co_type_is_basic(CO_DEFTYPE_UNSIGNED48));
+  CHECK(co_type_is_basic(CO_DEFTYPE_UNSIGNED56));
+  CHECK(co_type_is_basic(CO_DEFTYPE_UNSIGNED64));
 }
 
 /// \Given N/A
@@ -65,19 +65,19 @@ TEST(CO_Type, CoTypeIsBasic_True) {
 ///
 /// \Then 0 is returned
 TEST(CO_Type, CoTypeIsBasic_False) {
-  CHECK_EQUAL(0, co_type_is_basic(CO_DEFTYPE_TIME_OF_DAY));
-  CHECK_EQUAL(0, co_type_is_basic(CO_DEFTYPE_TIME_DIFF));
+  CHECK_FALSE(co_type_is_basic(CO_DEFTYPE_TIME_OF_DAY));
+  CHECK_FALSE(co_type_is_basic(CO_DEFTYPE_TIME_DIFF));
 #if CO_DEFTYPE_TIME_SCET
-  CHECK_EQUAL(0, co_type_is_basic(CO_DEFTYPE_TIME_SCET));
+  CHECK_FALSE(co_type_is_basic(CO_DEFTYPE_TIME_SCET));
 #endif
 #if CO_DEFTYPE_TIME_SUTC
-  CHECK_EQUAL(0, co_type_is_basic(CO_DEFTYPE_TIME_SUTC));
+  CHECK_FALSE(co_type_is_basic(CO_DEFTYPE_TIME_SUTC));
 #endif
-  CHECK_EQUAL(0, co_type_is_basic(CO_DEFTYPE_VISIBLE_STRING));
-  CHECK_EQUAL(0, co_type_is_basic(CO_DEFTYPE_OCTET_STRING));
-  CHECK_EQUAL(0, co_type_is_basic(CO_DEFTYPE_UNICODE_STRING));
-  CHECK_EQUAL(0, co_type_is_basic(CO_DEFTYPE_DOMAIN));
-  CHECK_EQUAL(0, co_type_is_basic(INVALID_TYPE));
+  CHECK_FALSE(co_type_is_basic(CO_DEFTYPE_VISIBLE_STRING));
+  CHECK_FALSE(co_type_is_basic(CO_DEFTYPE_OCTET_STRING));
+  CHECK_FALSE(co_type_is_basic(CO_DEFTYPE_UNICODE_STRING));
+  CHECK_FALSE(co_type_is_basic(CO_DEFTYPE_DOMAIN));
+  CHECK_FALSE(co_type_is_basic(INVALID_TYPE));
 }
 
 ///@}
@@ -91,10 +91,10 @@ TEST(CO_Type, CoTypeIsBasic_False) {
 ///
 /// \Then 1 is returned
 TEST(CO_Type, CoTypeIsArray_True) {
-  CHECK_EQUAL(1, co_type_is_array(CO_DEFTYPE_VISIBLE_STRING));
-  CHECK_EQUAL(1, co_type_is_array(CO_DEFTYPE_OCTET_STRING));
-  CHECK_EQUAL(1, co_type_is_array(CO_DEFTYPE_UNICODE_STRING));
-  CHECK_EQUAL(1, co_type_is_array(CO_DEFTYPE_DOMAIN));
+  CHECK(co_type_is_array(CO_DEFTYPE_VISIBLE_STRING));
+  CHECK(co_type_is_array(CO_DEFTYPE_OCTET_STRING));
+  CHECK(co_type_is_array(CO_DEFTYPE_UNICODE_STRING));
+  CHECK(co_type_is_array(CO_DEFTYPE_DOMAIN));
 }
 
 /// \Given N/A
@@ -103,33 +103,33 @@ TEST(CO_Type, CoTypeIsArray_True) {
 ///
 /// \Then 0 is returned
 TEST(CO_Type, CoTypeIsArray_False) {
-  CHECK_EQUAL(0, co_type_is_array(CO_DEFTYPE_BOOLEAN));
-  CHECK_EQUAL(0, co_type_is_array(CO_DEFTYPE_INTEGER8));
-  CHECK_EQUAL(0, co_type_is_array(CO_DEFTYPE_INTEGER16));
-  CHECK_EQUAL(0, co_type_is_array(CO_DEFTYPE_INTEGER32));
-  CHECK_EQUAL(0, co_type_is_array(CO_DEFTYPE_UNSIGNED8));
-  CHECK_EQUAL(0, co_type_is_array(CO_DEFTYPE_UNSIGNED16));
-  CHECK_EQUAL(0, co_type_is_array(CO_DEFTYPE_UNSIGNED32));
-  CHECK_EQUAL(0, co_type_is_array(CO_DEFTYPE_REAL32));
-  CHECK_EQUAL(0, co_type_is_array(CO_DEFTYPE_REAL64));
-  CHECK_EQUAL(0, co_type_is_array(CO_DEFTYPE_INTEGER40));
-  CHECK_EQUAL(0, co_type_is_array(CO_DEFTYPE_INTEGER48));
-  CHECK_EQUAL(0, co_type_is_array(CO_DEFTYPE_INTEGER56));
-  CHECK_EQUAL(0, co_type_is_array(CO_DEFTYPE_INTEGER64));
-  CHECK_EQUAL(0, co_type_is_array(CO_DEFTYPE_UNSIGNED24));
-  CHECK_EQUAL(0, co_type_is_array(CO_DEFTYPE_UNSIGNED40));
-  CHECK_EQUAL(0, co_type_is_array(CO_DEFTYPE_UNSIGNED48));
-  CHECK_EQUAL(0, co_type_is_array(CO_DEFTYPE_UNSIGNED56));
-  CHECK_EQUAL(0, co_type_is_array(CO_DEFTYPE_UNSIGNED64));
-  CHECK_EQUAL(0, co_type_is_array(CO_DEFTYPE_TIME_OF_DAY));
-  CHECK_EQUAL(0, co_type_is_array(CO_DEFTYPE_TIME_DIFF));
+  CHECK_FALSE(co_type_is_array(CO_DEFTYPE_BOOLEAN));
+  CHECK_FALSE(co_type_is_array(CO_DEFTYPE_INTEGER8));
+  CHECK_FALSE(co_type_is_array(CO_DEFTYPE_INTEGER16));
+  CHECK_FALSE(co_type_is_array(CO_DEFTYPE_INTEGER32));
+  CHECK_FALSE(co_type_is_array(CO_DEFTYPE_UNSIGNED8));
+  CHECK_FALSE(co_type_is_array(CO_DEFTYPE_UNSIGNED16));
+  CHECK_FALSE(co_type_is_array(CO_DEFTYPE_UNSIGNED32));
+  CHECK_FALSE(co_type_is_array(CO_DEFTYPE_REAL32));
+  CHECK_FALSE(co_type_is_array(CO_DEFTYPE_REAL64));
+  CHECK_FALSE(co_type_is_array(CO_DEFTYPE_INTEGER40));
+  CHECK_FALSE(co_type_is_array(CO_DEFTYPE_INTEGER48));
+  CHECK_FALSE(co_type_is_array(CO_DEFTYPE_INTEGER56));
+  CHECK_FALSE(co_type_is_array(CO_DEFTYPE_INTEGER64));
+  CHECK_FALSE(co_type_is_array(CO_DEFTYPE_UNSIGNED24));
+  CHECK_FALSE(co_type_is_array(CO_DEFTYPE_UNSIGNED40));
+  CHECK_FALSE(co_type_is_array(CO_DEFTYPE_UNSIGNED48));
+  CHECK_FALSE(co_type_is_array(CO_DEFTYPE_UNSIGNED56));
+  CHECK_FALSE(co_type_is_array(CO_DEFTYPE_UNSIGNED64));
+  CHECK_FALSE(co_type_is_array(CO_DEFTYPE_TIME_OF_DAY));
+  CHECK_FALSE(co_type_is_array(CO_DEFTYPE_TIME_DIFF));
 #if CO_DEFTYPE_TIME_SCET
-  CHECK_EQUAL(0, co_type_is_array(CO_DEFTYPE_TIME_SCET));
+  CHECK_FALSE(co_type_is_array(CO_DEFTYPE_TIME_SCET));
 #endif
 #if CO_DEFTYPE_TIME_SUTC
-  CHECK_EQUAL(0, co_type_is_array(CO_DEFTYPE_TIME_SUTC));
+  CHECK_FALSE(co_type_is_array(CO_DEFTYPE_TIME_SUTC));
 #endif
-  CHECK_EQUAL(0, co_type_is_array(INVALID_TYPE));
+  CHECK_FALSE(co_type_is_array(INVALID_TYPE));
 }
 
 ///@}

@@ -51,7 +51,7 @@ struct co_lss {
 	co_lss_state_t *state;
 #if !LELY_NO_CO_MASTER
 	/// A flag specifying whether the LSS service is a master or a slave.
-	int master;
+	bool master;
 	/// The inhibit time (in multiples of 100 microseconds).
 	co_unsigned16_t inhibit;
 	/// The index of the next frame to be sent.
@@ -749,7 +749,7 @@ co_lss_stop(co_lss_t *lss)
 	co_lss_enter(lss, co_lss_stopped_state);
 }
 
-int
+bool
 co_lss_is_stopped(const co_lss_t *lss)
 {
 	assert(lss);
@@ -853,7 +853,7 @@ co_lss_set_timeout(co_lss_t *lss, int timeout)
 
 #endif // !LELY_NO_CO_MASTER
 
-int
+bool
 co_lss_is_master(const co_lss_t *lss)
 {
 #if LELY_NO_CO_MASTER
@@ -869,7 +869,7 @@ co_lss_is_master(const co_lss_t *lss)
 
 #if !LELY_NO_CO_MASTER
 
-int
+bool
 co_lss_is_idle(const co_lss_t *lss)
 {
 	assert(lss);
@@ -2620,7 +2620,7 @@ co_lss_init(co_lss_t *lss, co_nmt_t *nmt)
 	lss->state = co_lss_stopped_state;
 
 #if !LELY_NO_CO_MASTER
-	lss->master = 0;
+	lss->master = false;
 	lss->inhibit = LELY_CO_LSS_INHIBIT;
 	lss->next = 0;
 #endif

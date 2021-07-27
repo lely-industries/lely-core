@@ -26,6 +26,8 @@
 #include <lely/co/dev.h>
 #include <lely/util/rbtree.h>
 
+#include <stdbool.h>
+
 /// A CANopen device.
 struct co_dev {
 	/// The network-ID.
@@ -59,7 +61,7 @@ struct co_dev {
 	/// The (pending) baudrate (in kbit/s).
 	co_unsigned16_t rate;
 	/// A flag specifying whether LSS is supported (1) or not (0).
-	int lss;
+	bool lss;
 	/// The data types supported for mapping dummy entries in PDOs.
 	co_unsigned32_t dummy;
 #if !LELY_NO_CO_TPDO

@@ -991,7 +991,7 @@ co_csdo_stop(co_csdo_t *sdo)
 	co_csdo_enter(sdo, co_csdo_stopped_state);
 }
 
-int
+bool
 co_csdo_is_stopped(const co_csdo_t *sdo)
 {
 	assert(sdo);
@@ -1098,17 +1098,17 @@ co_csdo_set_up_ind(co_csdo_t *sdo, co_csdo_ind_t *ind, void *data)
 	sdo->up_ind_data = data;
 }
 
-int
+bool
 co_csdo_is_valid(const co_csdo_t *sdo)
 {
 	assert(sdo);
 
-	int valid_req = !(sdo->par.cobid_req & CO_SDO_COBID_VALID);
-	int valid_res = !(sdo->par.cobid_res & CO_SDO_COBID_VALID);
+	const bool valid_req = !(sdo->par.cobid_req & CO_SDO_COBID_VALID);
+	const bool valid_res = !(sdo->par.cobid_res & CO_SDO_COBID_VALID);
 	return valid_req && valid_res;
 }
 
-int
+bool
 co_csdo_is_idle(const co_csdo_t *sdo)
 {
 	assert(sdo);
