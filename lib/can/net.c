@@ -275,7 +275,7 @@ can_net_set_next_func(can_net_t *net, can_timer_func_t *func, void *data)
 	net->next_data = data;
 }
 
-int
+ssize_t
 can_net_recv(can_net_t *net, const struct can_msg *msg, const int bus_id)
 {
 	assert(net);
@@ -285,7 +285,7 @@ can_net_recv(can_net_t *net, const struct can_msg *msg, const int bus_id)
 		return 0;
 
 	int errc = get_errc();
-	int result = 1;
+	ssize_t result = 1;
 
 	can_recv_key_t key = can_recv_key(msg->id, msg->flags);
 	struct rbnode *node = rbtree_find(&net->recv_tree, &key);

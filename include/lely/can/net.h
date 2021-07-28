@@ -173,7 +173,7 @@ void can_net_set_next_func(can_net_t *net, can_timer_func_t *func, void *data);
  * the error number set by the first failed CAN frame receiver callback
  * function can be obtained with get_errc().
  */
-int can_net_recv(can_net_t *net, const struct can_msg *msg, int bus_id);
+ssize_t can_net_recv(can_net_t *net, const struct can_msg *msg, int bus_id);
 
 /**
  * Sends a CAN frame from a network interface. This function invokes the
