@@ -20,14 +20,14 @@
  * limitations under the License.
  */
 
-#ifndef LELY_UNIT_TEST_SDO_CLIENT_PAR_HPP_
-#define LELY_UNIT_TEST_SDO_CLIENT_PAR_HPP_
+#ifndef LELY_UNIT_TEST_SDO_SERVER_PAR_HPP_
+#define LELY_UNIT_TEST_SDO_SERVER_PAR_HPP_
 
 #include "obj-init/obj-init.hpp"
 #include "holder/obj.hpp"
 
-// 0x1280-0x12ff: SDO client parameter
-struct Obj1280SdoClientPar : ObjInitT<0x1280u, 0x1280u, 0x12ffu> {
+// 0x1200-0x127f: SDO server parameter
+struct Obj1200SdoServerPar : ObjInitT<0x1200u, 0x1200u, 0x127fu> {
   struct Sub00HighestSubidxSupported
       : SubT<0x00u, CO_DEFTYPE_UNSIGNED8, 0x03u> {};
   struct Sub01CobIdReq : SubT<0x01u, CO_DEFTYPE_UNSIGNED32> {};
@@ -35,4 +35,4 @@ struct Obj1280SdoClientPar : ObjInitT<0x1280u, 0x1280u, 0x12ffu> {
   struct Sub03NodeId : SubT<0x03u, CO_DEFTYPE_UNSIGNED8, 0x01u> {};
 };
 
-#endif  // LELY_UNIT_TEST_SDO_CLIENT_PAR_HPP_
+#endif  // LELY_UNIT_TEST_SDO_SERVER_PAR_HPP_

@@ -20,19 +20,13 @@
  * limitations under the License.
  */
 
-#ifndef LELY_UNIT_TEST_SDO_CLIENT_PAR_HPP_
-#define LELY_UNIT_TEST_SDO_CLIENT_PAR_HPP_
+#ifndef LELY_UNIT_TEST_SYNC_COBID_HPP_
+#define LELY_UNIT_TEST_SYNC_COBID_HPP_
 
 #include "obj-init/obj-init.hpp"
-#include "holder/obj.hpp"
 
-// 0x1280-0x12ff: SDO client parameter
-struct Obj1280SdoClientPar : ObjInitT<0x1280u, 0x1280u, 0x12ffu> {
-  struct Sub00HighestSubidxSupported
-      : SubT<0x00u, CO_DEFTYPE_UNSIGNED8, 0x03u> {};
-  struct Sub01CobIdReq : SubT<0x01u, CO_DEFTYPE_UNSIGNED32> {};
-  struct Sub02CobIdRes : SubT<0x02u, CO_DEFTYPE_UNSIGNED32> {};
-  struct Sub03NodeId : SubT<0x03u, CO_DEFTYPE_UNSIGNED8, 0x01u> {};
+// 0x1005: COB-ID SYNC message
+struct Obj1005CobidSync : ObjValueInitT<0x1005u, CO_DEFTYPE_UNSIGNED32, 0x80u> {
 };
 
-#endif  // LELY_UNIT_TEST_SDO_CLIENT_PAR_HPP_
+#endif  // LELY_UNIT_TEST_SYNC_COBID_HPP_
