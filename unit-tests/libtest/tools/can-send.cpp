@@ -62,9 +62,7 @@ CanSend::CheckMsg(const uint_least32_t id, const uint_least8_t flags,
   CHECK_EQUAL(flags, msg.flags);
   CHECK_EQUAL(len, msg.len);
   if (data != nullptr) {
-    for (uint_least8_t i = 0; i < len; ++i) {
-      CHECK_EQUAL(data[i], msg.data[i]);
-    }
+    MEMCMP_EQUAL(data, msg.data, len);
   }
 }
 
