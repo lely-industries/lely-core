@@ -2450,6 +2450,9 @@ co_rdn_dn_ind(co_sub_t *sub, struct co_sdo_req *req, co_unsigned32_t ac,
 	default: return CO_SDO_AC_NO_SUB;
 	}
 
+	if (co_sub_get_val_u8(sub) == val.u8)
+		return 0;
+
 	co_sub_dn(sub, &val);
 	co_nmt_rdn_update(nmt);
 
