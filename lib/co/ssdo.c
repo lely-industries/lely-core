@@ -1456,7 +1456,7 @@ co_ssdo_blk_up_ini_on_recv(co_ssdo_t *sdo, const struct can_msg *msg)
 	if (pst && sdo->req.size <= pst) {
 		// If the PST is non-zero, and the number of bytes is smaller
 		// than or equal to the PST, switch to the SDO upload protocol.
-		if (sdo->req.size <= 4) {
+		if (sdo->req.size && sdo->req.size <= 4) {
 			// Perform an expedited transfer.
 			ac = co_ssdo_up_buf(sdo, sdo->req.size);
 #if LELY_NO_MALLOC
@@ -1547,8 +1547,10 @@ co_ssdo_blk_up_sub_on_recv(co_ssdo_t *sdo, const struct can_msg *msg)
 
 	ptrdiff_t n = sdo->blksize * 7 - membuf_size(&sdo->buf);
 	if (n > 0) {
+#if !LELY_NO_MALLOC || (CO_SSDO_MEMBUF_SIZE < (CO_SDO_MAX_SEQNO * 7))
 		if (!membuf_reserve(&sdo->buf, n))
 			return co_ssdo_abort_up_res(sdo, CO_SDO_AC_NO_MEM);
+#endif
 		ac = co_ssdo_up_buf(sdo, n);
 		if (ac)
 			return co_ssdo_abort_res(sdo, ac);
@@ -1712,13 +1714,16 @@ co_ssdo_up_ind(co_ssdo_t *sdo, co_unsigned32_t ac)
 static co_unsigned32_t
 co_ssdo_up_buf(co_ssdo_t *sdo, size_t nbyte)
 {
+	assert(nbyte > 0);
 	co_unsigned32_t ac = 0;
 
-	if (nbyte && !membuf_reserve(&sdo->buf, nbyte)) {
+#if !LELY_NO_MALLOC || (CO_SSDO_MEMBUF_SIZE < (CO_SDO_MAX_SEQNO * 7))
+	if (!membuf_reserve(&sdo->buf, nbyte)) {
 		ac = CO_SDO_AC_NO_MEM;
 		co_ssdo_up_ind(sdo, ac);
 		return ac;
 	}
+#endif
 
 	while (nbyte) {
 		if (sdo->nbyte >= sdo->req.nbyte) {
