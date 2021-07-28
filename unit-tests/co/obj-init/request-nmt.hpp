@@ -20,15 +20,20 @@
  * limitations under the License.
  */
 
-#ifndef LELY_UNIT_TEST_NMT_STARTUP_HPP_
-#define LELY_UNIT_TEST_NMT_STARTUP_HPP_
+#ifndef LELY_UNIT_TEST_REQUEST_NMT_HPP_
+#define LELY_UNIT_TEST_REQUEST_NMT_HPP_
 
 #include "obj-init/obj-init.hpp"
 
-// 0x1f80: NMT Start-up
-struct Obj1f80NmtStartup : ObjValueInitT<0x1f80u, CO_DEFTYPE_UNSIGNED32> {
-  static const sub_type MASTER_BIT = 0x01u;
-  static const sub_type AUTOSTART_BIT = 0x04;
+#include <lely/co/dev.h>
+
+// 0x1f82: Request NMT
+struct Obj1f82RequestNmt : ObjInitT<0x1f82u> {
+  struct Sub00SupportedNumberOfSlaves : SubT<0x00u, CO_DEFTYPE_UNSIGNED8> {};
+  struct SubNthRequestNmtService : SubT<0x01u, CO_DEFTYPE_UNSIGNED8, 0, 0x01> {
+  };
+
+  static const co_unsigned8_t ALL_NODES = 0x80u;
 };
 
-#endif  // LELY_UNIT_TEST_NMT_STARTUP_HPP_
+#endif  // LELY_UNIT_TEST_REQUEST_NMT_HPP_

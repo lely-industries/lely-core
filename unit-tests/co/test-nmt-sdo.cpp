@@ -26,6 +26,7 @@
 
 #include <functional>
 #include <memory>
+#include <map>
 
 #include <CppUTest/TestHarness.h>
 
@@ -52,6 +53,8 @@
 #include "obj-init/nmt-hb-producer.hpp"
 #include "obj-init/nmt-redundancy.hpp"
 #include "obj-init/nmt-startup.hpp"
+#include "obj-init/nmt-slave-assignment.hpp"
+#include "obj-init/request-nmt.hpp"
 
 namespace CO_NmtSdoConsts {
 static const co_unsigned8_t MASTER_DEV_ID = 0x01u;
@@ -1112,3 +1115,424 @@ TEST(CO_NmtRdnSdo, Co1016DnInd_SubN_ConsumerHeartbeatTime_UpdateRdnMaster) {
 ///@}
 
 #endif  // !LELY_NO_CO_ECSS_REDUNDANCY
+
+TEST_GROUP_BASE(CO_NmtSdo1f80, CO_NmtSdo) {
+  int32_t ignore = 0;  // clang-format fix
+
+  TEST_SETUP() {
+    TEST_BASE_SETUP();
+
+    dev_holder->CreateObjValue<Obj1f80NmtStartup>(obj1f80, 0);
+  }
+
+  TEST_TEARDOWN() { TEST_BASE_TEARDOWN(); }
+};
+
+/// @name NMT service: the NMT Start-up object (0x1f80) modification using SDO
+///@{
+
+/// \Given a started NMT service (co_nmt_t), the object dictionary contains the
+///        NMT Start-up object (0x1f80) with a sub-object
+///
+/// \When the download indication function for the object is called with
+///       a non-zero abort code
+///
+/// \Then the same abort code value is returned, nothing is changed
+///       \Calls co_sub_get_type()
+TEST(CO_NmtSdo1f80, Co1f80DnInd_NonZeroAC) {
+  CreateNmtAndReset();
+
+  const co_unsigned32_t ac = CO_SDO_AC_ERROR;
+
+  const auto ret = LelyUnitTest::CallDnIndWithAbortCode(dev, 0x1f80u, 0x00, ac);
+
+  CHECK_EQUAL(ac, ret);
+}
+
+/// \Given a started NMT service (co_nmt_t), the object dictionary contains the
+///        NMT Start-up object (0x1f80) with a sub-object (0x00)
+///
+/// \When a value of incompatible size is downloaded to the sub-object
+///
+/// \Then CO_SDO_AC_TYPE_LEN_HI abort code is passed to the download
+///       confirmation function, nothing is changed
+///       \Calls co_sub_get_type()
+///       \Calls co_sdo_req_dn_val()
+TEST(CO_NmtSdo1f80, Co1f80DnInd_TypeLenTooHigh) {
+  CreateNmtAndReset();
+
+  const co_unsigned64_t val = 0;
+  const auto ret = co_dev_dn_val_req(dev, 0x1f80u, 0x00, CO_DEFTYPE_UNSIGNED64,
+                                     &val, nullptr, CoCsdoDnCon::Func, nullptr);
+
+  CHECK_EQUAL(0, ret);
+  CoCsdoDnCon::Check(nullptr, 0x1f80, 0x00, CO_SDO_AC_TYPE_LEN_HI, nullptr);
+  CHECK_EQUAL(0, obj1f80->GetSub<Obj1f80NmtStartup>());
+}
+
+/// \Given a started NMT service (co_nmt_t), the object dictionary contains the
+///        NMT Start-up object (0x1f80) with a sub-object (0x01)
+///
+/// \When any value is downloaded to the sub-object
+///
+/// \Then CO_SDO_AC_NO_SUB abort code is passed to the download confirmation
+///       function, nothing is changed
+///       \Calls co_sub_get_type()
+///       \Calls co_sdo_req_dn_val()
+///       \Calls co_sub_get_subidx()
+TEST(CO_NmtSdo1f80, Co1f80DnInd_NoSub) {
+  obj1f80->InsertAndSetSub(0x01u, CO_DEFTYPE_UNSIGNED16, co_unsigned16_t{0});
+  CreateNmtAndReset();
+
+  const co_unsigned16_t val = 0xffffu;
+  const auto ret = co_dev_dn_val_req(dev, 0x1f80u, 0x01, CO_DEFTYPE_UNSIGNED16,
+                                     &val, nullptr, CoCsdoDnCon::Func, nullptr);
+
+  CHECK_EQUAL(0, ret);
+  CoCsdoDnCon::Check(nullptr, 0x1f80, 0x01, CO_SDO_AC_NO_SUB, nullptr);
+  CHECK_EQUAL(0, co_dev_get_val_u16(dev, 0x1f80u, 0x01u));
+}
+
+/// \Given a started NMT service (co_nmt_t), the object dictionary contains the
+///        NMT Start-up object (0x1f80) with a sub-object (0x00)
+///
+/// \When the value with an unsupported bit is downloaded to the sub-object
+///
+/// \Then CO_SDO_AC_PARAM_VAL abort code is passed to the download confirmation
+///       function, nothing is changed
+///       \Calls co_sub_get_type()
+///       \Calls co_sdo_req_dn_val()
+///       \Calls co_sub_get_subidx()
+///       \Calls co_sub_get_val_u32()
+TEST(CO_NmtSdo1f80, Co1f80DnInd_UnsupportedBit) {
+  CreateNmtAndReset();
+
+  const co_unsigned32_t val = 0x20u;  // unsupported bit
+  const auto ret = co_dev_dn_val_req(dev, 0x1f80u, 0x00, CO_DEFTYPE_UNSIGNED32,
+                                     &val, nullptr, CoCsdoDnCon::Func, nullptr);
+
+  CHECK_EQUAL(0, ret);
+  CHECK_EQUAL(0, ret);
+  CoCsdoDnCon::Check(nullptr, 0x1f80, 0x00, CO_SDO_AC_PARAM_VAL, nullptr);
+  CHECK_EQUAL(0, obj1f80->GetSub<Obj1f80NmtStartup>());
+}
+
+/// \Given a started NMT service (co_nmt_t), the object dictionary contains the
+///        NMT Start-up object (0x1f80) with a sub-object (0x00)
+///
+/// \When the same value as the current sub-object's value is downloaded to the
+///       sub-object
+///
+/// \Then a zero abort code is passed to the download confirmation function,
+///       the sub-object is not changed
+///       \Calls co_sub_get_type()
+///       \Calls co_sdo_req_dn_val()
+///       \Calls co_sub_get_subidx()
+///       \Calls co_sub_get_val_u32()
+TEST(CO_NmtSdo1f80, Co1f80DnInd_SameValue) {
+  CreateNmtAndReset();
+
+  const co_unsigned32_t val = obj1f80->GetSub<Obj1f80NmtStartup>();
+  const auto ret = co_dev_dn_val_req(dev, 0x1f80u, 0x00, CO_DEFTYPE_UNSIGNED32,
+                                     &val, nullptr, CoCsdoDnCon::Func, nullptr);
+
+  CHECK_EQUAL(0, ret);
+  CoCsdoDnCon::Check(nullptr, 0x1f80u, 0x00, 0, nullptr);
+  CHECK_EQUAL(0, obj1f80->GetSub<Obj1f80NmtStartup>());
+}
+
+/// \Given a started NMT service (co_nmt_t), the object dictionary contains the
+///        NMT Start-up object (0x1f80) with a sub-object (0x00)
+///
+/// \When a correct value is downloaded to the sub-object
+///
+/// \Then a zero abort code is passed to the download confirmation function,
+///       the sub-object is set to the requested value
+///       \Calls co_sub_get_type()
+///       \Calls co_sdo_req_dn_val()
+///       \Calls co_sub_get_subidx()
+///       \Calls co_sub_get_val_u32()
+///       \Calls co_sub_dn()
+TEST(CO_NmtSdo1f80, Co1f80DnInd_Nominal) {
+  CreateNmtAndReset();
+
+  const co_unsigned32_t val = 0x01u;
+  const auto ret = co_dev_dn_val_req(dev, 0x1f80u, 0x00, CO_DEFTYPE_UNSIGNED32,
+                                     &val, nullptr, CoCsdoDnCon::Func, nullptr);
+
+  CHECK_EQUAL(0, ret);
+  CoCsdoDnCon::Check(nullptr, 0x1f80u, 0x00, 0, nullptr);
+  CHECK_EQUAL(val, obj1f80->GetSub<Obj1f80NmtStartup>());
+}
+
+///@}
+
+#if !LELY_NO_CO_MASTER
+
+TEST_GROUP_BASE(CO_NmtSdo1f82, CO_NmtSdo) {
+  static const co_unsigned8_t SLAVE_ID = 0x01u;
+  static const size_t NMT_CS_MSG_SIZE = 2u;
+
+  std::unique_ptr<CoObjTHolder> obj1f81;
+  std::unique_ptr<CoObjTHolder> obj1f82;
+
+  TEST_SETUP() {
+    TEST_BASE_SETUP();
+
+    dev_holder->CreateObjValue<Obj1f80NmtStartup>(
+        obj1f80, Obj1f80NmtStartup::MASTER_BIT);
+
+    dev_holder->CreateObj<Obj1f81NmtSlaveAssignment>(obj1f81);
+    obj1f81->EmplaceSub<Obj1f81NmtSlaveAssignment::Sub00HighestSubidxSupported>(
+        1u);
+    obj1f81->EmplaceSub<Obj1f81NmtSlaveAssignment::SubNthSlaveEntry>(
+        0x01u, Obj1f81NmtSlaveAssignment::ASSIGNMENT_BIT);
+
+    dev_holder->CreateObj<Obj1f82RequestNmt>(obj1f82);
+    obj1f82->EmplaceSub<Obj1f82RequestNmt::Sub00SupportedNumberOfSlaves>(
+        CO_NUM_NODES);
+    obj1f82->EmplaceSub<Obj1f82RequestNmt::SubNthRequestNmtService>(SLAVE_ID,
+                                                                    0);
+    obj1f82->EmplaceSub<Obj1f82RequestNmt::SubNthRequestNmtService>(DEV_ID, 0);
+    obj1f82->EmplaceSub<Obj1f82RequestNmt::SubNthRequestNmtService>(0x03u, 0);
+  }
+};
+
+/// @name NMT service: the Request NMT object (0x1f82) modification using SDO
+///@{
+
+/// \Given a started NMT service (co_nmt_t), the object dictionary contains the
+///        Request NMT object (0x1f82) with a sub-object
+///
+/// \When the download indication function for the object is called with
+///       a non-zero abort code
+///
+/// \Then the same abort code value is returned, nothing is changed
+///       \Calls co_sub_get_type()
+TEST(CO_NmtSdo1f82, Co1f82DnInd_NonZeroAC) {
+  CreateNmtAndReset();
+
+  const co_unsigned32_t ac = CO_SDO_AC_ERROR;
+
+  const auto ret = LelyUnitTest::CallDnIndWithAbortCode(dev, 0x1f82u, 0x00, ac);
+
+  CHECK_EQUAL(ac, ret);
+}
+
+/// \Given a started NMT service (co_nmt_t), the object dictionary contains the
+///        Request NMT object (0x1f82) with a sub-object
+///
+/// \When a value of incompatible size is downloaded to the sub-object
+///
+/// \Then CO_SDO_AC_TYPE_LEN_HI abort code is passed to the download
+///       confirmation function, the sub-object is not modifed, an NMT request
+///       is not sent
+///       \Calls co_sub_get_type()
+///       \Calls co_sdo_req_dn_val()
+TEST(CO_NmtSdo1f82, Co1f82DnInd_TypeLenTooHigh) {
+  CreateNmtAndReset();
+
+  const co_unsigned16_t val = 0;
+  const auto ret = co_dev_dn_val_req(dev, 0x1f82u, 0x00, CO_DEFTYPE_UNSIGNED16,
+                                     &val, nullptr, CoCsdoDnCon::Func, nullptr);
+
+  CHECK_EQUAL(0, ret);
+  CHECK_EQUAL(0, CanSend::GetNumCalled());
+  CoCsdoDnCon::Check(nullptr, 0x1f82, 0x00, CO_SDO_AC_TYPE_LEN_HI, nullptr);
+
+  CHECK_EQUAL(
+      CO_NUM_NODES,
+      obj1f82->GetSub<Obj1f82RequestNmt::Sub00SupportedNumberOfSlaves>());
+}
+
+/// \Given a started NMT service (co_nmt_t), the object dictionary contains the
+///        Request NMT object (0x1f82) with the "Supported number of slaves"
+///        sub-object (0x00)
+///
+/// \When any value is downloaded to the sub-object
+///
+/// \Then CO_SDO_AC_NO_WRITE abort code is passed to the download confirmation
+///       function, the sub-object is not modifed, an NMT request is not sent
+///       \Calls co_sub_get_type()
+///       \Calls co_sdo_req_dn_val()
+///       \Calls co_sub_get_subidx()
+TEST(CO_NmtSdo1f82, Co1f82DnInd_Sub00_SupportedNumberOfSlaves_NoWrite) {
+  CreateNmtAndReset();
+
+  const co_unsigned8_t val = 0;
+  const auto ret = co_dev_dn_val_req(dev, 0x1f82, 0x00, CO_DEFTYPE_UNSIGNED8,
+                                     &val, nullptr, CoCsdoDnCon::Func, nullptr);
+
+  CHECK_EQUAL(0, ret);
+  CHECK_EQUAL(0, CanSend::GetNumCalled());
+  CoCsdoDnCon::Check(nullptr, 0x1f82, 0x00, CO_SDO_AC_NO_WRITE, nullptr);
+
+  CHECK_EQUAL(
+      CO_NUM_NODES,
+      obj1f82->GetSub<Obj1f82RequestNmt::Sub00SupportedNumberOfSlaves>());
+}
+
+/// \Given a started NMT service (co_nmt_t) configured as NMT master, the
+///        object dictionary contains the Request NMT object (0x1f82) with
+///        a Request NMT Service entry (0x02), but a node with `Node-ID = 0x02`
+///        is not known
+///
+/// \When any value is downloaded to the sub-object
+///
+/// \Then CO_SDO_AC_PARAM_VAL abort code is passed to the download confirmation
+///       function, the sub-object is not modifed, an NMT request is not sent
+///       \Calls co_sub_get_type()
+///       \Calls co_sdo_req_dn_val()
+///       \Calls co_sub_get_subidx()
+TEST(CO_NmtSdo1f82, Co1f82DnInd_SubN_RequestNmt_UnknownNode) {
+  CreateNmtAndReset();
+
+  const co_unsigned8_t val = CO_NMT_ST_PREOP;
+  const auto ret = co_dev_dn_val_req(dev, 0x1f82, 0x03u, CO_DEFTYPE_UNSIGNED8,
+                                     &val, nullptr, CoCsdoDnCon::Func, nullptr);
+
+  CHECK_EQUAL(0, ret);
+  CHECK_EQUAL(0, CanSend::GetNumCalled());
+  CoCsdoDnCon::Check(nullptr, 0x1f82, 0x03u, CO_SDO_AC_PARAM_VAL, nullptr);
+
+  CHECK_EQUAL(
+      0, obj1f82->GetSub<Obj1f82RequestNmt::SubNthRequestNmtService>(0x03u));
+}
+
+/// \Given a started NMT service (co_nmt_t) configured as NMT master, the
+///        object dictionary contains the Request NMT object (0x1f82) with
+///        a Request NMT Service entry at a sub-index over the all-nodes value
+///
+/// \When any value is downloaded to the sub-object
+///
+/// \Then CO_SDO_AC_PARAM_VAL abort code is passed to the download confirmation
+///       function, the sub-object is not modifed, an NMT request is not sent
+///       \Calls co_sub_get_type()
+///       \Calls co_sdo_req_dn_val()
+///       \Calls co_sub_get_subidx()
+TEST(CO_NmtSdo1f82, Co1f82DnInd_SubN_RequestNmt_NodeIdOverAllNodes) {
+  obj1f82->EmplaceSub<Obj1f82RequestNmt::SubNthRequestNmtService>(
+      Obj1f82RequestNmt::ALL_NODES + 1u, 0);
+  CreateNmtAndReset();
+
+  const co_unsigned8_t val = CO_NMT_ST_PREOP;
+  const auto ret = co_dev_dn_val_req(
+      dev, 0x1f82, Obj1f82RequestNmt::ALL_NODES + 1u, CO_DEFTYPE_UNSIGNED8,
+      &val, nullptr, CoCsdoDnCon::Func, nullptr);
+
+  CHECK_EQUAL(0, ret);
+  CHECK_EQUAL(0, CanSend::GetNumCalled());
+  CoCsdoDnCon::Check(nullptr, 0x1f82, Obj1f82RequestNmt::ALL_NODES + 1u,
+                     CO_SDO_AC_PARAM_VAL, nullptr);
+
+  CHECK_EQUAL(0, obj1f82->GetSub<Obj1f82RequestNmt::SubNthRequestNmtService>(
+                     Obj1f82RequestNmt::ALL_NODES + 1u));
+}
+
+/// \Given a started NMT service (co_nmt_t) configured as NMT master, the
+///        object dictionary contains the Request NMT object (0x1f82) with
+///        a Request NMT Service entry at a sub-index of a known slave node
+///
+/// \When a state value is downloaded to the sub-object
+///
+/// \Then a zero abort code is passed to the download confirmation function,
+///       and the NMT request with the command specifier for a requested state
+///       is sent to the slave, the sub-object is not modified
+///       \Calls co_sub_get_type()
+///       \Calls co_sdo_req_dn_val()
+///       \Calls co_sub_get_subidx()
+///       \Calls co_nmt_cs_req()
+TEST(CO_NmtSdo1f82, Co1f82DnInd_SubN_RequestNmt_State) {
+  CreateNmtAndReset();
+
+  const std::map<co_unsigned8_t, co_unsigned8_t> request_nmt = {
+      {CO_NMT_ST_STOP, CO_NMT_CS_STOP},
+      {CO_NMT_ST_START, CO_NMT_CS_START},
+      {CO_NMT_ST_RESET_NODE, CO_NMT_CS_RESET_NODE},
+      {CO_NMT_ST_RESET_COMM, CO_NMT_CS_RESET_COMM},
+      {CO_NMT_ST_PREOP, CO_NMT_CS_ENTER_PREOP},
+  };
+
+  for (auto const& req : request_nmt) {
+    const co_unsigned8_t val = req.first;
+    const auto ret =
+        co_dev_dn_val_req(dev, 0x1f82, SLAVE_ID, CO_DEFTYPE_UNSIGNED8, &val,
+                          nullptr, CoCsdoDnCon::Func, nullptr);
+
+    CHECK_EQUAL(0, ret);
+    CoCsdoDnCon::Check(nullptr, 0x1f82, SLAVE_ID, 0, nullptr);
+
+    CHECK_EQUAL(1u, CanSend::GetNumCalled());
+    const uint_least8_t data[NMT_CS_MSG_SIZE] = {req.second, SLAVE_ID};
+    CanSend::CheckMsg(CO_NMT_CS_CANID, 0, NMT_CS_MSG_SIZE, data);
+
+    CHECK_EQUAL(0, obj1f82->GetSub<Obj1f82RequestNmt::SubNthRequestNmtService>(
+                       SLAVE_ID));
+    CanSend::Clear();
+  }
+}
+
+/// \Given a started NMT service (co_nmt_t) configured as NMT master, the
+///        object dictionary contains the Request NMT object (0x1f82) with
+///        the "all-nodes" sub-object (0x80)
+///
+/// \When a state value is downloaded to the sub-object
+///
+/// \Then a zero abort code is passed to the download confirmation function,
+///       and the NMT request with the command specifier for a requested state
+///       is sent to all nodes (`Node-ID = 0`), the sub-object is not modifed
+///       \Calls co_sub_get_type()
+///       \Calls co_sdo_req_dn_val()
+///       \Calls co_sub_get_subidx()
+///       \Calls co_nmt_cs_req()
+TEST(CO_NmtSdo1f82, Co1f82DnInd_SubN_RequestNmt_AllNodes) {
+  obj1f82->EmplaceSub<Obj1f82RequestNmt::SubNthRequestNmtService>(
+      Obj1f82RequestNmt::ALL_NODES, 0);
+  CreateNmtAndReset();
+
+  const co_unsigned8_t val = CO_NMT_ST_STOP;
+  const auto ret = co_dev_dn_val_req(dev, 0x1f82, Obj1f82RequestNmt::ALL_NODES,
+                                     CO_DEFTYPE_UNSIGNED8, &val, nullptr,
+                                     CoCsdoDnCon::Func, nullptr);
+
+  CHECK_EQUAL(0, ret);
+  CoCsdoDnCon::Check(nullptr, 0x1f82, Obj1f82RequestNmt::ALL_NODES, 0, nullptr);
+
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
+  const uint_least8_t data[NMT_CS_MSG_SIZE] = {CO_NMT_CS_STOP, 0};
+  CanSend::CheckMsg(CO_NMT_CS_CANID, 0, NMT_CS_MSG_SIZE, data);
+
+  CHECK_EQUAL(0, obj1f82->GetSub<Obj1f82RequestNmt::SubNthRequestNmtService>(
+                     Obj1f82RequestNmt::ALL_NODES));
+}
+
+/// \Given a started NMT service (co_nmt_t) configured as NMT master, the
+///        object dictionary contains the Request NMT object (0x1f82) with
+///        a Request NMT Service entry at a sub-index of a known slave node
+///
+/// \When a invalid state value is downloaded to the sub-object
+///
+/// \Then CO_SDO_AC_PARAM_VAL abort code is passed to the download confirmation
+///       function, the sub-object is not modifed, an NMT request is not sent
+///       \Calls co_sub_get_type()
+///       \Calls co_sdo_req_dn_val()
+///       \Calls co_sub_get_subidx()
+TEST(CO_NmtSdo1f82, Co1f82DnInd_SubN_RequestNmt_InvalidState) {
+  CreateNmtAndReset();
+
+  const co_unsigned8_t val = 0xffu;
+  const auto ret =
+      co_dev_dn_val_req(dev, 0x1f82, SLAVE_ID, CO_DEFTYPE_UNSIGNED8, &val,
+                        nullptr, CoCsdoDnCon::Func, nullptr);
+
+  CHECK_EQUAL(0, ret);
+  CHECK_EQUAL(0, CanSend::GetNumCalled());
+  CoCsdoDnCon::Check(nullptr, 0x1f82, SLAVE_ID, CO_SDO_AC_PARAM_VAL, nullptr);
+
+  CHECK_EQUAL(
+      0, obj1f82->GetSub<Obj1f82RequestNmt::SubNthRequestNmtService>(SLAVE_ID));
+}
+
+///@}
+
+#endif  // !LELY_NO_CO_MASTER

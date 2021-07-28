@@ -57,6 +57,7 @@ CanSend::Func(const can_msg* const msg_, const int bus_id_, void* const data_) {
 void
 CanSend::CheckMsg(const uint_least32_t id, const uint_least8_t flags,
                   const uint_least8_t len, const uint_least8_t* const data) {
+  CHECK_COMPARE(num_called, >, 0);
   CHECK_EQUAL(id, msg.id);
   CHECK_EQUAL(flags, msg.flags);
   CHECK_EQUAL(len, msg.len);
