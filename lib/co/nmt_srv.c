@@ -199,20 +199,16 @@ co_nmt_srv_init(struct co_nmt_srv *srv, co_nmt_t *nmt)
 // that could occur in some ifdefs combinations
 error:
 #if !LELY_NO_CO_LSS
-	if (srv->lss)
-		co_nmt_srv_fini_lss(srv);
+	co_nmt_srv_fini_lss(srv);
 #endif
 #if !LELY_NO_CO_EMCY
-	if (srv->emcy)
-		co_nmt_srv_fini_emcy(srv);
+	co_nmt_srv_fini_emcy(srv);
 #endif
 #if !LELY_NO_CO_TIME
-	if (srv->time)
-		co_nmt_srv_fini_time(srv);
+	co_nmt_srv_fini_time(srv);
 #endif
 #if !LELY_NO_CO_SYNC
-	if (srv->sync)
-		co_nmt_srv_fini_sync(srv);
+	co_nmt_srv_fini_sync(srv);
 #endif
 	co_nmt_srv_fini_sdo(srv);
 #if !LELY_NO_CO_RPDO || !LELY_NO_CO_TPDO
@@ -485,6 +481,8 @@ co_nmt_srv_start_pdo(struct co_nmt_srv *srv)
 #if !LELY_NO_CO_RPDO
 	// Start the Receive-PDOs.
 	for (size_t i = 0; i < srv->nrpdo; i++) {
+		if (!srv->rpdos[i])
+			continue;
 		if (co_rpdo_start(srv->rpdos[i]) == -1)
 			goto error;
 	}
@@ -493,6 +491,8 @@ co_nmt_srv_start_pdo(struct co_nmt_srv *srv)
 #if !LELY_NO_CO_TPDO
 	// Start the Transmit-PDOs.
 	for (size_t i = 0; i < srv->ntpdo; i++) {
+		if (!srv->tpdos[i])
+			continue;
 		if (co_tpdo_start(srv->tpdos[i]) == -1)
 			goto error;
 	}
@@ -510,20 +510,24 @@ static void
 co_nmt_srv_stop_pdo(struct co_nmt_srv *srv)
 {
 	assert(srv);
-
-	if (!(srv->set & CO_NMT_SRV_PDO))
-		return;
+	assert(srv->set & CO_NMT_SRV_PDO);
 
 #if !LELY_NO_CO_TPDO
 	// Stop the Transmit-PDOs.
-	for (size_t i = 0; i < srv->ntpdo; i++)
+	for (size_t i = 0; i < srv->ntpdo; i++) {
+		if (!srv->tpdos[i])
+			continue;
 		co_tpdo_stop(srv->tpdos[i]);
+	}
 #endif
 
 #if !LELY_NO_CO_RPDO
 	// Stop the Receive-PDOs.
-	for (size_t i = 0; i < srv->nrpdo; i++)
+	for (size_t i = 0; i < srv->nrpdo; i++) {
+		if (!srv->rpdos[i])
+			continue;
 		co_rpdo_stop(srv->rpdos[i]);
+	}
 #endif
 
 	srv->set &= ~CO_NMT_SRV_PDO;
@@ -555,35 +559,32 @@ co_nmt_srv_init_sdo(struct co_nmt_srv *srv)
 	can_net_t *net = co_nmt_get_net(srv->nmt);
 	co_dev_t *dev = co_nmt_get_dev(srv->nmt);
 
-	size_t nssdo = 0;
-	for (co_unsigned8_t i = 0; i < CO_NUM_SDOS; i++) {
+	// The default Server-SDO does not have to exist in the object
+	// dictionary, the service for it is always created
+	size_t nssdo = 1;
+	for (co_unsigned8_t i = 1; i < CO_NUM_SDOS; i++) {
 		const co_obj_t *obj_1200 = co_dev_find_obj(dev, 0x1200 + i);
-		// The default Server-SDO does not have to exist in the object
-		// dictionary.
-		if (i && !obj_1200)
+		if (!obj_1200)
 			continue;
 		nssdo = i + 1;
 	}
 
 	// Create the Server-SDOs.
-	if (nssdo) {
-		srv->ssdos = mem_alloc(alloc, _Alignof(co_ssdo_t *),
-				nssdo * sizeof(co_ssdo_t *));
-		if (!srv->ssdos)
+	srv->ssdos = mem_alloc(alloc, _Alignof(co_ssdo_t *),
+			nssdo * sizeof(co_ssdo_t *));
+	if (!srv->ssdos)
+		goto error;
+
+	for (co_unsigned8_t i = 0; i < nssdo; i++) {
+		co_ssdo_t **psdo = &srv->ssdos[srv->nssdo++];
+		*psdo = NULL;
+
+		const co_obj_t *obj_1200 = co_dev_find_obj(dev, 0x1200 + i);
+		if (i && !obj_1200)
+			continue;
+
+		if (!(*psdo = co_ssdo_create(net, dev, i + 1)))
 			goto error;
-
-		for (co_unsigned8_t i = 0; i < nssdo; i++) {
-			co_ssdo_t **psdo = &srv->ssdos[srv->nssdo++];
-			*psdo = NULL;
-
-			const co_obj_t *obj_1200 =
-					co_dev_find_obj(dev, 0x1200 + i);
-			if (i && !obj_1200)
-				continue;
-
-			if (!(*psdo = co_ssdo_create(net, dev, i + 1)))
-				goto error;
-		}
 	}
 
 #if !LELY_NO_CO_CSDO
@@ -660,8 +661,10 @@ co_nmt_srv_start_sdo(struct co_nmt_srv *srv)
 
 	srv->set |= CO_NMT_SRV_SDO;
 
-	// Start the Server-SDOs (skipping the default one).
+	// Start the Server-SDOs
 	for (size_t i = 0; i < srv->nssdo; i++) {
+		if (!srv->ssdos[i])
+			continue;
 		if (co_ssdo_start(srv->ssdos[i]) == -1)
 			goto error;
 	}
@@ -669,6 +672,8 @@ co_nmt_srv_start_sdo(struct co_nmt_srv *srv)
 #if !LELY_NO_CO_CSDO
 	// Start the Client-SDOs.
 	for (size_t i = 0; i < srv->ncsdo; i++) {
+		if (!srv->csdos[i])
+			continue;
 		if (co_csdo_start(srv->csdos[i]) == -1)
 			goto error;
 	}
@@ -686,19 +691,23 @@ static void
 co_nmt_srv_stop_sdo(struct co_nmt_srv *srv)
 {
 	assert(srv);
-
-	if (!(srv->set & CO_NMT_SRV_SDO))
-		return;
+	assert(srv->set & CO_NMT_SRV_SDO);
 
 #if !LELY_NO_CO_CSDO
 	// Stop the Client-SDOs.
-	for (size_t i = 0; i < srv->ncsdo; i++)
+	for (size_t i = 0; i < srv->ncsdo; i++) {
+		if (!srv->csdos[i])
+			continue;
 		co_csdo_stop(srv->csdos[i]);
+	}
 #endif
 
-	// Stop the Server-SDOs (skipping the default one).
-	for (size_t i = 0; i < srv->nssdo; i++)
+	// Stop the Server-SDOs
+	for (size_t i = 0; i < srv->nssdo; i++) {
+		if (!srv->ssdos[i])
+			continue;
 		co_ssdo_stop(srv->ssdos[i]);
+	}
 
 	srv->set &= ~CO_NMT_SRV_SDO;
 }
@@ -767,9 +776,7 @@ static void
 co_nmt_srv_stop_sync(struct co_nmt_srv *srv)
 {
 	assert(srv);
-
-	if (!(srv->set & CO_NMT_SRV_SYNC))
-		return;
+	assert(srv->set & CO_NMT_SRV_SYNC);
 
 	co_sync_stop(srv->sync);
 
@@ -860,9 +867,7 @@ static void
 co_nmt_srv_stop_time(struct co_nmt_srv *srv)
 {
 	assert(srv);
-
-	if (!(srv->set & CO_NMT_SRV_TIME))
-		return;
+	assert(srv->set & CO_NMT_SRV_TIME);
 
 	co_time_stop(srv->time);
 
@@ -932,9 +937,7 @@ static void
 co_nmt_srv_stop_emcy(struct co_nmt_srv *srv)
 {
 	assert(srv);
-
-	if (!(srv->set & CO_NMT_SRV_EMCY))
-		return;
+	assert(srv->set & CO_NMT_SRV_EMCY);
 
 	co_emcy_stop(srv->emcy);
 
@@ -1002,9 +1005,7 @@ static void
 co_nmt_srv_stop_lss(struct co_nmt_srv *srv)
 {
 	assert(srv);
-
-	if (!(srv->set & CO_NMT_SRV_LSS))
-		return;
+	assert(srv->set & CO_NMT_SRV_LSS);
 
 	co_lss_stop(srv->lss);
 

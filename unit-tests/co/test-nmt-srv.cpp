@@ -25,111 +25,208 @@
 #endif
 
 #include <memory>
+#include <utility>
+#include <vector>
 
 #include <CppUTest/TestHarness.h>
 
-#include <include/lely/co/nmt.h>
-#include <include/lely/util/error.h>
-
-#include <libtest/tools/lely-unit-test.hpp>
 #include <libtest/allocators/default.hpp>
 #include <libtest/allocators/limited.hpp>
+#include <libtest/tools/lely-cpputest-ext.hpp>
+#include <libtest/tools/lely-unit-test.hpp>
 
+#include <lely/can/msg.h>
+#include <lely/can/net.h>
+
+#include <lely/co/csdo.h>
+#include <lely/co/dev.h>
+#include <lely/co/emcy.h>
+#include <lely/co/nmt.h>
 #include <lely/co/rpdo.h>
+#include <lely/co/ssdo.h>
+#include <lely/co/sync.h>
 #include <lely/co/tpdo.h>
+
+#include <lely/util/error.h>
 
 #include "holder/dev.hpp"
 
-#include "obj-init/tpdo-map-par.hpp"
-#include "obj-init/tpdo-comm-par.hpp"
-#include "obj-init/rpdo-map-par.hpp"
+#include "obj-init/emcy-error-register.hpp"
 #include "obj-init/rpdo-comm-par.hpp"
+#include "obj-init/rpdo-map-par.hpp"
+#include "obj-init/sdo-client-par.hpp"
+#include "obj-init/sdo-server-par.hpp"
+#include "obj-init/sync-cobid.hpp"
+#include "obj-init/tpdo-comm-par.hpp"
+#include "obj-init/tpdo-map-par.hpp"
 
 #include "common/nmt-alloc-sizes.hpp"
 
-TEST_GROUP(CO_NmtSrv) {
+TEST_BASE(CO_NmtSrvBase) {
+  TEST_BASE_SUPER(CO_NmtSrvBase);
+
   static const co_unsigned8_t DEV_ID = 0x01u;
-  static const co_unsigned16_t RPDO_NUM = 1u;
-  static const co_unsigned16_t TPDO_NUM = 1u;
+  static const co_unsigned16_t RPDO_NUM = 2u;
+  static const co_unsigned16_t TPDO_NUM = 2u;
+  static const co_unsigned32_t SDO_COBID_REQ = 0x600u + DEV_ID;
+  static const co_unsigned32_t SDO_COBID_RES = 0x580u + DEV_ID;
+  static const co_unsigned8_t DEFAULT_SSDO_NUM = 1u;
+  static const co_unsigned8_t SSDO_NUM = 3u;
+  static const co_unsigned8_t CSDO_NUM = 2u;
+  static const co_unsigned32_t SYNC_COBID = 0x80u;
 
   std::unique_ptr<CoDevTHolder> dev_holder;
-  std::unique_ptr<CoObjTHolder> obj1400;
-  std::unique_ptr<CoObjTHolder> obj1600;
-  std::unique_ptr<CoObjTHolder> obj1800;
-  std::unique_ptr<CoObjTHolder> obj1a00;
+  std::vector<std::unique_ptr<CoObjTHolder>> objects;
 
   co_dev_t* dev = nullptr;
-  can_net_t* net = nullptr;
-  can_net_t* fail_net = nullptr;
   co_nmt_t* nmt = nullptr;
 
-  Allocators::Default allocator;
-  Allocators::Limited limitedAllocator;
-
-  TEST_SETUP() {
-    LelyUnitTest::DisableDiagnosticMessages();
-    net = can_net_create(allocator.ToAllocT(), 0);
-    CHECK(net != nullptr);
-
-    fail_net = can_net_create(limitedAllocator.ToAllocT(), 0);
-    CHECK(fail_net != nullptr);
-
-    dev_holder.reset(new CoDevTHolder(DEV_ID));
-    dev = dev_holder->Get();
-    CHECK(dev != nullptr);
+  void CreateObj1001Defaults() {
+    std::unique_ptr<CoObjTHolder> obj1001;
+    dev_holder->CreateObjValue<Obj1001ErrorRegister>(obj1001);
+    objects.push_back(std::move(obj1001));
   }
 
-  void CreateObj1400Defaults() {
-    dev_holder->CreateObj<Obj1400RpdoCommPar>(obj1400);
+  void CreateObj1005Defaults() {
+    std::unique_ptr<CoObjTHolder> obj1005;
+    dev_holder->CreateObjValue<Obj1005CobidSync>(obj1005, SYNC_COBID);
+    objects.push_back(std::move(obj1005));
+  }
+
+  void CreateObj1201Defaults() {
+    std::unique_ptr<CoObjTHolder> obj1200;
+
+    dev_holder->CreateObj<Obj1200SdoServerPar>(
+        obj1200, Obj1200SdoServerPar::min_idx + SSDO_NUM - 1u);
+    obj1200->EmplaceSub<Obj1200SdoServerPar::Sub00HighestSubidxSupported>(
+        0x02u);
+    obj1200->EmplaceSub<Obj1200SdoServerPar::Sub01CobIdReq>(SDO_COBID_REQ);
+    obj1200->EmplaceSub<Obj1200SdoServerPar::Sub02CobIdRes>(SDO_COBID_RES);
+
+    objects.push_back(std::move(obj1200));
+  }
+
+  void CreateObj1280Defaults() {
+    std::unique_ptr<CoObjTHolder> obj1280;
+
+    dev_holder->CreateObj<Obj1280SdoClientPar>(
+        obj1280, Obj1280SdoClientPar::min_idx + CSDO_NUM - 1u);
+    obj1280->EmplaceSub<Obj1280SdoClientPar::Sub00HighestSubidxSupported>(
+        0x02u);
+    obj1280->EmplaceSub<Obj1280SdoClientPar::Sub01CobIdReq>(SDO_COBID_REQ);
+    obj1280->EmplaceSub<Obj1280SdoClientPar::Sub02CobIdRes>(SDO_COBID_RES);
+
+    objects.push_back(std::move(obj1280));
+  }
+
+  void CreateObj1400Defaults(const co_unsigned16_t rpdo_num = RPDO_NUM) {
+    std::unique_ptr<CoObjTHolder> obj1400;
+
+    dev_holder->CreateObj<Obj1400RpdoCommPar>(
+        obj1400, Obj1400RpdoCommPar::min_idx + rpdo_num - 1u);
     obj1400->EmplaceSub<Obj1400RpdoCommPar::Sub00HighestSubidxSupported>(0x02u);
-    obj1400->EmplaceSub<Obj1400RpdoCommPar::Sub01CobId>(0);
+    obj1400->EmplaceSub<Obj1400RpdoCommPar::Sub01CobId>(DEV_ID);
     obj1400->EmplaceSub<Obj1400RpdoCommPar::Sub02TransmissionType>(0xfeu);
+
+    objects.push_back(std::move(obj1400));
   }
 
-  void CreateObj1600Defaults() {
-    dev_holder->CreateObj<Obj1600RpdoMapPar>(obj1600);
+  void CreateObj1600Defaults(const co_unsigned16_t rpdo_num = RPDO_NUM) {
+    std::unique_ptr<CoObjTHolder> obj1600;
+
+    dev_holder->CreateObj<Obj1600RpdoMapPar>(
+        obj1600, Obj1600RpdoMapPar::min_idx + rpdo_num - 1u);
     obj1600->EmplaceSub<Obj1600RpdoMapPar::Sub00NumOfMappedObjs>(0x01u);
-    obj1600->EmplaceSub<Obj1600RpdoMapPar::SubNthAppObject>(0x01u, 0);
+    obj1600->EmplaceSub<Obj1600RpdoMapPar::SubNthAppObject>(0x01u, 0x12340004u);
+
+    objects.push_back(std::move(obj1600));
   }
 
-  void CreateObj1800Defaults() {
-    dev_holder->CreateObj<Obj1800TpdoCommPar>(obj1800);
+  void CreateObj1800Defaults(const co_unsigned16_t tpdo_num = TPDO_NUM) {
+    std::unique_ptr<CoObjTHolder> obj1800;
+
+    dev_holder->CreateObj<Obj1800TpdoCommPar>(
+        obj1800, Obj1800TpdoCommPar::min_idx + tpdo_num - 1u);
     obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub00HighestSubidxSupported>(0x02u);
     obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub01CobId>(0);
     obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub02TransmissionType>(0);
+
+    objects.push_back(std::move(obj1800));
   }
 
-  void CreateObj1a00Defaults() {
-    dev_holder->CreateObj<Obj1a00TpdoMapPar>(obj1a00);
+  void CreateObj1a00Defaults(const co_unsigned16_t tpdo_num = TPDO_NUM) {
+    std::unique_ptr<CoObjTHolder> obj1a00;
+
+    dev_holder->CreateObj<Obj1a00TpdoMapPar>(
+        obj1a00, Obj1a00TpdoMapPar::min_idx + tpdo_num - 1u);
     obj1a00->EmplaceSub<Obj1a00TpdoMapPar::Sub00NumOfMappedObjs>(0x01u);
     obj1a00->EmplaceSub<Obj1a00TpdoMapPar::SubNthAppObject>(0x01u, 0);
+
+    objects.push_back(std::move(obj1a00));
+  }
+
+  TEST_SETUP() {
+    LelyUnitTest::DisableDiagnosticMessages();
+    dev_holder.reset(new CoDevTHolder(DEV_ID));
+    dev = dev_holder->Get();
+    POINTER_NOT_NULL(dev);
+  }
+
+  TEST_TEARDOWN() {
+    objects.clear();
+    dev_holder.reset();
+    set_errnum(ERRNUM_SUCCESS);
+  }
+};
+
+TEST_GROUP_BASE(CO_NmtSrv, CO_NmtSrvBase) {
+  Allocators::Default allocator;
+  can_net_t* net = nullptr;
+
+  void CreateNmt() {
+    nmt = co_nmt_create(net, dev);
+    POINTER_NOT_NULL(nmt);
+  }
+
+  void CreateNmtAndReset() {
+    CreateNmt();
+    CHECK_EQUAL(0, co_nmt_cs_ind(nmt, CO_NMT_CS_RESET_NODE));
+  }
+
+  TEST_SETUP() {
+    TEST_BASE_SETUP();
+
+    net = can_net_create(allocator.ToAllocT(), 0);
+    POINTER_NOT_NULL(net);
   }
 
   TEST_TEARDOWN() {
     co_nmt_destroy(nmt);
-
-    dev_holder.reset();
-    can_net_destroy(fail_net);
     can_net_destroy(net);
-    set_errnum(0);
+
+    TEST_BASE_TEARDOWN();
   }
 };
 
-/// @name co_nmt_srv_init()
-///@{
-
-// TODO(N7S) add some tests to run in !LELY_NO_MALLOC
+#if !LELY_NO_MALLOC
 TEST(CO_NmtSrv, Dummy) {
   // this is a dummy test case to solve the container errors about no tests
 }
+#endif  // !LELY_NO_MALLOC
 
 #if LELY_NO_MALLOC
+/// @name NMT service manager services initialization
+///@{
+
+#if !LELY_NO_CO_RPDO
 /// \Given a pointer to the network (can_net_t), a pointer to a device
-///        (co_dev_t) with all services configured
+///        (co_dev_t) with RPDO service(s) partially configured - the object
+///        dictionary does not contain an RPDO mapping parameter matching the
+///        RPDO communication parameter
 ///
 /// \When NMT service is created
 ///
-/// \Then the configured services are initialized
+/// \Then only the fully configured RPDO services are initialized
 ///       \Calls co_nmt_get_alloc()
 ///       \Calls co_nmt_get_net()
 ///       \Calls co_nmt_get_dev()
@@ -137,54 +234,640 @@ TEST(CO_NmtSrv, Dummy) {
 ///       \Calls mem_alloc()
 ///       \Calls co_rpdo_create()
 ///       \Calls co_rpdo_set_err()
-///       \Calls co_tpdo_create()
-TEST(CO_NmtSrv, CoNmtSrvInit_Nominal) {
-#if !LELY_NO_CO_RPDO
+TEST(CO_NmtSrv, CoNmtSrvInit_RpdoMissingMappingParameterObject) {
+  CreateObj1400Defaults(RPDO_NUM);
+  CreateObj1400Defaults(RPDO_NUM + 1u);
+  CreateObj1600Defaults(RPDO_NUM + 1u);
+
+  CreateNmt();
+
+  POINTERS_EQUAL(nullptr, co_nmt_get_rpdo(nmt, 0u));
+  POINTERS_EQUAL(nullptr, co_nmt_get_rpdo(nmt, RPDO_NUM));
+  POINTER_NOT_NULL(co_nmt_get_rpdo(nmt, RPDO_NUM + 1u));
+  POINTERS_EQUAL(nullptr, co_nmt_get_rpdo(nmt, RPDO_NUM + 2u));
+}
+
+/// \Given a pointer to the network (can_net_t), a pointer to a device
+///        (co_dev_t) with RPDO service(s) configured
+///
+/// \When NMT service is created
+///
+/// \Then the configured RPDO services are initialized
+///       \Calls co_nmt_get_alloc()
+///       \Calls co_nmt_get_net()
+///       \Calls co_nmt_get_dev()
+///       \Calls co_dev_find_obj()
+///       \Calls mem_alloc()
+///       \Calls co_rpdo_create()
+///       \Calls co_rpdo_set_err()
+TEST(CO_NmtSrv, CoNmtSrvInit_RpdoNominal) {
   CreateObj1400Defaults();
   CreateObj1600Defaults();
-#endif
-#if !LELY_NO_CO_TPDO
-  CreateObj1800Defaults();
-  CreateObj1a00Defaults();
-#endif
 
-  // TODO(N7S) add objects for other services and verify if they were created
-  //           by the service manager (also add \Calls)
+  CreateNmt();
 
-  nmt = co_nmt_create(net, dev);
-
-#if LELY_NO_CO_RPDO
-  POINTERS_EQUAL(nullptr, co_nmt_get_rpdo(nmt, RPDO_NUM));
-#else
   const co_rpdo_t* const rpdo = co_nmt_get_rpdo(nmt, RPDO_NUM);
-  CHECK(rpdo != nullptr);
+  POINTER_NOT_NULL(rpdo);
   POINTERS_EQUAL(net, co_rpdo_get_net(rpdo));
   POINTERS_EQUAL(dev, co_rpdo_get_dev(rpdo));
   CHECK_EQUAL(1, co_rpdo_is_stopped(rpdo));
   CHECK_EQUAL(RPDO_NUM, co_rpdo_get_num(rpdo));
-#endif  // LELY_NO_CO_RPDO
-
-#if LELY_NO_CO_TPDO
-  POINTERS_EQUAL(nullptr, co_nmt_get_tpdo(nmt, TPDO_NUM));
+}
 #else
+/// \Given a pointer to the network (can_net_t), a pointer to a device
+///        (co_dev_t)
+///
+/// \When NMT service is created
+///
+/// \Then no RPDO services are initialized
+///       \Calls co_nmt_get_alloc()
+///       \Calls co_nmt_get_net()
+///       \Calls co_nmt_get_dev()
+TEST(CO_NmtSrv, CoNmtSrvInit_NoRpdoService) {
+  CreateNmt();
+  POINTERS_EQUAL(nullptr, co_nmt_get_rpdo(nmt, RPDO_NUM));
+}
+#endif  // !LELY_NO_CO_RPDO
+
+#if !LELY_NO_CO_TPDO
+/// \Given a pointer to the network (can_net_t), a pointer to a device
+///        (co_dev_t) with TPDO service(s) partially configured - the object
+///        dictionary does not contain a TPDO mapping parameter matching the
+///        TPDO communication parameter
+///
+/// \When NMT service is created
+///
+/// \Then only the fully configured TPDO services are initialized
+///       \Calls co_nmt_get_alloc()
+///       \Calls co_nmt_get_net()
+///       \Calls co_nmt_get_dev()
+///       \Calls co_dev_find_obj()
+///       \Calls mem_alloc()
+///       \Calls co_tpdo_create()
+TEST(CO_NmtSrv, CoNmtSrvInit_TpdoMissingMappingParameterObject) {
+  CreateObj1800Defaults(TPDO_NUM);
+  CreateObj1800Defaults(TPDO_NUM + 1u);
+  CreateObj1a00Defaults(TPDO_NUM + 1u);
+
+  CreateNmt();
+
+  POINTERS_EQUAL(nullptr, co_nmt_get_tpdo(nmt, 0u));
+  POINTERS_EQUAL(nullptr, co_nmt_get_tpdo(nmt, TPDO_NUM));
+  POINTER_NOT_NULL(co_nmt_get_tpdo(nmt, TPDO_NUM + 1u));
+  POINTERS_EQUAL(nullptr, co_nmt_get_tpdo(nmt, TPDO_NUM + 2u));
+}
+
+/// \Given a pointer to the network (can_net_t), a pointer to a device
+///        (co_dev_t) with TPDO service(s) configured
+///
+/// \When NMT service is created
+///
+/// \Then the configured TPDO services are initialized
+///       \Calls co_nmt_get_alloc()
+///       \Calls co_nmt_get_net()
+///       \Calls co_nmt_get_dev()
+///       \Calls co_dev_find_obj()
+///       \Calls mem_alloc()
+///       \Calls co_tpdo_create()
+TEST(CO_NmtSrv, CoNmtSrvInit_TpdoNominal) {
+  CreateObj1800Defaults();
+  CreateObj1a00Defaults();
+
+  CreateNmt();
+
   const co_tpdo_t* const tpdo = co_nmt_get_tpdo(nmt, TPDO_NUM);
-  CHECK(tpdo != nullptr);
+  POINTER_NOT_NULL(tpdo);
   POINTERS_EQUAL(net, co_tpdo_get_net(tpdo));
   POINTERS_EQUAL(dev, co_tpdo_get_dev(tpdo));
   CHECK_EQUAL(1, co_tpdo_is_stopped(tpdo));
   CHECK_EQUAL(TPDO_NUM, co_tpdo_get_num(tpdo));
-#endif  // LELY_NO_CO_TPDO
-  // TODO(N7S) add checks for other services here
+}
+#else
+/// \Given a pointer to the network (can_net_t), a pointer to a device
+///        (co_dev_t)
+///
+/// \When NMT service is created
+///
+/// \Then no TPDO services are initialized
+///       \Calls co_nmt_get_alloc()
+///       \Calls co_nmt_get_net()
+///       \Calls co_nmt_get_dev()
+TEST(CO_NmtSrv, CoNmtSrvInit_NoTpdoService) {
+  CreateNmt();
+  POINTERS_EQUAL(nullptr, co_nmt_get_tpdo(nmt, TPDO_NUM));
+}
+#endif  // !LELY_NO_CO_TPDO
+
+#if !LELY_NO_CO_SDO
+/// \Given a pointer to the network (can_net_t), a pointer to a device
+///        (co_dev_t) with Server SDO service(s) configured
+///
+/// \When NMT service is created
+///
+/// \Then the default and configured Server SDO services are initialized
+///       \Calls co_nmt_get_alloc()
+///       \Calls co_nmt_get_net()
+///       \Calls co_nmt_get_dev()
+///       \Calls co_dev_find_obj()
+///       \Calls mem_alloc()
+///       \Calls co_ssdo_create()
+TEST(CO_NmtSrv, CoNmtSrvInit_ServerSdoNominal) {
+  CreateObj1201Defaults();
+
+  CreateNmt();
+
+  const co_ssdo_t* const default_ssdo = co_nmt_get_ssdo(nmt, DEFAULT_SSDO_NUM);
+  POINTER_NOT_NULL(default_ssdo);
+  CHECK(co_ssdo_is_stopped(default_ssdo));
+  CHECK_EQUAL(DEFAULT_SSDO_NUM, co_ssdo_get_num(default_ssdo));
+
+  const co_ssdo_t* const ssdo = co_nmt_get_ssdo(nmt, SSDO_NUM);
+  POINTER_NOT_NULL(ssdo);
+  CHECK(co_ssdo_is_stopped(ssdo));
+  CHECK_EQUAL(SSDO_NUM, co_ssdo_get_num(ssdo));
+
+  POINTERS_EQUAL(nullptr, co_nmt_get_ssdo(nmt, 0u));
+  POINTERS_EQUAL(nullptr, co_nmt_get_ssdo(nmt, SSDO_NUM + 1u));
 }
 
-#if !LELY_NO_CO_RPDO || !LELY_NO_CO_TPDO
-/// \Given a pointer to the NMT service manager (co_nmt_srv), a device with PDO
-///        service(s) configured; the allocator has not enough memory for PDO
-///        services
+#if !LELY_NO_CO_CSDO
+/// \Given a pointer to the network (can_net_t), a pointer to a device
+///        (co_dev_t) with Client SDO service(s) configured
+///
+/// \When NMT service is created
+///
+/// \Then the configured Client SDO services are initialized
+///       \Calls co_nmt_get_alloc()
+///       \Calls co_nmt_get_net()
+///       \Calls co_nmt_get_dev()
+///       \Calls co_dev_find_obj()
+///       \Calls mem_alloc()
+///       \Calls co_csdo_create()
+TEST(CO_NmtSrv, CoNmtSrvInit_ClientSdoNominal) {
+  CreateObj1280Defaults();
+
+  CreateNmt();
+
+  const co_csdo_t* const csdo = co_nmt_get_csdo(nmt, CSDO_NUM);
+  POINTER_NOT_NULL(csdo);
+  CHECK(co_csdo_is_stopped(csdo));
+  CHECK_EQUAL(CSDO_NUM, co_csdo_get_num(csdo));
+
+  POINTERS_EQUAL(nullptr, co_nmt_get_csdo(nmt, 0u));
+  POINTERS_EQUAL(nullptr, co_nmt_get_csdo(nmt, CSDO_NUM + 1u));
+}
+#else   // !LELY_NO_CO_CSDO
+/// \Given a pointer to the network (can_net_t), a pointer to a device
+///        (co_dev_t)
+///
+/// \When NMT service is created
+///
+/// \Then no Client SDO services are initialized
+///       \Calls co_nmt_get_alloc()
+///       \Calls co_nmt_get_net()
+///       \Calls co_nmt_get_dev()
+TEST(CO_NmtSrv, CoNmtSrvInit_NoClientSdoService) {
+  CreateNmt();
+  POINTERS_EQUAL(nullptr, co_nmt_get_csdo(nmt, CSDO_NUM));
+}
+#endif  // !LELY_NO_CO_CSDO
+#else   // !LELY_NO_CO_SDO
+/// \Given a pointer to the network (can_net_t), a pointer to a device
+///        (co_dev_t)
+///
+/// \When NMT service is created
+///
+/// \Then no Server SDO services are initialized
+TEST(CO_NmtSrv, CoNmtSrvInit_NoServerSdoService) {
+  CreateNmt();
+  POINTERS_EQUAL(nullptr, co_nmt_get_ssdo(nmt, DEFAULT_SSDO_NUM));
+}
+#endif  // !LELY_NO_CO_SDO
+
+#if !LELY_NO_CO_SYNC
+/// \Given a pointer to the network (can_net_t), a pointer to a device
+///        (co_dev_t), the object dictionary does not contain the COB-ID SYNC
+///        Message object (0x1005)
+///
+/// \When NMT service is created
+///
+/// \Then the SYNC service is not initialized
+///       \Calls co_nmt_get_net()
+///       \Calls co_nmt_get_dev()
+///       \Calls co_dev_find_obj()
+TEST(CO_NmtSrv, CoNmtSrvInit_NoObj1005) {
+  CreateNmt();
+
+  POINTERS_EQUAL(nullptr, co_nmt_get_sync(nmt));
+}
+
+/// \Given a pointer to the network (can_net_t), a pointer to a device
+///        (co_dev_t), the object dictionary contains the COB-ID SYNC Message
+///        object (0x1005)
+///
+/// \When NMT service is created
+///
+/// \Then the SYNC service is initialized
+///       \Calls co_nmt_get_net()
+///       \Calls co_nmt_get_dev()
+///       \Calls co_dev_find_obj()
+///       \Calls co_sync_create()
+///       \Calls co_sync_set_ind()
+///       \Calls co_sync_set_err()
+TEST(CO_NmtSrv, CoNmtSrvInit_SyncNominal) {
+  CreateObj1005Defaults();
+
+  CreateNmt();
+
+  const co_sync_t* const sync = co_nmt_get_sync(nmt);
+  POINTER_NOT_NULL(sync);
+  CHECK(co_sync_is_stopped(sync));
+}
+#else
+/// \Given a pointer to the network (can_net_t), a pointer to a device
+///        (co_dev_t)
+///
+/// \When NMT service is created
+///
+/// \Then the SYNC service is not initialized
+TEST(CO_NmtSrv, CoNmtSrvInit_NoSyncService) {
+  CreateNmt();
+  POINTERS_EQUAL(nullptr, co_nmt_get_sync(nmt));
+}
+#endif  // !LELY_NO_CO_SYNC
+
+#if LELY_NO_CO_TIME
+/// \Given a pointer to the network (can_net_t), a pointer to a device
+///        (co_dev_t)
+///
+/// \When NMT service is created
+///
+/// \Then the TIME service is not initialized
+TEST(CO_NmtSrv, CoNmtSrvInit_NoTimeService) {
+  CreateNmt();
+  POINTERS_EQUAL(nullptr, co_nmt_get_time(nmt));
+}
+#endif  // LELY_NO_CO_TIME
+
+#if !LELY_NO_CO_EMCY
+/// \Given a pointer to the network (can_net_t), a pointer to a device
+///        (co_dev_t), the object dictionary does not contain the Error Register
+///        object (0x1001)
+///
+/// \When NMT service is created
+///
+/// \Then the EMCY service is not initialized
+///       \Calls co_nmt_get_net()
+///       \Calls co_nmt_get_dev()
+///       \Calls co_dev_find_obj()
+TEST(CO_NmtSrv, CoNmtSrvInit_NoObj1001) {
+  CreateNmt();
+
+  POINTERS_EQUAL(nullptr, co_nmt_get_emcy(nmt));
+}
+
+/// \Given a pointer to the network (can_net_t), a pointer to a device
+///        (co_dev_t), the object dictionary contains the Error Register object
+///        (0x1001)
+///
+/// \When NMT service is created
+///
+/// \Then the EMCY service is initialized
+///       \Calls co_nmt_get_net()
+///       \Calls co_nmt_get_dev()
+///       \Calls co_dev_find_obj()
+///       \Calls co_emcy_create()
+TEST(CO_NmtSrv, CoNmtSrvInit_EmcyNominal) {
+  CreateObj1001Defaults();
+
+  CreateNmt();
+
+  const co_emcy_t* const emcy = co_nmt_get_emcy(nmt);
+  POINTER_NOT_NULL(emcy);
+  CHECK(co_emcy_is_stopped(emcy));
+}
+#else
+/// \Given a pointer to the network (can_net_t), a pointer to a device
+///        (co_dev_t)
+///
+/// \When NMT service is created
+///
+/// \Then the EMCY service is not initialized
+TEST(CO_NmtSrv, CoNmtSrvInit_NoEmcyService) {
+  CreateNmt();
+  POINTERS_EQUAL(nullptr, co_nmt_get_emcy(nmt));
+}
+#endif  // !LELY_NO_CO_EMCY
+
+#if LELY_NO_CO_LSS
+/// \Given a pointer to the network (can_net_t), a pointer to a device
+///        (co_dev_t)
+///
+/// \When NMT service is created
+///
+/// \Then the LSS service is not initialized
+TEST(CO_NmtSrv, CoNmtSrvInit_NoLssService) {
+  CreateNmt();
+  POINTERS_EQUAL(nullptr, co_nmt_get_lss(nmt));
+}
+#endif  // LELY_NO_CO_LSS
+
+///@}
+
+/// @name NMT service manager services startup
+///@{
+
+#if !LELY_NO_CO_RPDO
+/// \Given a pointer to the network (can_net_t), a pointer to a device
+///        (co_dev_t) with RPDO service(s) configured, a pointer to an
+///        initialized NMT service (co_nmt_t)
+///
+/// \When co_nmt_cs_ind() is called with the NMT 'reset node' command specifier
+///
+/// \Then the configured RPDO services are started
+///       \Calls get_errc()
+///       \Calls set_errc()
+///       \Calls co_rpdo_start()
+TEST(CO_NmtSrv, CoNmtSrv_StartRpdo) {
+  CreateObj1400Defaults();
+  CreateObj1600Defaults();
+
+  CreateNmtAndReset();
+
+  const co_rpdo_t* const rpdo = co_nmt_get_rpdo(nmt, RPDO_NUM);
+  POINTER_NOT_NULL(rpdo);
+  CHECK_FALSE(co_rpdo_is_stopped(rpdo));
+}
+
+#if !LELY_NO_CO_EMCY
+/// \Given a pointer to the network (can_net_t), a pointer to a device
+///        (co_dev_t), with EMCY and RPDO service(s) configured, a pointer to a
+///        started NMT service (co_nmt_t)
+///
+/// \When an RPDO CAN message is received with length not matching configured
+///       object mapping
+///
+/// \Then the EMCY service is notified and the Error Register object (0x1001) is
+///       updated
+///       \Calls co_nmt_on_err()
+TEST(CO_NmtSrv, CoNmtSrv_RpdoErr) {
+  CreateObj1001Defaults();
+  CreateObj1400Defaults();
+  CreateObj1600Defaults();
+  CreateNmtAndReset();
+
+  can_msg msg = CAN_MSG_INIT;
+  msg.id = DEV_ID;
+  msg.len = 0u;
+  CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
+
+  CHECK_EQUAL(0x11u, co_dev_get_val_u8(dev, 0x1001u, 0x00u));
+}
+#endif  // !LELY_NO_CO_EMCY
+
+#endif  // !LELY_NO_CO_RPDO
+
+#if !LELY_NO_CO_TPDO
+/// \Given a pointer to the network (can_net_t), a pointer to a device
+///        (co_dev_t) with TPDO service(s) configured, a pointer to an
+///        initialized NMT service (co_nmt_t)
+///
+/// \When co_nmt_cs_ind() is called with the NMT 'reset node' command specifier
+///
+/// \Then the configured TPDO services are started
+///       \Calls get_errc()
+///       \Calls set_errc()
+///       \Calls co_tpdo_start()
+TEST(CO_NmtSrv, CoNmtSrv_StartTpdo) {
+  CreateObj1800Defaults();
+  CreateObj1a00Defaults();
+
+  CreateNmtAndReset();
+
+  const co_tpdo_t* const tpdo = co_nmt_get_tpdo(nmt, TPDO_NUM);
+  POINTER_NOT_NULL(tpdo);
+  CHECK_FALSE(co_tpdo_is_stopped(tpdo));
+}
+#endif  // !LELY_NO_CO_TPDO
+
+#if !LELY_NO_CO_SDO
+/// \Given a pointer to the network (can_net_t), a pointer to a device
+///        (co_dev_t) with Server SDO service(s) configured, a pointer to an
+///        initialized NMT service (co_nmt_t)
+///
+/// \When co_nmt_cs_ind() is called with the NMT 'reset node' command specifier
+///
+/// \Then the default and configured Server SDO services are started
+///       \Calls get_errc()
+///       \Calls set_errc()
+///       \Calls co_ssdo_start()
+TEST(CO_NmtSrv, CoNmtSrv_StartServerSdo) {
+  CreateObj1201Defaults();
+
+  CreateNmtAndReset();
+
+  const co_ssdo_t* const default_ssdo = co_nmt_get_ssdo(nmt, DEFAULT_SSDO_NUM);
+  POINTER_NOT_NULL(default_ssdo);
+  CHECK_FALSE(co_ssdo_is_stopped(default_ssdo));
+
+  const co_ssdo_t* const ssdo = co_nmt_get_ssdo(nmt, SSDO_NUM);
+  POINTER_NOT_NULL(ssdo);
+  CHECK_FALSE(co_ssdo_is_stopped(ssdo));
+}
+
+#if !LELY_NO_CO_CSDO
+/// \Given a pointer to the network (can_net_t), a pointer to a device
+///        (co_dev_t) with Client SDO service(s) configured, a pointer to an
+///        initialized NMT service (co_nmt_t)
+///
+/// \When co_nmt_cs_ind() is called with the NMT 'reset node' command specifier
+///
+/// \Then the configured Client SDO services are started
+///       \Calls get_errc()
+///       \Calls set_errc()
+///       \Calls co_csdo_start()
+TEST(CO_NmtSrv, CoNmtSrv_StartClientSdo) {
+  CreateObj1280Defaults();
+
+  CreateNmtAndReset();
+
+  const co_csdo_t* const csdo = co_nmt_get_csdo(nmt, CSDO_NUM);
+  POINTER_NOT_NULL(csdo);
+  CHECK_FALSE(co_csdo_is_stopped(csdo));
+}
+#endif  // !LELY_NO_CO_CSDO
+
+#endif  // !LELY_NO_CO_SDO
+
+#if !LELY_NO_CO_SYNC
+/// \Given a pointer to the network (can_net_t), a pointer to a device
+///        (co_dev_t) with the SYNC service configured, a pointer to an
+///        initialized NMT service (co_nmt_t)
+///
+/// \When co_nmt_cs_ind() is called with the NMT 'reset node' command specifier
+///
+/// \Then the SYNC service is started
+///       \Calls get_errc()
+///       \Calls set_errc()
+///       \Calls co_sync_start()
+TEST(CO_NmtSrv, CoNmtSrv_StartSync) {
+  CreateObj1005Defaults();
+
+  CreateNmtAndReset();
+
+  const co_sync_t* const sync = co_nmt_get_sync(nmt);
+  POINTER_NOT_NULL(sync);
+  CHECK_FALSE(co_sync_is_stopped(sync));
+}
+
+namespace {
+struct NmtSyncInd {
+  static bool was_called;
+
+  static void
+  Func(co_nmt_t*, co_unsigned8_t, void*) {
+    was_called = true;
+  }
+};
+}  // namespace
+
+bool NmtSyncInd::was_called = false;
+
+/// \Given a pointer to the network (can_net_t), a pointer to a device
+///        (co_dev_t), with the SYNC service configured, a pointer to a started
+///        NMT service (co_nmt_t) with a SYNC indication function set
+///
+/// \When a SYNC message is received
+///
+/// \Then the SYNC indication function is called
+///       \Calls co_nmt_on_sync()
+TEST(CO_NmtSrv, CoNmtSrv_SyncInd) {
+  CreateObj1005Defaults();
+  CreateNmtAndReset();
+  co_nmt_set_sync_ind(nmt, &NmtSyncInd::Func, nullptr);
+  NmtSyncInd::was_called = false;
+
+  can_msg msg = CAN_MSG_INIT;
+  msg.id = SYNC_COBID;
+  CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
+
+  CHECK(NmtSyncInd::was_called);
+}
+#endif  // !LELY_NO_CO_SYNC
+
+#if !LELY_NO_CO_EMCY
+/// \Given a pointer to the network (can_net_t), a pointer to a device
+///        (co_dev_t) with the EMCY service configured, a pointer to an
+///        initialized NMT service (co_nmt_t)
+///
+/// \When co_nmt_cs_ind() is called with the NMT 'reset node' command specifier
+///
+/// \Then the EMCY service is started
+///       \Calls get_errc()
+///       \Calls set_errc()
+///       \Calls co_emcy_start()
+TEST(CO_NmtSrv, CoNmtSrv_StartEmcy) {
+  CreateObj1001Defaults();
+
+  CreateNmtAndReset();
+
+  const co_emcy_t* const emcy = co_nmt_get_emcy(nmt);
+  POINTER_NOT_NULL(emcy);
+  CHECK_FALSE(co_emcy_is_stopped(emcy));
+}
+#endif  // !LELY_NO_CO_EMCY
+
+#if !LELY_NO_CO_EMCY && !LELY_NO_CO_SYNC
+/// \Given a pointer to the network (can_net_t), a pointer to a device
+///        (co_dev_t), with EMCY and SYNC services configured, a pointer to a
+///        started NMT service (co_nmt_t)
+///
+/// \When a SYNC message with unexpected data length is received
+///
+/// \Then the EMCY service is notified and the Error Register object (0x1001) is
+///       updated
+///       \Calls co_nmt_on_err()
+TEST(CO_NmtSrv, CoNmtSrv_SyncErr) {
+  CreateObj1001Defaults();
+  CreateObj1005Defaults();
+  CreateNmtAndReset();
+
+  can_msg msg = CAN_MSG_INIT;
+  msg.id = SYNC_COBID;
+  msg.len = 1u;
+  CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
+
+  CHECK_EQUAL(0x11u, co_dev_get_val_u8(dev, 0x1001u, 0x00u));
+}
+#endif  // !LELY_NO_CO_EMCY && !LELY_NO_CO_SYNC
+
+/// \Given a pointer to the network (can_net_t), a pointer to a device
+///        (co_dev_t) with no services configured, a pointer to an
+///        initialized NMT service (co_nmt_t)
+///
+/// \When co_nmt_cs_ind() is called with the NMT 'reset node' command specifier
+///
+/// \Then no services are initialized; if SDO support is enabled, the default
+///       Server SDO service is started
+///       \Calls get_errc()
+///       \Calls set_errc()
+///       \IfCalls{!LELY_NO_CO_SDO, co_ssdo_start()}
+TEST(CO_NmtSrv, CoNmtSrv_StartServices_NoneConfigured) {
+  CreateNmtAndReset();
+
+#if LELY_NO_CO_SDO
+  POINTERS_EQUAL(nullptr, co_nmt_get_ssdo(nmt, DEFAULT_SSDO_NUM));
+#else
+  const co_ssdo_t* const default_ssdo = co_nmt_get_ssdo(nmt, DEFAULT_SSDO_NUM);
+  POINTER_NOT_NULL(default_ssdo);
+  CHECK_FALSE(co_ssdo_is_stopped(default_ssdo));
+#endif
+
+  POINTERS_EQUAL(nullptr, co_nmt_get_sync(nmt));
+  POINTERS_EQUAL(nullptr, co_nmt_get_time(nmt));
+  POINTERS_EQUAL(nullptr, co_nmt_get_emcy(nmt));
+}
+
+///@}
+
+TEST_GROUP_BASE(CO_NmtSrvAllocation, CO_NmtSrvBase) {
+  Allocators::Limited limitedAllocator;
+  can_net_t* fail_net = nullptr;
+
+  void ExpectNmtCreateFailure() {
+    nmt = co_nmt_create(fail_net, dev);
+
+    POINTERS_EQUAL(nullptr, nmt);
+    CHECK_EQUAL(ERRNUM_NOMEM, get_errnum());
+    CHECK_EQUAL(0, limitedAllocator.GetAllocationLimit());
+  }
+
+  TEST_SETUP() {
+    TEST_BASE_SETUP();
+
+    fail_net = can_net_create(limitedAllocator.ToAllocT(), 0);
+    POINTER_NOT_NULL(fail_net);
+  }
+
+  TEST_TEARDOWN() {
+    co_nmt_destroy(nmt);
+    can_net_destroy(fail_net);
+
+    TEST_BASE_TEARDOWN();
+  }
+};
+
+  /// @name NMT service manager services initialization
+  ///@{
+
+#if !LELY_NO_CO_RPDO
+/// \Given a pointer to the network (can_net_t), a pointer to a device with RPDO
+///        service(s) configured; the allocator has not enough memory for an
+///        array of pointers to RPDO services
 ///
 /// \When co_nmt_create() is called with a pointer to the device
 ///
-/// \Then a null pointer is returned
+/// \Then a null pointer is returned, the error number it set to ERRNUM_NOMEM
 ///       \Calls co_nmt_get_alloc()
 ///       \Calls co_nmt_get_net()
 ///       \Calls co_nmt_get_dev()
@@ -192,27 +875,251 @@ TEST(CO_NmtSrv, CoNmtSrvInit_Nominal) {
 ///       \Calls mem_alloc()
 ///       \Calls diag()
 ///       \Calls mem_free()
-TEST(CO_NmtSrv, CoNmtSrvInit_FailPdoAllocation) {
-#if !LELY_NO_CO_RPDO
+TEST(CO_NmtSrvAllocation, CoNmtSrvInit_FailRpdoServiceArrayAllocation) {
   CreateObj1400Defaults();
   CreateObj1600Defaults();
-#endif
-#if !LELY_NO_CO_TPDO
-  CreateObj1800Defaults();
-  obj1800->SetSub<Obj1800TpdoCommPar::Sub02TransmissionType>(0xfe);
-  CreateObj1a00Defaults();
-#endif
 
   const size_t dcf_app_par_size = NmtCommon::GetDcfParamsAllocSize(dev);
   limitedAllocator.LimitAllocationTo(co_nmt_sizeof() + dcf_app_par_size);
 
-  nmt = co_nmt_create(fail_net, dev);
-
-  POINTERS_EQUAL(nullptr, nmt);
-  CHECK_EQUAL(ERRNUM_NOMEM, get_errnum());
-  CHECK_EQUAL(0, limitedAllocator.GetAllocationLimit());
+  ExpectNmtCreateFailure();
 }
-#endif  // !LELY_NO_CO_RPDO || !LELY_NO_CO_TPDO
+
+/// \Given a pointer to the network (can_net_t), a pointer to a device with RPDO
+///        service(s) configured; the allocator has not enough memory for RPDO
+///        services
+///
+/// \When co_nmt_create() is called with a pointer to the device
+///
+/// \Then a null pointer is returned, the error number it set to ERRNUM_NOMEM
+///       \Calls co_nmt_get_alloc()
+///       \Calls co_nmt_get_net()
+///       \Calls co_nmt_get_dev()
+///       \Calls co_dev_find_obj()
+///       \Calls mem_alloc()
+///       \Calls co_rpdo_create()
+///       \Calls diag()
+///       \Calls mem_free()
+TEST(CO_NmtSrvAllocation, CoNmtSrvInit_FailRpdoServiceInstanceAllocation) {
+  CreateObj1400Defaults();
+  CreateObj1600Defaults();
+
+  const size_t dcf_app_par_size = NmtCommon::GetDcfParamsAllocSize(dev);
+  limitedAllocator.LimitAllocationTo(co_nmt_sizeof() + dcf_app_par_size +
+                                     RPDO_NUM * sizeof(co_rpdo_t*));
+
+  ExpectNmtCreateFailure();
+}
+
+#endif  // !LELY_NO_CO_RPDO
+
+#if !LELY_NO_CO_TPDO
+/// \Given a pointer to the network (can_net_t), a pointer to a device with TPDO
+///        service(s) configured; the allocator has not enough memory for an
+///        array of pointers to TPDO services
+///
+/// \When co_nmt_create() is called with a pointer to the device
+///
+/// \Then a null pointer is returned, the error number it set to ERRNUM_NOMEM
+///       \Calls co_nmt_get_alloc()
+///       \Calls co_nmt_get_net()
+///       \Calls co_nmt_get_dev()
+///       \Calls co_dev_find_obj()
+///       \Calls mem_alloc()
+///       \Calls diag()
+///       \Calls mem_free()
+TEST(CO_NmtSrvAllocation, CoNmtSrvInit_FailTpdoServiceArrayAllocation) {
+  CreateObj1800Defaults();
+  CreateObj1a00Defaults();
+
+  const size_t dcf_app_par_size = NmtCommon::GetDcfParamsAllocSize(dev);
+  limitedAllocator.LimitAllocationTo(co_nmt_sizeof() + dcf_app_par_size);
+
+  ExpectNmtCreateFailure();
+}
+
+/// \Given a pointer to the network (can_net_t), a pointer to a device with TPDO
+///        service(s) configured; the allocator has not enough memory for TPDO
+///        services
+///
+/// \When co_nmt_create() is called with a pointer to the device
+///
+/// \Then a null pointer is returned, the error number it set to ERRNUM_NOMEM
+///       \Calls co_nmt_get_alloc()
+///       \Calls co_nmt_get_net()
+///       \Calls co_nmt_get_dev()
+///       \Calls co_dev_find_obj()
+///       \Calls mem_alloc()
+///       \Calls co_tpdo_create()
+///       \Calls diag()
+///       \Calls mem_free()
+TEST(CO_NmtSrvAllocation, CoNmtSrvInit_FailTpdoServiceInstanceAllocation) {
+  CreateObj1800Defaults();
+  CreateObj1a00Defaults();
+
+  const size_t dcf_app_par_size = NmtCommon::GetDcfParamsAllocSize(dev);
+  limitedAllocator.LimitAllocationTo(co_nmt_sizeof() + dcf_app_par_size +
+                                     TPDO_NUM * sizeof(co_tpdo_t*));
+
+  ExpectNmtCreateFailure();
+}
+
+#endif  // !LELY_NO_CO_TPDO
+
+#if !LELY_NO_CO_SDO
+
+/// \Given a pointer to the network (can_net_t), a pointer to a device with
+///        Server SDO service(s) configured; the allocator has not enough memory
+///        for an array of pointers to Server SDO services
+///
+/// \When co_nmt_create() is called with a pointer to the device
+///
+/// \Then a null pointer is returned, the error number it set to ERRNUM_NOMEM
+///       \Calls co_nmt_get_alloc()
+///       \Calls co_nmt_get_net()
+///       \Calls co_nmt_get_dev()
+///       \Calls co_dev_find_obj()
+///       \Calls mem_alloc()
+///       \Calls diag()
+///       \Calls mem_free()
+TEST(CO_NmtSrvAllocation, CoNmtSrvInit_FailServerSdoServiceArrayAllocation) {
+  const size_t dcf_app_par_size = NmtCommon::GetDcfParamsAllocSize(dev);
+  limitedAllocator.LimitAllocationTo(co_nmt_sizeof() + dcf_app_par_size);
+
+  ExpectNmtCreateFailure();
+}
+
+/// \Given a pointer to the network (can_net_t), a pointer to a device with
+///        Server SDO service(s) configured; the allocator has not enough memory
+///        for Server SDO services
+///
+/// \When co_nmt_create() is called with a pointer to the device
+///
+/// \Then a null pointer is returned, the error number it set to ERRNUM_NOMEM
+///       \Calls co_nmt_get_alloc()
+///       \Calls co_nmt_get_net()
+///       \Calls co_nmt_get_dev()
+///       \Calls co_dev_find_obj()
+///       \Calls mem_alloc()
+///       \Calls co_ssdo_create()
+///       \Calls diag()
+///       \Calls mem_free()
+TEST(CO_NmtSrvAllocation, CoNmtSrvInit_FailServerSdoServiceInstanceAllocation) {
+  const size_t dcf_app_par_size = NmtCommon::GetDcfParamsAllocSize(dev);
+  limitedAllocator.LimitAllocationTo(co_nmt_sizeof() + dcf_app_par_size +
+                                     sizeof(co_ssdo_t*));
+
+  ExpectNmtCreateFailure();
+}
+
+#if !LELY_NO_CO_CSDO
+
+/// \Given a pointer to the network (can_net_t), a pointer to a device with
+///        Client SDO service(s) configured; the allocator has not enough memory
+///        for an array of pointers to Client SDO services
+///
+/// \When co_nmt_create() is called with a pointer to the device
+///
+/// \Then a null pointer is returned, the error number it set to ERRNUM_NOMEM
+///       \Calls co_nmt_get_alloc()
+///       \Calls co_nmt_get_net()
+///       \Calls co_nmt_get_dev()
+///       \Calls co_dev_find_obj()
+///       \Calls mem_alloc()
+///       \Calls diag()
+///       \Calls mem_free()
+TEST(CO_NmtSrvAllocation, CoNmtSrvInit_FailClientSdoServiceArrayAllocation) {
+  CreateObj1280Defaults();
+
+  const size_t dcf_app_par_size = NmtCommon::GetDcfParamsAllocSize(dev);
+  const size_t default_ssdo_size = NmtCommon::GetSsdoAllocSize();
+  limitedAllocator.LimitAllocationTo(co_nmt_sizeof() + dcf_app_par_size +
+                                     default_ssdo_size);
+
+  ExpectNmtCreateFailure();
+}
+
+/// \Given a pointer to the network (can_net_t), a pointer to a device with
+///        Client SDO service(s) configured; the allocator has not enough memory
+///        for Client SDO services
+///
+/// \When co_nmt_create() is called with a pointer to the device
+///
+/// \Then a null pointer is returned, the error number it set to ERRNUM_NOMEM
+///       \Calls co_nmt_get_alloc()
+///       \Calls co_nmt_get_net()
+///       \Calls co_nmt_get_dev()
+///       \Calls co_dev_find_obj()
+///       \Calls mem_alloc()
+///       \Calls co_ssdo_create()
+///       \Calls co_csdo_create()
+///       \Calls diag()
+///       \Calls mem_free()
+TEST(CO_NmtSrvAllocation, CoNmtSrvInit_FailClientSdoServiceInstanceAllocation) {
+  CreateObj1280Defaults();
+
+  const size_t dcf_app_par_size = NmtCommon::GetDcfParamsAllocSize(dev);
+  const size_t default_ssdo_size = NmtCommon::GetSsdoAllocSize();
+  limitedAllocator.LimitAllocationTo(co_nmt_sizeof() + dcf_app_par_size +
+                                     default_ssdo_size +
+                                     CSDO_NUM * sizeof(co_csdo_t*));
+
+  ExpectNmtCreateFailure();
+}
+
+#endif  // !LELY_NO_CO_CSDO
+
+#endif  // !LELY_NO_CO_SDO
+
+#if !LELY_NO_CO_SYNC
+/// \Given a pointer to the network (can_net_t), a pointer to a device with the
+///        COB-ID SYNC Message object (0x1005); the allocator has not enough
+///        memory to create the SYNC service
+///
+/// \When co_nmt_create() is called with a pointer to the device
+///
+/// \Then a null pointer is returned, the error number it set to ERRNUM_NOMEM
+///       \Calls co_nmt_get_net()
+///       \Calls co_nmt_get_dev()
+///       \Calls co_dev_find_obj()
+///       \Calls co_sync_create()
+///       \Calls diag()
+TEST(CO_NmtSrvAllocation, CoNmtSrvInit_FailSyncServiceCreation) {
+  CreateObj1005Defaults();
+
+  const size_t dcf_app_par_size = NmtCommon::GetDcfParamsAllocSize(dev);
+  const size_t default_ssdo_size = NmtCommon::GetSsdoAllocSize();
+  limitedAllocator.LimitAllocationTo(co_nmt_sizeof() + dcf_app_par_size +
+                                     default_ssdo_size);
+
+  ExpectNmtCreateFailure();
+}
+#endif  // !LELY_NO_CO_SYNC
+
+#if !LELY_NO_CO_EMCY
+/// \Given a pointer to the network (can_net_t), a pointer to a device with the
+///        Error Register object (0x1001); the allocator has not enough memory
+///        to create the EMCY service
+///
+/// \When co_nmt_create() is called with a pointer to the device
+///
+/// \Then a null pointer is returned, the error number it set to ERRNUM_NOMEM
+///       \Calls co_nmt_get_net()
+///       \Calls co_nmt_get_dev()
+///       \Calls co_dev_find_obj()
+///       \Calls co_emcy_create()
+///       \Calls diag()
+TEST(CO_NmtSrvAllocation, CoNmtSrvInit_FailEmcyServiceCreation) {
+  CreateObj1001Defaults();
+
+  const size_t dcf_app_par_size = NmtCommon::GetDcfParamsAllocSize(dev);
+  const size_t default_ssdo_size = NmtCommon::GetSsdoAllocSize();
+  limitedAllocator.LimitAllocationTo(co_nmt_sizeof() + dcf_app_par_size +
+                                     default_ssdo_size);
+
+  ExpectNmtCreateFailure();
+}
+#endif  // !LELY_NO_CO_EMCY
 
 #endif  // LELY_NO_MALLOC
 
