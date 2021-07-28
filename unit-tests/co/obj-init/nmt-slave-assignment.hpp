@@ -20,15 +20,22 @@
  * limitations under the License.
  */
 
-#ifndef LELY_UNIT_TEST_NMT_STARTUP_HPP_
-#define LELY_UNIT_TEST_NMT_STARTUP_HPP_
+#ifndef LELY_UNIT_TEST_NMT_SLAVE_ASSIGNMENT_HPP_
+#define LELY_UNIT_TEST_NMT_SLAVE_ASSIGNMENT_HPP_
 
 #include "obj-init/obj-init.hpp"
 
-// 0x1f80: NMT Start-up
-struct Obj1f80NmtStartup : ObjValueInitT<0x1f80u, CO_DEFTYPE_UNSIGNED32> {
-  static const sub_type MASTER_BIT = 0x01u;
-  static const sub_type AUTOSTART_BIT = 0x04;
+#include <lely/co/dev.h>
+
+// 0x1f81: NMT Slave assignment
+struct Obj1f81NmtSlaveAssignment : ObjInitT<0x1f81u> {
+  struct Sub00HighestSubidxSupported : SubT<0x00u, CO_DEFTYPE_UNSIGNED8> {};
+  struct SubNthSlaveEntry : SubT<0x01u, CO_DEFTYPE_UNSIGNED32, 0, 0x01> {};
+
+  static const co_unsigned32_t ASSIGNMENT_BIT = 0x01u;
+  static const co_unsigned32_t BOOTED_BIT = 0x04u;
+  static const co_unsigned32_t MANDATORY_BIT = 0x08u;
+  static const co_unsigned32_t KEEP_ALIVE_BIT = 0x10u;
 };
 
-#endif  // LELY_UNIT_TEST_NMT_STARTUP_HPP_
+#endif  // LELY_UNIT_TEST_NMT_SLAVE_ASSIGNMENT_HPP_

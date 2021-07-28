@@ -2562,7 +2562,7 @@ co_1f80_dn_ind(co_sub_t *sub, struct co_sdo_req *req, co_unsigned32_t ac,
 		return 0;
 
 	// Only bits 0..4 and 6 are supported.
-	if ((startup ^ startup_old) != 0x5f)
+	if ((startup ^ startup_old) & ~UINT32_C(0x5f))
 		return CO_SDO_AC_PARAM_VAL;
 
 	co_sub_dn(sub, &val);
@@ -2644,13 +2644,10 @@ co_1f82_dn_ind(co_sub_t *sub, struct co_sdo_req *req, co_unsigned32_t ac,
 	co_unsigned8_t id = subidx == 0x80 ? 0 : subidx;
 	// Abort with an error if the node-ID is unknown.
 	if (id > CO_NUM_NODES
-			// cppcheck-suppress knownConditionTrueFalse
 			|| (id && !(nmt->slaves[id - 1].assignment & 0x01)))
 		return CO_SDO_AC_PARAM_VAL;
 
-	if (!nmt->master)
-		return CO_SDO_AC_DATA_CTL;
-
+	assert(nmt->master);
 	assert(type == CO_DEFTYPE_UNSIGNED8);
 	switch (val.u8) {
 	case CO_NMT_ST_STOP: co_nmt_cs_req(nmt, CO_NMT_CS_STOP, id); break;
