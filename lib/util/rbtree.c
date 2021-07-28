@@ -318,17 +318,17 @@ rbtree_find(const struct rbtree *tree, const void *key)
 	return node;
 }
 
-int
+bool
 rbtree_contains(const struct rbtree *tree, const struct rbnode *node)
 {
 	assert(tree);
 
 	while (node) {
 		if (node == tree->root)
-			return 1;
+			return true;
 		node = rbnode_get_parent(node);
 	}
-	return 0;
+	return false;
 }
 
 struct rbnode *

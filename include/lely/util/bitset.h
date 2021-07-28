@@ -24,6 +24,8 @@
 
 #include <lely/util/util.h>
 
+#include <stdbool.h>
+
 /// A variable-sized bitset.
 struct bitset {
 	/// The number of integers in #bits.
@@ -68,8 +70,11 @@ int bitset_size(const struct bitset *set);
  */
 int bitset_resize(struct bitset *set, int size);
 
-/// Returns 1 if bit <b>n</b> in <b>set</b> is set, and 0 otherwise.
-int bitset_test(const struct bitset *set, int n);
+/**
+ * Returns <b>true</b> if bit <b>n</b> in <b>set</b> is set, and
+ * <b>false</b> otherwise.
+ */
+bool bitset_test(const struct bitset *set, int n);
 
 /// Sets bit <b>n</b> in <b>set</b>.
 void bitset_set(struct bitset *set, int n);

@@ -570,9 +570,9 @@ TEST(Util_Pheap, PheapForeach_MultiElementsRemoveCurrent) {
 ///
 /// \Then 0 is returned
 TEST(Util_Pheap, PheapContains_HeapEmpty) {
-  CHECK_EQUAL(0, pheap_contains(&heap, &nodes[0]));
-  CHECK_EQUAL(0, pheap_contains(&heap, &nodes[1]));
-  CHECK_EQUAL(0, pheap_contains(&heap, &nodes[2]));
+  CHECK_FALSE(pheap_contains(&heap, &nodes[0]));
+  CHECK_FALSE(pheap_contains(&heap, &nodes[1]));
+  CHECK_FALSE(pheap_contains(&heap, &nodes[2]));
 }
 
 /// \Given a pairing heap (pheap) with one node (pnode) inserted
@@ -583,7 +583,7 @@ TEST(Util_Pheap, PheapContains_HeapEmpty) {
 TEST(Util_Pheap, PheapContains_OneInserted_Contains) {
   pheap_insert(&heap, &nodes[0]);
 
-  CHECK_EQUAL(1, pheap_contains(&heap, &nodes[0]));
+  CHECK(pheap_contains(&heap, &nodes[0]));
 }
 
 /// \Given a pairing heap (pheap) with one node (pnode) inserted
@@ -595,7 +595,7 @@ TEST(Util_Pheap, PheapContains_OneInserted_Contains) {
 TEST(Util_Pheap, PheapContains_OneInserted_NotContain) {
   pheap_insert(&heap, &nodes[0]);
 
-  CHECK_EQUAL(0, pheap_contains(&heap, &nodes[1]));
+  CHECK_FALSE(pheap_contains(&heap, &nodes[1]));
 }
 
 /// \Given a pairing heap (pheap) with multiple nodes (pnode) inserted
@@ -609,9 +609,9 @@ TEST(Util_Pheap, PheapContains_Many_Contains) {
   pheap_insert(&heap, &nodes[2]);
   pheap_insert(&heap, &nodes[1]);
 
-  CHECK_EQUAL(1, pheap_contains(&heap, &nodes[1]));
-  CHECK_EQUAL(1, pheap_contains(&heap, &nodes[2]));
-  CHECK_EQUAL(1, pheap_contains(&heap, &nodes[3]));
+  CHECK(pheap_contains(&heap, &nodes[1]));
+  CHECK(pheap_contains(&heap, &nodes[2]));
+  CHECK(pheap_contains(&heap, &nodes[3]));
 }
 
 /// \Given a pairing heap (pheap) with multiple nodes (pnode) inserted
@@ -625,8 +625,8 @@ TEST(Util_Pheap, PheapContains_Many_NotContain) {
   pheap_insert(&heap, &nodes[2]);
   pheap_insert(&heap, &nodes[1]);
 
-  CHECK_EQUAL(0, pheap_contains(&heap, &nodes[0]));
-  CHECK_EQUAL(0, pheap_contains(&heap, &nodes[4]));
+  CHECK_FALSE(pheap_contains(&heap, &nodes[0]));
+  CHECK_FALSE(pheap_contains(&heap, &nodes[4]));
 }
 
 ///@}

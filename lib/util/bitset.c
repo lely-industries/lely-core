@@ -100,7 +100,7 @@ bitset_get_size(const struct bitset *set)
 	return set->size * INT_BIT;
 }
 
-int
+bool
 bitset_test(const struct bitset *set, int n)
 {
 	if (n < 0 || n >= bitset_size(set))

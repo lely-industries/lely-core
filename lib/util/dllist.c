@@ -27,18 +27,18 @@
 
 #include <assert.h>
 
-int
+bool
 dllist_contains(const struct dllist *list, const struct dlnode *node)
 {
 	assert(list);
 
 	if (!node)
-		return 0;
+		return false;
 
 	dllist_foreach (list, node_) {
 		if (node_ == node)
-			return 1;
+			return true;
 	}
 
-	return 0;
+	return false;
 }

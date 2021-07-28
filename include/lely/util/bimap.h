@@ -33,6 +33,7 @@
 #include <lely/util/rbtree.h>
 
 #include <assert.h>
+#include <stdbool.h>
 
 #ifndef LELY_UTIL_BIMAP_INLINE
 #define LELY_UTIL_BIMAP_INLINE static inline
@@ -184,8 +185,11 @@ LELY_UTIL_BIMAP_INLINE struct binode *binode_next_by_value(
 LELY_UTIL_BIMAP_INLINE void bimap_init(
 		struct bimap *map, cmp_t *key_cmp, cmp_t *value_cmp);
 
-/// Returns 1 if the bidirectional map is empty, and 0 if not.
-LELY_UTIL_BIMAP_INLINE int bimap_empty(const struct bimap *map);
+/**
+ * Returns <b>true</b> if the bidirectional map is empty, and
+ * <b>false</b> if not.
+ */
+LELY_UTIL_BIMAP_INLINE bool bimap_empty(const struct bimap *map);
 
 /**
  * Returns the size (in number of nodes) of a bidirectional map. This is an O(1)
@@ -339,10 +343,10 @@ bimap_init(struct bimap *map, cmp_t *key_cmp, cmp_t *value_cmp)
 	rbtree_init(&map->values, value_cmp);
 }
 
-LELY_UTIL_BIMAP_INLINE int
+LELY_UTIL_BIMAP_INLINE bool
 bimap_empty(const struct bimap *map)
 {
-	return !bimap_size(map);
+	return bimap_size(map) == 0u;
 }
 
 LELY_UTIL_BIMAP_INLINE size_t

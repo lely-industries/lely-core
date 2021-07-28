@@ -64,7 +64,7 @@ typedef struct {
 #define co_restart(ctx) co_restart__(ctx)
 #define co_restart__(ctx) ((void)((ctx)->label = 0))
 
-/// Returns 1 if the stackless coroutine has finished.
+/// Returns <b>true</b> if the stackless coroutine has finished.
 #define co_is_ready(ctx) co_is_ready__(ctx)
 #define co_is_ready__(ctx) ((ctx)->label == -1)
 

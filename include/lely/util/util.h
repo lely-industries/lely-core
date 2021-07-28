@@ -72,8 +72,8 @@
 
 #ifndef powerof2
 /**
- * Returns 1 if <b>x</b> is a power of two, and 0 otherwise. Note that zero is
- * considered to be a power of two.
+ * Returns <b>true</b> if <b>x</b> is a power of two, and <b>false</b>
+ * otherwise. Note that zero is considered to be a power of two.
  */
 #define powerof2(x) (!((x) & ((x)-1)))
 #endif

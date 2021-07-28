@@ -60,20 +60,20 @@ sllist_remove(struct sllist *list, struct slnode *node)
 	return node;
 }
 
-int
+bool
 sllist_contains(const struct sllist *list, const struct slnode *node)
 {
 	assert(list);
 
 	if (!node)
-		return 0;
+		return false;
 
 	sllist_foreach (list, node_) {
 		if (node_ == node)
-			return 1;
+			return true;
 	}
 
-	return 0;
+	return false;
 }
 
 struct slnode *
