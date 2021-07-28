@@ -36,6 +36,7 @@
 #include <lely/co/obj.h>
 #include <lely/co/sdo.h>
 #include <lely/co/ssdo.h>
+#include <lely/co/val.h>
 
 #include <libtest/allocators/default.hpp>
 #include <libtest/allocators/limited.hpp>
@@ -551,6 +552,8 @@ TEST(CO_SsdoInit, CoSsdoStop_OnStarted) {
 ///@}
 
 TEST_BASE(CO_Ssdo) {
+  TEST_BASE_SUPER(CO_Ssdo);
+
   using sub_type = co_unsigned16_t;
   using sub_type8 = co_unsigned8_t;
   using sub_type64 = co_unsigned64_t;
@@ -2049,6 +2052,46 @@ TEST(CoSsdoBlkUpIniOnRecv, ReqSizeMoreThanPst) {
   CanSend::CheckMsg(DEFAULT_COBID_RES, 0, CO_SDO_MSG_SIZE, expected.data());
 }
 
+#if !LELY_NO_CO_OBJ_UPLOAD
+/// \Given a pointer to the SSDO service (co_ssdo_t)
+///
+/// \When an SDO block upload initiate request is received; protocol switch
+///       threshold value is equal to the size of the requested value in bytes;
+///       the requested value has a custom upload indication function set which
+///       claims that the value size is zero
+///
+/// \Then a segmented SDO upload initiate response with indicated size of zero
+///       sent
+TEST(CoSsdoBlkUpIniOnRecv, ReqSizeZero_NonZeroPst) {
+  auto zero_req_size = [](const co_sub_t* const sub, co_sdo_req* const req,
+                          co_unsigned32_t ac, void* const) -> co_unsigned32_t {
+    if (ac != 0) return ac;
+
+    const auto ret = co_sub_on_up(sub, req, &ac);
+    assert((ret == 0 && ac == 0) || (ret == -1 && ac != 0));
+    (void)ret;
+
+    req->size = 0u;
+
+    return ac;
+  };
+
+  dev_holder->CreateAndInsertObj(obj2020, IDX);
+  obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE, sub_type{0xabcdu});
+  co_obj_set_up_ind(obj2020->Get(), zero_req_size, nullptr);
+  StartSSDO();
+
+  can_msg msg = CreateBlkUp2020IniReqMsg();
+  msg.data[5] = sizeof(sub_type);
+  CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
+
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
+  const auto expected = SdoInitExpectedData::U32(
+      CO_SDO_SCS_UP_INI_RES | CO_SDO_INI_SIZE_IND, IDX, SUBIDX, 0u);
+  CanSend::CheckMsg(DEFAULT_COBID_RES, 0, CO_SDO_MSG_SIZE, expected.data());
+}
+#endif  // !LELY_NO_CO_OBJ_UPLOAD
+
 /// \Given a pointer to the SSDO service (co_ssdo_t)
 ///
 /// \When an SDO block upload initiate request for an existing entry is received
@@ -2476,6 +2519,33 @@ TEST(CoSsdoDnSegOnRecv, Nominal) {
 
 ///@}
 
+struct AcTrackingUpInd {
+  static co_unsigned32_t last_ac;
+
+  static co_unsigned32_t
+  Func(const co_sub_t* const sub, struct co_sdo_req* const req,
+       co_unsigned32_t ac, void* const) {
+    last_ac = ac;
+
+    if (ac != 0) {
+      return ac;
+    }
+
+    const auto ret = co_sub_on_up(sub, req, &ac);
+    assert((ret == 0 && ac == 0) || (ret == -1 && ac != 0));
+    (void)ret;
+
+    return ac;
+  }
+
+  static void
+  Clear() {
+    last_ac = 0u;
+  }
+};
+
+co_unsigned32_t AcTrackingUpInd::last_ac = 0u;
+
 TEST_GROUP_BASE(CoSsdoUpSegOnRecv, CO_Ssdo) {
   int32_t ignore = 0;  // clang-format fix
 
@@ -2524,6 +2594,12 @@ TEST_GROUP_BASE(CoSsdoUpSegOnRecv, CO_Ssdo) {
     CHECK_SDO_CAN_MSG_VAL(size, CanSend::msg.data);
     ResetCanSend();
   }
+
+  TEST_SETUP() {
+    TEST_BASE_SETUP();
+
+    AcTrackingUpInd::Clear();
+  }
 };
 
 /// @name SSDO upload segment on receive
@@ -2549,15 +2625,42 @@ TEST(CoSsdoUpSegOnRecv, NoCS) {
 TEST(CoSsdoUpSegOnRecv, CSAbort) {
   dev_holder->CreateAndInsertObj(obj2020, IDX);
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE64, sub_type64{0uL});
+  co_obj_set_up_ind(obj2020->Get(), &AcTrackingUpInd::Func, nullptr);
   StartSSDO();
 
   UploadInitiateReq(sizeof(sub_type64));
 
-  can_msg msg = SdoCreateMsg::Default(IDX, SUBIDX, DEFAULT_COBID_REQ);
-  msg.data[0] = CO_SDO_CS_ABORT;
+  const co_unsigned32_t ac = CO_SDO_AC_TIMEOUT;
+
+  const can_msg msg = SdoCreateMsg::Abort(IDX, SUBIDX, DEFAULT_COBID_REQ, ac);
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
   CHECK_EQUAL(0, CanSend::GetNumCalled());
+  CHECK_EQUAL(ac, AcTrackingUpInd::last_ac);
+}
+
+/// \Given a pointer to the SSDO service (co_ssdo_t), segmented upload transfer
+///        is in progress
+///
+/// \When an SDO abort transfer message was received, the message did not
+///       contain a complete abort code value
+///
+/// \Then no SDO message was sent, requested objects' upload indication function
+///       was called with the CO_SDO_AC_ERROR abort code
+TEST(CoSsdoUpSegOnRecv, CSAbort_NoAbortCode) {
+  dev_holder->CreateAndInsertObj(obj2020, IDX);
+  obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE64, sub_type64{0uL});
+  co_obj_set_up_ind(obj2020->Get(), &AcTrackingUpInd::Func, nullptr);
+  StartSSDO();
+
+  UploadInitiateReq(sizeof(sub_type64));
+
+  can_msg msg = SdoCreateMsg::Abort(IDX, SUBIDX, DEFAULT_COBID_REQ);
+  msg.len = 7u;
+  CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
+
+  CHECK_EQUAL(0, CanSend::GetNumCalled());
+  CHECK_EQUAL(CO_SDO_AC_ERROR, AcTrackingUpInd::last_ac);
 }
 
 TEST(CoSsdoUpSegOnRecv, InvalidCS) {
@@ -2816,6 +2919,35 @@ TEST(CoSsdoUpSegOnRecv, IndReqSizeLonger) {
 
 ///@}
 
+struct AcTrackingDnInd {
+  static co_unsigned32_t last_ac;
+
+  static co_unsigned32_t
+  Func(co_sub_t* const sub, struct co_sdo_req* const req, co_unsigned32_t ac,
+       void* const) {
+    last_ac = ac;
+
+    if (ac != 0) {
+      return ac;
+    }
+
+    // Capture and ignore the return value to suppress a Coverity Scan warning.
+    // Any error can be detected by the caller by checking whether 'ac'
+    // is non-zero.
+    const auto ignored_result = co_sub_on_dn(sub, req, &ac);
+    (void)ignored_result;
+
+    return ac;
+  }
+
+  static void
+  Clear() {
+    last_ac = 0u;
+  }
+};
+
+co_unsigned32_t AcTrackingDnInd::last_ac = 0u;
+
 TEST_GROUP_BASE(CoSsdoBlkDn, CO_Ssdo) {
   int32_t ignore = 0;  // clang-format fix
 
@@ -2889,6 +3021,11 @@ TEST_GROUP_BASE(CoSsdoBlkDn, CO_Ssdo) {
     CHECK_SDO_CAN_MSG_VAL(0, CanSend::msg.data);
     ResetCanSend();
   }
+
+  TEST_SETUP() {
+    TEST_BASE_SETUP();
+    AcTrackingDnInd::Clear();
+  }
 };
 
 /// @name SSDO block download
@@ -2911,7 +3048,7 @@ TEST(CoSsdoBlkDn, Sub_NoCS) {
   CanSend::CheckMsg(DEFAULT_COBID_RES, 0, CO_SDO_MSG_SIZE, expected.data());
 }
 
-TEST(CoSsdoBlkDn, Sub_CSAbort) {
+TEST(CoSsdoBlkDn, Sub_CSAbort_OnFirstSeg) {
   dev_holder->CreateAndInsertObj(obj2020, IDX);
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE64, sub_type64{0uL});
   StartSSDO();
@@ -3066,6 +3203,75 @@ TEST(CoSsdoBlkDn, Sub_Nominal) {
 
   const co_sub_t* const sub = co_dev_find_sub(dev, IDX, SUBIDX);
   CHECK_EQUAL(val, co_sub_get_val_u64(sub));
+}
+
+/// \Given a pointer to the SSDO service (co_ssdo_t), block download transfer
+///        is in progress, first sub-block was already received
+///
+/// \When an SDO abort transfer message was received
+///
+/// \Then no SDO message was sent, requested objects' download indication
+///       function was called with the received abort code
+TEST(CoSsdoBlkDn, Sub_CSAbort_OnSubsequentSeg) {
+  dev_holder->CreateAndInsertObj(obj2020, IDX);
+  obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE64, sub_type64{0uL});
+  co_obj_set_dn_ind(obj2020->Get(), &AcTrackingDnInd::Func, nullptr);
+  StartSSDO();
+
+  InitBlkDn2020Sub00(sizeof(sub_type64));
+
+  const sub_type64 val = 0xefcdab9078563412uL;
+  uint_least8_t val_buf[sizeof(sub_type64)] = {0};
+  stle_u64(val_buf, val);
+  can_msg msg_first_blk =
+      SdoCreateMsg::BlkDnSubReq(IDX, SUBIDX, DEFAULT_COBID_REQ, 1u);
+  memcpy(msg_first_blk.data + 1u, val_buf, 7u);
+  CHECK_EQUAL(1, can_net_recv(net, &msg_first_blk, 0));
+
+  CHECK_EQUAL(0, CanSend::GetNumCalled());
+
+  const co_unsigned32_t ac = CO_SDO_AC_TIMEOUT;
+
+  const can_msg msg_abort =
+      SdoCreateMsg::Abort(IDX, SUBIDX, DEFAULT_COBID_REQ, ac);
+  CHECK_EQUAL(1, can_net_recv(net, &msg_abort, 0));
+
+  CHECK_EQUAL(0, CanSend::GetNumCalled());
+  CHECK_EQUAL(ac, AcTrackingDnInd::last_ac);
+}
+
+/// \Given a pointer to the SSDO service (co_ssdo_t), block download transfer
+///        is in progress, first sub-block was already received
+///
+/// \When an SDO abort transfer message was received, the message did not
+///       contain a complete abort code value
+///
+/// \Then no SDO message was sent, requested objects' download indication
+///       function was called with the CO_SDO_AC_ERROR abort code
+TEST(CoSsdoBlkDn, Sub_CSAbort_NoAbortCodeOnSubsequentSeg) {
+  dev_holder->CreateAndInsertObj(obj2020, IDX);
+  obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE64, sub_type64{0uL});
+  co_obj_set_dn_ind(obj2020->Get(), &AcTrackingDnInd::Func, nullptr);
+  StartSSDO();
+
+  InitBlkDn2020Sub00(sizeof(sub_type64));
+
+  const sub_type64 val = 0xefcdab9078563412uL;
+  uint_least8_t val_buf[sizeof(sub_type64)] = {0};
+  stle_u64(val_buf, val);
+  can_msg msg_first_blk =
+      SdoCreateMsg::BlkDnSubReq(IDX, SUBIDX, DEFAULT_COBID_REQ, 1u);
+  memcpy(msg_first_blk.data + 1u, val_buf, 7u);
+  CHECK_EQUAL(1, can_net_recv(net, &msg_first_blk, 0));
+
+  CHECK_EQUAL(0, CanSend::GetNumCalled());
+
+  can_msg msg_abort = SdoCreateMsg::Abort(IDX, SUBIDX, DEFAULT_COBID_REQ);
+  msg_abort.len = 7u;
+  CHECK_EQUAL(1, can_net_recv(net, &msg_abort, 0));
+
+  CHECK_EQUAL(0, CanSend::GetNumCalled());
+  CHECK_EQUAL(CO_SDO_AC_ERROR, AcTrackingDnInd::last_ac);
 }
 
 TEST(CoSsdoBlkDn, Sub_InvalidSeqno_LastInBlk) {
@@ -3254,16 +3460,44 @@ TEST(CoSsdoBlkDn, EndRecv_NoCS) {
 TEST(CoSsdoBlkDn, EndRecv_CSAbort) {
   dev_holder->CreateAndInsertObj(obj2020, IDX);
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE64, sub_type64{0uL});
+  co_obj_set_dn_ind(obj2020->Get(), &AcTrackingDnInd::Func, nullptr);
   StartSSDO();
 
   InitBlkDn2020Sub00(sizeof(sub_type64));
   ChangeStateToEnd();
 
-  can_msg msg = SdoCreateMsg::Default(IDX, SUBIDX, DEFAULT_COBID_REQ);
-  msg.data[0] = CO_SDO_CS_ABORT;
+  const co_unsigned32_t ac = CO_SDO_AC_TIMEOUT;
+
+  const can_msg msg = SdoCreateMsg::Abort(IDX, SUBIDX, DEFAULT_COBID_REQ, ac);
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
   CHECK_EQUAL(0, CanSend::GetNumCalled());
+  CHECK_EQUAL(ac, AcTrackingDnInd::last_ac);
+}
+
+/// \Given a pointer to the SSDO service (co_ssdo_t), block download transfer
+///        is in an end state
+///
+/// \When an SDO abort transfer message was received, the message did not
+///       contain a complete abort code value
+///
+/// \Then no SDO message was sent, requested objects' download indication
+///       function was called with the CO_SDO_AC_ERROR abort code
+TEST(CoSsdoBlkDn, EndRecv_CSAbort_NoAbortCode) {
+  dev_holder->CreateAndInsertObj(obj2020, IDX);
+  obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE64, sub_type64{0uL});
+  co_obj_set_dn_ind(obj2020->Get(), &AcTrackingDnInd::Func, nullptr);
+  StartSSDO();
+
+  InitBlkDn2020Sub00(sizeof(sub_type64));
+  ChangeStateToEnd();
+
+  can_msg msg = SdoCreateMsg::Abort(IDX, SUBIDX, DEFAULT_COBID_REQ);
+  msg.len = 7u;
+  CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
+
+  CHECK_EQUAL(0, CanSend::GetNumCalled());
+  CHECK_EQUAL(CO_SDO_AC_ERROR, AcTrackingDnInd::last_ac);
 }
 
 TEST(CoSsdoBlkDn, EndRecv_InvalidCS) {
@@ -3451,6 +3685,54 @@ TEST(CoSsdoBlkDn, EndRecv_FailingDnInd) {
 
 ///@}
 
+struct StreamingUpInd {
+  static co_unsigned8_t valid_calls;
+  static co_unsigned8_t num_called;
+  static const co_unsigned8_t segment_size = 2u;
+
+  static co_unsigned32_t
+  Func(const co_sub_t* const sub, struct co_sdo_req* const req,
+       const co_unsigned32_t ac, void* const) {
+    if (ac != 0) {
+      return ac;
+    }
+
+    if (num_called > valid_calls) {
+      return CO_SDO_AC_DATA;
+    }
+
+    const void* const val = co_sub_get_val(sub);
+    const co_unsigned16_t type = co_sub_get_type(sub);
+
+    const size_t full_size = co_val_write(type, val, nullptr, nullptr);
+    req->size = full_size;
+
+    membuf* const buf = req->membuf;
+    membuf_clear(buf);
+
+    CHECK_COMPARE(membuf_reserve(buf, segment_size), >, 0uL);
+
+    const auto* const bp = static_cast<const uint_least8_t*>(val);
+    membuf_write(buf, bp + num_called * segment_size, segment_size);
+    req->offset = num_called * segment_size;
+    req->nbyte = segment_size;
+    req->buf = membuf_begin(buf);
+
+    ++num_called;
+
+    return ac;
+  }
+
+  static void
+  Clear() {
+    valid_calls = 0u;
+    num_called = 0u;
+  }
+};
+
+co_unsigned8_t StreamingUpInd::valid_calls = 0u;
+co_unsigned8_t StreamingUpInd::num_called = 0u;
+
 TEST_GROUP_BASE(CoSsdoBlkUp, CO_Ssdo) {
   int32_t ignore = 0;  // clang-format fix
 
@@ -3463,16 +3745,6 @@ TEST_GROUP_BASE(CoSsdoBlkUp, CO_Ssdo) {
     req->offset++;
 
     return ac;
-  }
-
-  static co_unsigned32_t up_ind_ret_err(const co_sub_t* const sub,
-                                        co_sdo_req* const req,
-                                        co_unsigned32_t ac, void*) {
-    if (ac != 0) return ac;
-
-    co_sub_on_up(sub, req, &ac);
-
-    return CO_SDO_AC_DATA;
   }
 
   static co_unsigned32_t up_ind_big_reqsiz(const co_sub_t* const sub,
@@ -3563,6 +3835,12 @@ TEST_GROUP_BASE(CoSsdoBlkUp, CO_Ssdo) {
     CHECK_EQUAL(0, CanSend::msg.data[6]);
     ResetCanSend();
   }
+
+  TEST_SETUP() {
+    TEST_BASE_SETUP();
+
+    StreamingUpInd::Clear();
+  }
 };
 
 /// @name SSDO block upload
@@ -3640,6 +3918,94 @@ TEST(CoSsdoBlkUp, Sub_Nominal) {
   CHECK_EQUAL(0, CanSend::GetNumCalled());
 }
 
+/// \Given a pointer to the SSDO service (co_ssdo_t), block upload transfer
+///        is in progress, first sub-block was already sent
+///
+/// \When an SDO upload sub-block request was received with the same acknowledge
+///       sequence value as in the previous request
+///
+/// \Then the requested SDO upload sub-block is resent
+TEST(CoSsdoBlkUp, Sub_ResendBlock) {
+  dev_holder->CreateAndInsertObj(obj2020, IDX);
+  const sub_type64 val = 0x5423456789abcdefuL;
+  obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE64, val);
+  StartSSDO();
+
+  InitBlkUp2020Req(SUBIDX, 1u);
+  CheckInitBlkUp2020ResData(SUBIDX, sizeof(sub_type64));
+  ResetCanSend();
+
+  can_msg msg = SdoCreateMsg::Default(IDX, SUBIDX, DEFAULT_COBID_REQ);
+  msg.data[0] = CO_SDO_CCS_BLK_UP_REQ | CO_SDO_SC_START_UP;
+  CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
+
+  // uploaded value from the server
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
+  const std::array<uint_least8_t, CO_SDO_MSG_SIZE> expected_first = {
+      0x01u, 0xefu, 0xcdu, 0xabu, 0x89u, 0x67u, 0x45u, 0x23u};
+  CanSend::CheckMsg(DEFAULT_COBID_RES, 0, CO_SDO_MSG_SIZE,
+                    expected_first.data());
+  ResetCanSend();
+
+  // client's request to resend last block
+  msg = SdoCreateMsg::Default(IDX, SUBIDX, DEFAULT_COBID_REQ);
+  msg.data[0] = CO_SDO_CCS_BLK_UP_REQ | CO_SDO_SC_BLK_RES;
+  msg.data[1] = 0u;  // ackseq
+  msg.data[2] = 1u;  // blksize
+  CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
+
+  // check resent uploaded value
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
+  CanSend::CheckMsg(DEFAULT_COBID_RES, 0, CO_SDO_MSG_SIZE,
+                    expected_first.data());
+  ResetCanSend();
+
+  // client's request for next block
+  msg = SdoCreateMsg::Default(IDX, SUBIDX, DEFAULT_COBID_REQ);
+  msg.data[0] = CO_SDO_CCS_BLK_UP_REQ | CO_SDO_SC_BLK_RES;
+  msg.data[1] = 1u;  // ackseq
+  msg.data[2] = 1u;  // blksize
+  CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
+
+  // check final byte
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
+  const std::array<uint_least8_t, CO_SDO_MSG_SIZE> expected_next = {
+      0x01u | CO_SDO_SEQ_LAST, 0x54u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u};
+  CanSend::CheckMsg(DEFAULT_COBID_RES, 0, CO_SDO_MSG_SIZE,
+                    expected_next.data());
+  ResetCanSend();
+
+  // client's confirmation response
+  msg = SdoCreateMsg::Default(IDX, SUBIDX, DEFAULT_COBID_REQ);
+  msg.data[0] = CO_SDO_CCS_BLK_UP_REQ | CO_SDO_SC_BLK_RES;
+  msg.data[1] = 2u;                // ackseq
+  msg.data[2] = CO_SDO_MAX_SEQNO;  // blksize
+  CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
+
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
+  CanSend::CheckMsg(DEFAULT_COBID_RES, 0, CO_SDO_MSG_SIZE, nullptr);
+  CHECK_SDO_CAN_MSG_CMD(
+      CO_SDO_SCS_BLK_UP_RES | CO_SDO_SC_END_BLK | CO_SDO_BLK_SIZE_SET(1u),
+      CanSend::msg.data);
+  uint_least8_t val_buf[sizeof(sub_type64)] = {0};
+  stle_u64(val_buf, val);
+  CHECK_EQUAL(co_crc(0, val_buf, sizeof(sub_type64)),
+              ldle_u16(CanSend::msg.data + 1u));
+  CHECK_EQUAL(0, CanSend::msg.data[3]);
+  CHECK_EQUAL(0, CanSend::msg.data[4]);
+  CHECK_EQUAL(0, CanSend::msg.data[5]);
+  CHECK_EQUAL(0, CanSend::msg.data[6]);
+  CHECK_EQUAL(0, CanSend::msg.data[7]);
+  ResetCanSend();
+
+  // end transmission
+  msg = SdoCreateMsg::Default(IDX, SUBIDX, DEFAULT_COBID_REQ);
+  msg.data[0] = CO_SDO_CCS_BLK_UP_REQ | CO_SDO_SC_END_BLK;
+  CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
+
+  CHECK_EQUAL(0, CanSend::GetNumCalled());
+}
+
 TEST(CoSsdoBlkUp, Sub_BlksizeOne_MsgWithNoLastByte) {
   dev_holder->CreateAndInsertObj(obj2020, IDX);
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE64,
@@ -3695,15 +4061,23 @@ TEST(CoSsdoBlkUp, Sub_IndError) {
   dev_holder->CreateAndInsertObj(obj2020, IDX);
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE64,
                            sub_type64{0x5423456789abcdefuL});
-  co_obj_set_up_ind(obj2020->Get(), up_ind_ret_err, nullptr);
+  co_obj_set_up_ind(obj2020->Get(), &StreamingUpInd::Func, nullptr);
   StartSSDO();
 
+  StreamingUpInd::valid_calls = 1u;  // fail in sub-block recv, not initiate
+
   InitBlkUp2020Req(SUBIDX, 1u);
+  CheckInitBlkUp2020ResData(SUBIDX, sizeof(sub_type64));
+  ResetCanSend();
+
+  can_msg msg = SdoCreateMsg::Default(IDX, SUBIDX, DEFAULT_COBID_REQ);
+  msg.data[0] = CO_SDO_CCS_BLK_UP_REQ | CO_SDO_SC_START_UP;
+  CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
+
   CHECK_EQUAL(1u, CanSend::GetNumCalled());
   const auto expected =
       SdoInitExpectedData::U32(CO_SDO_CS_ABORT, IDX, SUBIDX, CO_SDO_AC_DATA);
   CanSend::CheckMsg(DEFAULT_COBID_RES, 0, CO_SDO_MSG_SIZE, expected.data());
-  ResetCanSend();
 }
 
 TEST(CoSsdoBlkUp, Sub_StartButReqNotFirst) {
