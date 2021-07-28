@@ -34,6 +34,7 @@
 
 #include <libtest/allocators/default.hpp>
 #include <libtest/tools/lely-unit-test.hpp>
+#include <libtest/tools/can-send.hpp>
 
 #include "holder/dev.hpp"
 #include "obj-init/sdo-client-par.hpp"

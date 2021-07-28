@@ -35,10 +35,11 @@
 
 #include <libtest/allocators/default.hpp>
 #include <libtest/allocators/limited.hpp>
-#include <libtest/tools/lely-cpputest-ext.hpp>
-#include <libtest/tools/lely-unit-test.hpp>
+#include <libtest/tools/can-send.hpp>
 #include <libtest/tools/co-nmt-rdn-ind.hpp>
 #include <libtest/tools/co-nmt-hb-ind.hpp>
+#include <libtest/tools/lely-cpputest-ext.hpp>
+#include <libtest/tools/lely-unit-test.hpp>
 
 #include "holder/dev.hpp"
 
