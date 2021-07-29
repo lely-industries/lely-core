@@ -902,7 +902,7 @@ co_sub_set_id(co_sub_t *sub, co_unsigned8_t new_id, co_unsigned8_t old_id)
 {
 	assert(sub);
 
-	unsigned int flags = co_sub_get_flags(sub);
+	co_unsigned32_t flags = co_sub_get_flags(sub);
 	co_unsigned16_t type = co_sub_get_type(sub);
 #if !LELY_NO_CO_OBJ_LIMITS
 	if (flags & CO_OBJ_FLAGS_MIN_NODEID)

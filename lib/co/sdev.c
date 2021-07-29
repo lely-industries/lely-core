@@ -893,7 +893,7 @@ snprintf_c99_ssub(char *s, size_t n, const co_sub_t *sub)
 	r = MIN((size_t)r, n);
 	s += r;
 	n -= r;
-	unsigned int flags = co_sub_get_flags(sub);
+	co_unsigned32_t flags = co_sub_get_flags(sub);
 #define LELY_CO_DEFINE_FLAGS(x) \
 	if (flags & CO_OBJ_FLAGS_##x) { \
 		r = snprintf(s, n, "\t\t\t\t| CO_OBJ_FLAGS_" #x "\n"); \
