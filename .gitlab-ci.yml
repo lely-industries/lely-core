@@ -649,6 +649,7 @@ python-checks:
 
 docker:coverity:
   extends: .docker2
+  needs: ["docker-gcc: [9]"]
   script:
     - docker build
         --build-arg REGISTRY=$REGISTRY
