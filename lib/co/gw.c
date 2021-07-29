@@ -2272,7 +2272,7 @@ co_gw_recv_init(co_gw_t *gw, co_unsigned16_t net, const struct co_gw_req *req)
 
 	int iec = 0;
 
-	unsigned int baud = co_dev_get_baud(dev);
+	const co_unsigned16_t baud = co_dev_get_baud(dev);
 	co_unsigned16_t rate;
 	switch (par->bitidx) {
 	case 0:

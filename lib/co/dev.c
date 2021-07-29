@@ -485,7 +485,7 @@ co_dev_set_order_code(co_dev_t *dev, const char *order_code)
 
 #endif // !LELY_NO_CO_OBJ_NAME
 
-unsigned int
+co_unsigned16_t
 co_dev_get_baud(const co_dev_t *dev)
 {
 	assert(dev);
@@ -494,7 +494,7 @@ co_dev_get_baud(const co_dev_t *dev)
 }
 
 void
-co_dev_set_baud(co_dev_t *dev, unsigned int baud)
+co_dev_set_baud(co_dev_t *dev, co_unsigned16_t baud)
 {
 	assert(dev);
 

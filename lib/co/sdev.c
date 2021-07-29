@@ -302,7 +302,7 @@ snprintf_c99_sdev(char *s, size_t n, const co_dev_t *dev)
 	r = MIN((size_t)r, n);
 	s += r;
 	n -= r;
-	unsigned int baud = co_dev_get_baud(dev);
+	const co_unsigned16_t baud = co_dev_get_baud(dev);
 #define LELY_CO_DEFINE_BAUD(x) \
 	if (baud & CO_BAUD_##x) { \
 		r = snprintf(s, n, "\n\t\t| CO_BAUD_" #x); \

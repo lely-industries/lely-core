@@ -381,7 +381,7 @@ int co_dev_set_order_code(co_dev_t *dev, const char *order_code);
  *
  * @see co_dev_set_baud()
  */
-unsigned int co_dev_get_baud(const co_dev_t *dev);
+co_unsigned16_t co_dev_get_baud(const co_dev_t *dev);
 
 /**
  * Sets the supported bit rates of a CANopen device.
@@ -393,7 +393,7 @@ unsigned int co_dev_get_baud(const co_dev_t *dev);
  *
  * @see co_dev_get_baud()
  */
-void co_dev_set_baud(co_dev_t *dev, unsigned int baud);
+void co_dev_set_baud(co_dev_t *dev, co_unsigned16_t baud);
 
 /**
  * Returns the (pending) baudrate of a CANopen device (in kbit/s).
