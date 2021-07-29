@@ -795,7 +795,7 @@ co_sub_get_pdo_mapping(const co_sub_t *sub)
 {
 	assert(sub);
 
-	return sub->pdo_mapping != 0;
+	return sub->pdo_mapping;
 }
 
 void
@@ -803,10 +803,10 @@ co_sub_set_pdo_mapping(co_sub_t *sub, bool pdo_mapping)
 {
 	assert(sub);
 
-	sub->pdo_mapping = pdo_mapping ? 1u : 0u;
+	sub->pdo_mapping = pdo_mapping;
 }
 
-unsigned int
+co_unsigned32_t
 co_sub_get_flags(const co_sub_t *sub)
 {
 	assert(sub);
@@ -815,7 +815,7 @@ co_sub_get_flags(const co_sub_t *sub)
 }
 
 void
-co_sub_set_flags(co_sub_t *sub, unsigned int flags)
+co_sub_set_flags(co_sub_t *sub, co_unsigned32_t flags)
 {
 	assert(sub);
 

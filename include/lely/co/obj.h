@@ -773,10 +773,10 @@ bool co_sub_get_pdo_mapping(const co_sub_t *sub);
 void co_sub_set_pdo_mapping(co_sub_t *sub, bool pdo_mapping);
 
 /// Returns the object flags of a CANopen sub-object. @see co_sub_set_flags()
-unsigned int co_sub_get_flags(const co_sub_t *sub);
+co_unsigned32_t co_sub_get_flags(const co_sub_t *sub);
 
 /// Sets the object flags of a CANopen sub-object. @see co_sub_get_flags()
-void co_sub_set_flags(co_sub_t *sub, unsigned int flags);
+void co_sub_set_flags(co_sub_t *sub, co_unsigned32_t flags);
 
 /**
  * Returns a pointer to the value of the UploadFile attribute of a CANopen
