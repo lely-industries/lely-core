@@ -648,7 +648,7 @@ python-checks:
     - flake8 python/dcf-tools
 
 docker:coverity:
-  extends: .docker1
+  extends: .docker2
   script:
     - docker build
         --build-arg REGISTRY=$REGISTRY
