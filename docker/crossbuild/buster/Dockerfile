@@ -51,7 +51,7 @@ RUN apt-get update -q \
 RUN git clone --branch v4.0 --depth 1 https://github.com/cpputest/cpputest.git \
     && cd cpputest/cpputest_build \
     && autoreconf .. -i \
-    && ../configure --prefix=/usr/local/$NAME --host=$NAME \
+    && ../configure --prefix=/usr/local/$NAME --host=$NAME --disable-memory-leak-detection \
     && make \
     && make install \
     && cd - \
