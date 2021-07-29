@@ -25,8 +25,12 @@
 #endif
 
 #include <cassert>
+#include <functional>
+#include <vector>
 
 #include <CppUTest/TestHarness.h>
+
+#include "sdo-consts.hpp"
 
 #include "can-send.hpp"
 
@@ -37,10 +41,13 @@ can_msg CanSend::msg = CAN_MSG_INIT;
 int CanSend::bus_id = -1;
 can_msg* CanSend::msg_buf = &CanSend::msg;
 size_t CanSend::buf_size = 1u;
+CanSend::CheckFunc CanSend::checkFunc = nullptr;
 
 int
 CanSend::Func(const can_msg* const msg_, const int bus_id_, void* const data_) {
   assert(msg_);
+
+  if (checkFunc != nullptr) checkFunc(msg_, bus_id_, data_);
 
   msg = *msg_;
   user_data = data_;
@@ -49,6 +56,7 @@ CanSend::Func(const can_msg* const msg_, const int bus_id_, void* const data_) {
   if ((msg_buf != &msg) && (num_called < buf_size)) {
     msg_buf[num_called] = *msg_;
   }
+
   num_called++;
 
   return ret;
@@ -77,4 +85,19 @@ CanSend::Clear() {
 
   buf_size = 1u;
   msg_buf = &msg;
+
+  checkFunc = nullptr;
+}
+
+void
+CanSend::SetCheckSeq(const MsgSeq& msgSeq) {
+  checkFunc = [msgSeq](const can_msg* const sent_msg, int, void*) -> int {
+    CHECK_COMPARE(num_called, <, msgSeq.size());
+    CHECK_EQUAL(msgSeq[num_called].id, sent_msg->id);
+    CHECK_EQUAL(msgSeq[num_called].flags, sent_msg->flags);
+    CHECK_EQUAL(msgSeq[num_called].len, sent_msg->len);
+    MEMCMP_EQUAL(msgSeq[num_called].data, sent_msg->data,
+                 msgSeq[num_called].len);
+    return 0;
+  };
 }

@@ -23,12 +23,19 @@
 #ifndef LELY_UNIT_TEST_CAN_SEND_HPP_
 #define LELY_UNIT_TEST_CAN_SEND_HPP_
 
+#include <vector>
+#include <functional>
+
 #include <lely/can/msg.h>
+#include <lely/can/net.h>
 #include <lely/co/type.h>
 #include <lely/util/endian.h>
 
 class CanSend {
  public:
+  using CheckFunc = std::function<can_send_func_t>;
+  using MsgSeq = std::vector<can_msg>;
+
   static int ret;
   static void* user_data;
   static int bus_id;
@@ -39,6 +46,7 @@ class CanSend {
   static void CheckMsg(uint_least32_t id, uint_least8_t flags,
                        uint_least8_t len, const uint_least8_t* data);
   static void Clear();
+  static void SetCheckSeq(const MsgSeq& msgSeq);
 
   static inline size_t
   GetNumCalled() {
@@ -60,5 +68,6 @@ class CanSend {
  private:
   static size_t buf_size;
   static size_t num_called;
+  static CheckFunc checkFunc;
 };
 #endif  // LELY_UNIT_TEST_CAN_SEND_HPP_

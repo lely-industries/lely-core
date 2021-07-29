@@ -44,9 +44,11 @@
 #include <libtest/allocators/limited.hpp>
 #include <libtest/override/lelyutil-membuf.hpp>
 #include <libtest/override/lelyco-val.hpp>
+#include <libtest/tools/can-send.hpp>
 #include <libtest/tools/lely-cpputest-ext.hpp>
 #include <libtest/tools/lely-unit-test.hpp>
-#include <libtest/tools/can-send.hpp>
+#include <libtest/tools/sdo-consts.hpp>
+#include <libtest/tools/sdo-create-message.hpp>
 
 #include "holder/dev.hpp"
 #include "holder/obj.hpp"
@@ -2328,8 +2330,14 @@ TEST(CO_Csdo, CoCsdoDnReq_TimeoutSet) {
   StartCSDO();
   co_csdo_set_timeout(csdo, 999);  // 999 ms
 
-  uint_least8_t buffer[sizeof(sub_type)] = {0};
+  uint_least8_t buffer[CO_SDO_INI_DATA_SIZE] = {0};
   stle_u16(buffer, 0x1234u);
+
+  const CanSend::MsgSeq expected_msg_seq = {
+      SdoCreateMsg::DnIniReq(IDX, SUBIDX, DEFAULT_COBID_REQ, buffer,
+                             CO_SDO_INI_SIZE_EXP_SET(sizeof(sub_type))),
+      SdoCreateMsg::Abort(IDX, SUBIDX, DEFAULT_COBID_REQ, CO_SDO_AC_TIMEOUT)};
+  CanSend::SetCheckSeq(expected_msg_seq);
 
   const auto ret = co_csdo_dn_req(csdo, IDX, SUBIDX, buffer, sizeof(sub_type),
                                   CoCsdoDnCon::Func, nullptr);
@@ -2338,18 +2346,10 @@ TEST(CO_Csdo, CoCsdoDnReq_TimeoutSet) {
   CHECK_EQUAL(ERRNUM_SUCCESS, get_errnum());
 
   CHECK_EQUAL(1u, CanSend::GetNumCalled());
-  const auto expected = SdoInitExpectedData::U16(
-      CO_SDO_CCS_DN_INI_REQ | CO_SDO_INI_SIZE_EXP_SET(sizeof(sub_type)), IDX,
-      SUBIDX, 0x1234u);
-  CanSend::CheckMsg(DEFAULT_COBID_REQ, 0, CO_SDO_MSG_SIZE, expected.data());
 
   CoCsdoUpDnReq::SetOneSecOnNet(net);
 
   CHECK_EQUAL(2u, CanSend::GetNumCalled());
-  const auto expected_timeout =
-      SdoInitExpectedData::U32(CO_SDO_CS_ABORT, IDX, SUBIDX, CO_SDO_AC_TIMEOUT);
-  CanSend::CheckMsg(DEFAULT_COBID_REQ, 0, CO_SDO_MSG_SIZE,
-                    expected_timeout.data());
 
   CoCsdoUpDnReq::AbortTransfer(net, DEFAULT_COBID_RES);
   CHECK_EQUAL(1u, CoCsdoDnCon::GetNumCalled());
