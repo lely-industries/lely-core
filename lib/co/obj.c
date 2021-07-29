@@ -766,7 +766,7 @@ co_sub_chk_val(const co_sub_t *sub, co_unsigned16_t type, const void *val)
 }
 #endif
 
-unsigned int
+co_unsigned8_t
 co_sub_get_access(const co_sub_t *sub)
 {
 	assert(sub);
@@ -775,7 +775,7 @@ co_sub_get_access(const co_sub_t *sub)
 }
 
 int
-co_sub_set_access(co_sub_t *sub, unsigned int access)
+co_sub_set_access(co_sub_t *sub, co_unsigned8_t access)
 {
 	assert(sub);
 

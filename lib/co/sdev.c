@@ -860,7 +860,7 @@ snprintf_c99_ssub(char *s, size_t n, const co_sub_t *sub)
 	r = MIN((size_t)r, n);
 	s += r;
 	n -= r;
-	unsigned int access = co_sub_get_access(sub);
+	const co_unsigned8_t access = co_sub_get_access(sub);
 	switch (access) {
 	case CO_ACCESS_RO: r = snprintf(s, n, "CO_ACCESS_RO,\n"); break;
 	case CO_ACCESS_WO: r = snprintf(s, n, "CO_ACCESS_WO,\n"); break;

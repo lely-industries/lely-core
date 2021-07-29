@@ -741,7 +741,7 @@ co_unsigned32_t co_sub_chk_val(
 		const co_sub_t *sub, co_unsigned16_t type, const void *val);
 
 /// Returns the access type of a CANopen sub-object. @see co_sub_set_access()
-unsigned int co_sub_get_access(const co_sub_t *sub);
+co_unsigned8_t co_sub_get_access(const co_sub_t *sub);
 
 /**
  * Sets the access type of a CANopen sub-object.
@@ -755,7 +755,7 @@ unsigned int co_sub_get_access(const co_sub_t *sub);
  *
  * @see co_sub_get_access()
  */
-int co_sub_set_access(co_sub_t *sub, unsigned int access);
+int co_sub_set_access(co_sub_t *sub, co_unsigned8_t access);
 
 /**
  * Returns <b>true</b> if it is possible to map the specified CANopen

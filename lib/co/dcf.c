@@ -805,7 +805,7 @@ co_sub_parse_cfg(co_sub_t *sub, const config_t *cfg, const char *section)
 	}
 #endif // LELY_NO_CO_OBJ_LIMITS
 
-	unsigned int access = co_sub_get_access(sub);
+	co_unsigned8_t access = co_sub_get_access(sub);
 	val = config_get(cfg, section, "AccessType");
 	if (val && *val) {
 		if (!strcasecmp(val, "ro")) {
