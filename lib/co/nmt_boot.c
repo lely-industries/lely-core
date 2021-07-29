@@ -789,10 +789,10 @@ static int co_nmt_boot_up(co_nmt_boot_t *boot, co_unsigned16_t idx,
  * @param ptr    a pointer to the uploaded bytes.
  * @param n      the number of bytes at <b>ptr</b>.
  *
- * @returns 1 if the received value matches that of the specified sub-object,
- * and 0 if not.
+ * @returns <b>true</b> if the received value matches that of the
+ *          specified sub-object, and <b>false</b> if not.
  */
-static int co_nmt_boot_chk(co_nmt_boot_t *boot, co_unsigned16_t idx,
+static bool co_nmt_boot_chk(co_nmt_boot_t *boot, co_unsigned16_t idx,
 		co_unsigned8_t subidx, const void *ptr, size_t n);
 
 #if !LELY_NO_CO_NG
@@ -2163,7 +2163,7 @@ co_nmt_boot_up(co_nmt_boot_t *boot, co_unsigned16_t idx, co_unsigned8_t subidx)
 			boot);
 }
 
-static int
+static bool
 co_nmt_boot_chk(co_nmt_boot_t *boot, co_unsigned16_t idx, co_unsigned8_t subidx,
 		const void *ptr, size_t n)
 {
@@ -2171,15 +2171,15 @@ co_nmt_boot_chk(co_nmt_boot_t *boot, co_unsigned16_t idx, co_unsigned8_t subidx,
 
 	co_sub_t *sub = co_dev_find_sub(boot->dev, idx, subidx);
 	if (!sub)
-		return 0;
+		return false;
 	co_unsigned16_t type = co_sub_get_type(sub);
 	assert(!co_type_is_array(type));
 
 	union co_val val;
 	if (!co_val_read(type, &val, ptr, (const uint_least8_t *)ptr + n))
-		return 0;
+		return false;
 
-	return !co_val_cmp(type, &val, co_sub_get_val(sub));
+	return co_val_cmp(type, &val, co_sub_get_val(sub)) == 0;
 }
 
 #if !LELY_NO_CO_NG

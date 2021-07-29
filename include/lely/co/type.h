@@ -26,6 +26,7 @@
 #include <lely/compat/uchar.h>
 #include <lely/util/float.h>
 
+#include <stdbool.h>
 #include <stdint.h>
 
 /// The data type (and object index) of a boolean truth value.
@@ -181,11 +182,17 @@ struct co_time_sutc {
 extern "C" {
 #endif
 
-/// Returns 1 if the specified (static) data type is a basic type, and 0 if not.
-int co_type_is_basic(co_unsigned16_t type);
+/**
+ * Returns <b>true</b> if the specified (static) data type is a basic
+ * type, and <b>false</b> if not.
+ */
+bool co_type_is_basic(co_unsigned16_t type);
 
-/// Returns 1 if the specified (static) data type is an array, and 0 if not.
-int co_type_is_array(co_unsigned16_t type);
+/**
+ * Returns <b>true</b> if the specified (static) data type is an
+ * array, and <b>false</b> if not.
+ */
+bool co_type_is_array(co_unsigned16_t type);
 
 /**
  * Returns the native size (in bytes) of a value of the specified data type, or

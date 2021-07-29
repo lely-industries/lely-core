@@ -36,6 +36,7 @@
 #include <lely/compat/features.h>
 
 #include <assert.h>
+#include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
 
@@ -163,8 +164,10 @@ struct rbnode *rbnode_next(const struct rbnode *node);
 LELY_UTIL_RBTREE_INLINE void rbtree_init(
 		struct rbtree *tree, rbtree_cmp_t *cmp);
 
-/// Returns 1 if the red-black tree is empty, and 0 if not.
-LELY_UTIL_RBTREE_INLINE int rbtree_empty(const struct rbtree *tree);
+/**
+ * Returns <b>true</b> if the red-black tree is empty, and <b>false</b> if not.
+ */
+LELY_UTIL_RBTREE_INLINE bool rbtree_empty(const struct rbtree *tree);
 
 /**
  * Returns the size (in number of nodes) of a red-black tree. This is an O(1)
@@ -191,9 +194,10 @@ void rbtree_remove(struct rbtree *tree, struct rbnode *node);
 /**
  * Checks if a node is part of a red-black tree.
  *
- * @returns 1 if the node was found in the tree, and 0 if not.
+ * @returns <b>true</b> if the node was found in the tree, and
+ *          <b>false</b> if not.
  */
-int rbtree_contains(const struct rbtree *tree, const struct rbnode *node);
+bool rbtree_contains(const struct rbtree *tree, const struct rbnode *node);
 
 /**
  * Finds a node in a red-black tree. This is an O(log(n)) operation.
@@ -255,10 +259,10 @@ rbtree_init(struct rbtree *tree, rbtree_cmp_t *cmp)
 	tree->num_nodes = 0;
 }
 
-LELY_UTIL_RBTREE_INLINE int
+LELY_UTIL_RBTREE_INLINE bool
 rbtree_empty(const struct rbtree *tree)
 {
-	return !rbtree_size(tree);
+	return rbtree_size(tree) == 0u;
 }
 
 LELY_UTIL_RBTREE_INLINE size_t

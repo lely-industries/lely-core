@@ -76,17 +76,17 @@ static void co_nmt_rdn_toogle_bus(co_nmt_rdn_t *rdn);
 static int co_nmt_rdn_bus_toggle_timer(const struct timespec *tp, void *data);
 
 /// Check sub-index 0 (Highest sub-index supported)
-static int co_nmt_rdn_chk_dev_sub0(const co_obj_t *obj);
+static bool co_nmt_rdn_chk_dev_sub0(const co_obj_t *obj);
 /// Check sub-index 1 (Bdefault)
-static int co_nmt_rdn_chk_dev_sub_bdefault(const co_obj_t *obj);
+static bool co_nmt_rdn_chk_dev_sub_bdefault(const co_obj_t *obj);
 /// Check sub-index 2 (Ttoggle)
-static int co_nmt_rdn_chk_dev_sub_ttoggle(const co_obj_t *obj);
+static bool co_nmt_rdn_chk_dev_sub_ttoggle(const co_obj_t *obj);
 /// Check sub-index 3 (Ntoggle)
-static int co_nmt_rdn_chk_dev_sub_ntoggle(const co_obj_t *obj);
+static bool co_nmt_rdn_chk_dev_sub_ntoggle(const co_obj_t *obj);
 /// Check sub-index 4 (Ctoggle)
-static int co_nmt_rdn_chk_dev_sub_ctoggle(const co_obj_t *obj);
+static bool co_nmt_rdn_chk_dev_sub_ctoggle(const co_obj_t *obj);
 
-int
+bool
 co_nmt_rdn_chk_dev(const co_dev_t *dev)
 {
 	const co_obj_t *obj_rdn =
@@ -94,17 +94,14 @@ co_nmt_rdn_chk_dev(const co_dev_t *dev)
 
 	// Check Redundancy Configuration object
 	if (!obj_rdn)
-		return 1;
+		return true;
 
 	// Check sub-objects
-	if ((co_nmt_rdn_chk_dev_sub0(obj_rdn) != 1)
-			|| (co_nmt_rdn_chk_dev_sub_bdefault(obj_rdn) != 1)
-			|| (co_nmt_rdn_chk_dev_sub_ttoggle(obj_rdn) != 1)
-			|| (co_nmt_rdn_chk_dev_sub_ntoggle(obj_rdn) != 1)
-			|| (co_nmt_rdn_chk_dev_sub_ctoggle(obj_rdn) != 1))
-		return 0;
-
-	return 1;
+	return co_nmt_rdn_chk_dev_sub0(obj_rdn)
+			&& co_nmt_rdn_chk_dev_sub_bdefault(obj_rdn)
+			&& co_nmt_rdn_chk_dev_sub_ttoggle(obj_rdn)
+			&& co_nmt_rdn_chk_dev_sub_ntoggle(obj_rdn)
+			&& co_nmt_rdn_chk_dev_sub_ctoggle(obj_rdn);
 }
 
 size_t
@@ -376,25 +373,25 @@ co_nmt_rdn_bus_toggle_timer(const struct timespec *tp, void *data)
 	return 0;
 }
 
-static int
+static bool
 co_nmt_rdn_chk_dev_sub0(const co_obj_t *obj_rdn)
 {
 	const co_sub_t *sub_rdn_00 = co_obj_find_sub(obj_rdn, 0x00);
 	if (!sub_rdn_00) {
 		diag(DIAG_ERROR, 0, "NMT: mandatory object %04X:00 missing",
 				CO_NMT_RDN_REDUNDANCY_OBJ_IDX);
-		return 0;
+		return false;
 	}
 	if (co_sub_get_type(sub_rdn_00) != CO_DEFTYPE_UNSIGNED8) {
 		diag(DIAG_ERROR, 0, "NMT: object %04X:00 is not UNSIGNED8",
 				CO_NMT_RDN_REDUNDANCY_OBJ_IDX);
-		return 0;
+		return false;
 	}
 
-	return 1;
+	return true;
 }
 
-static int
+static bool
 co_nmt_rdn_chk_dev_sub_bdefault(const co_obj_t *obj_rdn)
 {
 	const co_sub_t *sub_rdn_bdefault =
@@ -403,19 +400,19 @@ co_nmt_rdn_chk_dev_sub_bdefault(const co_obj_t *obj_rdn)
 		diag(DIAG_ERROR, 0, "NMT: mandatory object %04X:%02X missing",
 				CO_NMT_RDN_REDUNDANCY_OBJ_IDX,
 				CO_NMT_RDN_BDEFAULT_SUBIDX);
-		return 0;
+		return false;
 	}
 	if (co_sub_get_type(sub_rdn_bdefault) != CO_DEFTYPE_UNSIGNED8) {
 		diag(DIAG_ERROR, 0, "NMT: object %04X:%02X is not UNSIGNED8",
 				CO_NMT_RDN_REDUNDANCY_OBJ_IDX,
 				CO_NMT_RDN_BDEFAULT_SUBIDX);
-		return 0;
+		return false;
 	}
 
-	return 1;
+	return true;
 }
 
-static int
+static bool
 co_nmt_rdn_chk_dev_sub_ttoggle(const co_obj_t *obj_rdn)
 {
 	const co_sub_t *sub_rdn_ttoggle =
@@ -426,13 +423,13 @@ co_nmt_rdn_chk_dev_sub_ttoggle(const co_obj_t *obj_rdn)
 		diag(DIAG_ERROR, 0, "NMT: object %04X:%02X is not UNSIGNED8",
 				CO_NMT_RDN_REDUNDANCY_OBJ_IDX,
 				CO_NMT_RDN_TTOGGLE_SUBIDX);
-		return 0;
+		return false;
 	}
 
-	return 1;
+	return true;
 }
 
-static int
+static bool
 co_nmt_rdn_chk_dev_sub_ntoggle(const co_obj_t *obj_rdn)
 {
 	const co_sub_t *sub_rdn_ntoggle =
@@ -443,13 +440,13 @@ co_nmt_rdn_chk_dev_sub_ntoggle(const co_obj_t *obj_rdn)
 		diag(DIAG_ERROR, 0, "NMT: object %04X:%02X is not UNSIGNED8",
 				CO_NMT_RDN_REDUNDANCY_OBJ_IDX,
 				CO_NMT_RDN_NTOGGLE_SUBIDX);
-		return 0;
+		return false;
 	}
 
-	return 1;
+	return true;
 }
 
-static int
+static bool
 co_nmt_rdn_chk_dev_sub_ctoggle(const co_obj_t *obj_rdn)
 {
 	const co_sub_t *sub_rdn_ctoggle =
@@ -460,8 +457,8 @@ co_nmt_rdn_chk_dev_sub_ctoggle(const co_obj_t *obj_rdn)
 		diag(DIAG_ERROR, 0, "NMT: object %04X:%02X is not UNSIGNED8",
 				CO_NMT_RDN_REDUNDANCY_OBJ_IDX,
 				CO_NMT_RDN_CTOGGLE_SUBIDX);
-		return 0;
+		return false;
 	}
 
-	return 1;
+	return true;
 }

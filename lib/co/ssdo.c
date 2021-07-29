@@ -676,7 +676,7 @@ co_ssdo_stop(co_ssdo_t *sdo)
 	co_ssdo_enter(sdo, co_ssdo_stopped_state);
 }
 
-int
+bool
 co_ssdo_is_stopped(const co_ssdo_t *sdo)
 {
 	assert(sdo);

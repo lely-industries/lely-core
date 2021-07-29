@@ -561,7 +561,7 @@ TEST(Util_Rbtree, RbtreeRemove_FixViolationsCase3And4OnLeftSubtree) {
 ///
 /// \Then 0 is returned
 TEST(Util_Rbtree, RbtreeContains_EmptyTreeContainsNull) {
-  CHECK_EQUAL(0, rbtree_contains(&tree, nullptr));
+  CHECK_FALSE(rbtree_contains(&tree, nullptr));
 }
 
 /// \Given an empty red-black tree
@@ -571,7 +571,7 @@ TEST(Util_Rbtree, RbtreeContains_EmptyTreeContainsNull) {
 ///
 /// \Then 0 is returned
 TEST(Util_Rbtree, RbtreeContains_EmptyTreeContainsNotNull) {
-  CHECK_EQUAL(0, rbtree_contains(&tree, &nodes[0]));
+  CHECK_FALSE(rbtree_contains(&tree, &nodes[0]));
 }
 
 /// \Given a red-black tree with exactly one node
@@ -582,7 +582,7 @@ TEST(Util_Rbtree, RbtreeContains_EmptyTreeContainsNotNull) {
 TEST(Util_Rbtree, RbtreeContains_TreeWithOneContains) {
   rbtree_insert(&tree, &nodes[0]);
 
-  CHECK_EQUAL(1, rbtree_contains(&tree, &nodes[0]));
+  CHECK(rbtree_contains(&tree, &nodes[0]));
 }
 
 /// \Given a red-black tree with exactly one node
@@ -594,7 +594,7 @@ TEST(Util_Rbtree, RbtreeContains_TreeWithOneContains) {
 TEST(Util_Rbtree, RbtreeContains_TreeWithOneDoesNotContain) {
   rbtree_insert(&tree, &nodes[0]);
 
-  CHECK_EQUAL(0, rbtree_contains(&tree, &nodes[1]));
+  CHECK_FALSE(rbtree_contains(&tree, &nodes[1]));
 }
 
 /// \Given a red-black tree with two nodes
@@ -606,7 +606,7 @@ TEST(Util_Rbtree, RbtreeContains_TreeWithManyContains) {
   rbtree_insert(&tree, &nodes[0]);
   rbtree_insert(&tree, &nodes[1]);
 
-  CHECK_EQUAL(1, rbtree_contains(&tree, &nodes[1]));
+  CHECK(rbtree_contains(&tree, &nodes[1]));
 }
 
 /// \Given a red-black tree with two nodes
@@ -619,7 +619,7 @@ TEST(Util_Rbtree, RbtreeContains_TreeWithManyDoesNotContain) {
   rbtree_insert(&tree, &nodes[0]);
   rbtree_insert(&tree, &nodes[1]);
 
-  CHECK_EQUAL(0, rbtree_contains(&tree, &nodes[3]));
+  CHECK_FALSE(rbtree_contains(&tree, &nodes[3]));
 }
 
 ///@}

@@ -42,7 +42,7 @@ struct co_sync {
 	/// A pointer to a CANopen device.
 	co_dev_t *dev;
 	/// A flag specifying whether the SYNC service is stopped.
-	int stopped;
+	bool stopped;
 	/// The SYNC COB-ID.
 	co_unsigned32_t cobid;
 	/// The communication cycle period (in microseconds).
@@ -206,7 +206,7 @@ co_sync_start(co_sync_t *sync)
 
 	co_sync_update(sync);
 
-	sync->stopped = 0;
+	sync->stopped = false;
 
 	return 0;
 }
@@ -236,10 +236,10 @@ co_sync_stop(co_sync_t *sync)
 	assert(obj_1005);
 	co_obj_set_dn_ind(obj_1005, NULL, NULL);
 
-	sync->stopped = 1;
+	sync->stopped = true;
 }
 
-int
+bool
 co_sync_is_stopped(const co_sync_t *sync)
 {
 	assert(sync);
@@ -573,7 +573,7 @@ co_sync_init(co_sync_t *sync, can_net_t *net, co_dev_t *dev)
 	sync->net = net;
 	sync->dev = dev;
 
-	sync->stopped = 1;
+	sync->stopped = true;
 
 	// Retrieve the SYNC COB-ID.
 	co_obj_t *obj_1005 = co_dev_find_obj(sync->dev, 0x1005);

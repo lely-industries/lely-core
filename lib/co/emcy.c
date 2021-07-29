@@ -90,7 +90,7 @@ struct co_emcy {
 	/// A pointer to a CANopen device.
 	co_dev_t *dev;
 	/// A flag specifying whether the EMCY service is stopped.
-	int stopped;
+	bool stopped;
 	/// A pointer to the error register object.
 	co_sub_t *sub_1001_00;
 	/// A pointer to the pre-defined error field object.
@@ -299,7 +299,7 @@ co_emcy_start(co_emcy_t *emcy)
 		}
 	}
 
-	emcy->stopped = 0;
+	emcy->stopped = false;
 
 	return 0;
 }
@@ -337,10 +337,10 @@ co_emcy_stop(co_emcy_t *emcy)
 	if (emcy->obj_1003)
 		co_obj_set_dn_ind(emcy->obj_1003, NULL, NULL);
 
-	emcy->stopped = 1;
+	emcy->stopped = true;
 }
 
-int
+bool
 co_emcy_is_stopped(const co_emcy_t *emcy)
 {
 	assert(emcy);
@@ -844,7 +844,7 @@ co_emcy_init(co_emcy_t *emcy, can_net_t *net, co_dev_t *dev)
 	emcy->net = net;
 	emcy->dev = dev;
 
-	emcy->stopped = 1;
+	emcy->stopped = true;
 
 	emcy->sub_1001_00 = co_dev_find_sub(emcy->dev, 0x1001, 0x00);
 	if (!emcy->sub_1001_00) {

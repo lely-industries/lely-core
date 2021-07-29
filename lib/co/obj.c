@@ -790,20 +790,20 @@ co_sub_set_access(co_sub_t *sub, unsigned int access)
 	}
 }
 
-int
+bool
 co_sub_get_pdo_mapping(const co_sub_t *sub)
 {
 	assert(sub);
 
-	return sub->pdo_mapping;
+	return sub->pdo_mapping != 0;
 }
 
 void
-co_sub_set_pdo_mapping(co_sub_t *sub, int pdo_mapping)
+co_sub_set_pdo_mapping(co_sub_t *sub, bool pdo_mapping)
 {
 	assert(sub);
 
-	sub->pdo_mapping = !!pdo_mapping;
+	sub->pdo_mapping = pdo_mapping ? 1u : 0u;
 }
 
 unsigned int

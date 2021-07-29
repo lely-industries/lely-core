@@ -26,6 +26,7 @@
 #include <lely/compat/features.h>
 
 #include <assert.h>
+#include <stdbool.h>
 #include <stddef.h>
 
 #ifndef LELY_UTIL_SLLIST_INLINE
@@ -89,10 +90,10 @@ LELY_UTIL_SLLIST_INLINE void slnode_init(struct slnode *node);
 LELY_UTIL_SLLIST_INLINE void sllist_init(struct sllist *list);
 
 /**
- * Returns 1 if the singly-linked list is empty, and 0 if not. This is an O(1)
- * operation.
+ * Returns <b>true</b> if the singly-linked list is empty, and
+ * <b>false</b> if not. This is an O(1) operation.
  */
-LELY_UTIL_SLLIST_INLINE int sllist_empty(const struct sllist *list);
+LELY_UTIL_SLLIST_INLINE bool sllist_empty(const struct sllist *list);
 
 /**
  * Returns the size (in number of nodes) of a singly-linked list. This is an
@@ -143,9 +144,10 @@ struct slnode *sllist_remove(struct sllist *list, struct slnode *node);
 /**
  * Checks if a node is part of a singly-linked list.
  *
- * @returns 1 if the node was found in the list, and 0 if not.
+ * @returns <b>true</b> if the node was found in the list, and
+ *          <b>false</b> if not.
  */
-int sllist_contains(const struct sllist *list, const struct slnode *node);
+bool sllist_contains(const struct sllist *list, const struct slnode *node);
 
 /**
  * Appends the singly-linked list at <b>src</b> to the one at <b>dst</b>. After
@@ -198,12 +200,12 @@ sllist_init(struct sllist *list)
 	*(list->plast = &list->first) = NULL;
 }
 
-LELY_UTIL_SLLIST_INLINE int
+LELY_UTIL_SLLIST_INLINE bool
 sllist_empty(const struct sllist *list)
 {
 	assert(list);
 
-	return !list->first;
+	return list->first == NULL;
 }
 
 LELY_UTIL_SLLIST_INLINE size_t

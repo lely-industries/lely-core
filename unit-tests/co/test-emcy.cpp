@@ -465,7 +465,7 @@ TEST(CO_EmcyMinimal, CoEmcyStart_NoObj1003_1014_1028) {
   const int ret = co_emcy_start(emcy);
 
   CHECK_EQUAL(0, ret);
-  CHECK_EQUAL(0, co_emcy_is_stopped(emcy));
+  CHECK_FALSE(co_emcy_is_stopped(emcy));
 }
 
 /// \Given a pointer to an already started EMCY service (co_emcy_t)
@@ -479,7 +479,7 @@ TEST(CO_EmcyMinimal, CoEmcyStart_AlreadyStarted) {
   const int ret = co_emcy_start(emcy);
 
   CHECK_EQUAL(0, ret);
-  CHECK_EQUAL(0, co_emcy_is_stopped(emcy));
+  CHECK_FALSE(co_emcy_is_stopped(emcy));
 }
 
 /// \Given a pointer to an EMCY service (co_emcy_t), the object dictionary
@@ -511,7 +511,7 @@ TEST(CO_EmcyCreate, CoEmcyStart_Obj1028_WithMissingSubObject) {
   const int ret = co_emcy_start(emcy);
 
   CHECK_EQUAL(0, ret);
-  CHECK_EQUAL(0, co_emcy_is_stopped(emcy));
+  CHECK_FALSE(co_emcy_is_stopped(emcy));
 
   co_emcy_destroy(emcy);
 }
@@ -548,7 +548,7 @@ TEST(CO_EmcyCreate, CoEmcyStart_Obj1028_BiggerThanMaxNodes) {
   const int ret = co_emcy_start(emcy);
 
   CHECK_EQUAL(0, ret);
-  CHECK_EQUAL(0, co_emcy_is_stopped(emcy));
+  CHECK_FALSE(co_emcy_is_stopped(emcy));
 
   can_msg msg = CAN_MSG_INIT;
   msg.id = CO_NUM_NODES + 1;
@@ -582,7 +582,7 @@ TEST(CO_EmcyMinimal, CoEmcyStop_NoObj1003_1028_1014) {
 
   co_emcy_stop(emcy);
 
-  CHECK_EQUAL(1, co_emcy_is_stopped(emcy));
+  CHECK(co_emcy_is_stopped(emcy));
 }
 
 /// \Given a pointer to a not started EMCY service (co_emcy_t)
@@ -593,7 +593,7 @@ TEST(CO_EmcyMinimal, CoEmcyStop_NoObj1003_1028_1014) {
 TEST(CO_EmcyMinimal, CoEmcyStop_NotStarted) {
   co_emcy_stop(emcy);
 
-  CHECK_EQUAL(1, co_emcy_is_stopped(emcy));
+  CHECK(co_emcy_is_stopped(emcy));
 }
 
 ///@}
@@ -607,7 +607,7 @@ TEST(CO_EmcyMinimal, CoEmcyStop_NotStarted) {
 ///
 /// \Then 1 is returned
 TEST(CO_EmcyMinimal, CoEmcyIsStopped_NotStarted) {
-  CHECK_EQUAL(1, co_emcy_is_stopped(emcy));
+  CHECK(co_emcy_is_stopped(emcy));
 }
 
 /// \Given a pointer to a started EMCY service (co_emcy_t)
@@ -618,7 +618,7 @@ TEST(CO_EmcyMinimal, CoEmcyIsStopped_NotStarted) {
 TEST(CO_EmcyMinimal, CoEmcyIsStopped_AfterStart) {
   co_emcy_start(emcy);
 
-  CHECK_EQUAL(0, co_emcy_is_stopped(emcy));
+  CHECK_FALSE(co_emcy_is_stopped(emcy));
 }
 
 /// \Given a pointer to a stopped EMCY service (co_emcy_t)
@@ -630,7 +630,7 @@ TEST(CO_EmcyMinimal, CoEmcyIsStopped_AfterStop) {
   co_emcy_start(emcy);
   co_emcy_stop(emcy);
 
-  CHECK_EQUAL(1, co_emcy_is_stopped(emcy));
+  CHECK(co_emcy_is_stopped(emcy));
 }
 
 ///@}
@@ -731,7 +731,7 @@ TEST(CO_Emcy, CoEmcyStart_Nominal) {
   const int ret = co_emcy_start(emcy);
 
   CHECK_EQUAL(0, ret);
-  CHECK_EQUAL(0, co_emcy_is_stopped(emcy));
+  CHECK_FALSE(co_emcy_is_stopped(emcy));
   LelyUnitTest::CheckSubDnIndIsSet(dev, 0x1003u, emcy);
   LelyUnitTest::CheckSubDnIndIsSet(dev, 0x1014u, emcy);
   LelyUnitTest::CheckSubDnIndIsSet(dev, 0x1028u, emcy);
@@ -761,7 +761,7 @@ TEST(CO_Emcy, CoEmcyStop_Nominal) {
 
   co_emcy_stop(emcy);
 
-  CHECK_EQUAL(1, co_emcy_is_stopped(emcy));
+  CHECK(co_emcy_is_stopped(emcy));
   LelyUnitTest::CheckSubDnIndIsDefault(dev, 0x1003u);
   LelyUnitTest::CheckSubDnIndIsDefault(dev, 0x1014u);
   LelyUnitTest::CheckSubDnIndIsDefault(dev, 0x1028u);

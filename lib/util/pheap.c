@@ -118,17 +118,17 @@ pheap_find(const struct pheap *heap, const void *key)
 	return node;
 }
 
-int
+bool
 pheap_contains(const struct pheap *heap, const struct pnode *node)
 {
 	assert(heap);
 
 	while (node) {
 		if (node == heap->root)
-			return 1;
+			return true;
 		node = node->parent;
 	}
-	return 0;
+	return false;
 }
 
 static struct pnode *

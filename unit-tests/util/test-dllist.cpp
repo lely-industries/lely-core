@@ -540,7 +540,7 @@ TEST(Util_Dllist, DllistAppend_SrcManyDstMany) {
 ///
 /// \Then 0 is returned
 TEST(Util_Dllist, DllistContains_EmptyListContainsNull) {
-  CHECK_EQUAL(0, dllist_contains(&list, nullptr));
+  CHECK_FALSE(dllist_contains(&list, nullptr));
 }
 
 /// \Given an empty doubly-linked list
@@ -550,7 +550,7 @@ TEST(Util_Dllist, DllistContains_EmptyListContainsNull) {
 ///
 /// \Then 0 is returned
 TEST(Util_Dllist, DllistContains_EmptyListContainsNotNull) {
-  CHECK_EQUAL(0, dllist_contains(&list, &nodes[0]));
+  CHECK_FALSE(dllist_contains(&list, &nodes[0]));
 }
 
 /// \Given a doubly-linked list with one node
@@ -561,7 +561,7 @@ TEST(Util_Dllist, DllistContains_EmptyListContainsNotNull) {
 TEST(Util_Dllist, DllistContains_ListWithOneContains) {
   dllist_push_back(&list, &nodes[0]);
 
-  CHECK_EQUAL(1, dllist_contains(&list, &nodes[0]));
+  CHECK(dllist_contains(&list, &nodes[0]));
 }
 
 /// \Given a doubly-linked list with one node
@@ -573,7 +573,7 @@ TEST(Util_Dllist, DllistContains_ListWithOneContains) {
 TEST(Util_Dllist, DllistContains_ListWithOneDoesNotContain) {
   dllist_push_back(&list, &nodes[0]);
 
-  CHECK_EQUAL(0, dllist_contains(&list, &nodes[1]));
+  CHECK_FALSE(dllist_contains(&list, &nodes[1]));
 }
 
 /// \Given a doubly-linked list with two nodes
@@ -586,7 +586,7 @@ TEST(Util_Dllist, DllistContains_ListWithManyContains) {
   dllist_push_back(&list, &nodes[0]);
   dllist_push_back(&list, &nodes[1]);
 
-  CHECK_EQUAL(1, dllist_contains(&list, &nodes[1]));
+  CHECK(dllist_contains(&list, &nodes[1]));
 }
 
 /// \Given a doubly-linked list with two nodes
@@ -599,7 +599,7 @@ TEST(Util_Dllist, DllistContains_ListWithManyDoesNotContain) {
   dllist_push_back(&list, &nodes[0]);
   dllist_push_back(&list, &nodes[1]);
 
-  CHECK_EQUAL(0, dllist_contains(&list, &nodes[3]));
+  CHECK_FALSE(dllist_contains(&list, &nodes[3]));
 }
 
 ///@}

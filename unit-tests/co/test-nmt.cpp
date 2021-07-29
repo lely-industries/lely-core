@@ -223,7 +223,7 @@ TEST_GROUP_BASE(CO_NmtCreate, CO_NmtBase) {
 
     CHECK_EQUAL(DEV_ID, co_nmt_get_id(nmt));
     CHECK_EQUAL(CO_NMT_ST_BOOTUP, co_nmt_get_st(nmt));
-    CHECK_EQUAL(0, co_nmt_is_master(nmt));
+    CHECK_FALSE(co_nmt_is_master(nmt));
 #if !LELY_NO_CO_MASTER
 #if !LELY_NO_CO_NMT_BOOT || !LELY_NO_CO_NMT_CFG
     CHECK_EQUAL(LELY_CO_NMT_TIMEOUT, co_nmt_get_timeout(nmt));
@@ -2109,7 +2109,7 @@ TEST(CO_Nmt, CoNmtIsMaster_BeforeInitialReset) {
 
   const auto ret = co_nmt_is_master(nmt);
 
-  CHECK_EQUAL(0, ret);
+  CHECK_FALSE(ret);
 }
 
 /// \Given a pointer to an initialized NMT service (co_nmt_t) configured as
@@ -2125,7 +2125,7 @@ TEST(CO_Nmt, CoNmtIsMaster_Slave) {
 
   const auto ret = co_nmt_is_master(nmt);
 
-  CHECK_EQUAL(0, ret);
+  CHECK_FALSE(ret);
 }
 
 #if !LELY_NO_CO_MASTER

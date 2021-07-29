@@ -36,6 +36,7 @@
 #include <lely/compat/features.h>
 
 #include <assert.h>
+#include <stdbool.h>
 #include <stddef.h>
 
 #ifndef LELY_UTIL_PHEAP_INLINE
@@ -145,8 +146,11 @@ LELY_UTIL_PHEAP_INLINE struct pnode *pnode_next(const struct pnode *node);
  */
 LELY_UTIL_PHEAP_INLINE void pheap_init(struct pheap *heap, pheap_cmp_t *cmp);
 
-/// Returns 1 if the pairing heap is empty, and 0 if not.
-LELY_UTIL_PHEAP_INLINE int pheap_empty(const struct pheap *heap);
+/**
+ * Returns <b>true</b> if the pairing heap is empty, and <b>false</b>
+ * if not.
+ */
+LELY_UTIL_PHEAP_INLINE bool pheap_empty(const struct pheap *heap);
 
 /**
  * Returns the size (in number of nodes) of a pairing heap. This is an O(1)
@@ -186,9 +190,10 @@ struct pnode *pheap_find(const struct pheap *heap, const void *key);
 /**
  * Checks if a node is part of a pairing heap.
  *
- * @returns 1 if the node was found in the heap, and 0 if not.
+ * @returns <b>true</b> if the node was found in the heap, and
+ *          <b>false</b> if not.
  */
-int pheap_contains(const struct pheap *heap, const struct pnode *node);
+bool pheap_contains(const struct pheap *heap, const struct pnode *node);
 
 /**
  * Returns a pointer to the first (minimum) node in a pairing heap. This is an
@@ -236,10 +241,10 @@ pheap_init(struct pheap *heap, pheap_cmp_t *cmp)
 	heap->num_nodes = 0;
 }
 
-LELY_UTIL_PHEAP_INLINE int
+LELY_UTIL_PHEAP_INLINE bool
 pheap_empty(const struct pheap *heap)
 {
-	return !pheap_size(heap);
+	return pheap_size(heap) == 0u;
 }
 
 LELY_UTIL_PHEAP_INLINE size_t

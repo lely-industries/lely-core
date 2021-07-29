@@ -431,8 +431,8 @@ TEST(CO_CsdoInit, CoCsdoStart_NoDev) {
   const auto ret = co_csdo_start(csdo);
 
   CHECK_EQUAL(0, ret);
-  CHECK_EQUAL(0, co_csdo_is_stopped(csdo));
-  CHECK_EQUAL(1u, co_csdo_is_idle(csdo));
+  CHECK_FALSE(co_csdo_is_stopped(csdo));
+  CHECK(co_csdo_is_idle(csdo));
 
   co_csdo_destroy(csdo);
 }
@@ -451,8 +451,8 @@ TEST(CO_CsdoInit, CoCsdoStart_AlreadyStarted) {
   const auto ret = co_csdo_start(csdo);
 
   CHECK_EQUAL(0, ret);
-  CHECK_EQUAL(0, co_csdo_is_stopped(csdo));
-  CHECK_EQUAL(1u, co_csdo_is_idle(csdo));
+  CHECK_FALSE(co_csdo_is_stopped(csdo));
+  CHECK(co_csdo_is_idle(csdo));
 
   co_csdo_destroy(csdo);
 }
@@ -484,8 +484,8 @@ TEST(CO_CsdoInit, CoCsdoStart_CobidRes_ExtendedId) {
   const auto ret = co_csdo_start(csdo);
 
   CHECK_EQUAL(0, ret);
-  CHECK_EQUAL(0, co_csdo_is_stopped(csdo));
-  CHECK_EQUAL(1u, co_csdo_is_idle(csdo));
+  CHECK_FALSE(co_csdo_is_stopped(csdo));
+  CHECK(co_csdo_is_idle(csdo));
 
   co_csdo_destroy(csdo);
 }
@@ -511,8 +511,8 @@ TEST(CO_CsdoInit, CoCsdoStart_DefaultCSDO_WithObj1280) {
   const auto ret = co_csdo_start(csdo);
 
   CHECK_EQUAL(0, ret);
-  CHECK_EQUAL(0, co_csdo_is_stopped(csdo));
-  CHECK_EQUAL(1u, co_csdo_is_idle(csdo));
+  CHECK_FALSE(co_csdo_is_stopped(csdo));
+  CHECK(co_csdo_is_idle(csdo));
 
   co_csdo_destroy(csdo);
 }
@@ -536,7 +536,7 @@ TEST(CO_CsdoInit, CoCsdoStop_OnCreated) {
 
   co_csdo_stop(csdo);
 
-  CHECK_EQUAL(1u, co_csdo_is_stopped(csdo));
+  CHECK(co_csdo_is_stopped(csdo));
 
   co_csdo_destroy(csdo);
 }
@@ -561,7 +561,7 @@ TEST(CO_CsdoInit, CoCsdoStop_OnStarted) {
 
   co_csdo_stop(csdo);
 
-  CHECK_EQUAL(1u, co_csdo_is_stopped(csdo));
+  CHECK(co_csdo_is_stopped(csdo));
 
   co_csdo_destroy(csdo);
 }
@@ -1028,7 +1028,7 @@ size_t TEST_GROUP_CppUTestGroupCO_Csdo::num_called = 0;
 TEST(CO_Csdo, CoCsdoIsValid_ReqResValid) {
   const auto ret = co_csdo_is_valid(csdo);
 
-  CHECK_EQUAL(1, ret);
+  CHECK(ret);
 }
 
 /// \Given a pointer to the CSDO service (co_csdo_t) with invalid COB-ID
@@ -1043,7 +1043,7 @@ TEST(CO_Csdo, CoCsdoIsValid_ReqInvalid) {
 
   const auto ret = co_csdo_is_valid(csdo);
 
-  CHECK_EQUAL(0, ret);
+  CHECK_FALSE(ret);
 }
 
 /// \Given a pointer to the CSDO service (co_csdo_t) with valid COB-ID
@@ -1058,7 +1058,7 @@ TEST(CO_Csdo, CoCsdoIsValid_ResInvalid) {
 
   const auto ret = co_csdo_is_valid(csdo);
 
-  CHECK_EQUAL(0, ret);
+  CHECK_FALSE(ret);
 }
 
 ///@}
@@ -2292,7 +2292,7 @@ AbortTransfer(can_net_t* const net, const co_unsigned32_t can_id) {
 ///       \Calls co_csdo_is_idle()
 ///       \Calls set_errnum()
 TEST(CO_Csdo, CoCsdoDnReq_ServiceIsBusy) {
-  CHECK_EQUAL(0, co_csdo_is_idle(csdo));
+  CHECK_FALSE(co_csdo_is_idle(csdo));
 
   const uint_least8_t buffer[sizeof(sub_type)] = {0};
   const auto ret = co_csdo_dn_req(csdo, IDX, SUBIDX, buffer, sizeof(sub_type),

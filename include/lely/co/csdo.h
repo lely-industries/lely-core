@@ -25,6 +25,8 @@
 #include <lely/can/net.h>
 #include <lely/co/sdo.h>
 
+#include <stdbool.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -191,7 +193,7 @@ void co_csdo_destroy(co_csdo_t *sdo);
 /**
  * Starts a Client-SDO service.
  *
- * @post on success, co_csdo_is_stopped() returns 0.
+ * @post on success, co_csdo_is_stopped() returns <b>false</b>.
  *
  * @returns 0 on success, or -1 on error. In the latter case, the error number
  * can be obtained with get_errc().
@@ -203,18 +205,19 @@ int co_csdo_start(co_csdo_t *sdo);
 /**
  * Stops a Client-SDO service. Any ongoing request is aborted.
  *
- * @post co_csdo_is_stopped() returns 1.
+ * @post co_csdo_is_stopped() returns <b>true</b>.
  *
  * @see co_csdo_start()
  */
 void co_csdo_stop(co_csdo_t *sdo);
 
 /**
- * Retuns 1 if the specified Client-SDO service is stopped, and 0 if not.
+ * Returns <b>true</b> if the specified Client-SDO service is stopped,
+ * and <b>false</b> if not.
  *
  * @see co_csdo_start, co_csdo_stop()
  */
-int co_csdo_is_stopped(const co_csdo_t *sdo);
+bool co_csdo_is_stopped(const co_csdo_t *sdo);
 
 /*
  * Returns a pointer to the allocator used to allocate a Client-SDO.
@@ -312,16 +315,17 @@ void co_csdo_get_up_ind(
 void co_csdo_set_up_ind(co_csdo_t *sdo, co_csdo_ind_t *ind, void *data);
 
 /**
- * Returns 1 of the COB-IDs of the specified Client-SDO service are valid, and 0
- * if not.
- */
-int co_csdo_is_valid(const co_csdo_t *sdo);
+ * Returns <b>true</b> of the COB-IDs of the specified Client-SDO
+ * service are valid, and <b>false</b> if not.
+*/
+bool co_csdo_is_valid(const co_csdo_t *sdo);
 
 /**
- * Returns 1 if the specified Client-SDO service is idle, and 0 if a transfer is
- * ongoing. It returns 0 when the service is stopped.
+ * Returns <b>true</b> if the specified Client-SDO service is idle,
+ * and <b>false</b> if a transfer is ongoing. It returns <b>false</b> when the
+ * service is stopped.
  */
-int co_csdo_is_idle(const co_csdo_t *sdo);
+bool co_csdo_is_idle(const co_csdo_t *sdo);
 
 /**
  * Submits an abort transfer request to a remote Server-SDO. This function has

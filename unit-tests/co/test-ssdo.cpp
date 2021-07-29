@@ -307,7 +307,7 @@ TEST(CO_SsdoInit, CoSsdoCreate_DefaultSsdo_NoServerParameterObject) {
   CHECK_EQUAL(DEV_ID, par->id);
   CHECK_EQUAL(DEFAULT_COBID_REQ, par->cobid_req);
   CHECK_EQUAL(DEFAULT_COBID_RES, par->cobid_res);
-  CHECK_EQUAL(1, co_ssdo_is_stopped(ssdo));
+  CHECK(co_ssdo_is_stopped(ssdo));
   POINTERS_EQUAL(can_net_get_alloc(net), co_ssdo_get_alloc(ssdo));
 
   co_ssdo_destroy(ssdo);
@@ -352,7 +352,7 @@ TEST(CO_SsdoInit, CoSsdoCreate_DefaultSsdo_WithServerParameterObject) {
   CHECK_EQUAL(DEV_ID, par->id);
   CHECK_EQUAL(DEFAULT_COBID_REQ, par->cobid_req);
   CHECK_EQUAL(DEFAULT_COBID_RES, par->cobid_res);
-  CHECK_EQUAL(1, co_ssdo_is_stopped(ssdo));
+  CHECK(co_ssdo_is_stopped(ssdo));
 
   co_ssdo_destroy(ssdo);
 }
@@ -398,7 +398,7 @@ TEST(CO_SsdoInit, CoSsdoCreate_NonDefaultSsdo_WithServerParameterObject) {
   CHECK_EQUAL(DEV_ID, par->id);
   CHECK_EQUAL(DEFAULT_COBID_REQ, par->cobid_req);
   CHECK_EQUAL(DEFAULT_COBID_RES, par->cobid_res);
-  CHECK_EQUAL(1, co_ssdo_is_stopped(ssdo));
+  CHECK(co_ssdo_is_stopped(ssdo));
 
   co_ssdo_destroy(ssdo);
 }
@@ -457,7 +457,7 @@ TEST(CO_SsdoInit, CoSsdoStart_DefaultSsdo_NoObj1200) {
   const auto ret = co_ssdo_start(ssdo);
 
   CHECK_EQUAL(0, ret);
-  CHECK_EQUAL(0, co_ssdo_is_stopped(ssdo));
+  CHECK_FALSE(co_ssdo_is_stopped(ssdo));
 
   co_ssdo_destroy(ssdo);
 }
@@ -477,7 +477,7 @@ TEST(CO_SsdoInit, CoSsdoStart_AlreadyStarted) {
   const auto ret = co_ssdo_start(ssdo);
 
   CHECK_EQUAL(0, ret);
-  CHECK_EQUAL(0, co_ssdo_is_stopped(ssdo));
+  CHECK_FALSE(co_ssdo_is_stopped(ssdo));
 
   co_ssdo_destroy(ssdo);
 }
@@ -503,7 +503,7 @@ TEST(CO_SsdoInit, CoSsdoStart_DefaultSsdo_WithServerParameterObject) {
   const auto ret = co_ssdo_start(ssdo);
 
   CHECK_EQUAL(0, ret);
-  CHECK_EQUAL(0, co_ssdo_is_stopped(ssdo));
+  CHECK_FALSE(co_ssdo_is_stopped(ssdo));
 
   co_ssdo_destroy(ssdo);
 }
@@ -524,7 +524,7 @@ TEST(CO_SsdoInit, CoSsdoStop_OnCreated) {
 
   co_ssdo_stop(ssdo);
 
-  CHECK_EQUAL(1, co_ssdo_is_stopped(ssdo));
+  CHECK(co_ssdo_is_stopped(ssdo));
 
   co_ssdo_destroy(ssdo);
 }
@@ -544,7 +544,7 @@ TEST(CO_SsdoInit, CoSsdoStop_OnStarted) {
 
   co_ssdo_stop(ssdo);
 
-  CHECK_EQUAL(1, co_ssdo_is_stopped(ssdo));
+  CHECK(co_ssdo_is_stopped(ssdo));
 
   co_ssdo_destroy(ssdo);
 }

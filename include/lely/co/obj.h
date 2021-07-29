@@ -24,6 +24,7 @@
 
 #include <lely/co/type.h>
 
+#include <stdbool.h>
 #include <stddef.h>
 
 /// An object with no data fields.
@@ -757,19 +758,19 @@ unsigned int co_sub_get_access(const co_sub_t *sub);
 int co_sub_set_access(co_sub_t *sub, unsigned int access);
 
 /**
- * Returns 1 if it is possible to map the specified CANopen sub-object into a
- * PDO, and 0 if not.
+ * Returns <b>true</b> if it is possible to map the specified CANopen
+ * sub-object into a PDO, and <b>false</b> if not.
  *
  * @see co_sub_set_pdo_mapping()
  */
-int co_sub_get_pdo_mapping(const co_sub_t *sub);
+bool co_sub_get_pdo_mapping(const co_sub_t *sub);
 
 /**
  * Enables or disables PDO mapping a CANopen sub-object.
  *
  * @see co_sub_get_pdo_mapping()
  */
-void co_sub_set_pdo_mapping(co_sub_t *sub, int pdo_mapping);
+void co_sub_set_pdo_mapping(co_sub_t *sub, bool pdo_mapping);
 
 /// Returns the object flags of a CANopen sub-object. @see co_sub_set_flags()
 unsigned int co_sub_get_flags(const co_sub_t *sub);

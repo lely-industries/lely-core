@@ -425,7 +425,7 @@ TEST(CO_Sync, CoSyncStart_NoObj1006NoObj1019) {
   const auto ret = co_sync_start(sync);
 
   CHECK_EQUAL(0, ret);
-  CHECK_EQUAL(0, co_sync_is_stopped(sync));
+  CHECK_FALSE(co_sync_is_stopped(sync));
   CheckSubDnIndIsSet(0x1005u);
 }
 
@@ -450,7 +450,7 @@ TEST(CO_Sync, CoSyncStart_Nominal) {
   const auto ret = co_sync_start(sync);
 
   CHECK_EQUAL(0, ret);
-  CHECK_EQUAL(0, co_sync_is_stopped(sync));
+  CHECK_FALSE(co_sync_is_stopped(sync));
   CheckSubDnIndIsSet(0x1005u);
   CheckSubDnIndIsSet(0x1006u);
   CheckSubDnIndIsSet(0x1019u);
@@ -491,9 +491,9 @@ TEST(CO_Sync, CoSyncIsStopped_BeforeAfterStart) {
   CreateObj1006AndSetPeriod(0x01u);
   CreateObj1019AndSetCntOverflow(0x01u);
 
-  CHECK_EQUAL(1, co_sync_is_stopped(sync));
+  CHECK(co_sync_is_stopped(sync));
   co_sync_start(sync);
-  CHECK_EQUAL(0, co_sync_is_stopped(sync));
+  CHECK_FALSE(co_sync_is_stopped(sync));
 }
 
 ///@}
@@ -522,7 +522,7 @@ TEST(CO_Sync, CoSyncStart_IsProducer) {
   const auto ret = co_sync_start(sync);
 
   CHECK_EQUAL(0, ret);
-  CHECK_EQUAL(0, co_sync_is_stopped(sync));
+  CHECK_FALSE(co_sync_is_stopped(sync));
   CheckSubDnIndIsSet(0x1005u);
   CheckSubDnIndIsSet(0x1006u);
 }
@@ -549,7 +549,7 @@ TEST(CO_Sync, CoSyncStart_FrameBitSet) {
   const auto ret = co_sync_start(sync);
 
   CHECK_EQUAL(0, ret);
-  CHECK_EQUAL(0, co_sync_is_stopped(sync));
+  CHECK_FALSE(co_sync_is_stopped(sync));
   CheckSubDnIndIsSet(0x1005u);
   CheckSubDnIndIsSet(0x1006u);
 }
@@ -577,7 +577,7 @@ TEST(CO_Sync, CoSyncStart_PeriodValueZero) {
   const auto ret = co_sync_start(sync);
 
   CHECK_EQUAL(0, ret);
-  CHECK_EQUAL(0, co_sync_is_stopped(sync));
+  CHECK_FALSE(co_sync_is_stopped(sync));
   CheckSubDnIndIsSet(0x1005u);
   CheckSubDnIndIsSet(0x1006u);
 
@@ -658,9 +658,9 @@ TEST(CO_Sync, CoSyncIsStopped_BeforeAfterStop) {
   CreateObj1019AndSetCntOverflow(0x01u);
   StartSYNC();
 
-  CHECK_EQUAL(0, co_sync_is_stopped(sync));
+  CHECK_FALSE(co_sync_is_stopped(sync));
   co_sync_stop(sync);
-  CHECK_EQUAL(1, co_sync_is_stopped(sync));
+  CHECK(co_sync_is_stopped(sync));
 }
 
 ///@}

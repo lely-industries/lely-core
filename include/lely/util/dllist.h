@@ -26,6 +26,7 @@
 #include <lely/compat/features.h>
 
 #include <assert.h>
+#include <stdbool.h>
 #include <stddef.h>
 
 #ifndef LELY_UTIL_DLLIST_INLINE
@@ -74,17 +75,19 @@ LELY_UTIL_DLLIST_INLINE void dlnode_init(struct dlnode *node);
 /**
  * Inserts <b>node</b> after <b>prev</b>.
  *
- * @returns 1 if <b>prev</b> was the last node in the list and 0 if not.
+ * @returns <b>true</b> if <b>prev</b> was the last node in the list
+ *          and <b>false</b> if not.
  */
-LELY_UTIL_DLLIST_INLINE int dlnode_insert_after(
+LELY_UTIL_DLLIST_INLINE bool dlnode_insert_after(
 		struct dlnode *prev, struct dlnode *node);
 
 /**
  * Inserts <b>node</b> before <b>next</b>.
  *
- * @returns 1 if <b>next</b> was the first node in the list and 0 if not.
+ * @returns <b>true</b> if <b>next</b> was the first node in the list
+ *          and <b>false</b> if not.
  */
-LELY_UTIL_DLLIST_INLINE int dlnode_insert_before(
+LELY_UTIL_DLLIST_INLINE bool dlnode_insert_before(
 		struct dlnode *next, struct dlnode *node);
 
 /**
@@ -119,10 +122,10 @@ LELY_UTIL_DLLIST_INLINE void dlnode_remove(struct dlnode *node);
 LELY_UTIL_DLLIST_INLINE void dllist_init(struct dllist *list);
 
 /**
- * Returns 1 if the doubly-linked list is empty, and 0 if not. This is an O(1)
- * operation.
+ * Returns <b>true</b> if the doubly-linked list is empty, and
+ * <b>false</b> if not. This is an O(1) operation.
  */
-LELY_UTIL_DLLIST_INLINE int dllist_empty(const struct dllist *list);
+LELY_UTIL_DLLIST_INLINE bool dllist_empty(const struct dllist *list);
 
 /**
  * Returns the size (in number of nodes) of a doubly-linked list. This is an
@@ -192,9 +195,10 @@ LELY_UTIL_DLLIST_INLINE void dllist_remove(
 /**
  * Checks if a node is part of a doubly-linked list.
  *
- * @returns 1 if the node was found in the list, and 0 if not.
+ * @returns <b>true</b> if the node was found in the list, and
+ *          <b>false</b> if not.
  */
-int dllist_contains(const struct dllist *list, const struct dlnode *node);
+bool dllist_contains(const struct dllist *list, const struct dlnode *node);
 
 /**
  * Appends the doubly-linked list at <b>src</b> to the one at <b>dst</b>. After
@@ -240,7 +244,7 @@ dlnode_init(struct dlnode *node)
 	node->next = NULL;
 }
 
-LELY_UTIL_DLLIST_INLINE int
+LELY_UTIL_DLLIST_INLINE bool
 dlnode_insert_after(struct dlnode *prev, struct dlnode *node)
 {
 	assert(prev);
@@ -250,10 +254,10 @@ dlnode_insert_after(struct dlnode *prev, struct dlnode *node)
 	if ((node->next = prev->next) != NULL)
 		node->next->prev = node;
 	prev->next = node;
-	return !node->next;
+	return node->next == NULL;
 }
 
-LELY_UTIL_DLLIST_INLINE int
+LELY_UTIL_DLLIST_INLINE bool
 dlnode_insert_before(struct dlnode *next, struct dlnode *node)
 {
 	assert(next);
@@ -263,7 +267,7 @@ dlnode_insert_before(struct dlnode *next, struct dlnode *node)
 	if ((node->prev = next->prev) != NULL)
 		node->prev->next = node;
 	next->prev = node;
-	return !node->prev;
+	return node->prev == NULL;
 }
 
 LELY_UTIL_DLLIST_INLINE void
@@ -286,12 +290,12 @@ dllist_init(struct dllist *list)
 	list->last = NULL;
 }
 
-LELY_UTIL_DLLIST_INLINE int
+LELY_UTIL_DLLIST_INLINE bool
 dllist_empty(const struct dllist *list)
 {
 	assert(list);
 
-	return !list->first;
+	return list->first == NULL;
 }
 
 LELY_UTIL_DLLIST_INLINE size_t

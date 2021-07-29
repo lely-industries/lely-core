@@ -517,7 +517,7 @@ co_dev_set_rate(co_dev_t *dev, co_unsigned16_t rate)
 	dev->rate = rate;
 }
 
-int
+bool
 co_dev_get_lss(const co_dev_t *dev)
 {
 	assert(dev);

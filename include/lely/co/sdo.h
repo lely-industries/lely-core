@@ -25,6 +25,8 @@
 #include <lely/co/type.h>
 #include <lely/util/membuf.h>
 
+#include <stdbool.h>
+
 #ifndef LELY_CO_SDO_INLINE
 #define LELY_CO_SDO_INLINE static inline
 #endif
@@ -268,16 +270,16 @@ void co_sdo_req_fini(struct co_sdo_req *req);
 void co_sdo_req_clear(struct co_sdo_req *req);
 
 /**
- * Returns 1 if the specified request includes the first segment, and 0
- * otherwise.
+ * Returns <b>true</> if the specified request includes the first
+ * segment, and <b>false</b> otherwise.
  */
-LELY_CO_SDO_INLINE int co_sdo_req_first(const struct co_sdo_req *req);
+LELY_CO_SDO_INLINE bool co_sdo_req_first(const struct co_sdo_req *req);
 
 /**
- * Returns 1 if the specified request includes the last segment, and 0
- * otherwise.
+ * Returns <b>true</b> if the specified request includes the last
+ * segment, and <b>false</b> otherwise.
  */
-LELY_CO_SDO_INLINE int co_sdo_req_last(const struct co_sdo_req *req);
+LELY_CO_SDO_INLINE bool co_sdo_req_last(const struct co_sdo_req *req);
 
 /**
  * Copies the next segment of the specified CANopen SDO download request to the
@@ -378,13 +380,13 @@ int co_sdo_req_up_val(struct co_sdo_req *req, co_unsigned16_t type,
 int co_sdo_req_up_file(struct co_sdo_req *req, const char *filename,
 		co_unsigned32_t *pac);
 
-LELY_CO_SDO_INLINE int
+LELY_CO_SDO_INLINE bool
 co_sdo_req_first(const struct co_sdo_req *req)
 {
-	return !req->offset;
+	return req->offset == 0u;
 }
 
-LELY_CO_SDO_INLINE int
+LELY_CO_SDO_INLINE bool
 co_sdo_req_last(const struct co_sdo_req *req)
 {
 	return req->offset + req->nbyte >= req->size;

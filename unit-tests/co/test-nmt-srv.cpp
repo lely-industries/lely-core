@@ -270,7 +270,7 @@ TEST(CO_NmtSrv, CoNmtSrvInit_RpdoNominal) {
   POINTER_NOT_NULL(rpdo);
   POINTERS_EQUAL(net, co_rpdo_get_net(rpdo));
   POINTERS_EQUAL(dev, co_rpdo_get_dev(rpdo));
-  CHECK_EQUAL(1, co_rpdo_is_stopped(rpdo));
+  CHECK(co_rpdo_is_stopped(rpdo));
   CHECK_EQUAL(RPDO_NUM, co_rpdo_get_num(rpdo));
 }
 #else
@@ -339,7 +339,7 @@ TEST(CO_NmtSrv, CoNmtSrvInit_TpdoNominal) {
   POINTER_NOT_NULL(tpdo);
   POINTERS_EQUAL(net, co_tpdo_get_net(tpdo));
   POINTERS_EQUAL(dev, co_tpdo_get_dev(tpdo));
-  CHECK_EQUAL(1, co_tpdo_is_stopped(tpdo));
+  CHECK(co_tpdo_is_stopped(tpdo));
   CHECK_EQUAL(TPDO_NUM, co_tpdo_get_num(tpdo));
 }
 #else

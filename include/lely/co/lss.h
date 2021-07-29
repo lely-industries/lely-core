@@ -25,6 +25,8 @@
 #include <lely/can/net.h>
 #include <lely/co/dev.h>
 
+#include <stdbool.h>
+
 #ifndef LELY_CO_LSS_INHIBIT
 /// The default LSS inhibit time (in multiples of 100 microseconds).
 #define LELY_CO_LSS_INHIBIT 10
@@ -165,7 +167,7 @@ void co_lss_destroy(co_lss_t *lss);
 /**
  * Starts an LSS service.
  *
- * @post on success, co_lss_is_stopped() returns 0.
+ * @post on success, co_lss_is_stopped() returns <b>false</b>.
  *
  * @returns 0 on success, or -1 on error. In the latter case, the error number
  * can be obtained with get_errc().
@@ -177,18 +179,19 @@ int co_lss_start(co_lss_t *lss);
 /**
  * Stops an LSS service.
  *
- * @post co_lss_is_stopped() returns 1.
+ * @post co_lss_is_stopped() returns <b>true</b>.
  *
  * @see co_lss_start()
  */
 void co_lss_stop(co_lss_t *lss);
 
 /**
- * Retuns 1 if the specified LSS service is stopped, and 0 if not.
+ * Returns <b>true</b> if the specified LSS service is stopped, and
+ * <b>false</b> if not.
  *
  * @see co_lss_start, co_lss_stop()
  */
-int co_lss_is_stopped(const co_lss_t *lss);
+bool co_lss_is_stopped(const co_lss_t *lss);
 
 /*
  * Returns a pointer to the allocator used to allocate an LSS master/slave
@@ -296,13 +299,17 @@ int co_lss_get_timeout(const co_lss_t *lss);
  */
 void co_lss_set_timeout(co_lss_t *lss, int timeout);
 
-/// Returns 1 if the specified CANopen LSS service is a master, and 0 if not.
-int co_lss_is_master(const co_lss_t *lss);
+/**
+ * Returns <b>true</b> if the specified CANopen LSS service is a
+ * master, and <b>false</b> if not.
+ */
+bool co_lss_is_master(const co_lss_t *lss);
 
 /**
- * Returns 1 if the specified LSS master is idle, and 0 if a request is ongoing.
- */
-int co_lss_is_idle(const co_lss_t *lss);
+ * Returns <b>true</b> if the specified LSS master is idle, and
+ * <b>false</b> if a request is ongoing.
+*/
+bool co_lss_is_idle(const co_lss_t *lss);
 
 /**
  * Aborts the current LSS master request. This function has no effect if the

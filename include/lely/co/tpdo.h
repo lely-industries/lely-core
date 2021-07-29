@@ -25,6 +25,8 @@
 #include <lely/can/net.h>
 #include <lely/co/pdo.h>
 
+#include <stdbool.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -88,7 +90,7 @@ void co_tpdo_destroy(co_tpdo_t *pdo);
 /**
  * Starts a Transmit-PDO service.
  *
- * @post on success, co_tpdo_is_stopped() returns 0.
+ * @post on success, co_tpdo_is_stopped() returns <b>false</b>.
  *
  * @returns 0 on success, or -1 on error. In the latter case, the error number
  * can be obtained with get_errc().
@@ -100,18 +102,19 @@ int co_tpdo_start(co_tpdo_t *pdo);
 /**
  * Stops a Transmit-PDO service.
  *
- * @post co_tpdo_is_stopped() returns 1.
+ * @post co_tpdo_is_stopped() returns <b>true</b>.
  *
  * @see co_tpdo_start()
  */
 void co_tpdo_stop(co_tpdo_t *pdo);
 
 /**
- * Retuns 1 if the specified Transmit-PDO service is stopped, and 0 if not.
+ * Returns <b>true</b> if the specified Transmit-PDO service is
+ * stopped, and <b>false</b> if not.
  *
  * @see co_tpdo_start, co_tpdo_stop()
  */
-int co_tpdo_is_stopped(const co_tpdo_t *pdo);
+bool co_tpdo_is_stopped(const co_tpdo_t *pdo);
 
 /*
  * Returns a pointer to the allocator used to allocate a Transmit-PDO.
