@@ -428,14 +428,6 @@ AS_IF([test "$enable_unit_tests" == "no"], [
 	AM_CONDITIONAL([NO_UNIT_TESTS], [true])
 ])
 
-AM_CONDITIONAL([NO_UNIT_TESTS_MEMLEAK], [false])
-AC_ARG_ENABLE([unit-tests-memleak],
-	AS_HELP_STRING([--disable-unit-tests-memleak], [disable unit tests memory leak detection]))
-AS_IF([test "$enable_unit_tests" == "no"], [enable_unit_tests_memleak=no])
-AS_IF([test "$enable_unit_tests_memleak" == "no"], [
-	AM_CONDITIONAL([NO_UNIT_TESTS_MEMLEAK], [true])
-])
-
 AC_CHECK_HEADER([valgrind/valgrind.h], [
 	AC_DEFINE([LELY_HAVE_VALGRIND], [1], [Define to 1 if you have the <valgrind/valgrind.h> header file.])
 ])
