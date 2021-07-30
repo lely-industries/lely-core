@@ -1528,7 +1528,7 @@ co_lss_cfg_on_recv(co_lss_t *lss, const struct can_msg *msg)
 		if (!lss->rate_ind || msg->data[1]) {
 			req.data[1] = 1;
 		} else {
-			unsigned int baud = co_dev_get_baud(lss->dev);
+			const co_unsigned16_t baud = co_dev_get_baud(lss->dev);
 			switch (msg->data[2]) {
 			case 0:
 				if (!(req.data[1] = !(baud & CO_BAUD_1000)))

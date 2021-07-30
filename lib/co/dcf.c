@@ -240,7 +240,7 @@ co_dev_parse_cfg(co_dev_t *dev, const config_t *cfg)
 		// clang-format on
 	}
 
-	unsigned int baud = 0;
+	co_unsigned16_t baud = 0;
 	val = config_get(cfg, "DeviceInfo", "BaudRate_10");
 	if (val && *val && strtoul(val, NULL, 0))
 		baud |= CO_BAUD_10;
