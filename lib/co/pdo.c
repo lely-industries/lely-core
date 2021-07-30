@@ -60,7 +60,7 @@ co_dev_chk_rpdo(const co_dev_t *dev, co_unsigned16_t idx, co_unsigned8_t subidx)
 		if (!sub)
 			return CO_SDO_AC_NO_SUB;
 
-		unsigned int access = co_sub_get_access(sub);
+		const co_unsigned8_t access = co_sub_get_access(sub);
 		if (!(access & CO_ACCESS_WRITE))
 			return CO_SDO_AC_NO_WRITE;
 
@@ -134,7 +134,7 @@ co_dev_chk_tpdo(const co_dev_t *dev, co_unsigned16_t idx, co_unsigned8_t subidx)
 	if (!sub)
 		return CO_SDO_AC_NO_SUB;
 
-	unsigned int access = co_sub_get_access(sub);
+	const co_unsigned8_t access = co_sub_get_access(sub);
 	if (!(access & CO_ACCESS_READ))
 		return CO_SDO_AC_NO_READ;
 
