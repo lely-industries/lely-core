@@ -46,6 +46,8 @@
 #include "holder/sub.hpp"
 #include "common/nmt-alloc-sizes.hpp"
 #include "obj-init/nmt-hb-consumer.hpp"
+#include "obj-init/nmt-slave-assignment.hpp"
+#include "obj-init/nmt-startup.hpp"
 
 #include <lib/co/nmt_hb.h>
 #if !LELY_NO_CO_NMT_BOOT
@@ -78,6 +80,7 @@ TEST_BASE(CO_NmtBase) {
   static const co_unsigned8_t DEV_ID = 0x01u;
   static const co_unsigned8_t MASTER_DEV_ID = DEV_ID;
   static const co_unsigned8_t SLAVE_DEV_ID = 0x02u;
+  static const co_unsigned8_t OTHER_NODE_ID = 0x05u;
 
   can_net_t* net = nullptr;
   co_dev_t* dev = nullptr;
@@ -1397,6 +1400,9 @@ TEST_GROUP_BASE(CO_Nmt, CO_NmtBase) {
   void CreateNmtAndReset() {
     CreateNmt();
     CHECK_EQUAL(0, co_nmt_cs_ind(nmt, CO_NMT_CS_RESET_NODE));
+
+    co_nmt_set_cs_ind(nmt, &CoNmtCsInd::Func, nullptr);
+    co_nmt_set_st_ind(nmt, &CoNmtStInd::Func, nullptr);
   }
 
   void CreateNmtAndStop() {
@@ -1426,13 +1432,41 @@ TEST_GROUP_BASE(CO_Nmt, CO_NmtBase) {
                              co_unsigned16_t{inhibit_time});
   }
 
-  can_msg CreateNmtBootupMsg(const co_unsigned8_t id) const {
+  can_msg CreateNmtEcMsg(const co_unsigned8_t id, const co_unsigned8_t st)
+      const {
     can_msg msg = CAN_MSG_INIT;
     msg.id = CO_NMT_EC_CANID(id);
     msg.len = 1u;
-    msg.data[0] = CO_NMT_ST_BOOTUP;
+    msg.data[0] = st;
 
     return msg;
+  }
+
+  can_msg CreateNmtMsg(const co_unsigned8_t id, const co_unsigned8_t cs) const {
+    can_msg msg = CAN_MSG_INIT;
+    msg.id = CO_NMT_CS_CANID;
+    msg.len = 2u;
+    msg.data[0] = cs;
+    msg.data[1] = id;
+
+    return msg;
+  }
+
+  void SetupMaster() {
+    dev_holder->CreateObjValue<Obj1f80NmtStartup>(
+        obj1f80, Obj1f80NmtStartup::MASTER_BIT);
+  }
+
+  void SetupMasterWithSlave() {
+    SetupMaster();
+
+    dev_holder->CreateObj<Obj1f81NmtSlaveAssignment>(obj1f81);
+    obj1f81->EmplaceSub<Obj1f81NmtSlaveAssignment::Sub00HighestSubidxSupported>(
+        2u);
+    obj1f81->EmplaceSub<Obj1f81NmtSlaveAssignment::SubNthSlaveEntry>(
+        MASTER_DEV_ID, Obj1f81NmtSlaveAssignment::ASSIGNMENT_BIT);
+    obj1f81->EmplaceSub<Obj1f81NmtSlaveAssignment::SubNthSlaveEntry>(
+        SLAVE_DEV_ID, Obj1f81NmtSlaveAssignment::ASSIGNMENT_BIT);
   }
 
   TEST_SETUP() {
@@ -2457,7 +2491,7 @@ TEST(CO_Nmt, CoNmtChkBootup_ZeroId_MandatorySlaveBooted) {
   CreateNmt();
 
   CHECK_EQUAL(0, co_nmt_cs_ind(nmt, CO_NMT_CS_RESET_NODE));
-  can_msg msg = CreateNmtBootupMsg(SLAVE_DEV_ID);
+  const can_msg msg = CreateNmtEcMsg(SLAVE_DEV_ID, CO_NMT_ST_BOOTUP);
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
   const auto ret = co_nmt_chk_bootup(nmt, 0);
@@ -2496,7 +2530,7 @@ TEST(CO_Nmt, CoNmtChkBootup_SlaveId_Booted) {
   CreateNmt();
 
   CHECK_EQUAL(0, co_nmt_cs_ind(nmt, CO_NMT_CS_RESET_NODE));
-  can_msg msg = CreateNmtBootupMsg(SLAVE_DEV_ID);
+  const can_msg msg = CreateNmtEcMsg(SLAVE_DEV_ID, CO_NMT_ST_BOOTUP);
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
   const auto ret = co_nmt_chk_bootup(nmt, SLAVE_DEV_ID);
@@ -2997,6 +3031,8 @@ TEST(CO_Nmt, CoNmtCsInd_Start_EnterPreOperational) {
   CreateObj1f80NmtStartup(0x04);  // do not start automatically
   CreateNmtAndReset();
   CHECK_EQUAL(0, co_nmt_cs_ind(nmt, CO_NMT_CS_START));
+  CoNmtCsInd::Clear();
+  CoNmtStInd::Clear();
   SetNmtCsStIndFunc();
 
   const auto ret = co_nmt_cs_ind(nmt, CO_NMT_CS_ENTER_PREOP);
@@ -3407,12 +3443,12 @@ TEST(CO_Nmt, CoNmtCsInd_WithoutCsInd) {
 /// \Given a pointer to an initialized device (co_dev_t), the object dictionary
 ///        does not contain the Consumer Heartbeat Time object (0x1016)
 ///
-/// \When co_dev_cfg_hb() is called with pointer to the device and with other
+/// \When co_dev_cfg_hb() is called with a pointer to the device and with other
 ///       arguments having any value
 ///
 /// \Then CO_SDO_AC_NO_OBJ is returned, the device is not modified
 ///       \Calls co_dev_find_obj()
-TEST(CO_Nmt, CoDevCfgHb_Missing1016) {
+TEST(CO_Nmt, CoDevCfgHb_NoObject1016) {
   CreateNmt();
 
   const auto ret = co_dev_cfg_hb(dev, 0u, 0u);
@@ -3422,16 +3458,16 @@ TEST(CO_Nmt, CoDevCfgHb_Missing1016) {
 }
 
 /// \Given a pointer to an initialized device (co_dev_t), the object dictionary
-///        contains the Consumer Heartbeat Time object (0x1016) but without any
-///        sub-objects
+///        contains the Consumer Heartbeat Time object (0x1016), but without
+///        any sub-objects
 ///
-/// \When co_dev_cfg_hb() is called with pointer to the device and with other
+/// \When co_dev_cfg_hb() is called with a pointer to the device and with other
 ///       arguments having any correct value
 ///
 /// \Then CO_SDO_AC_NO_SUB is returned, the device is not modified
 ///       \Calls co_dev_find_obj()
 ///       \Calls co_obj_get_val_u8()
-TEST(CO_Nmt, CoDevCfgHb_NoSubObjectsIn1016) {
+TEST(CO_Nmt, CoDevCfgHb_NoSubsInObject1016) {
   CreateNmt();
   dev_holder->CreateObj<Obj1016ConsumerHb>(obj1016);
   const co_unsigned8_t nodeId = 1u;
@@ -3442,18 +3478,19 @@ TEST(CO_Nmt, CoDevCfgHb_NoSubObjectsIn1016) {
 }
 
 /// \Given a pointer to an initialized device (co_dev_t), the object dictionary
-///        contains the Consumer Heartbeat Time object (0x1016) with Highest
-///        sub-index supported sub-object (0x00) set to a value greater than
-///        zero but without any other sub-objects (a malformed object).
+///        contains the Consumer Heartbeat Time object (0x1016) with the
+///        "Highest sub-index supported" sub-object (0x00) set to a value
+///        greater than zero, but without any other sub-objects (a malformed
+///        object).
 ///
-/// \When co_dev_cfg_hb() is called with pointer to the device and with other
+/// \When co_dev_cfg_hb() is called with a pointer to the device and with other
 ///       arguments having any correct value
 ///
 /// \Then CO_SDO_AC_NO_SUB is returned, the device is not modified
 ///       \Calls co_dev_find_obj()
 ///       \Calls co_obj_get_val_u8()
 ///       \Calls co_obj_find_sub()
-TEST(CO_Nmt, CoDevCfgHb_MissingSubObjectIn1016) {
+TEST(CO_Nmt, CoDevCfgHb_MissingSubInObject1016) {
   CreateNmt();
   dev_holder->CreateObj<Obj1016ConsumerHb>(obj1016);
   const co_unsigned8_t highestIdx = 1u;
@@ -3469,7 +3506,7 @@ TEST(CO_Nmt, CoDevCfgHb_MissingSubObjectIn1016) {
 /// \Given a pointer to an initialized device (co_dev_t), the object dictionary
 ///        contains the Consumer Heartbeat Time object (0x1016)
 ///
-/// \When co_dev_cfg_hb() is called with pointer to the device, an incorrect
+/// \When co_dev_cfg_hb() is called with a pointer to the device, an incorrect
 ///       Node-ID (zero) and any correct heartbeat time
 ///
 /// \Then CO_SDO_AC_PARAM_LO is returned, the device is not modified
@@ -3486,12 +3523,12 @@ TEST(CO_Nmt, CoDevCfgHb_NodeIdZero) {
 /// \Given a pointer to an initialized device (co_dev_t), the object dictionary
 ///        contains the Consumer Heartbeat Time object (0x1016)
 ///
-/// \When co_dev_cfg_hb() is called with pointer to the device, an incorrect
+/// \When co_dev_cfg_hb() is called with a pointer to the device, an incorrect
 ///       Node-ID (larger than CO_NUM_NODES) and any correct heartbeat time
 ///
 /// \Then CO_SDO_AC_PARAM_HI is returned, the device is not modified
 ///       \Calls co_dev_find_obj()
-TEST(CO_Nmt, CoDevCfgHb_NodeIdTooBig) {
+TEST(CO_Nmt, CoDevCfgHb_NodeIdOverMax) {
   CreateNmt();
   dev_holder->CreateObj<Obj1016ConsumerHb>(obj1016);
 
@@ -3505,7 +3542,7 @@ TEST(CO_Nmt, CoDevCfgHb_NodeIdTooBig) {
 ///        Consumer Heartbeat Time sub-objects, one containing an incorrect
 ///        Node-ID (zero)
 ///
-/// \Wen co_dev_cfg_hb() is called with pointer to the device, a selected
+/// \Wen co_dev_cfg_hb() is called with a pointer to the device, a selected
 ///       Node-ID and a heartbeat time
 ///
 /// \Then 0 is returned and the requested value is assigned to the sub-object
@@ -3514,7 +3551,7 @@ TEST(CO_Nmt, CoDevCfgHb_NodeIdTooBig) {
 ///       \Calls co_obj_get_val_u8()
 ///       \Calls co_obj_find_sub()
 ///       \Calls co_sub_dn_ind_val()
-TEST(CO_Nmt, CoDevCfgHb_SubObjectIn1016WithNoId) {
+TEST(CO_Nmt, CoDevCfgHb_OverwriteSubWithZeroId) {
   CreateNmt();
   const co_unsigned8_t highestIdx = 10u;
   const co_unsigned8_t selectedIdx = 7u;
@@ -3536,16 +3573,16 @@ TEST(CO_Nmt, CoDevCfgHb_SubObjectIn1016WithNoId) {
 ///        Consumer Heartbeat Time sub-objects, one containing an incorrect
 ///        Node-ID (larger than CO_NUM_NODES)
 ///
-/// \When co_dev_cfg_hb() is called with pointer to the device, selected Node-ID
-///       and heartbeat time
+/// \When co_dev_cfg_hb() is called with a pointer to the device, a selected
+///       Node-ID and a heartbeat time
 ///
-/// \Then 0 is returned and a requested value is assigned to the sub-object with
-///       an incorrect Node-ID
+/// \Then 0 is returned and the requested value is assigned to the sub-object
+///       with an incorrect Node-ID
 ///       \Calls co_dev_find_obj()
 ///       \Calls co_obj_get_val_u8()
 ///       \Calls co_obj_find_sub()
 ///       \Calls co_sub_dn_ind_val()
-TEST(CO_Nmt, CoDevCfgHb_SubObjectIn1016WithIncorrectId) {
+TEST(CO_Nmt, CoDevCfgHb_OverwriteSubWithIdOverMax) {
   CreateNmt();
   const co_unsigned8_t highestIdx = 10u;
   const co_unsigned8_t selectedIdx = 7u;
@@ -3567,9 +3604,9 @@ TEST(CO_Nmt, CoDevCfgHb_SubObjectIn1016WithIncorrectId) {
 /// \Given a pointer to an initialized device (co_dev_t), the object dictionary
 ///        contains the Consumer Heartbeat Time object (0x1016) with multiple
 ///        Consumer Heartbeat Time sub-objects, one containing a selected
-///        Node-ID.
+///        Node-ID
 ///
-/// \When co_dev_cfg_hb() is called with pointer to the device, the selected
+/// \When co_dev_cfg_hb() is called with a pointer to the device, the selected
 ///       Node-ID and a heartbeat time
 ///
 /// \Then 0 is returned and the Consumer Heartbeat Time sub-object containing
@@ -3578,7 +3615,7 @@ TEST(CO_Nmt, CoDevCfgHb_SubObjectIn1016WithIncorrectId) {
 ///       \Calls co_obj_get_val_u8()
 ///       \Calls co_obj_find_sub()
 ///       \Calls co_sub_dn_ind_val()
-TEST(CO_Nmt, CoDevCfgHb_SubObjectIn1016WithSelectedId) {
+TEST(CO_Nmt, CoDevCfgHb_UpdateSubWithSelectedId) {
   CreateNmt();
   const co_unsigned8_t highestIdx = 10u;
   const co_unsigned8_t selectedIdx = 8u;
@@ -3597,9 +3634,10 @@ TEST(CO_Nmt, CoDevCfgHb_SubObjectIn1016WithSelectedId) {
 
 /// \Given a pointer to an initialized device (co_dev_t), the object dictionary
 ///        contains the Consumer Heartbeat Time object (0x1016) with multiple
-///        Consumer Heartbeat Time sub-objects, one containing selected Node-ID.
+///        Consumer Heartbeat Time sub-objects, one containing a selected
+///        Node-ID
 ///
-/// \When co_dev_cfg_hb() is called with pointer to the device, the selected
+/// \When co_dev_cfg_hb() is called with a pointer to the device, the selected
 ///       Node-ID and a heartbeat time equal 0
 ///
 /// \Then 0 is returned and the Consumer Heartbeat Time sub-object containing
@@ -3608,7 +3646,7 @@ TEST(CO_Nmt, CoDevCfgHb_SubObjectIn1016WithSelectedId) {
 ///       \Calls co_obj_get_val_u8()
 ///       \Calls co_obj_find_sub()
 ///       \Calls co_sub_dn_ind_val()
-TEST(CO_Nmt, CoDevCfgHb_ZeroHeartbeatTime) {
+TEST(CO_Nmt, CoDevCfgHb_ClearSubWithSelectedId) {
   CreateNmt();
   const co_unsigned8_t highestIdx = 10u;
   const co_unsigned8_t selectedIdx = 4u;
@@ -3626,16 +3664,16 @@ TEST(CO_Nmt, CoDevCfgHb_ZeroHeartbeatTime) {
 /// \Given a pointer to an initialized device (co_dev_t), the object dictionary
 ///        contains the Consumer Heartbeat Time object (0x1016) with multiple
 ///        Consumer Heartbeat Time sub-objects, none containing a selected
-///        Node-ID.
+///        Node-ID
 ///
-/// \When co_dev_cfg_hb() is called with pointer to the device, the selected
+/// \When co_dev_cfg_hb() is called with a pointer to the device, the selected
 ///       Node-ID and a heartbeat time equal 0
 ///
 /// \Then 0 is returned and sub-objects are not modified
 ///       \Calls co_dev_find_obj()
 ///       \Calls co_obj_get_val_u8()
 ///       \Calls co_obj_find_sub()
-TEST(CO_Nmt, CoDevCfgHb_ZeroHeartbeatTimeForNonExistingItem) {
+TEST(CO_Nmt, CoDevCfgHb_ClearNonExistingId) {
   CreateNmt();
   const co_unsigned8_t highestIdx = 10u;
   CreateObj1016ConsumerHbTimeN(highestIdx);
@@ -3643,10 +3681,175 @@ TEST(CO_Nmt, CoDevCfgHb_ZeroHeartbeatTimeForNonExistingItem) {
   const auto ret = co_dev_cfg_hb(dev, DEV_ID, 0u);
 
   CHECK_EQUAL(0u, ret);
-  for (co_unsigned8_t i = 1; i <= highestIdx; ++i) {
+  for (co_unsigned8_t i = 1u; i <= highestIdx; ++i) {
     CHECK_COMPARE(obj1016->GetSub<Obj1016ConsumerHb::SubNthConsumerHbTime>(i),
                   !=, 0u);
   }
 }
+
+///@}
+
+/// @name NMT service: received NMT message processing
+///@{
+
+#if !LELY_NO_CO_MASTER
+/// \Given a started NMT service (co_nmt_t) configured as NMT master
+///
+/// \When an NMT message is received
+///
+/// \Then nothing is changed
+TEST(CO_Nmt, CoNmtRecv000_Master) {
+  SetupMaster();
+  CreateNmtAndReset();
+
+  const can_msg msg = CreateNmtMsg(DEV_ID, CO_NMT_CS_STOP);
+  const auto ret = can_net_recv(net, &msg, 0);
+
+  CHECK_EQUAL(1, ret);
+  CHECK_EQUAL(CO_NMT_ST_START, co_nmt_get_st(nmt));
+}
+#endif
+
+/// \Given a started NMT service (co_nmt_t) configured as NMT slave
+///
+/// \When an NMT message with an incorrect message length is received
+///
+/// \Then nothing is changed
+TEST(CO_Nmt, CoNmtRecv000_IncorrectMsgLength) {
+  CreateNmtAndReset();
+
+  can_msg msg = CreateNmtMsg(DEV_ID, CO_NMT_CS_STOP);
+  msg.len = 1u;
+  const auto ret = can_net_recv(net, &msg, 0);
+
+  CHECK_EQUAL(1, ret);
+  CHECK_EQUAL(CO_NMT_ST_START, co_nmt_get_st(nmt));
+}
+
+/// \Given a started NMT service (co_nmt_t) configured as NMT slave
+///
+/// \When an NMT message with a Node-ID equal to zero (all nodes) is received
+///
+/// \Then the command is processed, the node transitions to the requested state
+TEST(CO_Nmt, CoNmtRecv000_ZeroId) {
+  CreateNmtAndReset();
+
+  const can_msg msg = CreateNmtMsg(0, CO_NMT_CS_STOP);
+  const auto ret = can_net_recv(net, &msg, 0);
+
+  CHECK_EQUAL(1, ret);
+  CHECK_EQUAL(CO_NMT_ST_STOP, co_nmt_get_st(nmt));
+}
+
+/// \Given a started NMT service (co_nmt_t) configured as NMT slave
+///
+/// \When an NMT message with other node's Node-ID is received
+///
+/// \Then nothing is changed
+TEST(CO_Nmt, CoNmtRecv000_OtherNode) {
+  CreateNmtAndReset();
+
+  const can_msg msg = CreateNmtMsg(DEV_ID + 1u, CO_NMT_CS_STOP);
+  const auto ret = can_net_recv(net, &msg, 0);
+
+  CHECK_EQUAL(1, ret);
+  CHECK_EQUAL(CO_NMT_ST_START, co_nmt_get_st(nmt));
+}
+
+/// \Given a started NMT service (co_nmt_t) configured as NMT slave
+///
+/// \When an NMT message with the node's Node-ID is received
+///
+/// \Then the command is processed, the node transitions to the requested state
+TEST(CO_Nmt, CoNmtRecv000_Nominal) {
+  CreateNmtAndReset();
+
+  const can_msg msg = CreateNmtMsg(DEV_ID, CO_NMT_CS_STOP);
+  const auto ret = can_net_recv(net, &msg, 0);
+
+  CHECK_EQUAL(1, ret);
+  CHECK_EQUAL(CO_NMT_ST_STOP, co_nmt_get_st(nmt));
+}
+
+///@}
+
+/// @name NMT service: received NMT error control message processing
+///@{
+
+#if !LELY_NO_CO_MASTER
+
+/// \Given a started NMT service (co_nmt_t) configured as NMT master
+///
+/// \When an NMT error control message with a Node-ID equal to zero is received
+///
+/// \Then nothing is changed
+TEST(CO_Nmt, CoNmtRecv700_ZeroId) {
+  SetupMasterWithSlave();
+  CreateNmtAndReset();
+
+  const can_msg msg = CreateNmtEcMsg(0, CO_NMT_ST_START);
+  const auto ret = can_net_recv(net, &msg, 0);
+
+  CHECK_EQUAL(1, ret);
+  CHECK_EQUAL(0, CoNmtStInd::GetNumCalled());
+}
+
+/// \Given a started NMT service (co_nmt_t) configured as NMT master
+///
+/// \When an NMT error control message with an incorrect message length is
+///       received
+///
+/// \Then nothing is changed
+TEST(CO_Nmt, CoNmtRecv700_IncorrectMsgLength) {
+  SetupMasterWithSlave();
+  CreateNmtAndReset();
+
+  can_msg msg = CreateNmtEcMsg(SLAVE_DEV_ID, CO_NMT_ST_BOOTUP);
+  msg.len = 0;
+  const auto ret = can_net_recv(net, &msg, 0);
+
+  CHECK_EQUAL(1, ret);
+  CHECK_EQUAL(0, CoNmtStInd::GetNumCalled());
+}
+
+/// \Given a started NMT service (co_nmt_t) configured as NMT master with
+///        a configured slave node
+///
+/// \When an NMT boot-up message from the slave node is received
+///
+/// \Then the NMT state change indication function is invoked with the slave's
+///       Node-ID, CO_NMT_ST_BOOTUP state and a null user-specified data
+///       pointer, the receipt of a boot-up message from the slave is denoted
+TEST(CO_Nmt, CoNmtRecv700_BootUpMsg) {
+  SetupMasterWithSlave();
+  CreateNmtAndReset();
+
+  const can_msg msg = CreateNmtEcMsg(SLAVE_DEV_ID, CO_NMT_ST_BOOTUP);
+  const auto ret = can_net_recv(net, &msg, 0);
+
+  CHECK_EQUAL(1, ret);
+  CHECK_EQUAL(1u, CoNmtStInd::GetNumCalled());
+  CoNmtStInd::Check(nmt, SLAVE_DEV_ID, CO_NMT_ST_BOOTUP, nullptr);
+  CHECK_EQUAL(1, co_nmt_chk_bootup(nmt, SLAVE_DEV_ID));
+}
+
+/// \Given a started NMT service (co_nmt_t) configured as NMT master with
+///        a configured slave node
+///
+/// \When an NMT hearbeat message from the slave node is received
+///
+/// \Then nothing is changed
+TEST(CO_Nmt, CoNmtRecv700_HbMsg) {
+  SetupMasterWithSlave();
+  CreateNmtAndReset();
+
+  const can_msg msg = CreateNmtEcMsg(SLAVE_DEV_ID, CO_NMT_ST_START);
+  const auto ret = can_net_recv(net, &msg, 0);
+
+  CHECK_EQUAL(1, ret);
+  CHECK_EQUAL(0, CoNmtStInd::GetNumCalled());
+}
+
+#endif  // !LELY_NO_CO_MASTER
 
 ///@}
