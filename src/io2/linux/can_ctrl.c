@@ -4,7 +4,7 @@
  *
  * @see lely/io2/linux/can.h
  *
- * @copyright 2015-2019 Lely Industries N.V.
+ * @copyright 2015-2021 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -80,8 +80,12 @@ void *
 io_can_ctrl_alloc(void)
 {
 	struct io_can_ctrl_impl *impl = malloc(sizeof(*impl));
+	if (!impl)
+		return NULL;
+	// Suppress a GCC maybe-uninitialized warning.
+	impl->ctrl_vptr = NULL;
 	// cppcheck-suppress memleak symbolName=impl
-	return impl ? &impl->ctrl_vptr : NULL;
+	return &impl->ctrl_vptr;
 }
 
 void
