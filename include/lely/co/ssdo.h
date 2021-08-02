@@ -111,7 +111,7 @@ const struct co_sdo_par *co_ssdo_get_par(const co_ssdo_t *sdo);
  *
  * @see co_ssdo_set_timeout()
  */
-int co_ssdo_get_timeout(const co_ssdo_t *sdo);
+int_least32_t co_ssdo_get_timeout(const co_ssdo_t *sdo);
 
 /**
  * Sets the timeout of a Server-SDO. If the timeout expires before receiving a
@@ -123,7 +123,7 @@ int co_ssdo_get_timeout(const co_ssdo_t *sdo);
  *
  * @see co_ssdo_get_timeout()
  */
-void co_ssdo_set_timeout(co_ssdo_t *sdo, int timeout);
+void co_ssdo_set_timeout(co_ssdo_t *sdo, int_least32_t timeout);
 
 #ifdef __cplusplus
 }

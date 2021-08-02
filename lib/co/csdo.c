@@ -78,7 +78,7 @@ struct co_csdo {
 	/// A pointer to the CAN frame receiver.
 	can_recv_t *recv;
 	/// The SDO timeout (in milliseconds).
-	int timeout;
+	int_least32_t timeout;
 	/// A pointer to the CAN timer.
 	can_timer_t *timer;
 	/// A pointer to the current state.
@@ -1039,7 +1039,7 @@ co_csdo_get_par(const co_csdo_t *sdo)
 	return &sdo->par;
 }
 
-int
+int_least32_t
 co_csdo_get_timeout(const co_csdo_t *sdo)
 {
 	assert(sdo);
@@ -1048,7 +1048,7 @@ co_csdo_get_timeout(const co_csdo_t *sdo)
 }
 
 void
-co_csdo_set_timeout(co_csdo_t *sdo, int timeout)
+co_csdo_set_timeout(co_csdo_t *sdo, int_least32_t timeout)
 {
 	assert(sdo);
 

@@ -68,7 +68,7 @@ struct co_gw_net {
 	co_unsigned8_t def;
 #if !LELY_NO_CO_CSDO
 	/// The SDO timeout (in milliseconds).
-	int timeout;
+	int_least32_t timeout;
 #endif
 	/**
 	 * A flag indicating whether "boot-up event received" commands should be
@@ -1398,7 +1398,7 @@ co_gw_job_create_sdo(struct co_gw_job **pself, struct co_gw_net *net,
 
 	// The actual SDO timeout is limited by the global gateway command
 	// timeout.
-	int timeout = net->timeout;
+	int_least32_t timeout = net->timeout;
 	if (gw->timeout)
 		timeout = timeout ? MIN(timeout, gw->timeout) : gw->timeout;
 	co_csdo_set_timeout(sdo, timeout);

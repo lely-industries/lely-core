@@ -286,7 +286,7 @@ void co_lss_set_inhibit(co_lss_t *lss, co_unsigned16_t inhibit);
  *
  * @see co_lss_set_timeout()
  */
-int co_lss_get_timeout(const co_lss_t *lss);
+int_least32_t co_lss_get_timeout(const co_lss_t *lss);
 
 /**
  * Sets the timeout of an LSS master service.
@@ -297,7 +297,7 @@ int co_lss_get_timeout(const co_lss_t *lss);
  *
  * @see co_lss_get_timeout()
  */
-void co_lss_set_timeout(co_lss_t *lss, int timeout);
+void co_lss_set_timeout(co_lss_t *lss, int_least32_t timeout);
 
 /**
  * Returns <b>true</b> if the specified CANopen LSS service is a

@@ -289,7 +289,7 @@ struct co_nmt {
 	 * The default SDO timeout (in milliseconds) used during the NMT
 	 * 'boot slave' and 'check configuration' processes.
 	 */
-	int timeout;
+	int_least32_t timeout;
 #if !LELY_NO_CO_NMT_BOOT
 	/// A pointer to the NMT 'boot slave' indication function.
 	co_nmt_boot_ind_t *boot_ind;
@@ -1559,7 +1559,7 @@ co_nmt_get_timeout(const co_nmt_t *nmt)
 }
 
 void
-co_nmt_set_timeout(co_nmt_t *nmt, int timeout)
+co_nmt_set_timeout(co_nmt_t *nmt, int_least32_t timeout)
 {
 	assert(nmt);
 
@@ -1637,7 +1637,7 @@ co_nmt_lss_con(co_nmt_t *nmt)
 #if !LELY_NO_CO_NMT_BOOT
 
 int
-co_nmt_boot_req(co_nmt_t *nmt, co_unsigned8_t id, int timeout)
+co_nmt_boot_req(co_nmt_t *nmt, co_unsigned8_t id, int_least32_t timeout)
 {
 	assert(nmt);
 
@@ -1752,7 +1752,7 @@ co_nmt_chk_bootup(const co_nmt_t *nmt, co_unsigned8_t id)
 #if !LELY_NO_CO_NMT_CFG
 
 int
-co_nmt_cfg_req(co_nmt_t *nmt, co_unsigned8_t id, int timeout,
+co_nmt_cfg_req(co_nmt_t *nmt, co_unsigned8_t id, int_least32_t timeout,
 		co_nmt_cfg_con_t *con, void *data)
 {
 	assert(nmt);
@@ -3779,7 +3779,7 @@ co_nmt_ec_update(co_nmt_t *nmt)
 
 #if !LELY_NO_CO_NG
 	// Heartbeat production has precedence over life guarding.
-	int lt = nmt->ms ? 0 : nmt->gt * nmt->ltf;
+	int_least32_t lt = nmt->ms ? 0 : nmt->gt * nmt->ltf;
 #if !LELY_NO_CO_MASTER
 	// Disable life guarding for the master.
 	if (nmt->master)
@@ -3799,9 +3799,9 @@ co_nmt_ec_update(co_nmt_t *nmt)
 	// Start the CAN timer for heartbeat production or life guarding, if
 	// necessary.
 #if LELY_NO_CO_NG
-	int ms = nmt->ms;
+	int_least32_t ms = nmt->ms;
 #else
-	int ms = nmt->ms ? nmt->ms : lt;
+	int_least32_t ms = nmt->ms ? nmt->ms : lt;
 #endif
 	if (ms) {
 		struct timespec interval = { ms / 1000, (ms % 1000) * 1000000 };

@@ -44,7 +44,7 @@ namespace canopen {
 /// The internal implementation of the Client-SDO queue.
 struct Sdo::Impl_ {
   Impl_(can_net_t* net, co_dev_t* dev, uint8_t num);
-  Impl_(co_csdo_t* sdo, int timeout);
+  Impl_(co_csdo_t* sdo, int_least32_t timeout);
   Impl_(const Impl_&) = delete;
   Impl_& operator=(const Impl_&) = delete;
   ~Impl_();
@@ -460,7 +460,7 @@ Sdo::Impl_::Impl_(can_net_t* net, co_dev_t* dev, uint8_t num)
 #endif
 }
 
-Sdo::Impl_::Impl_(co_csdo_t* sdo_, int timeout)
+Sdo::Impl_::Impl_(co_csdo_t* sdo_, int_least32_t timeout)
 #if LELY_NO_CO_CSDO
 {
   (void)sdo_;

@@ -144,7 +144,7 @@ from_sdo_timeout(int timeout) {
 
 /// Converts a duration to an SDO timeout.
 template <class Rep, class Period>
-inline int
+inline int_least32_t
 to_sdo_timeout(const ::std::chrono::duration<Rep, Period>& d) {
   using ::std::chrono::duration;
   using ::std::chrono::duration_cast;
@@ -154,8 +154,8 @@ to_sdo_timeout(const ::std::chrono::duration<Rep, Period>& d) {
   auto timeout = duration_cast<milliseconds>(d).count();
   // A timeout less than 1 ms is rounded up to keep it finite.
   if (timeout < 1) return 1;
-  if (timeout > ::std::numeric_limits<int>::max())
-    return ::std::numeric_limits<int>::max();
+  if (timeout > ::std::numeric_limits<int_least32_t>::max())
+    return ::std::numeric_limits<int_least32_t>::max();
   return timeout;
 }
 

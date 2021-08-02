@@ -61,7 +61,7 @@ struct co_lss {
 	can_recv_t *recv;
 #if !LELY_NO_CO_MASTER
 	/// The timeout (in milliseconds).
-	int timeout;
+	int_least32_t timeout;
 	/// A pointer to the CAN timer.
 	can_timer_t *timer;
 #endif
@@ -832,7 +832,7 @@ co_lss_set_inhibit(co_lss_t *lss, co_unsigned16_t inhibit)
 	lss->inhibit = inhibit;
 }
 
-int
+int_least32_t
 co_lss_get_timeout(const co_lss_t *lss)
 {
 	assert(lss);
@@ -841,7 +841,7 @@ co_lss_get_timeout(const co_lss_t *lss)
 }
 
 void
-co_lss_set_timeout(co_lss_t *lss, int timeout)
+co_lss_set_timeout(co_lss_t *lss, int_least32_t timeout)
 {
 	assert(lss);
 

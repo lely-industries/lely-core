@@ -385,8 +385,8 @@ co_nmt_cfg_get_alloc(const co_nmt_cfg_t *cfg)
 }
 
 int
-co_nmt_cfg_cfg_req(co_nmt_cfg_t *cfg, int timeout, co_csdo_ind_t *dn_ind,
-		co_csdo_ind_t *up_ind, void *data)
+co_nmt_cfg_cfg_req(co_nmt_cfg_t *cfg, int_least32_t timeout,
+		co_csdo_ind_t *dn_ind, co_csdo_ind_t *up_ind, void *data)
 {
 	assert(cfg);
 
