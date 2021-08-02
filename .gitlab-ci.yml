@@ -452,12 +452,19 @@ valgrind:ecss:
       - unit-tests/*/unit-test-*.log
     expire_in: 1 week
 
+docker:asan:
+  extends: .docker2
+  needs: ["docker:build"]
+  variables:
+    NAME: asan
+    TAG: bullseye
+
 asan:
   stage: test
   tags:
     - docker
     - linux
-  image: $REGISTRY/build:bullseye
+  image: $REGISTRY/asan:bullseye
   needs: []
   variables:
     CFLAGS: "-O0 -g -fsanitize=address"
@@ -480,7 +487,7 @@ asan:redundancy:
   tags:
     - docker
     - linux
-  image: $REGISTRY/build:bullseye
+  image: $REGISTRY/asan:bullseye
   needs: []
   variables:
     CFLAGS: "-O0 -g -fsanitize=address"
@@ -503,7 +510,7 @@ asan:ecss:
   tags:
     - docker
     - linux
-  image: $REGISTRY/build:bullseye
+  image: $REGISTRY/asan:bullseye
   needs: []
   variables:
     CFLAGS: "-O0 -g -fsanitize=address"
