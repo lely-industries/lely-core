@@ -928,6 +928,113 @@ TEST(CoCsdoSetGet, CoCsdoSetTimeout_UpdateTimeout) {
 
 ///@}
 
+class CoCsdoInd {
+ public:
+  static void
+  Func(const co_csdo_t* const csdo, const co_unsigned16_t idx,
+       const co_unsigned8_t subidx, const size_t size, const size_t nbyte,
+       void* const data) {
+    num_called++;
+
+    csdo_ = csdo;
+    idx_ = idx;
+    subidx_ = subidx;
+    size_ = size;
+    nbyte_ = nbyte;
+    data_ = data;
+  }
+
+  static void
+  Check(const co_csdo_t* const csdo, const co_unsigned16_t idx,
+        const co_unsigned8_t subidx, const size_t size, const size_t nbyte,
+        const void* const data) {
+    POINTERS_EQUAL(csdo, csdo_);
+    CHECK_EQUAL(idx, idx_);
+    CHECK_EQUAL(subidx, subidx_);
+    CHECK_EQUAL(size, size_);
+    CHECK_EQUAL(nbyte, nbyte_);
+    POINTERS_EQUAL(data, data_);
+  }
+
+  static size_t
+  GetNumCalled() {
+    return num_called;
+  }
+
+  static void
+  Clear() {
+    num_called = 0;
+
+    csdo_ = nullptr;
+    idx_ = 0;
+    subidx_ = 0;
+    size_ = 0;
+    nbyte_ = 0;
+    data_ = nullptr;
+  }
+
+ private:
+  static const co_csdo_t* csdo_;
+  static co_unsigned16_t idx_;
+  static co_unsigned8_t subidx_;
+  static size_t size_;
+  static size_t nbyte_;
+  static void* data_;
+  static size_t num_called;
+};
+const co_csdo_t* CoCsdoInd::csdo_ = nullptr;
+co_unsigned16_t CoCsdoInd::idx_ = 0;
+co_unsigned8_t CoCsdoInd::subidx_ = 0;
+size_t CoCsdoInd::size_ = 0;
+size_t CoCsdoInd::nbyte_ = 0;
+void* CoCsdoInd::data_ = nullptr;
+size_t CoCsdoInd::num_called = 0;
+
+class SampleValueU16 {
+  using sub_type = co_unsigned16_t;
+  using segment_data_t = std::vector<uint_least8_t>;
+
+ public:
+  static segment_data_t
+  GetSegmentData() {
+    segment_data_t segment(CO_SDO_SEG_MAX_DATA_SIZE, 0);
+    segment[0] = val2dn[0];
+    segment[1] = val2dn[1];
+
+    return segment;
+  }
+
+  static std::array<uint_least8_t, sizeof(sub_type)>
+  StLe16InArray(const sub_type val) {
+    std::array<uint_least8_t, sizeof(sub_type)> array = {0};
+    stle_u16(array.data(), val);
+
+    return array;
+  }
+
+  static const void*
+  GetValPtr() {
+    return &VAL;
+  }
+
+  static void*
+  GetVal2DnPtr() {
+    return val2dn.data();
+  }
+
+  static sub_type
+  GetVal() {
+    return VAL;
+  }
+
+ private:
+  static const sub_type VAL;
+  static std::array<uint_least8_t, sizeof(sub_type)> val2dn;
+};
+const SampleValueU16::sub_type SampleValueU16::VAL = 0x1234u;
+std::array<uint_least8_t, sizeof(SampleValueU16::sub_type)>
+    SampleValueU16::val2dn = SampleValueU16::StLe16InArray(SampleValueU16::VAL);
+
 TEST_GROUP_BASE(CO_Csdo, CO_CsdoBase) {
   CoArrays arrays;
 
@@ -1004,6 +1111,7 @@ TEST_GROUP_BASE(CO_Csdo, CO_CsdoBase) {
 
     CoCsdoUpCon::Clear();
     CanSend::Clear();
+    CoCsdoInd::Clear();
   }
 
   TEST_TEARDOWN() {
@@ -2794,7 +2902,7 @@ TEST(CO_Csdo, CoCsdoDnDcfReq_TooShortBuffer) {
 ///       the confirmation function and a null user-specified data pointer
 ///
 /// \Then -1 is returned, ERRNUM_INVAL is set as an error number and no SDO
-///       message was sent
+///       message is sent
 ///       \Calls co_csdo_is_valid()
 ///       \Calls co_csdo_is_idle()
 ///       \Calls set_errnum()
@@ -2814,7 +2922,7 @@ TEST(CO_Csdo, CoCsdoUpReq_ServiceNotStarted) {
 ///       the confirmation function and a null user-specified data pointer
 ///
 /// \Then 0 is returned, the error number is not changed and the upload request
-///       was sent to the server
+///       is sent to the server
 ///       \Calls co_csdo_is_valid()
 ///       \Calls co_csdo_is_idle()
 ///       \Calls membuf_clear()
@@ -2843,7 +2951,7 @@ TEST(CO_Csdo, CoCsdoUpReq_Nominal) {
 ///       the confirmation function and a null user-specified data pointer
 ///
 /// \Then 0 is returned, the error number is not changed and the upload request
-///       was sent to the server; when the timeout expired, an SDO abort
+///       is sent to the server; when the timeout expired, an SDO abort
 ///       transfer message is sent
 ///       \Calls co_csdo_is_valid()
 ///       \Calls co_csdo_is_idle()
@@ -2888,7 +2996,7 @@ TEST(CO_Csdo, CoCsdoUpReq_TimeoutSet) {
 ///       function and a null user-specified data pointer
 ///
 /// \Then -1 is returned, ERRNUM_INVAL is set as the error number and no SDO
-///       message was sent
+///       message is sent
 ///       \Calls co_csdo_is_valid()
 ///       \Calls co_csdo_is_idle()
 ///       \Calls set_errnum()
@@ -2908,7 +3016,7 @@ TEST(CO_Csdo, CoCsdoBlkUpReq_ServiceNotStarted) {
 ///       function and a null user-specified data pointer
 ///
 /// \Then 0 is returned, the error number is not changed and a block upload
-///       request was sent to the server
+///       request is sent to the server
 ///       \Calls co_csdo_is_valid()
 ///       \Calls co_csdo_is_idle()
 ///       \Calls membuf_clear()
@@ -2938,7 +3046,7 @@ TEST(CO_Csdo, CoCsdoBlkUpReq_Nominal) {
 ///       function and a null user-specified data pointer
 ///
 /// \Then 0 is returned, the error number is not changed and a block upload
-///       request was sent to the server; when the timeout expired, an SDO abort
+///       request is sent to the server; when the timeout expired, an SDO abort
 ///       transfer message is sent
 ///       \Calls co_csdo_is_valid()
 ///       \Calls co_csdo_is_idle()
@@ -3961,7 +4069,7 @@ TEST(CO_Csdo, CoCsdoBlkDnIniOnRecv_NoCS) {
 /// \When an SDO block download sub-block response is received
 ///
 /// \Then an SDO message with CO_SDO_SEQ_LAST command specifier with correct
-///       sequence number and segment data was sent
+///       sequence number and segment data is sent
 ///       \Calls ldle_u16()
 ///       \Calls stle_u32()
 ///       \Calls stle_u16()
@@ -3969,7 +4077,7 @@ TEST(CO_Csdo, CoCsdoBlkDnIniOnRecv_NoCS) {
 TEST(CO_Csdo, CoCsdoBlkDnIniOnRecv_Nominal) {
   StartCSDO();
 
-  InitiateBlockDownloadRequest(IDX, SUBIDX, 0x1234u);
+  InitiateBlockDownloadRequest(IDX, SUBIDX, SampleValueU16::GetVal());
 
   uint_least8_t sequence_number = 0;
   const can_msg msg =
@@ -3980,7 +4088,7 @@ TEST(CO_Csdo, CoCsdoBlkDnIniOnRecv_Nominal) {
   ++sequence_number;
   CHECK_EQUAL(1u, CanSend::GetNumCalled());
   const auto expected_last = SdoInitExpectedData::Segment(
-      CO_SDO_SEQ_LAST | sequence_number, {0x34u, 0x12u});
+      CO_SDO_SEQ_LAST | sequence_number, SampleValueU16::GetSegmentData());
   CanSend::CheckMsg(DEFAULT_COBID_REQ, 0, CO_SDO_MSG_SIZE,
                     expected_last.data());
 }
@@ -4078,10 +4186,142 @@ TEST(CO_Csdo, CoCsdoSendBlkDnSubReq_IsNotLast) {
 /// @name CSDO block download sub-block
 ///@{
 
-/// TODO(N7S): test cases for co_csdo_blk_dn_sub_on_enter()
+/// \Given a pointer to the CSDO service (co_csdo_t) which has initiated block
+///        download transfer (the correct request was sent by the client)
+///
+/// \When an SDO block download sub-block response is received, but
+///       specified block size is incorrect
+///
+/// \Then an abort transfer SDO message with CO_SDO_AC_BLK_SIZE abort code
+///       is sent
+TEST(CO_Csdo, CoCsdoBlkDnSubOnEnter_IncorrectBlksize) {
+  StartCSDO();
+
+  InitiateBlockDownloadRequest(IDX, SUBIDX, SampleValueU16::GetVal());
+
+  const co_unsigned32_t blksize = 0;  // incorrect
+  const uint_least8_t sequence_number = 0;
+  const can_msg msg =
+      SdoCreateMsg::BlkDnSubRes(IDX, SUBIDX, DEFAULT_COBID_RES, sequence_number,
+                                CO_SDO_SC_INI_BLK, blksize);
+  CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
+
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
+  const auto expected_last = SdoInitExpectedData::U32(
+      CO_SDO_CS_ABORT, IDX, SUBIDX, CO_SDO_AC_BLK_SIZE);
+  CanSend::CheckMsg(DEFAULT_COBID_REQ, 0, CO_SDO_MSG_SIZE,
+                    expected_last.data());
+}
+
+/// \Given a pointer to the CSDO service (co_csdo_t) which has initiated block
+///        download transfer (the correct request was sent by the client),
+///        a custom download indication function is set
+///
+/// \When an SDO block download sub-block response is received
+///
+/// \Then an SDO segment with the expected data is sent, download indication
+///       function is called once with the pointer to the CSDO service,
+///       the index, the sub-index, a size of the value, 0 and a user-specified
+///       data pointer
+TEST(CO_Csdo, CoCsdoBlkDnSubOnEnter_WithDnInd) {
+  int32_t data = 0;
+  co_csdo_set_dn_ind(csdo, CoCsdoInd::Func, &data);
+  StartCSDO();
+
+  InitiateBlockDownloadRequest(IDX, SUBIDX, SampleValueU16::GetVal());
+
+  uint_least8_t sequence_number = 0;
+  const can_msg msg =
+      SdoCreateMsg::BlkDnSubRes(IDX, SUBIDX, DEFAULT_COBID_RES, sequence_number,
+                                CO_SDO_SC_INI_BLK, sizeof(sub_type));
+  CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
+
+  CHECK_EQUAL(1u, CoCsdoInd::GetNumCalled());
+  CoCsdoInd::Check(csdo, IDX, SUBIDX, sizeof(sub_type), 0, &data);
+
+  ++sequence_number;
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
+  const auto expected_last = SdoInitExpectedData::Segment(
+      CO_SDO_SEQ_LAST | sequence_number, SampleValueU16::GetSegmentData());
+  CanSend::CheckMsg(DEFAULT_COBID_REQ, 0, CO_SDO_MSG_SIZE,
+                    expected_last.data());
+}
+
+//// \Given a pointer to the CSDO service (co_csdo_t) with a timeout set; the
+///         service has initiated block download transfer (the correct request
+///         was sent by the client); all segments were sent
+///
+/// \When the Client-SDO timeout expires before receiving the response from the
+///       server
+///
+/// \Then an abort transfer SDO message with CO_SDO_AC_TIMEOUT abort code is
+///       sent
+TEST(CO_Csdo, CoCsdoBlkDnSubOnEnter_TimeoutSet) {
+  co_csdo_set_dn_ind(csdo, CoCsdoInd::Func, nullptr);
+  co_csdo_set_timeout(csdo, 999);
+  StartCSDO();
+
+  InitiateBlockDownloadRequest(IDX, SUBIDX, SampleValueU16::GetVal());
+
+  uint_least8_t sequence_number = 0;
+  const can_msg msg =
+      SdoCreateMsg::BlkDnSubRes(IDX, SUBIDX, DEFAULT_COBID_RES, sequence_number,
+                                CO_SDO_SC_INI_BLK, sizeof(sub_type));
+  CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
+
+  CHECK_EQUAL(1u, CoCsdoInd::GetNumCalled());
+
+  ++sequence_number;
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
+  const auto expected_last = SdoInitExpectedData::Segment(
+      CO_SDO_SEQ_LAST | sequence_number, SampleValueU16::GetSegmentData());
+  CanSend::CheckMsg(DEFAULT_COBID_REQ, 0, CO_SDO_MSG_SIZE,
+                    expected_last.data());
+  CanSend::Clear();
+
+  CHECK_EQUAL(1u, CoCsdoInd::GetNumCalled());
+  CoCsdoInd::Check(csdo, IDX, SUBIDX, sizeof(sub_type), 0, nullptr);
+
+  CoCsdoUpDnReq::SetOneSecOnNet(net);
+
+  CHECK_EQUAL(1, CanSend::GetNumCalled());
+  const auto expected_timeout =
+      SdoInitExpectedData::U32(CO_SDO_CS_ABORT, IDX, SUBIDX, CO_SDO_AC_TIMEOUT);
+  CanSend::CheckMsg(DEFAULT_COBID_REQ, 0, CO_SDO_MSG_SIZE,
+                    expected_timeout.data());
+}
+
 /// TODO(N7S): test cases for co_csdo_blk_dn_sub_on_abort()
+
 /// TODO(N7S): test cases for co_csdo_blk_dn_sub_on_time()
+
 /// TODO(N7S): test cases for co_csdo_blk_dn_sub_on_recv()
+
+/// \Given a pointer to the CSDO service (co_csdo_t) which has initiated block
+///        download transfer (the correct request was sent by the client)
+///
+/// \When an SDO block download sub-block response is received
+///
+/// \Then an SDO message with CO_SDO_SEQ_LAST command specifier with correct
+///       sequence number and segment data is sent
+TEST(CO_Csdo, CoCsdoBlkDnSubOnRecv_Nominal) {
+  StartCSDO();
+
+  InitiateBlockDownloadRequest(IDX, SUBIDX, SampleValueU16::GetVal());
+
+  uint_least8_t sequence_number = 0;
+  const can_msg msg =
+      SdoCreateMsg::BlkDnSubRes(IDX, SUBIDX, DEFAULT_COBID_RES, sequence_number,
+                                CO_SDO_SC_INI_BLK, sizeof(sub_type));
+  CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
+
+  ++sequence_number;
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
+  const auto expected_last = SdoInitExpectedData::Segment(
+      CO_SDO_SEQ_LAST | sequence_number, SampleValueU16::GetSegmentData());
+  CanSend::CheckMsg(DEFAULT_COBID_REQ, 0, CO_SDO_MSG_SIZE,
+                    expected_last.data());
+}
 
 ///@}
 
@@ -4104,73 +4344,6 @@ TEST(CO_Csdo, CoCsdoSendBlkDnSubReq_IsNotLast) {
 /// @name CSDO block upload sub-block
 ///@{
 
-class CoCsdoInd {
- public:
-  static void
-  Func(const co_csdo_t* const csdo, const co_unsigned16_t idx,
-       const co_unsigned8_t subidx, const size_t size, const size_t nbyte,
-       void* const data) {
-    num_called++;
-
-    csdo_ = csdo;
-    idx_ = idx;
-    subidx_ = subidx;
-    size_ = size;
-    nbyte_ = nbyte;
-    data_ = data;
-  }
-
-  static void
-  Check(const co_csdo_t* const csdo, const co_unsigned16_t idx,
-        const co_unsigned8_t subidx, const size_t size, const size_t nbyte,
-        void* const data) {
-    POINTERS_EQUAL(csdo, csdo_);
-    CHECK_EQUAL(idx, idx_);
-    CHECK_EQUAL(subidx, subidx_);
-    CHECK_EQUAL(size, size_);
-    CHECK_EQUAL(nbyte, nbyte_);
-    if ((data != nullptr) && (data_ != nullptr)) {
-      for (size_t i = 0; i < nbyte; i++) {
-        CHECK_EQUAL(static_cast<uint_least8_t*>(data)[i],
-                    static_cast<uint_least8_t*>(data_)[i]);
-      }
-    }
-  }
-
-  static size_t
-  GetNumCalled() {
-    return num_called;
-  }
-
-  static void
-  Clear() {
-    num_called = 0;
-
-    csdo_ = nullptr;
-    idx_ = 0;
-    subidx_ = 0;
-    size_ = 0;
-    nbyte_ = 0;
-    data_ = nullptr;
-  }
-
- private:
-  static const co_csdo_t* csdo_;
-  static co_unsigned16_t idx_;
-  static co_unsigned8_t subidx_;
-  static size_t size_;
-  static size_t nbyte_;
-  static void* data_;
-  static size_t num_called;
-};
-const co_csdo_t* CoCsdoInd::csdo_ = nullptr;
-co_unsigned16_t CoCsdoInd::idx_ = 0;
-co_unsigned8_t CoCsdoInd::subidx_ = 0;
-size_t CoCsdoInd::size_ = 0;
-size_t CoCsdoInd::nbyte_ = 0;
-void* CoCsdoInd::data_ = nullptr;
-size_t CoCsdoInd::num_called = 0;
-
 /// \Given a pointer to the CSDO service (co_csdo_t) which has initiated block
 ///        upload transfer (the correct request was sent by the client)
 ///
@@ -4179,17 +4352,17 @@ size_t CoCsdoInd::num_called = 0;
 /// \Then an SDO message with a client command specifier block upload request
 ///       and a subcommand block upload response, last received sequence number
 ///       and the block size is sent; custom CSDO block upload indication
-///       function is called with a pointer to the buffer containing
-///       the received bytes
+///       function is called with a user-specified data pointer
 TEST(CO_Csdo, CoCsdoBlkUpSubOnRecv_Nominal) {
   const co_unsigned8_t subidx_u64 = SUBIDX + 1u;
   obj2020->InsertAndSetSub(subidx_u64, SUB_TYPE64, co_unsigned64_t{0});
-  co_csdo_set_up_ind(csdo, CoCsdoInd::Func, nullptr);
+  char data = 'a';
+  co_csdo_set_up_ind(csdo, CoCsdoInd::Func, &data);
   StartCSDO();
 
   InitiateBlockUploadRequest(IDX, subidx_u64, sizeof(sub_type64));
   CHECK_EQUAL(1, CoCsdoInd::GetNumCalled());
-  CoCsdoInd::Check(csdo, IDX, subidx_u64, sizeof(sub_type64), 0, nullptr);
+  CoCsdoInd::Check(csdo, IDX, subidx_u64, sizeof(sub_type64), 0, &data);
   CoCsdoInd::Clear();
 
   co_unsigned8_t seqno = 1u;
@@ -4217,7 +4390,7 @@ TEST(CO_Csdo, CoCsdoBlkUpSubOnRecv_Nominal) {
 
   CHECK_EQUAL(1, CoCsdoInd::GetNumCalled());
   CoCsdoInd::Check(csdo, IDX, subidx_u64, sizeof(sub_type64),
-                   sizeof(sub_type64), SampleValue::GetVal2DnPtr());
+                   sizeof(sub_type64), &data);
   CoCsdoInd::Clear();
 }
 
