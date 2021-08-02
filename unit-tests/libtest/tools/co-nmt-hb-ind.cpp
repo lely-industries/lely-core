@@ -25,6 +25,7 @@
 #endif
 
 #include <CppUTest/TestHarness.h>
+#include <CppUTestExt/MockSupport.h>
 
 #include <lely/co/nmt.h>
 #include <lely/co/type.h>
@@ -37,6 +38,7 @@ co_unsigned8_t CoNmtHbInd::id_ = 255u;
 int CoNmtHbInd::state_ = -1;
 int CoNmtHbInd::reason_ = -1;
 void* CoNmtHbInd::data_ = nullptr;
+bool CoNmtHbInd::skipCallToDefaultInd = false;
 
 void
 CoNmtHbInd::Func(co_nmt_t* const nmt, const co_unsigned8_t id, const int state,
@@ -49,7 +51,7 @@ CoNmtHbInd::Func(co_nmt_t* const nmt, const co_unsigned8_t id, const int state,
   reason_ = reason;
   data_ = data;
 
-  co_nmt_on_hb(nmt, id, state, reason);
+  if (!skipCallToDefaultInd) co_nmt_on_hb(nmt, id, state, reason);
 }
 
 void
@@ -61,6 +63,8 @@ CoNmtHbInd::Clear() {
   state_ = -1;
   reason_ = -1;
   data_ = nullptr;
+
+  skipCallToDefaultInd = false;
 }
 
 void
@@ -71,4 +75,43 @@ CoNmtHbInd::Check(const co_nmt_t* const nmt, const co_unsigned8_t id,
   CHECK_EQUAL(state, state_);
   CHECK_EQUAL(reason, reason_);
   POINTERS_EQUAL(data, data_);
+}
+
+void
+CoNmtHbInd::SkipCallToDefaultInd() {
+  skipCallToDefaultInd = true;
+}
+
+co_nmt_hb_ind_t*
+CoNmtHbIndMock::GetFunc() {
+  mock("ConNmtHbIndMock").strictOrder();
+  return [](co_nmt_t* const nmt, const co_unsigned8_t id, const int state,
+            const int reason, void* const data) {
+    mock("CoNmtHbIndMock")
+        .actualCall("co_nmt_hb_ind_t")
+        .withParameter("nmt", nmt)
+        .withParameter("id", id)
+        .withParameter("state", state)
+        .withParameter("reason", reason)
+        .withParameter("data", data);
+
+    co_nmt_on_hb(nmt, id, state, reason);
+  };
+}
+
+void*
+CoNmtHbIndMock::GetData() {
+  return &indData;
+}
+
+void
+CoNmtHbIndMock::Expect(co_nmt_t* const nmt, const co_unsigned8_t id,
+                       const int state, const int reason) {
+  mock("CoNmtHbIndMock")
+      .expectOneCall("co_nmt_hb_ind_t")
+      .withParameter("nmt", nmt)
+      .withParameter("id", id)
+      .withParameter("state", state)
+      .withParameter("reason", reason)
+      .withParameter("data", &indData);
 }

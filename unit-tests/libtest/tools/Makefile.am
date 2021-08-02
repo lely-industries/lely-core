@@ -1,4 +1,3 @@
-
 LELY_CAN_LIBS = $(top_builddir)/lib/can/liblely-can.la
 LELY_CO_LIBS = $(top_builddir)/lib/co/liblely-co.la
 LELY_UTIL_LIBS = $(top_builddir)/lib/util/liblely-util.la
@@ -13,6 +12,7 @@ liblely_unit_test_src += can-send.cpp
 liblely_unit_test_src += co-csdo-dn-con.cpp
 liblely_unit_test_src += co-csdo-up-con.cpp
 liblely_unit_test_src += co-nmt-hb-ind.cpp
+liblely_unit_test_src += co-nmt-st-ind.cpp
 liblely_unit_test_src += co-nmt-rdn-ind.cpp
 liblely_unit_test_src += co-sub-dn-ind.cpp
 liblely_unit_test_src += co-sub-up-ind.cpp

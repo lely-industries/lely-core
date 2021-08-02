@@ -147,9 +147,6 @@ co_nmt_hb_set_1016(co_nmt_hb_t *hb, co_unsigned8_t id, co_unsigned16_t ms)
 
 	if (hb->id && hb->id <= CO_NUM_NODES && hb->ms) {
 		can_recv_start(hb->recv, hb->net, CO_NMT_EC_CANID(hb->id), 0);
-	} else {
-		can_recv_stop(hb->recv);
-		can_timer_stop(hb->timer);
 	}
 }
 
