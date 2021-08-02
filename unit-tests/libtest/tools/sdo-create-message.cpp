@@ -128,10 +128,10 @@ SdoCreateMsg::DnIniReq(const co_unsigned16_t idx, const co_unsigned8_t subidx,
 }
 
 can_msg
-SdoCreateMsg::DnSeg(const co_unsigned16_t idx, const co_unsigned8_t subidx,
-                    const uint_least32_t recipient_id,
-                    const uint_least8_t buf[], const uint8_t size,
-                    const uint_least8_t cs_flags) {
+SdoCreateMsg::DnSegReq(const co_unsigned16_t idx, const co_unsigned8_t subidx,
+                       const uint_least32_t recipient_id,
+                       const uint_least8_t buf[], const uint8_t size,
+                       const uint_least8_t cs_flags) {
   assert(size <= 7u);
 
   can_msg msg = SdoCreateMsg::Default(idx, subidx, recipient_id);

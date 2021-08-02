@@ -2157,7 +2157,7 @@ TEST(CoSsdoDnSegOnRecv, NoCS) {
 
   // receive empty segment
   can_msg msg =
-      SdoCreateMsg::DnSeg(IDX, SUBIDX, DEFAULT_COBID_REQ, nullptr, 0u);
+      SdoCreateMsg::DnSegReq(IDX, SUBIDX, DEFAULT_COBID_REQ, nullptr, 0u);
   msg.len = 0;
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
@@ -2208,7 +2208,7 @@ TEST(CoSsdoDnSegOnRecv, AbortAfterFirstSegment) {
   const uint_least8_t val2dn[sizeof(sub_type64)] = {0x12u, 0x34u, 0x56u, 0x78u,
                                                     0x90u, 0xabu, 0xcdu, 0xefu};
 
-  const can_msg first_segment = SdoCreateMsg::DnSeg(
+  const can_msg first_segment = SdoCreateMsg::DnSegReq(
       IDX, SUBIDX, DEFAULT_COBID_REQ, val2dn, bytes_per_segment);
   CHECK_EQUAL(1, can_net_recv(net, &first_segment, 0));
   CanSend::Clear();
@@ -2246,7 +2246,7 @@ TEST(CoSsdoDnSegOnRecv, AbortAfterFirstSegment_MsgTooShort) {
   const uint_least8_t val2dn[sizeof(sub_type64)] = {0x12u, 0x34u, 0x56u, 0x78u,
                                                     0x90u, 0xabu, 0xcdu, 0xefu};
 
-  const can_msg first_segment = SdoCreateMsg::DnSeg(
+  const can_msg first_segment = SdoCreateMsg::DnSegReq(
       IDX, SUBIDX, DEFAULT_COBID_REQ, val2dn, bytes_per_segment);
   CHECK_EQUAL(1, can_net_recv(net, &first_segment, 0));
   CanSend::Clear();
@@ -2279,7 +2279,7 @@ TEST(CoSsdoDnSegOnRecv, InvalidCS) {
 
   const co_unsigned8_t val2dn[4u] = {0};
   const can_msg msg =
-      SdoCreateMsg::DnSeg(IDX, SUBIDX, DEFAULT_COBID_REQ, val2dn, 4u, 0xffu);
+      SdoCreateMsg::DnSegReq(IDX, SUBIDX, DEFAULT_COBID_REQ, val2dn, 4u, 0xffu);
   const auto ret_abort = can_net_recv(net, &msg, 0);
 
   CHECK_EQUAL(1, ret_abort);
@@ -2307,7 +2307,7 @@ TEST(CoSsdoDnSegOnRecv, NoToggle) {
 
   // send first segment: 4 bytes
   const can_msg msg =
-      SdoCreateMsg::DnSeg(IDX, SUBIDX, DEFAULT_COBID_REQ, val2dn, 4u);
+      SdoCreateMsg::DnSegReq(IDX, SUBIDX, DEFAULT_COBID_REQ, val2dn, 4u);
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
   CHECK_EQUAL(1u, CanSend::GetNumCalled());
@@ -2317,8 +2317,8 @@ TEST(CoSsdoDnSegOnRecv, NoToggle) {
   ResetCanSend();
 
   // send last segment: next 4 bytes
-  const can_msg msg2 = SdoCreateMsg::DnSeg(IDX, SUBIDX, DEFAULT_COBID_REQ,
-                                           val2dn + 4u, 4u, CO_SDO_SEG_LAST);
+  const can_msg msg2 = SdoCreateMsg::DnSegReq(IDX, SUBIDX, DEFAULT_COBID_REQ,
+                                              val2dn + 4u, 4u, CO_SDO_SEG_LAST);
   CHECK_EQUAL(1, can_net_recv(net, &msg2, 0));
 
   CHECK_EQUAL(0, CanSend::GetNumCalled());
@@ -2340,7 +2340,8 @@ TEST(CoSsdoDnSegOnRecv, MsgLenLessThanSegmentSize) {
   DownloadInitiateReq(sizeof(sub_type64));
 
   const co_unsigned8_t val2dn[8] = {0};
-  can_msg msg = SdoCreateMsg::DnSeg(IDX, SUBIDX, DEFAULT_COBID_REQ, val2dn, 6u);
+  can_msg msg =
+      SdoCreateMsg::DnSegReq(IDX, SUBIDX, DEFAULT_COBID_REQ, val2dn, 6u);
   msg.len = 5u;
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
@@ -2367,7 +2368,7 @@ TEST(CoSsdoDnSegOnRecv, SegmentTooBig) {
 
   const co_unsigned8_t val2dn[4] = {0};
   const can_msg msg =
-      SdoCreateMsg::DnSeg(IDX, SUBIDX, DEFAULT_COBID_REQ, val2dn, 4u);
+      SdoCreateMsg::DnSegReq(IDX, SUBIDX, DEFAULT_COBID_REQ, val2dn, 4u);
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
   CHECK_EQUAL(1u, CanSend::GetNumCalled());
@@ -2392,7 +2393,7 @@ TEST(CoSsdoDnSegOnRecv, SegmentTooShort) {
   DownloadInitiateReq(sizeof(sub_type64));
 
   const co_unsigned8_t val2dn[sizeof(sub_type64) - 1u] = {0};
-  const can_msg msg = SdoCreateMsg::DnSeg(
+  const can_msg msg = SdoCreateMsg::DnSegReq(
       IDX, SUBIDX, DEFAULT_COBID_REQ, val2dn,
       static_cast<uint8_t>(sizeof(sub_type64) - 1u), CO_SDO_SEG_LAST);
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
@@ -2423,7 +2424,7 @@ TEST(CoSsdoDnSegOnRecv, FailDnInd) {
 
   const co_unsigned8_t val2dn[4] = {0};
   const can_msg msg =
-      SdoCreateMsg::DnSeg(IDX, SUBIDX, DEFAULT_COBID_REQ, val2dn, 4u);
+      SdoCreateMsg::DnSegReq(IDX, SUBIDX, DEFAULT_COBID_REQ, val2dn, 4u);
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
   CHECK_EQUAL(1u, CanSend::GetNumCalled());
@@ -2452,7 +2453,7 @@ TEST(CoSsdoDnSegOnRecv, TimeoutSet) {
 
   // send first segment: 4 bytes
   const can_msg msg =
-      SdoCreateMsg::DnSeg(IDX, SUBIDX, DEFAULT_COBID_REQ, val2dn, 4u);
+      SdoCreateMsg::DnSegReq(IDX, SUBIDX, DEFAULT_COBID_REQ, val2dn, 4u);
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
   CHECK_EQUAL(1u, CanSend::GetNumCalled());
@@ -2491,7 +2492,7 @@ TEST(CoSsdoDnSegOnRecv, Nominal) {
 
   // send first segment: 4 bytes
   const can_msg msg_first =
-      SdoCreateMsg::DnSeg(IDX, SUBIDX, DEFAULT_COBID_REQ, val2dn, 4u);
+      SdoCreateMsg::DnSegReq(IDX, SUBIDX, DEFAULT_COBID_REQ, val2dn, 4u);
   CHECK_EQUAL(1, can_net_recv(net, &msg_first, 0));
 
   CHECK_EQUAL(1u, CanSend::GetNumCalled());
@@ -2502,8 +2503,8 @@ TEST(CoSsdoDnSegOnRecv, Nominal) {
 
   // send last segment: next 4 bytes
   const can_msg msg_last =
-      SdoCreateMsg::DnSeg(IDX, SUBIDX, DEFAULT_COBID_REQ, val2dn + 4u, 4u,
-                          CO_SDO_SEG_LAST | CO_SDO_SEG_TOGGLE);
+      SdoCreateMsg::DnSegReq(IDX, SUBIDX, DEFAULT_COBID_REQ, val2dn + 4u, 4u,
+                             CO_SDO_SEG_LAST | CO_SDO_SEG_TOGGLE);
   CHECK_EQUAL(1, can_net_recv(net, &msg_last, 0));
 
   CHECK_EQUAL(1u, CanSend::GetNumCalled());

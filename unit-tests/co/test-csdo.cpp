@@ -3987,10 +3987,91 @@ TEST(CO_Csdo, CoCsdoBlkDnIniOnRecv_Nominal) {
 
 ///@}
 
+class SampleValue {
+  using sub_type64 = co_unsigned64_t;
+  using segment_data_t = std::vector<uint_least8_t>;
+
+ public:
+  static segment_data_t
+  GetFirstSegment() {
+    segment_data_t segment(CO_SDO_SEG_MAX_DATA_SIZE, 0);
+    std::copy(val2dn.begin(),
+              std::next(val2dn.begin(), CO_SDO_SEG_MAX_DATA_SIZE),
+              segment.begin());
+
+    return segment;
+  }
+
+  static segment_data_t
+  GetLastSegment() {
+    return segment_data_t(1u, val2dn.back());
+  }
+
+  static std::array<uint_least8_t, sizeof(sub_type64)>
+  StLe64InArray(const sub_type64 val) {
+    std::array<uint_least8_t, sizeof(sub_type64)> array = {0};
+    stle_u64(array.data(), val);
+
+    return array;
+  }
+
+  static const void*
+  GetValPtr() {
+    return &VAL;
+  }
+
+  static void*
+  GetVal2DnPtr() {
+    return val2dn.data();
+  }
+
+ private:
+  static const sub_type64 VAL;
+  static std::array<uint_least8_t, sizeof(sub_type64)> val2dn;
+};
+const SampleValue::sub_type64 SampleValue::VAL = 0x1234567890abcdefu;
+std::array<uint_least8_t, sizeof(SampleValue::sub_type64)> SampleValue::val2dn =
+    SampleValue::StLe64InArray(SampleValue::VAL);
+
 /// @name CSDO send 'block download sub-block' request
 ///@{
 
-/// TODO(N7S): test cases for co_csdo_send_blk_dn_sub_req()
+/// \Given a pointer to the CSDO service (co_csdo_t) which has initiated block
+///        download transfer (the correct request was sent by the client); the
+///        transfer contains at least two segments
+///
+/// \When an SDO block download sub-block response is received
+///
+/// \Then two SDO download segment requests are sent; the last one has
+///       CO_SDO_SEQ_LAST flag set in command specifier and the former does not
+TEST(CO_Csdo, CoCsdoSendBlkDnSubReq_IsNotLast) {
+  const co_unsigned8_t subidx_u64 = SUBIDX + 1u;
+  StartCSDO();
+
+  CHECK_EQUAL(0, co_csdo_blk_dn_val_req(csdo, IDX, subidx_u64, SUB_TYPE64,
+                                        SampleValue::GetValPtr(),
+                                        CoCsdoDnCon::Func, nullptr));
+
+  CanSend::Clear();
+
+  const CanSend::MsgSeq expected_msg_seq = {
+      SdoCreateMsg::DnSegReq(
+          IDX, subidx_u64, DEFAULT_COBID_REQ,
+          SampleValue::GetFirstSegment().data(),
+          static_cast<uint_least8_t>(SampleValue::GetFirstSegment().size())),
+      SdoCreateMsg::DnSegReq(
+          IDX, subidx_u64, DEFAULT_COBID_REQ,
+          SampleValue::GetLastSegment().data(),
+          static_cast<uint_least8_t>(SampleValue::GetLastSegment().size()),
+          CO_SDO_SEQ_LAST),
+  };
+
+  const uint_least8_t sequence_number = 0;
+  const can_msg msg = SdoCreateMsg::BlkDnSubRes(
+      IDX, subidx_u64, DEFAULT_COBID_RES, sequence_number, CO_SDO_SC_INI_BLK,
+      sizeof(sub_type));
+  CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
+}
 
 ///@}
 
@@ -4089,46 +4170,6 @@ size_t CoCsdoInd::size_ = 0;
 size_t CoCsdoInd::nbyte_ = 0;
 void* CoCsdoInd::data_ = nullptr;
 size_t CoCsdoInd::num_called = 0;
-
-class SampleValue {
-  using sub_type64 = co_unsigned64_t;
-  using segment_data_t = std::vector<uint_least8_t>;
-
- public:
-  static segment_data_t
-  GetFirstSegment() {
-    segment_data_t segment(CO_SDO_SEG_MAX_DATA_SIZE, 0);
-    std::copy(val2dn.begin(),
-              std::next(val2dn.begin(), CO_SDO_SEG_MAX_DATA_SIZE),
-              segment.begin());
-
-    return segment;
-  }
-
-  static segment_data_t
-  GetLastSegment() {
-    return segment_data_t(1u, val2dn.back());
-  }
-
-  static std::array<uint_least8_t, sizeof(sub_type64)>
-  StLe64InArray(const sub_type64 val) {
-    std::array<uint_least8_t, sizeof(sub_type64)> array = {0};
-    stle_u64(array.data(), val);
-
-    return array;
-  }
-
-  static void*
-  GetVal2DnPtr() {
-    return val2dn.data();
-  }
-
- private:
-  static const sub_type64 VAL = 0x1234567890abcdefu;
-  static std::array<uint_least8_t, sizeof(sub_type64)> val2dn;
-};
-std::array<uint_least8_t, sizeof(SampleValue::sub_type64)> SampleValue::val2dn =
-    SampleValue::StLe64InArray(SampleValue::VAL);
 
 /// \Given a pointer to the CSDO service (co_csdo_t) which has initiated block
 ///        upload transfer (the correct request was sent by the client)
