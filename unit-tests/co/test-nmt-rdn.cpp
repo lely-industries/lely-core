@@ -717,7 +717,7 @@ TEST(CO_NmtRdn, CoNmtEcssRdnInd_Nominal) {
 TEST(CO_NmtRdn, CoNmtRdnInd_NoRdnInd) {
   CreateNmt();
 
-  co_nmt_ecss_rdn_ind(nmt, 0, 0);
+  co_nmt_ecss_rdn_ind(nmt, 0, CO_NMT_ECSS_RDN_BUS_SWITCH);
 
   CHECK_EQUAL(0, CoNmtRdnInd::GetNumCalled());
 }
@@ -1340,7 +1340,8 @@ TEST(CO_NmtRdn, CoNmtRdnHbTimeout_NoMaster) {
   co_unsigned8_t bus_id = BUS_A_ID;
   CoNmtRdnInd::SetCheckFunc(
       [&bus_id, this](const co_nmt_t* const, const co_unsigned8_t bus_id_,
-                      const int reason_, const void* const) {
+                      const co_nmt_ecss_rdn_reason_t reason_,
+                      const void* const) {
         if (reason_ == CO_NMT_ECSS_RDN_BUS_SWITCH)
           bus_id = bus_id == BUS_A_ID ? BUS_B_ID : BUS_A_ID;
 

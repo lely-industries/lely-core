@@ -91,14 +91,12 @@ enum {
 	CO_NMT_EC_STATE
 };
 
-#if !LELY_NO_CO_ECSS_REDUNDANCY
-enum {
+typedef enum co_nmt_ecss_rdn_reason {
 	/// An NMT ECSS redundancy manager bus switch.
 	CO_NMT_ECSS_RDN_BUS_SWITCH,
 	/// An NMT ECSS redundancy manager no-master operation.
 	CO_NMT_ECSS_RDN_NO_MASTER,
-};
-#endif // !LELY_NO_CO_ECSS_REDUNDANCY
+} co_nmt_ecss_rdn_reason_t;
 
 #ifdef __cplusplus
 extern "C" {
@@ -177,8 +175,8 @@ typedef void co_nmt_hb_ind_t(co_nmt_t *nmt, co_unsigned8_t id, int state,
  *               mode (#CO_NMT_ECSS_RDN_NO_MASTER).
  * @param data a pointer to user-specified data.
  */
-typedef void co_nmt_ecss_rdn_ind_t(
-		co_nmt_t *nmt, uint_least8_t bus_id, int reason, void *data);
+typedef void co_nmt_ecss_rdn_ind_t(co_nmt_t *nmt, uint_least8_t bus_id,
+		co_nmt_ecss_rdn_reason_t reason, void *data);
 
 /**
  * The type of a CANopen NMT state change indication function, invoked when a

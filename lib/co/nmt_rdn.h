@@ -64,7 +64,8 @@ extern "C" {
  *
  * @param nmt a pointer to an NMT master/slave service.
  */
-void co_nmt_ecss_rdn_ind(co_nmt_t *nmt, uint_least8_t bus_id, int reason);
+void co_nmt_ecss_rdn_ind(co_nmt_t *nmt, uint_least8_t bus_id,
+		co_nmt_ecss_rdn_reason_t reason);
 
 /**
  * Checks if the structure of the Redundancy object conforms to ECSS.
