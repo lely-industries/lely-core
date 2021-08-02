@@ -4,7 +4,7 @@
  *
  * @see lely/ev/fiber_exec.h
  *
- * @copyright 2019-2020 Lely Industries N.V.
+ * @copyright 2019-2021 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -250,12 +250,16 @@ void *
 ev_fiber_exec_alloc(void)
 {
 	struct ev_fiber_exec *exec = malloc(sizeof(*exec));
+	if (!exec) {
 #if !LELY_NO_ERRNO
-	if (!exec)
 		set_errc(errno2c(errno));
 #endif
+		return NULL;
+	}
+	// Suppress a GCC maybe-uninitialized warning.
+	exec->exec_vptr = NULL;
 	// cppcheck-suppress memleak symbolName=exec
-	return exec ? &exec->exec_vptr : NULL;
+	return &exec->exec_vptr;
 }
 
 void

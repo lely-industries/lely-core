@@ -4,7 +4,7 @@
  *
  * @see lely/io2/linux/can.h
  *
- * @copyright 2015-2020 Lely Industries N.V.
+ * @copyright 2015-2021 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -227,8 +227,12 @@ void *
 io_can_chan_alloc(void)
 {
 	struct io_can_chan_impl *impl = malloc(sizeof(*impl));
+	if (!impl)
+		return NULL;
+	// Suppress a GCC maybe-uninitialized warning.
+	impl->chan_vptr = NULL;
 	// cppcheck-suppress memleak symbolName=impl
-	return impl ? &impl->chan_vptr : NULL;
+	return &impl->chan_vptr;
 }
 
 void

@@ -172,7 +172,7 @@ TEST_GROUP(CO_Val) {
 
 #define LELY_CO_DEFINE_TYPE(a, b, c, d) \
   TEST(CO_Val, CoValInit_##a) { \
-    co_##b##_t val; \
+    co_##b##_t val = co_##b##_t(); \
 \
     const auto ret = co_val_init(CO_DEFTYPE_##a, &val); \
 \
@@ -203,7 +203,7 @@ TEST_GROUP(CO_Val) {
 
 #define LELY_CO_DEFINE_TYPE(a, b, c, d) \
   TEST(CO_Val, CoValInit_##a) { \
-    co_##b##_t val; \
+    co_##b##_t val = co_##b##_t(); \
 \
     const auto ret = co_val_init(CO_DEFTYPE_##a, &val); \
 \
@@ -215,7 +215,7 @@ TEST_GROUP(CO_Val) {
 #undef LELY_CO_DEFINE_TYPE
 
 TEST(CO_Val, CoValInit_Invalid) {
-  char val;
+  char val = 0;
 
   const auto ret = co_val_init(INVALID_TYPE, &val);
 
@@ -227,7 +227,7 @@ TEST(CO_Val, CoValInit_Invalid) {
 
 #define LELY_CO_DEFINE_TYPE(a, b, c, d) \
   TEST(CO_Val, CoValInitMin_##a) { \
-    co_##b##_t val; \
+    co_##b##_t val = co_##b##_t(); \
 \
     const auto ret = co_val_init_min(CO_DEFTYPE_##a, &val); \
 \
@@ -236,7 +236,7 @@ TEST(CO_Val, CoValInit_Invalid) {
   } \
 \
   TEST(CO_Val, CoValInitMax_##a) { \
-    co_##b##_t val; \
+    co_##b##_t val = co_##b##_t(); \
 \
     const auto ret = co_val_init_max(CO_DEFTYPE_##a, &val); \
 \
@@ -248,7 +248,7 @@ TEST(CO_Val, CoValInit_Invalid) {
 
 #define LELY_CO_DEFINE_TYPE(a, b, c, d) \
   TEST(CO_Val, CoValInitMin_##a) { \
-    co_##b##_t val; \
+    co_##b##_t val = co_##b##_t(); \
 \
     const auto ret = co_val_init_min(CO_DEFTYPE_##a, &val); \
 \
@@ -258,7 +258,7 @@ TEST(CO_Val, CoValInit_Invalid) {
   } \
 \
   TEST(CO_Val, CoValInitMax_##a) { \
-    co_time_of_day_t val; \
+    co_time_of_day_t val = co_time_of_day_t(); \
 \
     const auto ret = co_val_init_max(CO_DEFTYPE_##a, &val); \
 \
@@ -342,7 +342,7 @@ TEST(CO_Val, CoValInitMax_DOMAIN) {
 }
 
 TEST(CO_Val, CoValInitMin_Invalid) {
-  char val;
+  char val = 0;
   CHECK_EQUAL(-1, co_val_init_min(INVALID_TYPE, &val));
 #if !LELY_NO_ERRNO
   CHECK_EQUAL(ERRNUM_INVAL, get_errnum());
@@ -350,7 +350,7 @@ TEST(CO_Val, CoValInitMin_Invalid) {
 }
 
 TEST(CO_Val, CoValInitMax_Invalid) {
-  char val;
+  char val = 0;
 
   const auto ret = co_val_init_max(INVALID_TYPE, &val);
 
@@ -604,7 +604,7 @@ TEST(CO_Val, CoValInitDom_TooBigValue) {
 #endif
 
 TEST(CO_Val, CoValFini_BasicType) {
-  co_unsigned16_t val;
+  co_unsigned16_t val = 0;
   CHECK_EQUAL(0, co_val_init(CO_DEFTYPE_INTEGER16, &val));
 
   co_val_fini(CO_DEFTYPE_INTEGER16, &val);
@@ -633,7 +633,7 @@ TEST(CO_Val, CoValAddressof_ArrayType) {
 }
 
 TEST(CO_Val, CoValAddressof_BasicType) {
-  co_integer16_t val;
+  co_integer16_t val = 0;
   co_val_init(CO_DEFTYPE_INTEGER16, &val);
 
   const auto* ptr = co_val_addressof(CO_DEFTYPE_INTEGER16, &val);
@@ -659,7 +659,7 @@ TEST(CO_Val, CoValSizeof_ArrayType) {
 }
 
 TEST(CO_Val, CoValSizeof_BasicType) {
-  co_integer16_t val;
+  co_integer16_t val = 0;
   co_val_init(CO_DEFTYPE_INTEGER16, &val);
 
   const auto ret = co_val_sizeof(CO_DEFTYPE_INTEGER16, &val);
@@ -834,7 +834,7 @@ TEST(CO_Val, CoValMake_DOMAIN_TooBigValue) {
 #endif
 
 TEST(CO_Val, CoValMake_BasicType) {
-  co_integer16_t val;
+  co_integer16_t val = 0;
   const char ptr[] = {0x42, 0x00};
 
   const auto ret = co_val_make(CO_DEFTYPE_INTEGER16, &val, ptr, sizeof(val));
@@ -844,7 +844,7 @@ TEST(CO_Val, CoValMake_BasicType) {
 }
 
 TEST(CO_Val, CoValMake_BasicType_Null) {
-  co_integer16_t val;
+  co_integer16_t val = 0;
 
   const auto ret =
       co_val_make(CO_DEFTYPE_INTEGER16, &val, nullptr, sizeof(val));
@@ -853,7 +853,7 @@ TEST(CO_Val, CoValMake_BasicType_Null) {
 }
 
 TEST(CO_Val, CoValMake_BasicType_WrongSize) {
-  co_integer16_t val;
+  co_integer16_t val = 0;
   const char ptr[sizeof(val) + 1] = {0};
 
   const auto ret =
@@ -1054,21 +1054,21 @@ TEST(CO_Val, CoValMove_ArrayType) {
 }
 
 TEST(CO_Val, CoValCmp_PointersEqual) {
-  co_integer16_t val;
+  co_integer16_t val = 0;
   CHECK_EQUAL(0, co_val_init(CO_DEFTYPE_INTEGER16, &val));
 
   CHECK_EQUAL(0, co_val_cmp(CO_DEFTYPE_INTEGER16, &val, &val));
 }
 
 TEST(CO_Val, CoValCmp_FirstValNull) {
-  co_integer16_t val;
+  co_integer16_t val = 0;
   CHECK_EQUAL(0, co_val_init(CO_DEFTYPE_INTEGER16, &val));
 
   CHECK_EQUAL(-1, co_val_cmp(CO_DEFTYPE_INTEGER16, nullptr, &val));
 }
 
 TEST(CO_Val, CoValCmp_SecondValNull) {
-  co_integer16_t val;
+  co_integer16_t val = 0;
   CHECK_EQUAL(0, co_val_init(CO_DEFTYPE_INTEGER16, &val));
 
   CHECK_EQUAL(1, co_val_cmp(CO_DEFTYPE_INTEGER16, &val, nullptr));
@@ -1113,8 +1113,8 @@ TEST(CO_Val, CoValCmp_ArrayType_SecondValNull) {
 
 #define LELY_CO_DEFINE_TYPE(a, b, c, d) \
   TEST(CO_Val, CoValCmp_##a) { \
-    co_##b##_t val1; \
-    co_##b##_t val2; \
+    co_##b##_t val1 = co_##b##_t(); \
+    co_##b##_t val2 = co_##b##_t(); \
     CHECK_EQUAL(0, co_val_init_min(CO_DEFTYPE_##a, &val1)); \
     CHECK_EQUAL(0, co_val_init_max(CO_DEFTYPE_##a, &val2)); \
 \
@@ -1127,8 +1127,8 @@ TEST(CO_Val, CoValCmp_ArrayType_SecondValNull) {
 
 #define LELY_CO_DEFINE_TYPE(a, b, c, d) \
   TEST(CO_Val, CoValCmp_##a) { \
-    co_##b##_t val1; \
-    co_##b##_t val2; \
+    co_##b##_t val1 = co_##b##_t(); \
+    co_##b##_t val2 = co_##b##_t(); \
     CHECK_EQUAL(0, co_val_init_min(CO_DEFTYPE_##a, &val1)); \
     CHECK_EQUAL(0, co_val_init_max(CO_DEFTYPE_##a, &val2)); \
 \
@@ -1138,8 +1138,8 @@ TEST(CO_Val, CoValCmp_ArrayType_SecondValNull) {
   } \
 \
   TEST(CO_Val, CoValCmp_##a##_EqualMs) { \
-    co_##b##_t val1; \
-    co_##b##_t val2; \
+    co_##b##_t val1 = co_##b##_t(); \
+    co_##b##_t val2 = co_##b##_t(); \
     CHECK_EQUAL(0, co_val_init_min(CO_DEFTYPE_##a, &val1)); \
     CHECK_EQUAL(0, co_val_init_max(CO_DEFTYPE_##a, &val2)); \
     val1.ms = val2.ms; \
@@ -1247,7 +1247,7 @@ TEST(CO_Val, CoValCmp_INVALID_TYPE) {
 
 #define LELY_CO_DEFINE_TYPE(a, b, c, d) \
   TEST(CO_Val, CoValRead_##a) { \
-    co_##b##_t val; \
+    co_##b##_t val = co_##b##_t(); \
     const size_t val_size = ValGetReadWriteSize(CO_DEFTYPE_##a); \
     const uint_least8_t buffer[MAX_VAL_SIZE] = {0x3eu, 0x18u, 0x67u, 0x7bu, \
                                                 0x34u, 0x15u, 0x09u, 0x27u}; \
@@ -1261,7 +1261,7 @@ TEST(CO_Val, CoValCmp_INVALID_TYPE) {
   } \
 \
   TEST(CO_Val, CoValRead_##a##_Overflow) { \
-    co_##b##_t val; \
+    co_##b##_t val = co_##b##_t(); \
     const size_t val_size = ValGetReadWriteSize(CO_DEFTYPE_##a); \
     const uint_least8_t buffer[MAX_VAL_SIZE] = {0xfau, 0x83u, 0xb1,  0xf0u, \
                                                 0xaau, 0xc4u, 0x88u, 0xe7u}; \
@@ -1275,7 +1275,7 @@ TEST(CO_Val, CoValCmp_INVALID_TYPE) {
 #undef LELY_CO_DEFINE_TYPE
 
 TEST(CO_Val, CoValRead_BOOLEAN_True) {
-  co_boolean_t val;
+  co_boolean_t val = false;
   const uint_least8_t buffer[] = {0xffu};
 
   const auto ret = co_val_read(CO_DEFTYPE_BOOLEAN, &val, buffer, buffer + 1);
@@ -1285,7 +1285,7 @@ TEST(CO_Val, CoValRead_BOOLEAN_True) {
 }
 
 TEST(CO_Val, CoValRead_BOOLEAN_False) {
-  co_boolean_t val;
+  co_boolean_t val = false;
   const uint_least8_t buffer[] = {0x00};
 
   const auto ret = co_val_read(CO_DEFTYPE_BOOLEAN, &val, buffer, buffer + 1);
@@ -1296,7 +1296,7 @@ TEST(CO_Val, CoValRead_BOOLEAN_False) {
 
 #define LELY_CO_DEFINE_TYPE(a, b, c, d) \
   TEST(CO_Val, CoValRead_##a) { \
-    co_##b##_t val; \
+    co_##b##_t val = co_##b##_t(); \
     const size_t val_size = ValGetReadWriteSize(CO_DEFTYPE_##a); \
     const size_t type_size = co_type_sizeof(CO_DEFTYPE_##a); \
     const uint_least8_t buffer[MAX_VAL_SIZE] = {0x3eu, 0x18u, 0x67u, 0x7bu, \
@@ -1316,7 +1316,7 @@ TEST(CO_Val, CoValRead_BOOLEAN_False) {
 
 #define LELY_CO_DEFINE_TYPE(a, b, c, d) \
   TEST(CO_Val, CoValRead_##a##_InvalidSize) { \
-    co_##b##_t val; \
+    co_##b##_t val = co_##b##_t(); \
     const uint_least8_t buffer = 0x00; \
 \
     const auto ret = co_val_read(CO_DEFTYPE_##a, &val, &buffer, &buffer); \
@@ -1490,7 +1490,7 @@ TEST(CO_Val, CoValReadSdo_ToTooSmall) {
   const char buffer[] = "too long string";
   co_array array = CO_ARRAY_INIT;
   array.hdr.capacity = 1;
-  co_visible_string_t val;
+  co_visible_string_t val = nullptr;
   co_val_init_array(&val, &array);
 #if !LELY_NO_ERRNO
   set_errnum(42);
@@ -1510,7 +1510,7 @@ TEST(CO_Val, CoValReadSdo_ToTooSmall) {
 
 #define LELY_CO_DEFINE_TYPE(a, b, c, d) \
   TEST(CO_Val, CoValWrite_##a) { \
-    co_##b##_t val; \
+    co_##b##_t val = co_##b##_t(); \
     CHECK_EQUAL(0, co_val_init_max(CO_DEFTYPE_##a, &val)); \
     const size_t val_size = ValGetReadWriteSize(CO_DEFTYPE_##a); \
     CHECK_COMPARE(val_size, <=, MAX_VAL_SIZE); \
@@ -1526,7 +1526,7 @@ TEST(CO_Val, CoValReadSdo_ToTooSmall) {
   } \
 \
   TEST(CO_Val, CoValWrite_##a##_NoEnd) { \
-    co_##b##_t val; \
+    co_##b##_t val = co_##b##_t(); \
     CHECK_EQUAL(0, co_val_init_min(CO_DEFTYPE_##a, &val)); \
     const size_t val_size = ValGetReadWriteSize(CO_DEFTYPE_##a); \
     CHECK_COMPARE(val_size, <=, MAX_VAL_SIZE); \
@@ -1543,7 +1543,7 @@ TEST(CO_Val, CoValReadSdo_ToTooSmall) {
 #undef LELY_CO_DEFINE_TYPE
 
 TEST(CO_Val, CoValWrite_BOOLEAN_True) {
-  co_boolean_t val;
+  co_boolean_t val = false;
   const uint_least8_t ptr[] = {0xffu};
   co_val_make(CO_DEFTYPE_BOOLEAN, &val, ptr, 1);
   uint_least8_t buffer[] = {0x00};
@@ -1555,7 +1555,7 @@ TEST(CO_Val, CoValWrite_BOOLEAN_True) {
 }
 
 TEST(CO_Val, CoValWrite_BOOLEAN_False) {
-  co_boolean_t val;
+  co_boolean_t val = false;
   const uint_least8_t ptr[] = {0x00};
   co_val_make(CO_DEFTYPE_BOOLEAN, &val, ptr, 1);
   uint_least8_t buffer[] = {0xffu};
@@ -1568,7 +1568,7 @@ TEST(CO_Val, CoValWrite_BOOLEAN_False) {
 
 #define LELY_CO_DEFINE_TYPE(a, b, c, d) \
   TEST(CO_Val, CoValWrite_##a) { \
-    co_##b##_t val; \
+    co_##b##_t val = co_##b##_t(); \
     const size_t val_size = ValGetReadWriteSize(CO_DEFTYPE_##a); \
     uint_least8_t buffer[MAX_VAL_SIZE] = {0x00}; \
     CHECK_EQUAL(0, co_val_init(CO_DEFTYPE_##a, &val)); \
@@ -1586,7 +1586,7 @@ TEST(CO_Val, CoValWrite_BOOLEAN_False) {
   } \
 \
   TEST(CO_Val, CoValWrite_##a##_NoEnd) { \
-    co_##b##_t val; \
+    co_##b##_t val = co_##b##_t(); \
     const size_t val_size = ValGetReadWriteSize(CO_DEFTYPE_##a); \
     uint_least8_t buffer[MAX_VAL_SIZE] = {0x00}; \
     CHECK_EQUAL(0, co_val_init(CO_DEFTYPE_##a, &val)); \
@@ -1606,7 +1606,7 @@ TEST(CO_Val, CoValWrite_BOOLEAN_False) {
 
 #define LELY_CO_DEFINE_TYPE(a, b, c, d) \
   TEST(CO_Val, CoValWrite_##a##_NullBuffer) { \
-    co_##b##_t val; \
+    co_##b##_t val = co_##b##_t(); \
     const size_t val_size = ValGetReadWriteSize(CO_DEFTYPE_##a); \
 \
     const auto ret = co_val_write(CO_DEFTYPE_##a, &val, nullptr, nullptr); \
@@ -1615,7 +1615,7 @@ TEST(CO_Val, CoValWrite_BOOLEAN_False) {
   } \
 \
   TEST(CO_Val, CoValWrite_##a##_InvalidSize) { \
-    co_##b##_t val; \
+    co_##b##_t val = co_##b##_t(); \
     const size_t val_size = ValGetReadWriteSize(CO_DEFTYPE_##a); \
     uint_least8_t buffer[MAX_VAL_SIZE] = {0x00}; \
 \
@@ -1770,7 +1770,7 @@ TEST(CO_Val, CoValWrite_DOMAIN_SizeZero) {
 }
 
 TEST(CO_Val, CoValWrite_INVALID_TYPE) {
-  co_integer16_t val;
+  co_integer16_t val = 0;
   uint_least8_t buffer[MAX_VAL_SIZE] = {0x00};
 
   const auto ret = co_val_write(INVALID_TYPE, &val, buffer, buffer);
@@ -1784,7 +1784,7 @@ TEST(CO_Val, CoValWrite_INVALID_TYPE) {
 #if LELY_NO_MALLOC
 TEST(CO_Val, CoValInitArray) {
   co_array array = CO_ARRAY_INIT;
-  co_visible_string_t val;
+  co_visible_string_t val = nullptr;
 
   co_val_init_array(&val, &array);
 
@@ -1801,7 +1801,7 @@ TEST(CO_Val, CoValInitArray_NullValue) {
 }
 
 TEST(CO_Val, CoValInitArray_NullArray) {
-  co_visible_string_t val;
+  co_visible_string_t val = nullptr;
 
   co_val_init_array(&val, nullptr);
 
