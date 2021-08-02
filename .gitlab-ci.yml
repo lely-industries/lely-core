@@ -452,12 +452,19 @@ valgrind:ecss:
       - unit-tests/*/unit-test-*.log
     expire_in: 1 week
 
+docker:asan:
+  extends: .docker2
+  needs: ["docker:build"]
+  variables:
+    NAME: asan
+    TAG: bullseye
+
 asan:
   stage: test
   tags:
     - docker
     - linux
-  image: $REGISTRY/build:bullseye
+  image: $REGISTRY/asan:bullseye
   needs: []
   variables:
     CFLAGS: "-O0 -g -fsanitize=address"
@@ -475,12 +482,35 @@ asan:
       - unit-tests/*/unit-test-*.log
     expire_in: 1 week
 
+asan:redundancy:
+  stage: test
+  tags:
+    - docker
+    - linux
+  image: $REGISTRY/asan:bullseye
+  needs: []
+  variables:
+    CFLAGS: "-O0 -g -fsanitize=address"
+    CXXFLAGS: "-O0 -g -fsanitize=address"
+  script:
+    - autoreconf -i
+    - ./configure --disable-python --disable-shared --enable-ecss-redundancy --disable-tests
+    - make
+    - make check
+  artifacts:
+    when: always
+    paths:
+      - test/test-*.log
+      - unit-tests/*/test-*.log
+      - unit-tests/*/unit-test-*.log
+    expire_in: 1 week
+
 asan:ecss:
   stage: test
   tags:
     - docker
     - linux
-  image: $REGISTRY/build:bullseye
+  image: $REGISTRY/asan:bullseye
   needs: []
   variables:
     CFLAGS: "-O0 -g -fsanitize=address"
