@@ -4,7 +4,7 @@
  *
  * @see lely/io2/sys/timer.h
  *
- * @copyright 2014-2019 Lely Industries N.V.
+ * @copyright 2014-2021 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -115,8 +115,12 @@ void *
 io_timer_alloc(void)
 {
 	struct io_timer_impl *impl = malloc(sizeof(*impl));
+	if (!impl)
+		return NULL;
+	// Suppress a GCC maybe-uninitialized warning.
+	impl->timer_vptr = NULL;
 	// cppcheck-suppress memleak symbolName=impl
-	return impl ? &impl->timer_vptr : NULL;
+	return &impl->timer_vptr;
 }
 
 void
