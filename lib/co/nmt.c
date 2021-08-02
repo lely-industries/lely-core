@@ -2678,12 +2678,7 @@ co_nmt_recv_000(const struct can_msg *msg, void *data)
 	assert(msg);
 	co_nmt_t *nmt = data;
 	assert(nmt);
-
-#if !LELY_NO_CO_MASTER
-	// Ignore NMT commands if we're the master.
-	if (nmt->master)
-		return 0;
-#endif
+	assert(!co_nmt_is_master(nmt));
 
 	if (msg->len < 2)
 		return 0;
@@ -2709,8 +2704,10 @@ co_nmt_recv_700(const struct can_msg *msg, void *data)
 
 	(void)nmt;
 
+#if LELY_NO_CO_NG
+	assert(!(msg->flags & CAN_FLAG_RTR));
+#else
 	if (msg->flags & CAN_FLAG_RTR) {
-#if !LELY_NO_CO_NG
 		assert(nmt->gt && nmt->ltf);
 		assert(nmt->lg_ind);
 
@@ -2728,94 +2725,95 @@ co_nmt_recv_700(const struct can_msg *msg, void *data)
 			nmt->lg_state = CO_NMT_EC_RESOLVED;
 			nmt->lg_ind(nmt, nmt->lg_state, nmt->lg_data);
 		}
-#endif
+
+		return 0;
+	}
+#endif // !LELY_NO_CO_NG
+
 #if !LELY_NO_CO_MASTER
-	} else {
-		assert(nmt->master);
+	assert(nmt->master);
 #if !LELY_NO_CO_NG
-		assert(nmt->ng_ind);
+	assert(nmt->ng_ind);
 #endif
 
-		co_unsigned8_t id = (msg->id - 0x700) & 0x7f;
-		if (!id)
-			return 0;
-		struct co_nmt_slave *slave = &nmt->slaves[id - 1];
+	co_unsigned8_t id = (msg->id - 0x700) & 0x7f;
 
-		if (msg->len < 1)
-			return 0;
-		co_unsigned8_t st = msg->data[0];
+	struct co_nmt_slave *slave = &nmt->slaves[id - 1];
 
-		if (st == CO_NMT_ST_BOOTUP) {
-			// The expected state after a boot-up event is
-			// pre-operational.
-			slave->est = CO_NMT_ST_PREOP;
-			// Record the reception of the boot-up message.
-			slave->bootup = 1;
+	if (msg->len < 1)
+		return 0;
+	co_unsigned8_t st = msg->data[0];
 
-			// Inform the application of the boot-up event.
-			co_nmt_st_ind(nmt, id, st);
-			return 0;
-		}
+	if (st == CO_NMT_ST_BOOTUP) {
+		// The expected state after a boot-up event is
+		// pre-operational.
+		slave->est = CO_NMT_ST_PREOP;
+		// Record the reception of the boot-up message.
+		slave->bootup = 1;
 
-		// Ignore messages from booting slaves or slaves that are being
-		// configured.
+		// Inform the application of the boot-up event.
+		co_nmt_st_ind(nmt, id, st);
+		return 0;
+	}
+
+	// Ignore messages from booting slaves or slaves that are being
+	// configured.
 #if !LELY_NO_CO_NMT_BOOT
-		if (slave->booting)
-			return 0;
+	if (slave->booting)
+		return 0;
 #endif
 #if !LELY_NO_CO_NMT_CFG
-		if (slave->configuring)
-			return 0;
+	if (slave->configuring)
+		return 0;
 #endif
 
 #if !LELY_NO_CO_NG
-		// Ignore messages if node guarding is disabled.
-		if (!slave->gt || !slave->ltf)
-			return 0;
+	// Ignore messages if node guarding is disabled.
+	if (!slave->gt || !slave->ltf)
+		return 0;
 
-		// Check the toggle bit and ignore the message if it does not
-		// match.
-		if (!((st ^ slave->rst) & CO_NMT_ST_TOGGLE))
-			return 0;
-		slave->rst ^= CO_NMT_ST_TOGGLE;
+	// Check the toggle bit and ignore the message if it does not
+	// match.
+	if (!((st ^ slave->rst) & CO_NMT_ST_TOGGLE))
+		return 0;
+	slave->rst ^= CO_NMT_ST_TOGGLE;
 
-		// Notify the application of the resolution of a node guarding
-		// timeout.
-		if (slave->rtr >= slave->ltf) {
-			diag(DIAG_INFO, 0,
-					"NMT: node guarding time out resolved for node %d",
-					id);
-			nmt->ng_ind(nmt, id, CO_NMT_EC_RESOLVED,
-					CO_NMT_EC_TIMEOUT, nmt->ng_data);
-		}
-		slave->rtr = 0;
+	// Notify the application of the resolution of a node guarding
+	// timeout.
+	if (slave->rtr >= slave->ltf) {
+		diag(DIAG_INFO, 0,
+				"NMT: node guarding time out resolved for node %d",
+				id);
+		nmt->ng_ind(nmt, id, CO_NMT_EC_RESOLVED, CO_NMT_EC_TIMEOUT,
+				nmt->ng_data);
+	}
+	slave->rtr = 0;
 
-		// Notify the application of the occurrence or resolution of an
-		// unexpected state change.
-		if (slave->est != (st & ~CO_NMT_ST_TOGGLE)
-				&& slave->ng_state == CO_NMT_EC_RESOLVED) {
-			diag(DIAG_INFO, 0,
-					"NMT: node guarding state change occurred for node %d",
-					id);
-			slave->ng_state = CO_NMT_EC_OCCURRED;
-			nmt->ng_ind(nmt, id, slave->ng_state, CO_NMT_EC_STATE,
-					nmt->ng_data);
-		} else if (slave->est == (st & ~CO_NMT_ST_TOGGLE)
-				&& slave->ng_state == CO_NMT_EC_OCCURRED) {
-			diag(DIAG_INFO, 0,
-					"NMT: node guarding state change resolved for node %d",
-					id);
-			slave->ng_state = CO_NMT_EC_RESOLVED;
-			nmt->ng_ind(nmt, id, slave->ng_state, CO_NMT_EC_STATE,
-					nmt->ng_data);
-		}
+	// Notify the application of the occurrence or resolution of an
+	// unexpected state change.
+	if (slave->est != (st & ~CO_NMT_ST_TOGGLE)
+			&& slave->ng_state == CO_NMT_EC_RESOLVED) {
+		diag(DIAG_INFO, 0,
+				"NMT: node guarding state change occurred for node %d",
+				id);
+		slave->ng_state = CO_NMT_EC_OCCURRED;
+		nmt->ng_ind(nmt, id, slave->ng_state, CO_NMT_EC_STATE,
+				nmt->ng_data);
+	} else if (slave->est == (st & ~CO_NMT_ST_TOGGLE)
+			&& slave->ng_state == CO_NMT_EC_OCCURRED) {
+		diag(DIAG_INFO, 0,
+				"NMT: node guarding state change resolved for node %d",
+				id);
+		slave->ng_state = CO_NMT_EC_RESOLVED;
+		nmt->ng_ind(nmt, id, slave->ng_state, CO_NMT_EC_STATE,
+				nmt->ng_data);
+	}
 
-		// Notify the application of the occurrence of a state change.
-		if (st != slave->rst)
-			co_nmt_st_ind(nmt, id, st);
+	// Notify the application of the occurrence of a state change.
+	if (st != slave->rst)
+		co_nmt_st_ind(nmt, id, st);
 #endif // !LELY_NO_CO_NG
 #endif // !LELY_NO_CO_MASTER
-	}
 
 	return 0;
 }
