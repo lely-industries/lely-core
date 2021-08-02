@@ -32,6 +32,7 @@ stages:
     - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
       changes:
         - docker/**/*
+        - .gitlab-ci.yml
       when: always
 
 .docker1:
