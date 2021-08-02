@@ -4,7 +4,7 @@
  *
  * @see lely/io2/vcan.h
  *
- * @copyright 2019-2020 Lely Industries N.V.
+ * @copyright 2019-2021 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -257,6 +257,8 @@ io_vcan_ctrl_alloc(void)
 		set_errc_from_errno();
 		return NULL;
 	}
+	// Suppress a GCC maybe-uninitialized warning.
+	vcan->ctrl_vptr = NULL;
 	// cppcheck-suppress memleak symbolName=vcan
 	return &vcan->ctrl_vptr;
 }
@@ -433,6 +435,8 @@ io_vcan_chan_alloc(void)
 		set_errc_from_errno();
 		return NULL;
 	}
+	// Suppress a GCC maybe-uninitialized warning.
+	vcan->chan_vptr = NULL;
 	// cppcheck-suppress memleak symbolName=vcan
 	return &vcan->chan_vptr;
 }

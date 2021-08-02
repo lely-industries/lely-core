@@ -136,12 +136,14 @@ void *
 io_user_timer_alloc(void)
 {
 	struct io_user_timer *user = malloc(sizeof(*user));
-	if (!user)
+	if (!user) {
 		set_errc_from_errno();
+		return NULL;
+	}
 	// Suppress a GCC maybe-uninitialized warning.
 	user->timer_vptr = NULL;
 	// cppcheck-suppress memleak symbolName=user
-	return user ? &user->timer_vptr : NULL;
+	return &user->timer_vptr;
 }
 
 void

@@ -195,12 +195,14 @@ void *
 io_user_can_chan_alloc(void)
 {
 	struct io_user_can_chan *user = malloc(sizeof(*user));
-	if (!user)
+	if (!user) {
 		set_errc_from_errno();
+		return NULL;
+	}
 	// Suppress a GCC maybe-uninitialized warning.
 	user->chan_vptr = NULL;
 	// cppcheck-suppress memleak symbolName=user
-	return user ? &user->chan_vptr : NULL;
+	return &user->chan_vptr;
 }
 
 void

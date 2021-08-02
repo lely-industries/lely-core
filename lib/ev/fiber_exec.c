@@ -250,12 +250,14 @@ void *
 ev_fiber_exec_alloc(void)
 {
 	struct ev_fiber_exec *exec = malloc(sizeof(*exec));
-	if (!exec)
+	if (!exec) {
 		set_errc_from_errno();
+		return NULL;
+	}
 	// Suppress a GCC maybe-uninitialized warning.
 	exec->exec_vptr = NULL;
 	// cppcheck-suppress memleak symbolName=exec
-	return exec ? &exec->exec_vptr : NULL;
+	return &exec->exec_vptr;
 }
 
 void
