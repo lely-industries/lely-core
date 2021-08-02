@@ -4,7 +4,7 @@
  *
  * @see lely/io2/user/can.h
  *
- * @copyright 2015-2020 Lely Industries N.V.
+ * @copyright 2015-2021 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -197,6 +197,8 @@ io_user_can_chan_alloc(void)
 	struct io_user_can_chan *user = malloc(sizeof(*user));
 	if (!user)
 		set_errc_from_errno();
+	// Suppress a GCC maybe-uninitialized warning.
+	user->chan_vptr = NULL;
 	// cppcheck-suppress memleak symbolName=user
 	return user ? &user->chan_vptr : NULL;
 }
