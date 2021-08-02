@@ -1518,7 +1518,7 @@ co_nmt_set_alternate_bus_id(co_nmt_t *nmt, co_unsigned8_t bus_id)
 }
 #endif
 
-int
+uint_least8_t
 co_nmt_get_active_bus_id(const co_nmt_t *nmt)
 {
 	assert(nmt);
@@ -1529,7 +1529,7 @@ co_nmt_get_active_bus_id(const co_nmt_t *nmt)
 #if !LELY_NO_CO_MASTER
 
 int
-co_nmt_set_active_bus(co_nmt_t *nmt, const co_unsigned8_t bus_id)
+co_nmt_set_active_bus(co_nmt_t *nmt, const uint_least8_t bus_id)
 {
 	assert(nmt);
 
@@ -2223,7 +2223,7 @@ co_nmt_hb_ind(co_nmt_t *nmt, co_unsigned8_t id, int state, int reason,
 
 #if !LELY_NO_CO_ECSS_REDUNDANCY
 void
-co_nmt_ecss_rdn_ind(co_nmt_t *nmt, co_unsigned8_t bus_id, int reason)
+co_nmt_ecss_rdn_ind(co_nmt_t *nmt, uint_least8_t bus_id, int reason)
 {
 	assert(nmt);
 

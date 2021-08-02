@@ -64,7 +64,7 @@ void daemon_main();
 void daemon_fini();
 void daemon_handler(int sig, void *handle);
 
-int can_send(const struct can_msg *msg, int bus_id, void *data);
+int can_send(const struct can_msg *msg, uint_least8_t bus_id, void *data);
 int can_next(const struct timespec *tp, void *data);
 int can_timer(const struct timespec *tp, void *data);
 
@@ -620,7 +620,7 @@ daemon_handler(int sig, void *handle)
 }
 
 int
-can_send(const struct can_msg *msg, int bus_id, void *data)
+can_send(const struct can_msg *msg, uint_least8_t bus_id, void *data)
 {
 	(void)bus_id;
 

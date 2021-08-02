@@ -46,7 +46,8 @@ static inline void co_test_wait(struct co_test *test);
 static inline void co_test_done(struct co_test *test);
 
 static int co_test_recv(struct co_test *test, const struct can_msg *msg);
-static int co_test_send(const struct can_msg *msg, int bus_id, void *data);
+static int co_test_send(
+		const struct can_msg *msg, uint_least8_t bus_id, void *data);
 #if !LELY_NO_CO_WTM
 static int co_test_wtm_recv(co_wtm_t *wtm, uint_least8_t nif,
 		const struct timespec *tp, const struct can_msg *msg,
@@ -207,7 +208,7 @@ co_test_recv(struct co_test *test, const struct can_msg *msg)
 }
 
 static int
-co_test_send(const struct can_msg *msg, int bus_id, void *data)
+co_test_send(const struct can_msg *msg, uint_least8_t bus_id, void *data)
 {
 	(void)bus_id;
 

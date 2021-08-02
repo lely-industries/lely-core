@@ -78,7 +78,8 @@ typedef int can_recv_func_t(const struct can_msg *msg, void *data);
  * @returns 0 on success, or -1 on error. In the latter case, implementations
  * SHOULD set the error number with `set_errnum()`.
  */
-typedef int can_send_func_t(const struct can_msg *msg, int bus_id, void *data);
+typedef int can_send_func_t(
+		const struct can_msg *msg, uint_least8_t bus_id, void *data);
 
 /// Returns the alignment (in bytes) of the #can_net_t structure.
 size_t can_net_alignof(void);
@@ -95,7 +96,7 @@ size_t can_net_sizeof(void);
  *
  * @see can_net_destroy()
  */
-can_net_t *can_net_create(alloc_t *alloc, int bus_id);
+can_net_t *can_net_create(alloc_t *alloc, uint_least8_t bus_id);
 
 /// Destroys a CAN network interface. @see can_net_create()
 void can_net_destroy(can_net_t *net);
@@ -173,7 +174,8 @@ void can_net_set_next_func(can_net_t *net, can_timer_func_t *func, void *data);
  * the error number set by the first failed CAN frame receiver callback
  * function can be obtained with get_errc().
  */
-ssize_t can_net_recv(can_net_t *net, const struct can_msg *msg, int bus_id);
+ssize_t can_net_recv(can_net_t *net, const struct can_msg *msg,
+		uint_least8_t bus_id);
 
 /**
  * Sends a CAN frame from a network interface. This function invokes the
@@ -215,7 +217,7 @@ void can_net_get_send_func(
 void can_net_set_send_func(can_net_t *net, can_send_func_t *func, void *data);
 
 /// Returns the active CAN bus identifier of the network interface.
-int can_net_get_active_bus(const can_net_t *net);
+uint_least8_t can_net_get_active_bus(const can_net_t *net);
 
 /**
  * Sets the active CAN bus of the network interface.
@@ -223,7 +225,7 @@ int can_net_get_active_bus(const can_net_t *net);
  * @param net    a pointer to a CAN network interface.
  * @param bus_id a CAN bus identifier.
  */
-void can_net_set_active_bus(can_net_t *net, int bus_id);
+void can_net_set_active_bus(can_net_t *net, uint_least8_t bus_id);
 
 /// Returns the alignment (in bytes) of the #can_timer_t structure.
 size_t can_timer_alignof(void);

@@ -178,7 +178,7 @@ typedef void co_nmt_hb_ind_t(co_nmt_t *nmt, co_unsigned8_t id, int state,
  * @param data a pointer to user-specified data.
  */
 typedef void co_nmt_ecss_rdn_ind_t(
-		co_nmt_t *nmt, co_unsigned8_t bus_id, int reason, void *data);
+		co_nmt_t *nmt, uint_least8_t bus_id, int reason, void *data);
 
 /**
  * The type of a CANopen NMT state change indication function, invoked when a
@@ -808,7 +808,7 @@ int co_nmt_set_alternate_bus_id(co_nmt_t *nmt, co_unsigned8_t bus_id);
 /**
  * Returns the currently active CAN bus on which the NMT service operates.
  */
-int co_nmt_get_active_bus_id(const co_nmt_t *nmt);
+uint_least8_t co_nmt_get_active_bus_id(const co_nmt_t *nmt);
 
 /**
  * Sets the active CAN bus on which the NMT service operates. Only NMT master
@@ -817,7 +817,7 @@ int co_nmt_get_active_bus_id(const co_nmt_t *nmt);
  * @param nmt    a pointer to an NMT master service.
  * @param bus_id a CAN bus identifier.
  */
-int co_nmt_set_active_bus(co_nmt_t *nmt, co_unsigned8_t bus_id);
+int co_nmt_set_active_bus(co_nmt_t *nmt, uint_least8_t bus_id);
 
 /**
  * Returns the default SDO timeout used during the NMT 'boot slave' and

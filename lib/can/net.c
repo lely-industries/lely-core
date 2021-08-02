@@ -53,7 +53,7 @@ struct can_net {
 	/// A pointer to the user-specified data for #send_func.
 	void *send_data;
 	/// The active CAN bus identifier.
-	int active_bus;
+	uint_least8_t active_bus;
 };
 
 /**
@@ -70,7 +70,7 @@ static can_net_t *can_net_alloc(alloc_t *alloc);
 static void can_net_free(can_net_t *net);
 
 /// Initializes the #can_net_t structure.
-static void can_net_init(can_net_t *net, int bus_id);
+static void can_net_init(can_net_t *net, uint_least8_t bus_id);
 
 /// Finalizes the #can_net_t structure.
 static void can_net_fini(can_net_t *net);
@@ -173,7 +173,7 @@ can_net_sizeof(void)
 }
 
 can_net_t *
-can_net_create(alloc_t *alloc, const int bus_id)
+can_net_create(alloc_t *alloc, const uint_least8_t bus_id)
 {
 	can_net_t *net = can_net_alloc(alloc);
 	if (!net)
@@ -276,7 +276,8 @@ can_net_set_next_func(can_net_t *net, can_timer_func_t *func, void *data)
 }
 
 ssize_t
-can_net_recv(can_net_t *net, const struct can_msg *msg, const int bus_id)
+can_net_recv(can_net_t *net, const struct can_msg *msg,
+		const uint_least8_t bus_id)
 {
 	assert(net);
 	assert(msg);
@@ -343,14 +344,14 @@ can_net_set_send_func(can_net_t *net, can_send_func_t *func, void *data)
 	net->send_data = data;
 }
 
-int
+uint_least8_t
 can_net_get_active_bus(const can_net_t *net)
 {
 	return net->active_bus;
 }
 
 void
-can_net_set_active_bus(can_net_t *net, const int bus_id)
+can_net_set_active_bus(can_net_t *net, const uint_least8_t bus_id)
 {
 	net->active_bus = bus_id;
 }
@@ -637,7 +638,7 @@ can_net_free(can_net_t *net)
 }
 
 static void
-can_net_init(can_net_t *net, const int bus_id)
+can_net_init(can_net_t *net, const uint_least8_t bus_id)
 {
 	assert(net);
 

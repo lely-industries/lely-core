@@ -40,9 +40,9 @@ struct co_nmt_rdn {
 	/// A pointer to an NMT master/slave service.
 	co_nmt_t *nmt;
 	/// The CAN bus A identifier.
-	co_unsigned8_t bus_a_id;
+	uint_least8_t bus_a_id;
 	/// The CAN bus B identifier.
-	co_unsigned8_t bus_b_id;
+	uint_least8_t bus_b_id;
 	/// The Redundancy Master Node-ID.
 	co_unsigned8_t master_id;
 	/// The Redundancy Master consumer heartbeat timer (in milliseconds).
@@ -332,8 +332,9 @@ co_nmt_rdn_toogle_bus(co_nmt_rdn_t *rdn)
 			CO_NMT_RDN_CTOGGLE_SUBIDX);
 
 	if (ctoggle < ntoggle) {
-		const int active_bus = can_net_get_active_bus(rdn->net);
-		const co_unsigned8_t new_bus = (active_bus == rdn->bus_a_id)
+		const uint_least8_t active_bus =
+				can_net_get_active_bus(rdn->net);
+		const uint_least8_t new_bus = (active_bus == rdn->bus_a_id)
 				? rdn->bus_b_id
 				: rdn->bus_a_id;
 

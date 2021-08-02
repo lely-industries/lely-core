@@ -490,7 +490,8 @@ TEST_GROUP_BASE(CO_Rpdo, CO_RpdoBase) {
     CO_RpdoStatic::rpdo_err_args.data = data;
   }
 
-  static int can_send_func(const struct can_msg* const msg, int, void*) {
+  static int can_send_func(const struct can_msg* const msg, uint_least8_t,
+                           void*) {
     CO_RpdoStatic::can_send_func_called = true;
     CO_RpdoStatic::sent_msg = *msg;
     return 0;
