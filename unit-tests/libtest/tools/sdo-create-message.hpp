@@ -56,9 +56,9 @@ can_msg DnIniReq(co_unsigned16_t idx, co_unsigned8_t subidx,
                  uint_least32_t recipient_id, const uint_least8_t buf[],
                  uint_least8_t cs_flags = 0);
 // download segment request
-can_msg DnSeg(co_unsigned16_t idx, co_unsigned8_t subidx,
-              uint_least32_t recipient_id, const uint_least8_t buf[],
-              uint8_t size, uint_least8_t cs_flags = 0);
+can_msg DnSegReq(co_unsigned16_t idx, co_unsigned8_t subidx,
+                 uint_least32_t recipient_id, const uint_least8_t buf[],
+                 uint8_t size, uint_least8_t cs_flags = 0);
 // upload initiate request
 can_msg UpIniReq(co_unsigned16_t idx, co_unsigned8_t subidx,
                  uint_least32_t recipient_id);
