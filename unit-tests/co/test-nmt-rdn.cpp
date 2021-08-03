@@ -816,7 +816,7 @@ TEST(CO_NmtRdn, CoNmtSetActiveBus_Slave) {
 
   CHECK_EQUAL(-1, ret);
   CHECK_EQUAL(ERRNUM_PERM, get_errnum());
-  CHECK_EQUAL(0, co_nmt_get_active_bus_id(nmt));
+  CHECK_EQUAL(0u, co_nmt_get_active_bus_id(nmt));
 }
 
 ///@}
@@ -878,7 +878,7 @@ TEST(CO_NmtRdn, CoNmtRdnInit_Master_NoBdefault) {
   CHECK_EQUAL(0, co_nmt_cs_ind(nmt, CO_NMT_CS_RESET_NODE));
 
   CHECK_EQUAL(CO_NMT_ST_START, co_nmt_get_st(nmt));
-  CHECK_EQUAL(0, co_nmt_get_active_bus_id(nmt));
+  CHECK_EQUAL(0u, co_nmt_get_active_bus_id(nmt));
 }
 #endif
 
@@ -905,7 +905,7 @@ TEST(CO_NmtRdn, CoNmtRdnInit_Slave_IncompleteRdnObject) {
   CreateNmtAndReset();
 
   CHECK_EQUAL(CO_NMT_ST_START, co_nmt_get_st(nmt));
-  CHECK_EQUAL(0, co_nmt_get_active_bus_id(nmt));
+  CHECK_EQUAL(0u, co_nmt_get_active_bus_id(nmt));
 
   timespec ts = {0, 0};
   timespec_add_msec(&ts, HB_TIMEOUT_MS * TTOGGLE);
@@ -939,7 +939,7 @@ TEST(CO_NmtRdn, CoNmtRdnInit_Slave_NoMasterHbEntry) {
   CHECK_EQUAL(0, co_nmt_cs_ind(nmt, CO_NMT_CS_RESET_NODE));
 
   CHECK_EQUAL(CO_NMT_ST_START, co_nmt_get_st(nmt));
-  CHECK_EQUAL(0, co_nmt_get_active_bus_id(nmt));
+  CHECK_EQUAL(0u, co_nmt_get_active_bus_id(nmt));
 
   timespec ts = {0, 0};
   timespec_add_msec(&ts, HB_TIMEOUT_MS * TTOGGLE);

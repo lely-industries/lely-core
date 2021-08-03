@@ -38,13 +38,14 @@ int CanSend::ret = 0;
 void* CanSend::user_data = nullptr;
 size_t CanSend::num_called = 0;
 can_msg CanSend::msg = CAN_MSG_INIT;
-int CanSend::bus_id = -1;
+uint_least8_t CanSend::bus_id = 0xffu;
 can_msg* CanSend::msg_buf = &CanSend::msg;
 size_t CanSend::buf_size = 1u;
 CanSend::CheckFunc CanSend::checkFunc = nullptr;
 
 int
-CanSend::Func(const can_msg* const msg_, const int bus_id_, void* const data_) {
+CanSend::Func(const can_msg* const msg_, const uint_least8_t bus_id_,
+              void* const data_) {
   assert(msg_);
 
   if (checkFunc != nullptr) checkFunc(msg_, bus_id_, data_);
@@ -78,7 +79,7 @@ void
 CanSend::Clear() {
   msg = CAN_MSG_INIT;
   user_data = nullptr;
-  bus_id = -1;
+  bus_id = 0xffu;
 
   ret = 0;
   num_called = 0;

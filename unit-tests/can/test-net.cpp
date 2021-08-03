@@ -114,11 +114,11 @@ TEST_GROUP(CAN_Net) {
     return -1;
   }
 
-  static int send_func_empty(const can_msg*, int, void*) {
+  static int send_func_empty(const can_msg*, uint_least8_t, void*) {
     ++CAN_Net_Static::sfunc_empty_counter;
     return 0;
   }
-  static int send_func_err(const can_msg*, int, void*) { return -1; }
+  static int send_func_err(const can_msg*, uint_least8_t, void*) { return -1; }
 
   TEST_SETUP() {
     net = can_net_create(allocator.ToAllocT(), 0);
@@ -559,7 +559,7 @@ TEST(CAN_Net, CanNetGetActiveBus_Nominal) {
 TEST(CAN_Net, CanNetSetActiveBus_Nominal) {
   can_net_set_active_bus(net, 7);
 
-  CHECK_EQUAL(7, can_net_get_active_bus(net));
+  CHECK_EQUAL(7u, can_net_get_active_bus(net));
 }
 
 ///@}

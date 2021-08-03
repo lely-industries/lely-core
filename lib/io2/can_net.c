@@ -183,7 +183,7 @@ static void io_can_net_write_func(struct ev_task *task);
 
 static int io_can_net_next_func(const struct timespec *tp, void *data);
 static int io_can_net_send_func(
-		const struct can_msg *msg, int bus_id, void *data);
+		const struct can_msg *msg, uint_least8_t bus_id, void *data);
 
 static void io_can_net_c_wait_func(struct spscring *ring, void *arg);
 
@@ -919,7 +919,8 @@ io_can_net_next_func(const struct timespec *tp, void *data)
 }
 
 static int
-io_can_net_send_func(const struct can_msg *msg, int bus_id, void *data)
+io_can_net_send_func(
+		const struct can_msg *msg, uint_least8_t bus_id, void *data)
 {
 	assert(msg);
 	(void)bus_id;
