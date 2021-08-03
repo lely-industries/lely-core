@@ -157,8 +157,8 @@ static void co_gw_net_cs_ind(co_nmt_t *nmt, co_unsigned8_t cs, void *data);
  *
  * @see co_nmt_ng_ind_t
  */
-static void co_gw_net_ng_ind(co_nmt_t *nmt, co_unsigned8_t id, int state,
-		int reason, void *data);
+static void co_gw_net_ng_ind(co_nmt_t *nmt, co_unsigned8_t id,
+		co_nmt_ec_state_t state, co_nmt_ec_reason_t reason, void *data);
 #endif
 /**
  * The callback function invoked when a life guarding event occurs for a CANopen
@@ -166,7 +166,8 @@ static void co_gw_net_ng_ind(co_nmt_t *nmt, co_unsigned8_t id, int state,
  *
  * @see co_nmt_lg_ind_t
  */
-static void co_gw_net_lg_ind(co_nmt_t *nmt, int state, void *data);
+static void co_gw_net_lg_ind(
+		co_nmt_t *nmt, co_nmt_ec_state_t state, void *data);
 #endif // !LELY_NO_CO_NG
 /**
  * The callback function invoked when a heartbeat event occurs for a node on a
@@ -174,8 +175,8 @@ static void co_gw_net_lg_ind(co_nmt_t *nmt, int state, void *data);
  *
  * @see co_nmt_hb_ind_t
  */
-static void co_gw_net_hb_ind(co_nmt_t *nmt, co_unsigned8_t id, int state,
-		int reason, void *data);
+static void co_gw_net_hb_ind(co_nmt_t *nmt, co_unsigned8_t id,
+		co_nmt_ec_state_t state, co_nmt_ec_reason_t reason, void *data);
 /**
  * The callback function invoked when a boot-up event or state change is
  * detected for a node on a CANopen network.
@@ -1124,8 +1125,8 @@ co_gw_net_cs_ind(co_nmt_t *nmt, co_unsigned8_t cs, void *data)
 
 #if !LELY_NO_CO_MASTER
 static void
-co_gw_net_ng_ind(co_nmt_t *nmt, co_unsigned8_t id, int state, int reason,
-		void *data)
+co_gw_net_ng_ind(co_nmt_t *nmt, co_unsigned8_t id, co_nmt_ec_state_t state,
+		co_nmt_ec_reason_t reason, void *data)
 {
 	struct co_gw_net *net = data;
 	assert(net);
@@ -1145,7 +1146,7 @@ co_gw_net_ng_ind(co_nmt_t *nmt, co_unsigned8_t id, int state, int reason,
 #endif
 
 static void
-co_gw_net_lg_ind(co_nmt_t *nmt, int state, void *data)
+co_gw_net_lg_ind(co_nmt_t *nmt, co_nmt_ec_state_t state, void *data)
 {
 	struct co_gw_net *net = data;
 	assert(net);
@@ -1162,8 +1163,8 @@ co_gw_net_lg_ind(co_nmt_t *nmt, int state, void *data)
 #endif // !LELY_NO_CO_NG
 
 static void
-co_gw_net_hb_ind(co_nmt_t *nmt, co_unsigned8_t id, int state, int reason,
-		void *data)
+co_gw_net_hb_ind(co_nmt_t *nmt, co_unsigned8_t id, co_nmt_ec_state_t state,
+		co_nmt_ec_reason_t reason, void *data)
 {
 	struct co_gw_net *net = data;
 	assert(net);

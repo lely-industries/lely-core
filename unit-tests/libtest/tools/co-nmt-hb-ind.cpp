@@ -35,14 +35,15 @@
 size_t CoNmtHbInd::num_called = 0;
 co_nmt_t* CoNmtHbInd::nmt_ = nullptr;
 co_unsigned8_t CoNmtHbInd::id_ = 255u;
-int CoNmtHbInd::state_ = -1;
-int CoNmtHbInd::reason_ = -1;
+co_nmt_ec_state_t CoNmtHbInd::state_ = static_cast<co_nmt_ec_state_t>(-1);
+co_nmt_ec_reason_t CoNmtHbInd::reason_ = static_cast<co_nmt_ec_reason_t>(-1);
 void* CoNmtHbInd::data_ = nullptr;
 bool CoNmtHbInd::skipCallToDefaultInd = false;
 
 void
-CoNmtHbInd::Func(co_nmt_t* const nmt, const co_unsigned8_t id, const int state,
-                 const int reason, void* const data) {
+CoNmtHbInd::Func(co_nmt_t* const nmt, const co_unsigned8_t id,
+                 const co_nmt_ec_state_t state, const co_nmt_ec_reason_t reason,
+                 void* const data) {
   num_called++;
 
   nmt_ = nmt;
@@ -60,8 +61,8 @@ CoNmtHbInd::Clear() {
 
   nmt_ = nullptr;
   id_ = 255u;
-  state_ = -1;
-  reason_ = -1;
+  state_ = static_cast<co_nmt_ec_state_t>(-1);
+  reason_ = static_cast<co_nmt_ec_reason_t>(-1);
   data_ = nullptr;
 
   skipCallToDefaultInd = false;
@@ -69,7 +70,8 @@ CoNmtHbInd::Clear() {
 
 void
 CoNmtHbInd::Check(const co_nmt_t* const nmt, const co_unsigned8_t id,
-                  const int state, const int reason, const void* const data) {
+                  const co_nmt_ec_state_t state,
+                  const co_nmt_ec_reason_t reason, const void* const data) {
   POINTERS_EQUAL(nmt, nmt_);
   CHECK_EQUAL(id, id_);
   CHECK_EQUAL(state, state_);
@@ -85,8 +87,9 @@ CoNmtHbInd::SkipCallToDefaultInd() {
 co_nmt_hb_ind_t*
 CoNmtHbIndMock::GetFunc() {
   mock("ConNmtHbIndMock").strictOrder();
-  return [](co_nmt_t* const nmt, const co_unsigned8_t id, const int state,
-            const int reason, void* const data) {
+  return [](co_nmt_t* const nmt, const co_unsigned8_t id,
+            const co_nmt_ec_state_t state, const co_nmt_ec_reason_t reason,
+            void* const data) {
     mock("CoNmtHbIndMock")
         .actualCall("co_nmt_hb_ind_t")
         .withParameter("nmt", nmt)
@@ -106,7 +109,8 @@ CoNmtHbIndMock::GetData() {
 
 void
 CoNmtHbIndMock::Expect(co_nmt_t* const nmt, const co_unsigned8_t id,
-                       const int state, const int reason) {
+                       const co_nmt_ec_state_t state,
+                       const co_nmt_ec_reason_t reason) {
   mock("CoNmtHbIndMock")
       .expectOneCall("co_nmt_hb_ind_t")
       .withParameter("nmt", nmt)

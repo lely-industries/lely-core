@@ -144,11 +144,8 @@ struct co_nmt_slave {
 	co_unsigned8_t ltf;
 	/// The number of unanswered node guarding RTRs.
 	co_unsigned8_t rtr;
-	/**
-	 * Indicates whether a node guarding error occurred (#CO_NMT_EC_OCCURRED
-	 * or #CO_NMT_EC_RESOLVED).
-	 */
-	int ng_state;
+	/// Indicates whether a node guarding error occurred.
+	co_nmt_ec_state_t ng_state;
 #endif
 };
 #endif
@@ -218,11 +215,8 @@ struct co_nmt {
 	co_unsigned16_t gt;
 	/// The lifetime factor.
 	co_unsigned8_t ltf;
-	/**
-	 * Indicates whether a life guarding error occurred (#CO_NMT_EC_OCCURRED
-	 * or #CO_NMT_EC_RESOLVED).
-	 */
-	int lg_state;
+	/// Indicates whether a life guarding error occurred.
+	co_nmt_ec_state_t lg_state;
 	/// A pointer to the life guarding event indication function.
 	co_nmt_lg_ind_t *lg_ind;
 	/// A pointer to user-specified data for #lg_ind.
@@ -478,18 +472,18 @@ static void co_nmt_st_ind(co_nmt_t *nmt, co_unsigned8_t id, co_unsigned8_t st);
 
 #if !LELY_NO_CO_MASTER
 /// The default node guarding event handler. @see co_nmt_ng_ind_t
-static void default_ng_ind(co_nmt_t *nmt, co_unsigned8_t id, int state,
-		int reason, void *data);
+static void default_ng_ind(co_nmt_t *nmt, co_unsigned8_t id,
+		co_nmt_ec_state_t state, co_nmt_ec_reason_t reason, void *data);
 #endif
 
 /// The default life guarding event handler. @see co_nmt_lg_ind_t
-static void default_lg_ind(co_nmt_t *nmt, int state, void *data);
+static void default_lg_ind(co_nmt_t *nmt, co_nmt_ec_state_t state, void *data);
 
 #endif // !LELY_NO_CO_NG
 
 /// The default heartbeat event handler. @see co_nmt_hb_ind_t
-static void default_hb_ind(co_nmt_t *nmt, co_unsigned8_t id, int state,
-		int reason, void *data);
+static void default_hb_ind(co_nmt_t *nmt, co_unsigned8_t id,
+		co_nmt_ec_state_t state, co_nmt_ec_reason_t reason, void *data);
 
 /// The default state change event handler. @see co_nmt_st_ind_t
 static void default_st_ind(co_nmt_t *nmt, co_unsigned8_t id, co_unsigned8_t st,
@@ -758,7 +752,8 @@ static void co_nmt_rdn_init_slave(co_nmt_t *nmt);
 static void co_nmt_rdn_update(co_nmt_t *nmt);
 
 /// Processes a heartbeat event from the Redundancy Master for a slave node.
-static void co_nmt_rdn_slave_on_master_hb(co_nmt_t *nmt, int state, int reason);
+static void co_nmt_rdn_slave_on_master_hb(co_nmt_t *nmt,
+		co_nmt_ec_state_t state, co_nmt_ec_reason_t reason);
 
 /// Starts the bus selection process for a slave node.
 static void co_nmt_rdn_slave_start_bus_selection(co_nmt_t *nmt);
@@ -1044,7 +1039,8 @@ co_nmt_set_ng_ind(co_nmt_t *nmt, co_nmt_ng_ind_t *ind, void *data)
 }
 
 void
-co_nmt_on_ng(co_nmt_t *nmt, co_unsigned8_t id, int state, int reason)
+co_nmt_on_ng(co_nmt_t *nmt, co_unsigned8_t id, co_nmt_ec_state_t state,
+		co_nmt_ec_reason_t reason)
 {
 	assert(nmt);
 	(void)reason;
@@ -1079,7 +1075,7 @@ co_nmt_set_lg_ind(co_nmt_t *nmt, co_nmt_lg_ind_t *ind, void *data)
 }
 
 void
-co_nmt_on_lg(co_nmt_t *nmt, int state)
+co_nmt_on_lg(co_nmt_t *nmt, co_nmt_ec_state_t state)
 {
 	assert(nmt);
 
@@ -1110,7 +1106,8 @@ co_nmt_set_hb_ind(co_nmt_t *nmt, co_nmt_hb_ind_t *ind, void *data)
 }
 
 void
-co_nmt_on_hb(co_nmt_t *nmt, co_unsigned8_t id, int state, int reason)
+co_nmt_on_hb(co_nmt_t *nmt, co_unsigned8_t id, co_nmt_ec_state_t state,
+		co_nmt_ec_reason_t reason)
 {
 	assert(nmt);
 
@@ -2206,8 +2203,8 @@ co_nmt_cfg_con(co_nmt_t *nmt, co_unsigned8_t id, co_unsigned32_t ac)
 #endif // !LELY_NO_CO_NMT_BOOT
 
 void
-co_nmt_hb_ind(co_nmt_t *nmt, co_unsigned8_t id, int state, int reason,
-		co_unsigned8_t st)
+co_nmt_hb_ind(co_nmt_t *nmt, co_unsigned8_t id, co_nmt_ec_state_t state,
+		co_nmt_ec_reason_t reason, co_unsigned8_t st)
 {
 	assert(nmt);
 	assert(nmt->hb_ind);
@@ -2970,8 +2967,8 @@ co_nmt_st_ind(co_nmt_t *nmt, co_unsigned8_t id, co_unsigned8_t st)
 
 #if !LELY_NO_CO_MASTER
 static void
-default_ng_ind(co_nmt_t *nmt, co_unsigned8_t id, int state, int reason,
-		void *data)
+default_ng_ind(co_nmt_t *nmt, co_unsigned8_t id, co_nmt_ec_state_t state,
+		co_nmt_ec_reason_t reason, void *data)
 {
 	(void)data;
 
@@ -2980,7 +2977,7 @@ default_ng_ind(co_nmt_t *nmt, co_unsigned8_t id, int state, int reason,
 #endif
 
 static void
-default_lg_ind(co_nmt_t *nmt, int state, void *data)
+default_lg_ind(co_nmt_t *nmt, co_nmt_ec_state_t state, void *data)
 {
 	(void)data;
 
@@ -2990,8 +2987,8 @@ default_lg_ind(co_nmt_t *nmt, int state, void *data)
 #endif // !LELY_NO_CO_NG
 
 static void
-default_hb_ind(co_nmt_t *nmt, co_unsigned8_t id, int state, int reason,
-		void *data)
+default_hb_ind(co_nmt_t *nmt, co_unsigned8_t id, co_nmt_ec_state_t state,
+		co_nmt_ec_reason_t reason, void *data)
 {
 	(void)data;
 
@@ -3704,7 +3701,8 @@ co_nmt_rdn_slave_finish_bus_selection(co_nmt_t *nmt)
 }
 
 static void
-co_nmt_rdn_slave_on_master_hb(co_nmt_t *nmt, int state, int reason)
+co_nmt_rdn_slave_on_master_hb(co_nmt_t *nmt, co_nmt_ec_state_t state,
+		co_nmt_ec_reason_t reason)
 {
 	assert(nmt);
 	assert(nmt->rdn);

@@ -57,7 +57,7 @@ struct BasicSlave::Impl_ {
   }
 
 #if !LELY_NO_CO_NG
-  void OnLgInd(co_nmt_t* nmt, int state) noexcept;
+  void OnLgInd(co_nmt_t* nmt, co_nmt_ec_state_t state) noexcept;
 #endif
 
   static constexpr uint32_t Key(uint16_t idx, uint8_t subidx) noexcept;
@@ -635,7 +635,7 @@ BasicSlave::Impl_::Impl_(BasicSlave* self_, co_nmt_t* nmt) : self(self_) {
 #else
   co_nmt_set_lg_ind(
       nmt,
-      [](co_nmt_t* nmt, int state, void* data) noexcept {
+      [](co_nmt_t* nmt, co_nmt_ec_state_t state, void* data) noexcept {
         static_cast<Impl_*>(data)->OnLgInd(nmt, state);
       },
       this);
@@ -644,7 +644,7 @@ BasicSlave::Impl_::Impl_(BasicSlave* self_, co_nmt_t* nmt) : self(self_) {
 
 #if !LELY_NO_CO_NG
 void
-BasicSlave::Impl_::OnLgInd(co_nmt_t* nmt, int state) noexcept {
+BasicSlave::Impl_::OnLgInd(co_nmt_t* nmt, co_nmt_ec_state_t state) noexcept {
   // Invoke the default behavior before notifying the implementation.
   co_nmt_on_lg(nmt, state);
   // Notify the implementation.

@@ -47,7 +47,8 @@ struct BasicMaster::Impl_ {
   ev::Future<void> AsyncDeconfig(DriverBase* driver);
 
 #if !LELY_NO_CO_NG
-  void OnNgInd(co_nmt_t* nmt, uint8_t id, int state, int reason) noexcept;
+  void OnNgInd(co_nmt_t* nmt, uint8_t id, co_nmt_ec_state_t state,
+               co_nmt_ec_reason_t reason) noexcept;
 #endif
 #if !LELY_NO_CO_NMT_BOOT
   void OnBootInd(co_nmt_t* nmt, uint8_t id, uint8_t st, char es) noexcept;
@@ -641,8 +642,8 @@ BasicMaster::Impl_::Impl_(BasicMaster* self_, co_nmt_t* nmt) : self(self_) {
 #if !LELY_NO_CO_NG
   co_nmt_set_ng_ind(
       nmt,
-      [](co_nmt_t* nmt, uint8_t id, int state, int reason,
-         void* data) noexcept {
+      [](co_nmt_t* nmt, uint8_t id, co_nmt_ec_state_t state,
+         co_nmt_ec_reason_t reason, void* data) noexcept {
         static_cast<Impl_*>(data)->OnNgInd(nmt, id, state, reason);
       },
       this);
@@ -679,8 +680,8 @@ BasicMaster::Impl_::AsyncDeconfig(DriverBase* driver) {
 
 #if !LELY_NO_CO_NG
 void
-BasicMaster::Impl_::OnNgInd(co_nmt_t* nmt, uint8_t id, int state,
-                            int reason) noexcept {
+BasicMaster::Impl_::OnNgInd(co_nmt_t* nmt, uint8_t id, co_nmt_ec_state_t state,
+                            co_nmt_ec_reason_t reason) noexcept {
   // Invoke the default behavior before notifying the implementation.
   co_nmt_on_ng(nmt, id, state, reason);
   // Only handle node guarding timeout events. State changes are handled by

@@ -1383,7 +1383,8 @@ TEST_GROUP_BASE(CO_Nmt, CO_NmtBase) {
   std::unique_ptr<CoObjTHolder> obj102a;
 
   static void empty_cs_ind(co_nmt_t*, co_unsigned8_t, void*) {}
-  static void empty_hb_ind(co_nmt_t*, co_unsigned8_t, int, int, void*) {}
+  static void empty_hb_ind(co_nmt_t*, co_unsigned8_t, co_nmt_ec_state_t,
+                           co_nmt_ec_reason_t, void*) {}
   static void empty_st_ind(co_nmt_t*, co_unsigned8_t, co_unsigned8_t, void*) {}
   static void empty_sdo_ind(co_nmt_t*, co_unsigned8_t, co_unsigned16_t,
                             co_unsigned8_t, size_t, size_t, void*) {}

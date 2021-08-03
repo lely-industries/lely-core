@@ -47,8 +47,8 @@ extern "C" {
  *               (#CO_NMT_EC_TIMEOUT) or a state change (#CO_NMT_EC_STATE).
  * @param st     the state of the node (if <b>reason</b> is #CO_NMT_EC_STATE).
  */
-void co_nmt_hb_ind(co_nmt_t *nmt, co_unsigned8_t id, int state, int reason,
-		co_unsigned8_t st);
+void co_nmt_hb_ind(co_nmt_t *nmt, co_unsigned8_t id, co_nmt_ec_state_t state,
+		co_nmt_ec_reason_t reason, co_unsigned8_t st);
 
 /// Returns the alignment (in bytes) of the #co_nmt_hb_t structure.
 size_t co_nmt_hb_alignof(void);
