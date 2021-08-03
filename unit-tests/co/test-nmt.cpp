@@ -180,7 +180,7 @@ TEST_BASE(CO_NmtBase) {
   TEST_TEARDOWN() {
     dev_holder.reset();
     can_net_destroy(net);
-    set_errnum(0);
+    set_errnum(ERRNUM_SUCCESS);
   }
 };
 

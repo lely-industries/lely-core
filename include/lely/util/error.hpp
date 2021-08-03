@@ -115,7 +115,7 @@ throw_errc(const char* what_arg, int errc = get_errc()) {
  * platform-independent error number.
  */
 [[noreturn]] inline void
-throw_errnum(int errnum) {
+throw_errnum(errnum_t errnum) {
   throw_errc(errnum2c(errnum));
 }
 
@@ -126,13 +126,13 @@ throw_errnum(int errnum) {
  * a substring.
  */
 [[noreturn]] inline void
-throw_errnum(const ::std::string& what_arg, int errnum) {
+throw_errnum(const ::std::string& what_arg, errnum_t errnum) {
   throw_errc(what_arg, errnum2c(errnum));
 }
 
 /// @see throw_errnum(const ::std::string& what_arg, int errnum)
 [[noreturn]] inline void
-throw_errnum(const char* what_arg, int errnum) {
+throw_errnum(const char* what_arg, errnum_t errnum) {
   throw_errc(what_arg, errnum2c(errnum));
 }
 

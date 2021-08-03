@@ -64,7 +64,7 @@ TEST_GROUP(CO_Val) {
   CoArrays arrays;
 
   TEST_TEARDOWN() {
-    set_errnum(0);
+    set_errnum(ERRNUM_SUCCESS);
     arrays.Clear();
   }
 
