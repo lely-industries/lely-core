@@ -382,7 +382,9 @@ TEST(Util_Error, SetErrnum_NullHandler) {
 /// \When errnum2c() is called with any value
 ///
 /// \Then the same value is returned
-TEST(Util_Error, Errnum2c) { CHECK_EQUAL(1789, errnum2c(1789)); }
+TEST(Util_Error, Errnum2c) {
+  CHECK_EQUAL(ERRNUM_INVAL, errnum2c(ERRNUM_INVAL));
+}
 
 ///@}
 

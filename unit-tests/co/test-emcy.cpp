@@ -180,7 +180,7 @@ TEST_BASE(CO_EmcyBase) {
     can_net_destroy(net);
     dev_holder.reset();
 
-    set_errnum(0);
+    set_errnum(ERRNUM_SUCCESS);
   }
 };
 

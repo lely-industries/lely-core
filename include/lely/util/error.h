@@ -80,7 +80,7 @@
 #endif
 
 /// The platform-independent error numbers.
-enum errnum {
+typedef enum errnum {
 	/// No error reported.
 	ERRNUM_SUCCESS = 0,
 	/// Argument list too long.
@@ -265,14 +265,7 @@ enum errnum {
 	ERRNUM_AI_SERVICE,
 	/// The intended socket type was not recognized.
 	ERRNUM_AI_SOCKTYPE
-};
-
-/// The platform-independent error number type.
-#ifdef __cplusplus
-typedef int errnum_t;
-#else
-typedef enum errnum errnum_t;
-#endif
+} errnum_t;
 
 #ifdef __cplusplus
 extern "C" {

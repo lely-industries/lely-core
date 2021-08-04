@@ -189,7 +189,7 @@ TEST(Util_MemPool, MemPool_Alloc_OutOfMemory) {
 /// \Then a null pointer is returned, nothing is changed;
 ///       no error is reported
 TEST(Util_MemPool, MemPool_Alloc_SizeZero) {
-  set_errnum(0);
+  set_errnum(ERRNUM_SUCCESS);
 
   const auto result = mem_alloc(alloc, 0, 0);
 

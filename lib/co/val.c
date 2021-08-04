@@ -1063,7 +1063,7 @@ co_val_lex(co_unsigned16_t type, void *val, const char *begin, const char *end,
 
 	// Prevent a previous range error from triggering a spurious warning.
 	if (get_errnum() == ERRNUM_RANGE)
-		set_errnum(0);
+		set_errnum(ERRNUM_SUCCESS);
 
 	const char *cp = begin;
 	size_t chars = 0;
