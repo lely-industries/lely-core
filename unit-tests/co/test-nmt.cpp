@@ -24,7 +24,6 @@
 #include <config.h>
 #endif
 
-#include <functional>
 #include <memory>
 #include <vector>
 
@@ -37,14 +36,17 @@
 #include <libtest/allocators/limited.hpp>
 #include <libtest/override/lelyco-val.hpp>
 #include <libtest/tools/can-send.hpp>
+#include <libtest/tools/co-nmt-cs-ind.hpp>
+#include <libtest/tools/co-nmt-st-ind.hpp>
 #include <libtest/tools/lely-cpputest-ext.hpp>
 #include <libtest/tools/lely-unit-test.hpp>
-#include <libtest/tools/co-nmt-st-ind.hpp>
 
 #include "holder/dev.hpp"
 #include "holder/obj.hpp"
 #include "holder/sub.hpp"
 #include "common/nmt-alloc-sizes.hpp"
+
+#include "obj-init/error-behavior-object.hpp"
 #include "obj-init/nmt-hb-consumer.hpp"
 #include "obj-init/nmt-slave-assignment.hpp"
 #include "obj-init/nmt-startup.hpp"
@@ -72,8 +74,6 @@
 
 #endif  // LELY_NO_MALLOC
 
-using NmtCsSeq = std::vector<co_unsigned8_t>;
-
 TEST_BASE(CO_NmtBase) {
   TEST_BASE_SUPER(CO_NmtBase);
 
@@ -94,6 +94,7 @@ TEST_BASE(CO_NmtBase) {
 
   std::unique_ptr<CoObjTHolder> obj1016;
   std::unique_ptr<CoObjTHolder> obj1017;
+  std::unique_ptr<CoObjTHolder> obj1029;
   std::unique_ptr<CoObjTHolder> obj1f80;
   std::unique_ptr<CoObjTHolder> obj1f81;
   std::unique_ptr<CoObjTHolder> obj1f82;
@@ -108,12 +109,8 @@ TEST_BASE(CO_NmtBase) {
 #endif
 
     dev_holder->CreateObj<Obj1016ConsumerHb>(obj1016);
-
-    // 0x00 - Highest sub-index supported
-    obj1016->EmplaceSub<Obj1016ConsumerHb::Sub00HighestSubidxSupported>(
-        co_unsigned8_t{num});
-    // 0x01-0x7f - Consumer Heartbeat Time
-    for (co_unsigned8_t i = 1; i <= num; ++i) {
+    obj1016->EmplaceSub<Obj1016ConsumerHb::Sub00HighestSubidxSupported>(num);
+    for (co_unsigned8_t i = 1u; i <= num; ++i) {
       obj1016->EmplaceSub<Obj1016ConsumerHb::SubNthConsumerHbTime>(
           i,
           Obj1016ConsumerHb::MakeHbConsumerEntry(SLAVE_DEV_ID, 1u));  //  1 ms
@@ -126,10 +123,8 @@ TEST_BASE(CO_NmtBase) {
                              co_unsigned16_t{hb_time});
   }
 
-  void CreateObj1f80NmtStartup(const co_unsigned32_t startup) {
-    dev_holder->CreateAndInsertObj(obj1f80, 0x1f80u);
-    obj1f80->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED32,
-                             co_unsigned32_t{startup});
+  void CreateObj1f80NmtStartup(const Obj1f80NmtStartup::sub_type startup) {
+    dev_holder->CreateObjValue<Obj1f80NmtStartup>(obj1f80, startup);
   }
 
   void CreateObj1f81SlaveAssignmentN(const co_unsigned8_t num) {
@@ -166,6 +161,12 @@ TEST_BASE(CO_NmtBase) {
     obj_rdn->InsertAndSetSub(0x01u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t{0});
   }
 #endif
+
+  void CreateObj1029ErrorBehavior(const co_unsigned8_t eb) {
+    dev_holder->CreateObj<Obj1029ErrorBehavior>(obj1029);
+    obj1029->EmplaceSub<Obj1029ErrorBehavior::Sub00HighestSubidxSupported>();
+    obj1029->EmplaceSub<Obj1029ErrorBehavior::Sub01CommError>(eb);
+  }
 
   TEST_SETUP() {
     LelyUnitTest::DisableDiagnosticMessages();
@@ -1298,86 +1299,10 @@ TEST(CO_NmtAllocation, CoNmtCreate_ExactMemory_WithObj1016_MaxEntries) {
 
 ///@}
 
-class CoNmtCsInd {
- public:
-  static void
-  Func(co_nmt_t* nmt, co_unsigned8_t cs, void* data) {
-    if (checkFunc != nullptr) checkFunc(nmt, cs, data);
-
-    ++num_called_;
-
-    nmt_ = nmt;
-    cs_ = cs;
-    data_ = data;
-  }
-
-  static void
-  Clear() {
-    num_called_ = 0;
-
-    nmt_ = nullptr;
-    cs_ = 0;
-    data_ = nullptr;
-
-    checkFunc = nullptr;
-
-    checkSeqNmt_ = nullptr;
-    checkSeqCs_ = nullptr;
-  }
-
-  static size_t
-  GetNumCalled() {
-    return num_called_;
-  }
-
-  static void
-  Check(const co_nmt_t* const nmt, const co_unsigned8_t cs,
-        const void* const data) {
-    POINTERS_EQUAL(nmt, nmt_);
-    CHECK_EQUAL(cs, cs_);
-    POINTERS_EQUAL(data, data_);
-  }
-
-  static void
-  SetCheckSeq(const co_nmt_t* const nmt, const NmtCsSeq& csSeq) {
-    checkSeqNumCalled_ = csSeq.size();
-    checkSeqNmt_ = nmt;
-    checkSeqCs_ = csSeq.data();
-
-    checkFunc = [](const co_nmt_t* const service, const co_unsigned8_t cs,
-                   const void* const data) {
-      CHECK(num_called_ < checkSeqNumCalled_);
-      POINTERS_EQUAL(checkSeqNmt_, service);
-      CHECK_EQUAL(checkSeqCs_[num_called_], cs);
-      POINTERS_EQUAL(nullptr, data);
-    };
-  }
-
- private:
-  static size_t num_called_;
-
-  static const co_nmt_t* nmt_;
-  static co_unsigned8_t cs_;
-  static const void* data_;
-
-  static std::function<void(co_nmt_t*, co_unsigned8_t, void*)> checkFunc;
-
-  static size_t checkSeqNumCalled_;
-  static const co_nmt_t* checkSeqNmt_;
-  static const co_unsigned8_t* checkSeqCs_;
-};
-
-size_t CoNmtCsInd::num_called_ = 0;
-const co_nmt_t* CoNmtCsInd::nmt_ = nullptr;
-co_unsigned8_t CoNmtCsInd::cs_ = 0;
-const void* CoNmtCsInd::data_ = nullptr;
-std::function<void(co_nmt_t*, co_unsigned8_t, void*)> CoNmtCsInd::checkFunc =
-    nullptr;
-size_t CoNmtCsInd::checkSeqNumCalled_ = 0;
-const co_nmt_t* CoNmtCsInd::checkSeqNmt_ = nullptr;
-const co_unsigned8_t* CoNmtCsInd::checkSeqCs_ = nullptr;
-
 TEST_GROUP_BASE(CO_Nmt, CO_NmtBase) {
+  static constexpr co_unsigned8_t NMT_EC_MSG_SIZE = 1u;
+  static constexpr co_unsigned8_t NMT_CS_MSG_SIZE = 2u;
+
   co_nmt_t* nmt = nullptr;
 
   std::unique_ptr<CoObjTHolder> obj102a;
@@ -1401,6 +1326,10 @@ TEST_GROUP_BASE(CO_Nmt, CO_NmtBase) {
     CreateNmt();
     CHECK_EQUAL(0, co_nmt_cs_ind(nmt, CO_NMT_CS_RESET_NODE));
 
+    CanSend::Clear();
+    CoNmtCsInd::Clear();
+    CoNmtStInd::Clear();
+
     co_nmt_set_cs_ind(nmt, &CoNmtCsInd::Func, nullptr);
     co_nmt_set_st_ind(nmt, &CoNmtStInd::Func, nullptr);
   }
@@ -1417,11 +1346,13 @@ TEST_GROUP_BASE(CO_Nmt, CO_NmtBase) {
     CHECK_EQUAL(0, co_nmt_cs_ind(nmt, CO_NMT_CS_RESET_NODE));
   }
 
-  void SetNmtCsStIndFunc(const NmtCsSeq& csSeq = {},
-                         const NmtStSeq& stSeq = {}) {
+  void SetNmtCsStIndFunc(const CoNmtCsInd::Seq& csSeq = {},
+                         const CoNmtStInd::Seq& stSeq = {}) {
+    CoNmtCsInd::Clear();
     co_nmt_set_cs_ind(nmt, &CoNmtCsInd::Func, nullptr);
     if (csSeq.size() != 0) CoNmtCsInd::SetCheckSeq(nmt, csSeq);
 
+    CoNmtStInd::Clear();
     co_nmt_set_st_ind(nmt, &CoNmtStInd::Func, nullptr);
     if (stSeq.size() != 0) CoNmtStInd::SetCheckSeq(nmt, DEV_ID, stSeq);
   }
@@ -1436,7 +1367,7 @@ TEST_GROUP_BASE(CO_Nmt, CO_NmtBase) {
       const {
     can_msg msg = CAN_MSG_INIT;
     msg.id = CO_NMT_EC_CANID(id);
-    msg.len = 1u;
+    msg.len = NMT_EC_MSG_SIZE;
     msg.data[0] = st;
 
     return msg;
@@ -1445,28 +1376,31 @@ TEST_GROUP_BASE(CO_Nmt, CO_NmtBase) {
   can_msg CreateNmtMsg(const co_unsigned8_t id, const co_unsigned8_t cs) const {
     can_msg msg = CAN_MSG_INIT;
     msg.id = CO_NMT_CS_CANID;
-    msg.len = 2u;
+    msg.len = NMT_CS_MSG_SIZE;
     msg.data[0] = cs;
     msg.data[1] = id;
 
     return msg;
   }
 
-  void SetupMaster() {
-    dev_holder->CreateObjValue<Obj1f80NmtStartup>(
-        obj1f80, Obj1f80NmtStartup::MASTER_BIT);
+  void SetupMaster(const co_unsigned32_t startup =
+                       Obj1f80NmtStartup::MASTER_BIT) {
+    dev_holder->CreateObjValue<Obj1f80NmtStartup>(obj1f80, startup);
   }
 
-  void SetupMasterWithSlave() {
-    SetupMaster();
+  void SetupMasterWithSlave(const co_unsigned32_t startup =
+                                Obj1f80NmtStartup::MASTER_BIT) {
+    SetupMaster(startup);
 
     dev_holder->CreateObj<Obj1f81NmtSlaveAssignment>(obj1f81);
     obj1f81->EmplaceSub<Obj1f81NmtSlaveAssignment::Sub00HighestSubidxSupported>(
-        2u);
+        SLAVE_DEV_ID);
     obj1f81->EmplaceSub<Obj1f81NmtSlaveAssignment::SubNthSlaveEntry>(
-        MASTER_DEV_ID, Obj1f81NmtSlaveAssignment::ASSIGNMENT_BIT);
+        MASTER_DEV_ID, Obj1f81NmtSlaveAssignment::ASSIGNMENT_BIT |
+                           Obj1f81NmtSlaveAssignment::MANDATORY_BIT);
     obj1f81->EmplaceSub<Obj1f81NmtSlaveAssignment::SubNthSlaveEntry>(
-        SLAVE_DEV_ID, Obj1f81NmtSlaveAssignment::ASSIGNMENT_BIT);
+        SLAVE_DEV_ID, Obj1f81NmtSlaveAssignment::ASSIGNMENT_BIT |
+                          Obj1f81NmtSlaveAssignment::MANDATORY_BIT);
   }
 
   TEST_SETUP() {
@@ -2327,7 +2261,6 @@ TEST(CO_Nmt, CoNmtCsReq_Nominal) {
 
   CHECK_EQUAL(0, ret);
   CHECK_EQUAL(1u, CanSend::GetNumCalled());
-  const size_t NMT_CS_MSG_SIZE = 2u;
   const uint_least8_t data[NMT_CS_MSG_SIZE] = {CO_NMT_CS_START, SLAVE_DEV_ID};
   CanSend::CheckMsg(CO_NMT_CS_CANID, 0, NMT_CS_MSG_SIZE, data);
 }
@@ -2623,10 +2556,10 @@ TEST(CO_Nmt, CoNmtCsInd_Init_BeforeReset) {
 ///       \Calls co_nmt_hb_set_1016()
 ///       \Calls can_net_send()
 TEST(CO_Nmt, CoNmtCsInd_Init_ResetNode) {
-  const NmtCsSeq csSeq = {CO_NMT_CS_RESET_NODE, CO_NMT_CS_RESET_COMM,
-                          CO_NMT_CS_ENTER_PREOP, CO_NMT_CS_START};
-  const NmtStSeq stSeq = {CO_NMT_ST_BOOTUP, CO_NMT_ST_BOOTUP, CO_NMT_ST_PREOP,
-                          CO_NMT_ST_START};
+  const CoNmtCsInd::Seq csSeq = {CO_NMT_CS_RESET_NODE, CO_NMT_CS_RESET_COMM,
+                                 CO_NMT_CS_ENTER_PREOP, CO_NMT_CS_START};
+  const CoNmtStInd::Seq stSeq = {CO_NMT_ST_BOOTUP, CO_NMT_ST_BOOTUP,
+                                 CO_NMT_ST_PREOP, CO_NMT_ST_START};
   CreateNmt();
   SetNmtCsStIndFunc(csSeq, stSeq);
 
@@ -2672,7 +2605,7 @@ TEST(CO_Nmt, CoNmtCsInd_Init_ResetNode) {
 ///       \Calls can_recv_start()
 ///       \IfCalls{!LELY_NO_CO_MASTER && !LELY_NO_CO_LSS, co_nmt_get_lss()}
 TEST(CO_Nmt, CoNmtCsInd_Init_ResetNode_UnconfiguredId) {
-  const NmtCsSeq csSeq = {CO_NMT_CS_RESET_NODE, CO_NMT_CS_RESET_COMM};
+  const CoNmtCsInd::Seq csSeq = {CO_NMT_CS_RESET_NODE, CO_NMT_CS_RESET_COMM};
 
   CreateNmt();
   SetNmtCsStIndFunc(csSeq);
@@ -2732,9 +2665,10 @@ TEST(CO_Nmt, CoNmtCsInd_Init_ResetNode_UnconfiguredId) {
 ///       \Calls co_nmt_hb_set_1016()
 ///       \Calls can_net_send()
 TEST(CO_Nmt, CoNmtCsInd_BootupResetComm_ResetNode) {
-  const NmtCsSeq csSeq = {CO_NMT_CS_RESET_NODE, CO_NMT_CS_RESET_COMM,
-                          CO_NMT_CS_ENTER_PREOP, CO_NMT_CS_START};
-  const NmtStSeq stSeq = {CO_NMT_ST_BOOTUP, CO_NMT_ST_PREOP, CO_NMT_ST_START};
+  const CoNmtCsInd::Seq csSeq = {CO_NMT_CS_RESET_NODE, CO_NMT_CS_RESET_COMM,
+                                 CO_NMT_CS_ENTER_PREOP, CO_NMT_CS_START};
+  const CoNmtStInd::Seq stSeq = {CO_NMT_ST_BOOTUP, CO_NMT_ST_PREOP,
+                                 CO_NMT_ST_START};
 
   CreateUnconfNmtAndReset();
   SetNmtCsStIndFunc(csSeq, stSeq);
@@ -2791,9 +2725,10 @@ TEST(CO_Nmt, CoNmtCsInd_BootupResetComm_ResetNode) {
 ///       \Calls co_nmt_hb_set_1016()
 ///       \Calls can_net_send()
 TEST(CO_Nmt, CoNmtCsInd_BootupResetComm_ResetComm) {
-  const NmtCsSeq csSeq = {CO_NMT_CS_RESET_COMM, CO_NMT_CS_ENTER_PREOP,
-                          CO_NMT_CS_START};
-  const NmtStSeq stSeq = {CO_NMT_ST_BOOTUP, CO_NMT_ST_PREOP, CO_NMT_ST_START};
+  const CoNmtCsInd::Seq csSeq = {CO_NMT_CS_RESET_COMM, CO_NMT_CS_ENTER_PREOP,
+                                 CO_NMT_CS_START};
+  const CoNmtStInd::Seq stSeq = {CO_NMT_ST_BOOTUP, CO_NMT_ST_PREOP,
+                                 CO_NMT_ST_START};
 
   CreateUnconfNmtAndReset();
   SetNmtCsStIndFunc(csSeq, stSeq);
@@ -2918,9 +2853,10 @@ TEST(CO_Nmt, CoNmtCsInd_PreOperational_Stop) {
 ///       \Calls co_nmt_hb_set_1016()
 ///       \Calls can_net_send()
 TEST(CO_Nmt, CoNmtCsInd_PreOperational_ResetNode) {
-  const NmtCsSeq csSeq = {CO_NMT_CS_RESET_NODE, CO_NMT_CS_RESET_COMM,
-                          CO_NMT_CS_ENTER_PREOP};
-  const NmtStSeq stSeq = {CO_NMT_ST_BOOTUP, CO_NMT_ST_BOOTUP, CO_NMT_ST_PREOP};
+  const CoNmtCsInd::Seq csSeq = {CO_NMT_CS_RESET_NODE, CO_NMT_CS_RESET_COMM,
+                                 CO_NMT_CS_ENTER_PREOP};
+  const CoNmtStInd::Seq stSeq = {CO_NMT_ST_BOOTUP, CO_NMT_ST_BOOTUP,
+                                 CO_NMT_ST_PREOP};
 
   CreateObj1f80NmtStartup(0x04);  // do not start automatically
   CreateNmtAndReset();
@@ -2976,8 +2912,8 @@ TEST(CO_Nmt, CoNmtCsInd_PreOperational_ResetNode) {
 ///       \Calls co_nmt_hb_set_1016()
 ///       \Calls can_net_send()
 TEST(CO_Nmt, CoNmtCsInd_PreOperational_ResetComm) {
-  const NmtCsSeq csSeq = {CO_NMT_CS_RESET_COMM, CO_NMT_CS_ENTER_PREOP};
-  const NmtStSeq stSeq = {CO_NMT_ST_BOOTUP, CO_NMT_ST_PREOP};
+  const CoNmtCsInd::Seq csSeq = {CO_NMT_CS_RESET_COMM, CO_NMT_CS_ENTER_PREOP};
+  const CoNmtStInd::Seq stSeq = {CO_NMT_ST_BOOTUP, CO_NMT_ST_PREOP};
 
   CreateObj1f80NmtStartup(0x04);  // do not start automatically
   CreateNmtAndReset();
@@ -3107,10 +3043,10 @@ TEST(CO_Nmt, CoNmtCsInd_Start_Stop) {
 ///       \Calls co_nmt_hb_set_1016()
 ///       \Calls can_net_send()
 TEST(CO_Nmt, CoNmtCsInd_Start_ResetNode) {
-  const NmtCsSeq csSeq = {CO_NMT_CS_RESET_NODE, CO_NMT_CS_RESET_COMM,
-                          CO_NMT_CS_ENTER_PREOP, CO_NMT_CS_START};
-  const NmtStSeq stSeq = {CO_NMT_ST_BOOTUP, CO_NMT_ST_BOOTUP, CO_NMT_ST_PREOP,
-                          CO_NMT_ST_START};
+  const CoNmtCsInd::Seq csSeq = {CO_NMT_CS_RESET_NODE, CO_NMT_CS_RESET_COMM,
+                                 CO_NMT_CS_ENTER_PREOP, CO_NMT_CS_START};
+  const CoNmtStInd::Seq stSeq = {CO_NMT_ST_BOOTUP, CO_NMT_ST_BOOTUP,
+                                 CO_NMT_ST_PREOP, CO_NMT_ST_START};
   CreateNmtAndReset();
   SetNmtCsStIndFunc(csSeq, stSeq);
 
@@ -3163,9 +3099,10 @@ TEST(CO_Nmt, CoNmtCsInd_Start_ResetNode) {
 ///       \Calls co_nmt_hb_set_1016()
 ///       \Calls can_net_send()
 TEST(CO_Nmt, CoNmtCsInd_Start_ResetComm) {
-  const NmtCsSeq csSeq = {CO_NMT_CS_RESET_COMM, CO_NMT_CS_ENTER_PREOP,
-                          CO_NMT_CS_START};
-  const NmtStSeq stSeq = {CO_NMT_ST_BOOTUP, CO_NMT_ST_PREOP, CO_NMT_ST_START};
+  const CoNmtCsInd::Seq csSeq = {CO_NMT_CS_RESET_COMM, CO_NMT_CS_ENTER_PREOP,
+                                 CO_NMT_CS_START};
+  const CoNmtStInd::Seq stSeq = {CO_NMT_ST_BOOTUP, CO_NMT_ST_PREOP,
+                                 CO_NMT_ST_START};
 
   CreateNmtAndReset();
   SetNmtCsStIndFunc(csSeq, stSeq);
@@ -3291,10 +3228,10 @@ TEST(CO_Nmt, CoNmtCsInd_Stop_Start) {
 ///       \Calls co_nmt_hb_set_1016()
 ///       \Calls can_net_send()
 TEST(CO_Nmt, CoNmtCsInd_Stop_ResetNode) {
-  const NmtCsSeq csSeq = {CO_NMT_CS_RESET_NODE, CO_NMT_CS_RESET_COMM,
-                          CO_NMT_CS_ENTER_PREOP, CO_NMT_CS_START};
-  const NmtStSeq stSeq = {CO_NMT_ST_BOOTUP, CO_NMT_ST_BOOTUP, CO_NMT_ST_PREOP,
-                          CO_NMT_ST_START};
+  const CoNmtCsInd::Seq csSeq = {CO_NMT_CS_RESET_NODE, CO_NMT_CS_RESET_COMM,
+                                 CO_NMT_CS_ENTER_PREOP, CO_NMT_CS_START};
+  const CoNmtStInd::Seq stSeq = {CO_NMT_ST_BOOTUP, CO_NMT_ST_BOOTUP,
+                                 CO_NMT_ST_PREOP, CO_NMT_ST_START};
   CreateNmtAndStop();
   SetNmtCsStIndFunc(csSeq, stSeq);
 
@@ -3347,9 +3284,10 @@ TEST(CO_Nmt, CoNmtCsInd_Stop_ResetNode) {
 ///       \Calls co_nmt_hb_set_1016()
 ///       \Calls can_net_send()
 TEST(CO_Nmt, CoNmtCsInd_Stop_ResetComm) {
-  const NmtCsSeq csSeq = {CO_NMT_CS_RESET_COMM, CO_NMT_CS_ENTER_PREOP,
-                          CO_NMT_CS_START};
-  const NmtStSeq stSeq = {CO_NMT_ST_BOOTUP, CO_NMT_ST_PREOP, CO_NMT_ST_START};
+  const CoNmtCsInd::Seq csSeq = {CO_NMT_CS_RESET_COMM, CO_NMT_CS_ENTER_PREOP,
+                                 CO_NMT_CS_START};
+  const CoNmtStInd::Seq stSeq = {CO_NMT_ST_BOOTUP, CO_NMT_ST_PREOP,
+                                 CO_NMT_ST_START};
 
   CreateNmtAndStop();
   SetNmtCsStIndFunc(csSeq, stSeq);
@@ -3424,8 +3362,9 @@ TEST(CO_Nmt, CoNmtCsInd_Stop_Stop) {
 TEST(CO_Nmt, CoNmtCsInd_WithoutCsInd) {
   CreateNmt();
 
-  const NmtStSeq stSeq = {CO_NMT_ST_BOOTUP, CO_NMT_ST_BOOTUP, CO_NMT_ST_PREOP,
-                          CO_NMT_ST_START, CO_NMT_ST_STOP};
+  const CoNmtStInd::Seq stSeq = {CO_NMT_ST_BOOTUP, CO_NMT_ST_BOOTUP,
+                                 CO_NMT_ST_PREOP, CO_NMT_ST_START,
+                                 CO_NMT_ST_STOP};
   co_nmt_set_st_ind(nmt, &CoNmtStInd::Func, nullptr);
   CoNmtStInd::SetCheckSeq(nmt, DEV_ID, stSeq);
 
@@ -3436,6 +3375,304 @@ TEST(CO_Nmt, CoNmtCsInd_WithoutCsInd) {
 }
 
 ///@}
+
+/// @name co_nmt_comm_err_ind()
+///@{
+
+/// \Given a started NMT service (co_nmt_t), the object dictionary contains
+///        the Error Behavior object (0x1029) containing the Communication
+///        Error entry (0x01) with the value `0x00`; the node is in the
+///        operational state
+///
+/// \When co_nmt_comm_err_ind() is called
+///
+/// \Then the node transitions to the NMT 'pre-operational' state
+TEST(CO_Nmt, CoNmtCommErrInd_Obj1029_Value00_Operational) {
+  CreateObj1f80NmtStartup(Obj1f80NmtStartup::AUTOSTART_BIT);
+  CreateObj1029ErrorBehavior(Obj1029ErrorBehavior::CHANGE_TO_PREOP);
+  CreateNmtAndReset();
+  co_nmt_cs_ind(nmt, CO_NMT_CS_START);
+  CoNmtCsInd::Clear();
+  CoNmtStInd::Clear();
+
+  co_nmt_comm_err_ind(nmt);
+
+  CHECK_EQUAL(CO_NMT_ST_PREOP, co_nmt_get_st(nmt));
+  CHECK_EQUAL(1u, CoNmtCsInd::GetNumCalled());
+  CoNmtCsInd::Check(nmt, CO_NMT_CS_ENTER_PREOP, nullptr);
+  CHECK_EQUAL(1u, CoNmtStInd::GetNumCalled());
+  CoNmtStInd::Check(nmt, DEV_ID, CO_NMT_ST_PREOP, nullptr);
+}
+
+/// \Given a started NMT service (co_nmt_t), the object dictionary contains
+///        the Error Behavior object (0x1029) containing the Communication
+///        Error entry (0x01) with the value `0x00`; the node is not in the
+///        operational state
+///
+/// \When co_nmt_comm_err_ind() is called
+///
+/// \Then nothing is changed
+TEST(CO_Nmt, CoNmtCommErrInd_Obj1029_Value00_NotOperational) {
+  CreateObj1029ErrorBehavior(Obj1029ErrorBehavior::CHANGE_TO_PREOP);
+  CreateNmtAndReset();
+  co_nmt_cs_ind(nmt, CO_NMT_CS_STOP);
+  CoNmtCsInd::Clear();
+  CoNmtStInd::Clear();
+
+  co_nmt_comm_err_ind(nmt);
+
+  CHECK_EQUAL(CO_NMT_ST_STOP, co_nmt_get_st(nmt));
+  CHECK_EQUAL(0, CoNmtCsInd::GetNumCalled());
+  CHECK_EQUAL(0, CoNmtStInd::GetNumCalled());
+}
+
+/// \Given a started NMT service (co_nmt_t), the object dictionary contains
+///        the Error Behavior object (0x1029) containing the Communication
+///        Error entry (0x01) with the value `0x01`
+///
+/// \When co_nmt_comm_err_ind() is called
+///
+/// \Then nothing is changed
+TEST(CO_Nmt, CoNmtCommErrInd_Obj1029_Value01) {
+  CreateObj1029ErrorBehavior(Obj1029ErrorBehavior::NO_CHANGE);
+  CreateNmtAndReset();
+
+  co_nmt_comm_err_ind(nmt);
+
+  CHECK_EQUAL(CO_NMT_ST_START, co_nmt_get_st(nmt));
+  CHECK_EQUAL(0, CoNmtCsInd::GetNumCalled());
+  CHECK_EQUAL(0, CoNmtStInd::GetNumCalled());
+}
+
+/// \Given a started NMT service (co_nmt_t), the object dictionary contains
+///        the Error Behavior object (0x1029) containing the Communication
+///        Error entry (0x01) with the value `0x02`
+///
+/// \When co_nmt_comm_err_ind() is called
+///
+/// \Then the node transitions to the NMT 'stop' state
+TEST(CO_Nmt, CoNmtCommErrInd_Obj1029_Value02) {
+  CreateObj1029ErrorBehavior(Obj1029ErrorBehavior::CHANGE_TO_STOP);
+  CreateNmtAndReset();
+
+  co_nmt_comm_err_ind(nmt);
+
+  CHECK_EQUAL(CO_NMT_ST_STOP, co_nmt_get_st(nmt));
+  CHECK_EQUAL(1u, CoNmtCsInd::GetNumCalled());
+  CoNmtCsInd::Check(nmt, CO_NMT_CS_STOP, nullptr);
+  CHECK_EQUAL(1u, CoNmtStInd::GetNumCalled());
+  CoNmtStInd::Check(nmt, DEV_ID, CO_NMT_ST_STOP, nullptr);
+}
+
+///@}
+
+#if !LELY_NO_CO_MASTER
+
+/// @name co_nmt_node_err_ind()
+///@{
+
+/// \Given a started NMT service (co_nmt_t) configured as NMT slave
+///
+/// \When co_nmt_node_err_ind() is called with any Node-ID
+///
+/// \Then -1 is returned and the error number is set to ERRNUM_PERM
+TEST(CO_Nmt, CoNmtNodeErrInd_NotMaster) {
+  CreateNmtAndReset();
+
+  const auto ret = co_nmt_node_err_ind(nmt, 0);
+
+  CHECK_EQUAL(-1, ret);
+  CHECK_EQUAL(ERRNUM_PERM, get_errnum());
+  CHECK_EQUAL(0, CanSend::GetNumCalled());
+  CHECK_EQUAL(0, CoNmtCsInd::GetNumCalled());
+  CHECK_EQUAL(0, CoNmtStInd::GetNumCalled());
+}
+
+/// \Given a started NMT service (co_nmt_t) configured as NMT master
+///
+/// \When co_nmt_node_err_ind() is called with a Node-ID equal to 0
+///
+/// \Then -1 is returned and the error number is set to ERRNUM_INVAL
+TEST(CO_Nmt, CoNmtNodeErrInd_ZeroNodeId) {
+  SetupMaster();
+  CreateNmtAndReset();
+
+  const auto ret = co_nmt_node_err_ind(nmt, 0);
+
+  CHECK_EQUAL(-1, ret);
+  CHECK_EQUAL(ERRNUM_INVAL, get_errnum());
+  CHECK_EQUAL(0, CanSend::GetNumCalled());
+  CHECK_EQUAL(0, CoNmtCsInd::GetNumCalled());
+  CHECK_EQUAL(0, CoNmtStInd::GetNumCalled());
+}
+
+/// \Given a started NMT service (co_nmt_t) configured as NMT master
+///
+/// \When co_nmt_node_err_ind() is called with a Node-ID larger than
+///       CO_NUM_NODES
+///
+/// \Then -1 is returned and the error number is set to ERRNUM_INVAL
+TEST(CO_Nmt, CoNmtNodeErrInd_NodeIdOverMax) {
+  SetupMaster();
+  CreateNmtAndReset();
+
+  const auto ret = co_nmt_node_err_ind(nmt, CO_NUM_NODES + 1u);
+
+  CHECK_EQUAL(-1, ret);
+  CHECK_EQUAL(ERRNUM_INVAL, get_errnum());
+  CHECK_EQUAL(0, CanSend::GetNumCalled());
+  CHECK_EQUAL(0, CoNmtCsInd::GetNumCalled());
+  CHECK_EQUAL(0, CoNmtStInd::GetNumCalled());
+}
+
+/// \Given a started NMT service (co_nmt_t) configured as NMT master
+///
+/// \When co_nmt_node_err_ind() is called with a Node-ID of an unknown slave
+///
+/// \Then 0 is returned, nothing is changed
+TEST(CO_Nmt, CoNmtNodeErrInd_UnknownSlave) {
+  SetupMaster();
+  CreateNmtAndReset();
+
+  const auto ret = co_nmt_node_err_ind(nmt, SLAVE_DEV_ID);
+
+  CHECK_EQUAL(0, ret);
+  CHECK_EQUAL(0, CanSend::GetNumCalled());
+  CHECK_EQUAL(0, CoNmtCsInd::GetNumCalled());
+  CHECK_EQUAL(0, CoNmtStInd::GetNumCalled());
+}
+
+// FIXME: there is a bug in the NMT 'boot slave' in MALLOC mode (non-ECSS)
+#if LELY_NO_MALLOC
+
+/// \Given a started NMT service (co_nmt_t) configured as NMT master with
+///        `0x40` bit set in the NMT Startup object (0x1f80)
+///
+/// \When co_nmt_node_err_ind() is called with a Node-ID of a mandatory slave
+///
+/// \Then 0 is returned, the NMT 'stop' command is sent to all nodes
+///       (`Node-ID = 0`) and the master transitions to the NMT 'stop' state
+TEST(CO_Nmt, CoNmtNodeErrInd_MandatorySlave_StopAllNodes) {
+  SetupMasterWithSlave(Obj1f80NmtStartup::MASTER_BIT |
+                       Obj1f80NmtStartup::STOP_NODES_ON_ERR);
+  CreateNmtAndReset();
+#if LELY_NO_CO_NMT_BOOT
+  CHECK_EQUAL(CO_NMT_ST_START, co_nmt_get_st(nmt));
+#else
+  CHECK_EQUAL(CO_NMT_ST_PREOP, co_nmt_get_st(nmt));
+#endif
+
+  const auto ret = co_nmt_node_err_ind(nmt, SLAVE_DEV_ID);
+
+  CHECK_EQUAL(0, ret);
+
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
+  CanSend::CheckMsg(CreateNmtMsg(0, CO_NMT_CS_STOP));
+
+  CHECK_EQUAL(CO_NMT_ST_STOP, co_nmt_get_st(nmt));
+  CHECK_EQUAL(1u, CoNmtCsInd::GetNumCalled());
+  CoNmtCsInd::Check(nmt, CO_NMT_CS_STOP, nullptr);
+  CHECK_EQUAL(1u, CoNmtStInd::GetNumCalled());
+  CoNmtStInd::Check(nmt, DEV_ID, CO_NMT_ST_STOP, nullptr);
+}
+
+/// \Given a started NMT service (co_nmt_t) configured as NMT master with
+///        `0x10` bit set in the NMT Startup object (0x1f80)
+///
+/// \When co_nmt_node_err_ind() is called with a Node-ID of a mandatory slave
+///
+/// \Then 0 is returned, the NMT 'reset node' command is sent to all nodes
+///       (`Node-ID = 0`) and the master resets itself
+TEST(CO_Nmt, CoNmtNodeErrInd_MandatorySlave_ResetAllNodes) {
+  SetupMasterWithSlave(Obj1f80NmtStartup::MASTER_BIT |
+                       Obj1f80NmtStartup::RESET_NODES_ON_ERR);
+  CreateNmtAndReset();
+#if LELY_NO_CO_NMT_BOOT
+  CHECK_EQUAL(CO_NMT_ST_START, co_nmt_get_st(nmt));
+#else
+  CHECK_EQUAL(CO_NMT_ST_PREOP, co_nmt_get_st(nmt));
+#endif
+
+  const CoNmtCsInd::Seq csSeq = {CO_NMT_CS_RESET_NODE, CO_NMT_CS_RESET_COMM,
+                                 CO_NMT_CS_ENTER_PREOP, CO_NMT_CS_START};
+  const CoNmtStInd::Seq stSeq = {CO_NMT_ST_BOOTUP, CO_NMT_ST_BOOTUP,
+                                 CO_NMT_ST_PREOP, CO_NMT_ST_START};
+  SetNmtCsStIndFunc(csSeq, stSeq);
+
+  const CanSend::MsgSeq msgSeq = {
+      CreateNmtMsg(0, CO_NMT_CS_RESET_NODE),
+      CreateNmtEcMsg(MASTER_DEV_ID, CO_NMT_ST_BOOTUP),
+      CreateNmtMsg(0, CO_NMT_CS_RESET_COMM),
+  };
+  CanSend::SetCheckSeq(msgSeq);
+
+  const auto ret = co_nmt_node_err_ind(nmt, SLAVE_DEV_ID);
+
+  CHECK_EQUAL(0, ret);
+
+  CHECK_EQUAL(msgSeq.size(), CanSend::GetNumCalled());
+
+#if LELY_NO_CO_NMT_BOOT
+  CHECK_EQUAL(CO_NMT_ST_START, co_nmt_get_st(nmt));
+  CHECK_EQUAL(csSeq.size(), CoNmtCsInd::GetNumCalled());
+  CHECK_EQUAL(stSeq.size(), CoNmtStInd::GetNumCalled());
+#else
+  CHECK_EQUAL(CO_NMT_ST_PREOP, co_nmt_get_st(nmt));
+  CHECK_EQUAL(csSeq.size() - 1u, CoNmtCsInd::GetNumCalled());
+  CHECK_EQUAL(stSeq.size() - 1u, CoNmtStInd::GetNumCalled());
+#endif
+}
+
+#endif  // LELY_NO_MALLOC
+
+/// \Given a started NMT service (co_nmt_t) configured as NMT master, no
+///        additional bits in the NMT Startup object (0x1f80) are set
+///
+/// \When co_nmt_node_err_ind() is called with a Node-ID of a mandatory slave
+///
+/// \Then 0 is returned, the NMT 'reset node' command is sent to the slave
+TEST(CO_Nmt, CoNmtNodeErrInd_MandatorySlave_NoBits) {
+  SetupMasterWithSlave();
+  CreateNmtAndReset();
+
+  const auto ret = co_nmt_node_err_ind(nmt, SLAVE_DEV_ID);
+
+  CHECK_EQUAL(0, ret);
+
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
+  CanSend::CheckMsg(CreateNmtMsg(SLAVE_DEV_ID, CO_NMT_CS_RESET_NODE));
+
+  CHECK_EQUAL(0, CoNmtCsInd::GetNumCalled());
+  CHECK_EQUAL(0, CoNmtStInd::GetNumCalled());
+}
+
+/// \Given a started NMT service (co_nmt_t) configured as NMT master
+///
+/// \When co_nmt_node_err_ind() is called with a Node-ID of a non-mandatory
+///       slave
+///
+/// \Then 0 is returned, the NMT 'reset node' command is sent to the slave
+TEST(CO_Nmt, CoNmtNodeErrInd_NonMandatorySlave) {
+  SetupMasterWithSlave();
+  obj1f81->SetSub<Obj1f81NmtSlaveAssignment::SubNthSlaveEntry>(
+      SLAVE_DEV_ID, Obj1f81NmtSlaveAssignment::ASSIGNMENT_BIT);
+
+  CreateNmtAndReset();
+
+  const auto ret = co_nmt_node_err_ind(nmt, SLAVE_DEV_ID);
+
+  CHECK_EQUAL(0, ret);
+
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
+  CanSend::CheckMsg(CreateNmtMsg(SLAVE_DEV_ID, CO_NMT_CS_RESET_NODE));
+
+  CHECK_EQUAL(0, CoNmtCsInd::GetNumCalled());
+  CHECK_EQUAL(0, CoNmtStInd::GetNumCalled());
+}
+
+///@}
+
+#endif  // !LELY_NO_CO_MASTER
 
 /// @name co_dev_cfg_hb()
 ///@{

@@ -24,8 +24,6 @@
 #include <config.h>
 #endif
 
-#include <functional>
-
 #include <CppUTest/TestHarness.h>
 
 #include "co-nmt-rdn-ind.hpp"
@@ -35,8 +33,7 @@ co_nmt_t* CoNmtRdnInd::nmt_ = nullptr;
 co_unsigned8_t CoNmtRdnInd::bus_id_ = 0;
 co_nmt_ecss_rdn_reason_t CoNmtRdnInd::reason_;
 void* CoNmtRdnInd::data_ = nullptr;
-std::function<void(co_nmt_t*, co_unsigned8_t, co_nmt_ecss_rdn_reason_t, void*)>
-    CoNmtRdnInd::checkFunc_ = nullptr;
+std::function<co_nmt_ecss_rdn_ind_t> CoNmtRdnInd::checkFunc_ = nullptr;
 
 void
 CoNmtRdnInd::Func(co_nmt_t* const nmt, const co_unsigned8_t bus_id,

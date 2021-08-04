@@ -23,15 +23,15 @@
 #ifndef LELY_UNIT_TEST_CO_NMT_ST_IND_HPP_
 #define LELY_UNIT_TEST_CO_NMT_ST_IND_HPP_
 
-#include <lely/co/type.h>
-#include <lely/co/nmt.h>
-
+#include <functional>
 #include <vector>
 
-using NmtStSeq = std::vector<co_unsigned8_t>;
+#include <lely/co/nmt.h>
 
 class CoNmtStInd {
  public:
+  using Seq = std::vector<co_unsigned8_t>;
+
   static void Func(co_nmt_t* nmt, co_unsigned8_t id, co_unsigned8_t st,
                    void* data);
   static void Clear();
@@ -42,7 +42,7 @@ class CoNmtStInd {
     return num_called;
   }
   static void SetCheckSeq(const co_nmt_t* const nmt, const co_unsigned8_t id,
-                          const NmtStSeq& stSeq);
+                          const Seq& stSeq);
 
  private:
   static size_t num_called;

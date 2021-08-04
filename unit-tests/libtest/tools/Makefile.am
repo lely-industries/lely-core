@@ -11,6 +11,7 @@ liblely_unit_test_src += lely-unit-test.cpp
 liblely_unit_test_src += can-send.cpp
 liblely_unit_test_src += co-csdo-dn-con.cpp
 liblely_unit_test_src += co-csdo-up-con.cpp
+liblely_unit_test_src += co-nmt-cs-ind.cpp
 liblely_unit_test_src += co-nmt-hb-ind.cpp
 liblely_unit_test_src += co-nmt-st-ind.cpp
 liblely_unit_test_src += co-nmt-rdn-ind.cpp

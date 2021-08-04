@@ -24,20 +24,16 @@
 #include <config.h>
 #endif
 
-#include <functional>
-
 #include <CppUTest/TestHarness.h>
 
-#include <lely/co/nmt.h>
-#include <lely/co/type.h>
 #include <lely/co/val.h>
 
 #include "co-nmt-st-ind.hpp"
 
 size_t CoNmtStInd::num_called = 0;
 co_nmt_t* CoNmtStInd::nmt_ = nullptr;
-co_unsigned8_t CoNmtStInd::id_ = 255u;
-co_unsigned8_t CoNmtStInd::st_ = 255u;
+co_unsigned8_t CoNmtStInd::id_ = CO_UNSIGNED8_MAX;
+co_unsigned8_t CoNmtStInd::st_ = CO_UNSIGNED8_MAX;
 void* CoNmtStInd::data_ = nullptr;
 std::function<co_nmt_st_ind_t> CoNmtStInd::checkFunc;
 
@@ -78,7 +74,7 @@ CoNmtStInd::Check(const co_nmt_t* const nmt, const co_unsigned8_t id,
 
 void
 CoNmtStInd::SetCheckSeq(const co_nmt_t* const nmt, const co_unsigned8_t id,
-                        const NmtStSeq& stSeq) {
+                        const Seq& stSeq) {
   checkFunc = [nmt, id, stSeq](
                   const co_nmt_t* const service, const co_unsigned8_t seqId,
                   const co_unsigned8_t st, const void* const data) {

@@ -27,9 +27,6 @@
 #include <CppUTest/TestHarness.h>
 #include <CppUTestExt/MockSupport.h>
 
-#include <lely/co/nmt.h>
-#include <lely/co/type.h>
-
 #include "co-nmt-hb-ind.hpp"
 
 size_t CoNmtHbInd::num_called = 0;
