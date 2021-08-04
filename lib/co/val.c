@@ -1622,7 +1622,7 @@ static inline co_unsigned40_t
 ldle_u40(const uint_least8_t begin[5])
 {
 	co_unsigned40_t v = 0;
-	for (unsigned i = 0; i < 5; ++i)
+	for (uint_least8_t i = 0; i < 5; ++i)
 		v |= ((co_unsigned40_t)begin[i] & 0xffu) << (8u * i);
 	return v;
 }
@@ -1631,7 +1631,7 @@ static inline co_unsigned48_t
 ldle_u48(const uint_least8_t begin[6])
 {
 	co_unsigned48_t v = 0;
-	for (unsigned i = 0; i < 6; ++i)
+	for (uint_least8_t i = 0; i < 6; ++i)
 		v |= ((co_unsigned48_t)begin[i] & 0xffu) << (8u * i);
 	return v;
 }
@@ -1640,7 +1640,7 @@ static inline co_unsigned56_t
 ldle_u56(const uint_least8_t begin[7])
 {
 	co_unsigned56_t v = 0;
-	for (unsigned i = 0; i < 7; ++i)
+	for (uint_least8_t i = 0; i < 7; ++i)
 		v |= ((co_unsigned56_t)begin[i] & 0xffu) << (8u * i);
 	return v;
 }

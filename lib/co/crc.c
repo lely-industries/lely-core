@@ -31,9 +31,9 @@ co_crc(uint_least16_t crc, const uint_least8_t *bp, size_t n)
 	// bytes. The table was computed with the following code:
 	/*
 	uint_least16_t tab[256];
-	for (int n = 0; n < 256; n++) {
+	for (size_t n = 0; n < 256; n++) {
 		uint_least16_t crc = n << 8;
-		for (int k = 0; k < 8; k++) {
+		for (size_t k = 0; k < 8; k++) {
 			if (crc & 0x8000)
 				crc = (crc << 1) ^ 0x1021;
 			else
