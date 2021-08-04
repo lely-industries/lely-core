@@ -2223,7 +2223,8 @@ co_nmt_hb_ind(co_nmt_t *nmt, co_unsigned8_t id, int state, int reason,
 
 #if !LELY_NO_CO_ECSS_REDUNDANCY
 void
-co_nmt_ecss_rdn_ind(co_nmt_t *nmt, uint_least8_t bus_id, int reason)
+co_nmt_ecss_rdn_ind(co_nmt_t *nmt, uint_least8_t bus_id,
+		co_nmt_ecss_rdn_reason_t reason)
 {
 	assert(nmt);
 

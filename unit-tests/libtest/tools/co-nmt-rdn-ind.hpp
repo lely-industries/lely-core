@@ -25,18 +25,19 @@
 
 #include <functional>
 
-#include <lely/co/type.h>
+#include <lely/co/nmt.h>
 
 class CoNmtRdnInd {
  public:
-  static void Func(co_nmt_t* nmt, co_unsigned8_t bus_id, int reason,
-                   void* data);
+  static void Func(co_nmt_t* nmt, co_unsigned8_t bus_id,
+                   co_nmt_ecss_rdn_reason_t reason, void* data);
   static void Clear();
-  static void Check(const co_nmt_t* nmt, co_unsigned8_t bus_id, int reason,
-                    const void* data);
+  static void Check(const co_nmt_t* nmt, co_unsigned8_t bus_id,
+                    co_nmt_ecss_rdn_reason_t reason, const void* data);
   static inline void
-  SetCheckFunc(const std::function<void(co_nmt_t*, co_unsigned8_t, int, void*)>&
-                   checkFunc) {
+  SetCheckFunc(
+      const std::function<void(co_nmt_t*, co_unsigned8_t,
+                               co_nmt_ecss_rdn_reason_t, void*)>& checkFunc) {
     checkFunc_ = checkFunc;
   }
   static inline size_t
@@ -48,10 +49,12 @@ class CoNmtRdnInd {
   static size_t num_called_;
   static co_nmt_t* nmt_;
   static co_unsigned8_t bus_id_;
-  static int reason_;
+  static co_nmt_ecss_rdn_reason_t reason_;
   static void* data_;
 
-  static std::function<void(co_nmt_t*, co_unsigned8_t, int, void*)> checkFunc_;
+  static std::function<void(co_nmt_t*, co_unsigned8_t, co_nmt_ecss_rdn_reason_t,
+                            void*)>
+      checkFunc_;
 };
 
 #endif  // LELY_UNIT_TEST_CO_NMT_RDN_IND_HPP_

@@ -33,14 +33,14 @@
 size_t CoNmtRdnInd::num_called_ = 0;
 co_nmt_t* CoNmtRdnInd::nmt_ = nullptr;
 co_unsigned8_t CoNmtRdnInd::bus_id_ = 0;
-int CoNmtRdnInd::reason_ = 0;
+co_nmt_ecss_rdn_reason_t CoNmtRdnInd::reason_;
 void* CoNmtRdnInd::data_ = nullptr;
-std::function<void(co_nmt_t*, co_unsigned8_t, int, void*)>
+std::function<void(co_nmt_t*, co_unsigned8_t, co_nmt_ecss_rdn_reason_t, void*)>
     CoNmtRdnInd::checkFunc_ = nullptr;
 
 void
 CoNmtRdnInd::Func(co_nmt_t* const nmt, const co_unsigned8_t bus_id,
-                  const int reason, void* const data) {
+                  const co_nmt_ecss_rdn_reason_t reason, void* const data) {
   if (checkFunc_ != nullptr) checkFunc_(nmt, bus_id, reason, data);
 
   num_called_++;
@@ -57,7 +57,7 @@ CoNmtRdnInd::Clear() {
 
   nmt_ = nullptr;
   bus_id_ = 0;
-  reason_ = 0;
+  reason_ = {};
   data_ = nullptr;
 
   checkFunc_ = nullptr;
@@ -65,7 +65,8 @@ CoNmtRdnInd::Clear() {
 
 void
 CoNmtRdnInd::Check(const co_nmt_t* const nmt, const co_unsigned8_t bus_id,
-                   const int reason, const void* const data) {
+                   const co_nmt_ecss_rdn_reason_t reason,
+                   const void* const data) {
   POINTERS_EQUAL(nmt, nmt_);
   CHECK_EQUAL(bus_id, bus_id_);
   CHECK_EQUAL(reason, reason_);
