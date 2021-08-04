@@ -601,7 +601,7 @@ static void co_csdo_send_dn_ini_req(co_csdo_t *sdo);
  * @param last a flag indicating whether this is the last segment.
  */
 static void co_csdo_send_dn_seg_req(
-		co_csdo_t *sdo, co_unsigned32_t n, int last);
+		co_csdo_t *sdo, co_unsigned32_t n, bool last);
 
 /// Sends a Client-SDO 'upload initiate' request.
 static void co_csdo_send_up_ini_req(co_csdo_t *sdo);
@@ -1339,10 +1339,10 @@ co_1280_dn_ind(co_sub_t *sub, struct co_sdo_req *req, co_unsigned32_t ac,
 
 		// The CAN-ID cannot be changed when the SDO is and remains
 		// valid.
-		int valid = !(cobid & CO_SDO_COBID_VALID);
-		int valid_old = !(cobid_old & CO_SDO_COBID_VALID);
-		uint_least32_t canid = cobid & CAN_MASK_EID;
-		uint_least32_t canid_old = cobid_old & CAN_MASK_EID;
+		const bool valid = !(cobid & CO_SDO_COBID_VALID);
+		const bool valid_old = !(cobid_old & CO_SDO_COBID_VALID);
+		const uint_least32_t canid = cobid & CAN_MASK_EID;
+		const uint_least32_t canid_old = cobid_old & CAN_MASK_EID;
 		if (valid && valid_old && canid != canid_old)
 			return CO_SDO_AC_PARAM_VAL;
 
@@ -1363,10 +1363,10 @@ co_1280_dn_ind(co_sub_t *sub, struct co_sdo_req *req, co_unsigned32_t ac,
 
 		// The CAN-ID cannot be changed when the SDO is and remains
 		// valid.
-		int valid = !(cobid & CO_SDO_COBID_VALID);
-		int valid_old = !(cobid_old & CO_SDO_COBID_VALID);
-		uint_least32_t canid = cobid & CAN_MASK_EID;
-		uint_least32_t canid_old = cobid_old & CAN_MASK_EID;
+		const bool valid = !(cobid & CO_SDO_COBID_VALID);
+		const bool valid_old = !(cobid_old & CO_SDO_COBID_VALID);
+		const uint_least32_t canid = cobid & CAN_MASK_EID;
+		const uint_least32_t canid_old = cobid_old & CAN_MASK_EID;
 		if (valid && valid_old && canid != canid_old)
 			return CO_SDO_AC_PARAM_VAL;
 
@@ -1703,7 +1703,7 @@ co_csdo_up_ini_on_recv(co_csdo_t *sdo, const struct can_msg *msg)
 	memcpy(data, msg->data + 4, msg->len - 4);
 
 	// Obtain the size from the command specifier.
-	int exp = !!(cs & CO_SDO_INI_SIZE_EXP);
+	const bool exp = cs & CO_SDO_INI_SIZE_EXP;
 	sdo->size = 0;
 	if (exp) {
 		if (cs & CO_SDO_INI_SIZE_IND)
@@ -1778,7 +1778,7 @@ co_csdo_up_seg_on_recv(co_csdo_t *sdo, const struct can_msg *msg)
 	size_t n = CO_SDO_SEG_SIZE_GET(cs);
 	if (msg->len < 1 + n)
 		return co_csdo_abort_res(sdo, CO_SDO_AC_NO_CS);
-	int last = !!(cs & CO_SDO_SEG_LAST);
+	const bool last = cs & CO_SDO_SEG_LAST;
 
 	if (membuf_size(buf) + n > sdo->size)
 		return co_csdo_abort_res(sdo, CO_SDO_AC_TYPE_LEN_HI);
@@ -2097,7 +2097,7 @@ co_csdo_blk_up_sub_on_recv(co_csdo_t *sdo, const struct can_msg *msg)
 	}
 
 	co_unsigned8_t seqno = cs & ~CO_SDO_SEQ_LAST;
-	int last = !!(cs & CO_SDO_SEQ_LAST);
+	const bool last = cs & CO_SDO_SEQ_LAST;
 
 	// Only accept sequential segments. Dropped segments will be resent
 	// after the confirmation message.
@@ -2318,7 +2318,7 @@ co_csdo_send_dn_ini_req(co_csdo_t *sdo)
 }
 
 static void
-co_csdo_send_dn_seg_req(co_csdo_t *sdo, co_unsigned32_t n, int last)
+co_csdo_send_dn_seg_req(co_csdo_t *sdo, co_unsigned32_t n, bool last)
 {
 	assert(sdo);
 	assert(n <= 7);
@@ -2389,7 +2389,7 @@ co_csdo_send_blk_dn_sub_req(co_csdo_t *sdo, co_unsigned8_t seqno)
 	struct membuf *buf = &sdo->dn_buf;
 
 	size_t n = sdo->size - membuf_size(buf);
-	int last = n <= 7;
+	const bool last = n <= 7;
 	n = MIN(n, 7);
 
 	co_unsigned8_t cs = seqno;
