@@ -83,7 +83,7 @@ TEST_GROUP(CO_DevInit) {
     CHECK_EQUAL(0, co_dev_get_revision(dev));
     CHECK_EQUAL(0, co_dev_get_baud(dev));
     CHECK_EQUAL(0, co_dev_get_rate(dev));
-    CHECK_EQUAL(0, co_dev_get_lss(dev));
+    CHECK_FALSE(co_dev_get_lss(dev));
     CHECK_EQUAL(0, co_dev_get_dummy(dev));
   }
 
@@ -1439,13 +1439,13 @@ TEST(CO_Dev, CoDevSetRate_Nominal) {
 
 /// \Given a pointer to a device (co_dev_t)
 ///
-/// \When co_dev_set_lss() is called with a non-zero number
+/// \When co_dev_set_lss() is called with true.
 ///
 /// \Then the LSS support flag is set
 TEST(CO_Dev, CoDevSetLSS_Nominal) {
-  co_dev_set_lss(dev, 123);
+  co_dev_set_lss(dev, true);
 
-  CHECK_EQUAL(1, co_dev_get_lss(dev));
+  CHECK(co_dev_get_lss(dev));
 }
 
 ///@}

@@ -48,8 +48,8 @@ struct co_sdev {
 	unsigned baud : 10;
 	/// The (pending) baudrate (in kbit/s).
 	co_unsigned16_t rate;
-	/// A flag specifying whether LSS is supported (1) or not (0).
-	int lss;
+	/// A flag specifying whether LSS is supported.
+	bool lss;
 	/// The data types supported for mapping dummy entries in PDOs.
 	co_unsigned32_t dummy;
 	/// The number of objects in #objs.

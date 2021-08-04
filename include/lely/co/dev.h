@@ -419,7 +419,7 @@ void co_dev_set_rate(co_dev_t *dev, co_unsigned16_t rate);
 bool co_dev_get_lss(const co_dev_t *dev);
 
 /// Sets the LSS support flag. @see co_dev_get_lss()
-void co_dev_set_lss(co_dev_t *dev, int lss);
+void co_dev_set_lss(co_dev_t *dev, bool lss);
 
 /**
  * Returns the data types supported by a CANopen device for mapping dummy
