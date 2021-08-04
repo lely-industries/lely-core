@@ -23,6 +23,7 @@
 #define LELY_CAN_MSG_H_
 
 #include <lely/compat/features.h>
+#include <lely/compat/sys/types.h>
 
 #include <stddef.h>
 #include <stdint.h>
@@ -148,7 +149,7 @@ extern "C" {
  * @returns the number of bits on success, or -1 on error. In the latter case,
  * the error number can be obtained with get_errc().
  */
-int can_msg_bits(const struct can_msg *msg, enum can_msg_bits_mode mode);
+ssize_t can_msg_bits(const struct can_msg *msg, enum can_msg_bits_mode mode);
 
 /**
  * Prints the contents of a CAN or CAN FD format frame to a string buffer. The
