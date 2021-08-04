@@ -20,17 +20,20 @@
  * limitations under the License.
  */
 
-#ifndef LELY_UNIT_TEST_NMT_STARTUP_HPP_
-#define LELY_UNIT_TEST_NMT_STARTUP_HPP_
+#ifndef LELY_UNIT_TEST_ERROR_BEHAVIOR_OBJECT_HPP_
+#define LELY_UNIT_TEST_ERROR_BEHAVIOR_OBJECT_HPP_
 
 #include "obj-init/obj-init.hpp"
 
-// 0x1f80: NMT Start-up
-struct Obj1f80NmtStartup : ObjValueInitT<0x1f80u, CO_DEFTYPE_UNSIGNED32> {
-  static const sub_type MASTER_BIT = 0x01u;
-  static const sub_type AUTOSTART_BIT = 0x04u;
-  static const sub_type RESET_NODES_ON_ERR = 0x10u;
-  static const sub_type STOP_NODES_ON_ERR = 0x40u;
+// 0x1029: Error behavior object
+struct Obj1029ErrorBehavior : ObjInitT<0x1029u> {
+  static const co_unsigned8_t CHANGE_TO_PREOP = 0x00u;
+  static const co_unsigned8_t NO_CHANGE = 0x01u;
+  static const co_unsigned8_t CHANGE_TO_STOP = 0x02u;
+
+  struct Sub00HighestSubidxSupported
+      : SubT<0x00u, CO_DEFTYPE_UNSIGNED8, 0x01u> {};
+  struct Sub01CommError : SubT<0x01u, CO_DEFTYPE_UNSIGNED8, CHANGE_TO_PREOP> {};
 };
 
-#endif  // LELY_UNIT_TEST_NMT_STARTUP_HPP_
+#endif  // LELY_UNIT_TEST_ERROR_BEHAVIOR_OBJECT_HPP_

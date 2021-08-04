@@ -45,6 +45,8 @@ class CanSend {
   static int Func(const can_msg* msg_, uint_least8_t bus_id_, void* data_);
   static void CheckMsg(uint_least32_t id, uint_least8_t flags,
                        uint_least8_t len, const uint_least8_t* data);
+  static void CheckMsg(const can_msg& expected_msg);
+
   static void Clear();
   static void SetCheckSeq(const MsgSeq& msgSeq);
 

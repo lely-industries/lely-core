@@ -35,9 +35,7 @@ class CoNmtRdnInd {
   static void Check(const co_nmt_t* nmt, co_unsigned8_t bus_id,
                     co_nmt_ecss_rdn_reason_t reason, const void* data);
   static inline void
-  SetCheckFunc(
-      const std::function<void(co_nmt_t*, co_unsigned8_t,
-                               co_nmt_ecss_rdn_reason_t, void*)>& checkFunc) {
+  SetCheckFunc(const std::function<co_nmt_ecss_rdn_ind_t>& checkFunc) {
     checkFunc_ = checkFunc;
   }
   static inline size_t
@@ -52,9 +50,7 @@ class CoNmtRdnInd {
   static co_nmt_ecss_rdn_reason_t reason_;
   static void* data_;
 
-  static std::function<void(co_nmt_t*, co_unsigned8_t, co_nmt_ecss_rdn_reason_t,
-                            void*)>
-      checkFunc_;
+  static std::function<co_nmt_ecss_rdn_ind_t> checkFunc_;
 };
 
 #endif  // LELY_UNIT_TEST_CO_NMT_RDN_IND_HPP_

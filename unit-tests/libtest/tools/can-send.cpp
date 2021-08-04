@@ -67,12 +67,23 @@ void
 CanSend::CheckMsg(const uint_least32_t id, const uint_least8_t flags,
                   const uint_least8_t len, const uint_least8_t* const data) {
   CHECK_COMPARE(num_called, >, 0);
+
   CHECK_EQUAL(id, msg.id);
   CHECK_EQUAL(flags, msg.flags);
   CHECK_EQUAL(len, msg.len);
   if (data != nullptr) {
     MEMCMP_EQUAL(data, msg.data, len);
   }
+}
+
+void
+CanSend::CheckMsg(const can_msg& expected_msg) {
+  CHECK_COMPARE(num_called, >, 0);
+
+  CHECK_EQUAL(msg.id, expected_msg.id);
+  CHECK_EQUAL(msg.flags, expected_msg.flags);
+  CHECK_EQUAL(msg.len, expected_msg.len);
+  MEMCMP_EQUAL(msg.data, expected_msg.data, expected_msg.len);
 }
 
 void
@@ -92,8 +103,11 @@ CanSend::Clear() {
 
 void
 CanSend::SetCheckSeq(const MsgSeq& msgSeq) {
+  Clear();
+
   checkFunc = [msgSeq](const can_msg* const sent_msg, int, void*) -> int {
     CHECK_COMPARE(num_called, <, msgSeq.size());
+
     CHECK_EQUAL(msgSeq[num_called].id, sent_msg->id);
     CHECK_EQUAL(msgSeq[num_called].flags, sent_msg->flags);
     CHECK_EQUAL(msgSeq[num_called].len, sent_msg->len);
