@@ -37,8 +37,8 @@
 #endif
 
 /// Computes a bitwise CRC-15-CAN checksum of a single byte. @see can_crc()
-static uint_least16_t can_crc_bits(
-		uint_least16_t crc, uint_least8_t byte, int off, int bits);
+static uint_least16_t can_crc_bits(uint_least16_t crc, uint_least8_t byte,
+		size_t off, size_t bits);
 
 /// Computes a CRC-15-CAN checksum. @see can_crc()
 static uint_least16_t can_crc_bytes(
@@ -277,7 +277,7 @@ asprintf_can_msg(char **ps, const struct can_msg *msg)
 #endif // !LELY_NO_STDIO
 
 uint_least16_t
-can_crc(uint_least16_t crc, const void *ptr, int off, size_t bits)
+can_crc(uint_least16_t crc, const void *ptr, ptrdiff_t off, size_t bits)
 {
 	assert(ptr || !bits);
 
@@ -290,13 +290,13 @@ can_crc(uint_least16_t crc, const void *ptr, int off, size_t bits)
 	}
 
 	if (off && bits) {
-		int n = MIN((size_t)(8 - off), bits);
-		crc = can_crc_bits(crc, *bp, off, n);
+		const size_t n = MIN((8u - (size_t)off), bits);
+		crc = can_crc_bits(crc, *bp, (size_t)off, n);
 		bp++;
 		bits -= n;
 	}
 
-	size_t n = bits / 8;
+	const size_t n = bits / 8;
 	crc = can_crc_bytes(crc, bp, n);
 	bp += n;
 	bits -= n * 8;
@@ -308,10 +308,8 @@ can_crc(uint_least16_t crc, const void *ptr, int off, size_t bits)
 }
 
 static uint_least16_t
-can_crc_bits(uint_least16_t crc, uint_least8_t byte, int off, int bits)
+can_crc_bits(uint_least16_t crc, uint_least8_t byte, size_t off, size_t bits)
 {
-	assert(off >= 0);
-	assert(bits >= 0);
 	assert(off + bits <= 8);
 
 	for (byte <<= off; bits--; byte <<= 1) {
