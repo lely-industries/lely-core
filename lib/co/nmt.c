@@ -1052,8 +1052,11 @@ co_nmt_on_ng(co_nmt_t *nmt, co_unsigned8_t id, int state, int reason)
 	if (!id || id > CO_NUM_NODES)
 		return;
 
-	if (co_nmt_is_master(nmt) && state == CO_NMT_EC_OCCURRED)
-		co_nmt_node_err_ind(nmt, id);
+	if (co_nmt_is_master(nmt) && state == CO_NMT_EC_OCCURRED) {
+		const int ret = co_nmt_node_err_ind(nmt, id);
+		assert(ret == 0);
+		(void)ret;
+	}
 }
 
 #endif // !LELY_NO_CO_MASTER
@@ -1125,7 +1128,9 @@ co_nmt_on_hb(co_nmt_t *nmt, co_unsigned8_t id, int state, int reason)
 	if (state == CO_NMT_EC_OCCURRED && reason == CO_NMT_EC_TIMEOUT) {
 #if !LELY_NO_CO_MASTER
 		if (co_nmt_is_master(nmt)) {
-			co_nmt_node_err_ind(nmt, id);
+			const int ret = co_nmt_node_err_ind(nmt, id);
+			assert(ret == 0);
+			(void)ret;
 			return;
 		}
 #endif
