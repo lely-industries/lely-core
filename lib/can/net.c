@@ -466,7 +466,7 @@ can_timer_stop(can_timer_t *timer)
 }
 
 void
-can_timer_timeout(can_timer_t *timer, can_net_t *net, int timeout)
+can_timer_timeout(can_timer_t *timer, can_net_t *net, int_least32_t timeout)
 {
 	if (timeout < 0) {
 		can_timer_stop(timer);

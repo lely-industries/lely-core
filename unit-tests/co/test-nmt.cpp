@@ -2058,7 +2058,7 @@ TEST(CO_Nmt, CoNmtGetTimeout_Nominal) {
 ///
 /// \Then the default SDO timeout is set
 TEST(CO_Nmt, CoNmtSetTimeout_Nominal) {
-  const int timeout = 500;
+  const int_least32_t timeout = 500;
   CreateNmt();
 
   co_nmt_set_timeout(nmt, timeout);

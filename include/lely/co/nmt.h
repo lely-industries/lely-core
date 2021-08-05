@@ -837,7 +837,7 @@ int co_nmt_get_timeout(const co_nmt_t *nmt);
  *
  * @see co_nmt_get_timeout()
  */
-void co_nmt_set_timeout(co_nmt_t *nmt, int timeout);
+void co_nmt_set_timeout(co_nmt_t *nmt, int_least32_t timeout);
 
 /**
  * Submits an NMT request to a slave. If <b>id</b> equals the node-ID of the
@@ -875,7 +875,7 @@ int co_nmt_lss_con(co_nmt_t *nmt);
  * @returns 0 on success, or -1 on error. In the latter case, the error number
  * can be obtained with get_errc().
  */
-int co_nmt_boot_req(co_nmt_t *nmt, co_unsigned8_t id, int timeout);
+int co_nmt_boot_req(co_nmt_t *nmt, co_unsigned8_t id, int_least32_t timeout);
 
 /**
  * Returns <b>true</b> if the NMT 'boot slave' process is currently
@@ -909,7 +909,7 @@ int co_nmt_chk_bootup(const co_nmt_t *nmt, co_unsigned8_t id);
  * @returns 0 on success, or -1 on error. In the latter case, the error number
  * can be obtained with get_errc().
  */
-int co_nmt_cfg_req(co_nmt_t *nmt, co_unsigned8_t id, int timeout,
+int co_nmt_cfg_req(co_nmt_t *nmt, co_unsigned8_t id, int_least32_t timeout,
 		co_nmt_cfg_con_t *con, void *data);
 
 /**

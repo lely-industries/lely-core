@@ -306,7 +306,8 @@ void can_timer_stop(can_timer_t *timer);
  *
  * @see can_timer_start(), can_timer_stop()
  */
-void can_timer_timeout(can_timer_t *timer, can_net_t *net, int timeout);
+void can_timer_timeout(
+		can_timer_t *timer, can_net_t *net, int_least32_t timeout);
 
 /// Returns the alignment (in bytes) of #can_recv_t structure.
 size_t can_recv_alignof(void);

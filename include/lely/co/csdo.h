@@ -244,7 +244,7 @@ const struct co_sdo_par *co_csdo_get_par(const co_csdo_t *sdo);
  *
  * @see co_csdo_set_timeout()
  */
-int co_csdo_get_timeout(const co_csdo_t *sdo);
+int_least32_t co_csdo_get_timeout(const co_csdo_t *sdo);
 
 /**
  * Sets the timeout of a Client-SDO. If the timeout expires before receiving a
@@ -256,7 +256,7 @@ int co_csdo_get_timeout(const co_csdo_t *sdo);
  *
  * @see co_csdo_get_timeout()
  */
-void co_csdo_set_timeout(co_csdo_t *sdo, int timeout);
+void co_csdo_set_timeout(co_csdo_t *sdo, int_least32_t timeout);
 
 /**
  * Retrieves the indication function used to notify the user of the progress of

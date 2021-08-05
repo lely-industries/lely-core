@@ -91,7 +91,7 @@ struct co_nmt_boot {
 	/// A pointer to the CAN timer.
 	can_timer_t *timer;
 	/// The SDO timeout (in milliseconds).
-	int timeout;
+	int_least32_t timeout;
 	/// A pointer to the Client-SDO used to access slave objects.
 	co_csdo_t *sdo;
 	/// The time at which the 'boot slave' request was received.
@@ -860,8 +860,8 @@ co_nmt_boot_get_alloc(const co_nmt_boot_t *boot)
 }
 
 int
-co_nmt_boot_boot_req(co_nmt_boot_t *boot, int timeout, co_csdo_ind_t *dn_ind,
-		co_csdo_ind_t *up_ind, void *data)
+co_nmt_boot_boot_req(co_nmt_boot_t *boot, int_least32_t timeout,
+		co_csdo_ind_t *dn_ind, co_csdo_ind_t *up_ind, void *data)
 {
 	assert(boot);
 
@@ -1347,7 +1347,7 @@ co_nmt_boot_chk_node_on_enter(co_nmt_boot_t *boot)
 
 	// If the keep-alive bit is set, check the node state.
 	if (boot->assignment & 0x10) {
-		int ms;
+		int_least32_t ms;
 		if (boot->ms) {
 			boot->es = 'E';
 			ms = boot->ms;
