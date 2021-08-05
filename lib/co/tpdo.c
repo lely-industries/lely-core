@@ -631,10 +631,10 @@ co_1800_dn_ind(co_sub_t *sub, struct co_sdo_req *req, co_unsigned32_t ac,
 
 		// The CAN-ID cannot be changed when the PDO is and remains
 		// valid.
-		int valid = !(cobid & CO_PDO_COBID_VALID);
-		int valid_old = !(cobid_old & CO_PDO_COBID_VALID);
-		uint_least32_t canid = cobid & CAN_MASK_EID;
-		uint_least32_t canid_old = cobid_old & CAN_MASK_EID;
+		const bool valid = !(cobid & CO_PDO_COBID_VALID);
+		const bool valid_old = !(cobid_old & CO_PDO_COBID_VALID);
+		const uint_least32_t canid = cobid & CAN_MASK_EID;
+		const uint_least32_t canid_old = cobid_old & CAN_MASK_EID;
 		if (valid && valid_old && canid != canid_old)
 			return CO_SDO_AC_PARAM_VAL;
 
@@ -754,7 +754,7 @@ co_1a00_dn_ind(co_sub_t *sub, struct co_sdo_req *req, co_unsigned32_t ac,
 	if (co_sdo_req_dn_val(req, type, &val, &ac) == -1)
 		return ac;
 
-	int valid = !(pdo->comm.cobid & CO_PDO_COBID_VALID);
+	const bool valid = !(pdo->comm.cobid & CO_PDO_COBID_VALID);
 
 	if (!co_sub_get_subidx(sub)) {
 		assert(type == CO_DEFTYPE_UNSIGNED8);

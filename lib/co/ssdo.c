@@ -533,7 +533,7 @@ static void co_ssdo_send_up_ini_res(co_ssdo_t *sdo);
  * @param sdo  a pointer to a Server-SDO service.
  * @param last a flag indicating whether this is the last segment.
  */
-static void co_ssdo_send_up_seg_res(co_ssdo_t *sdo, int last);
+static void co_ssdo_send_up_seg_res(co_ssdo_t *sdo, bool last);
 
 /// Sends a Server-SDO 'block download initiate' response.
 static void co_ssdo_send_blk_dn_ini_res(co_ssdo_t *sdo);
@@ -553,7 +553,7 @@ static void co_ssdo_send_blk_up_ini_res(co_ssdo_t *sdo);
  * @param sdo  a pointer to a Server-SDO service.
  * @param last a flag indicating whether this block contains the last segment.
  */
-static void co_ssdo_send_blk_up_sub_res(co_ssdo_t *sdo, int last);
+static void co_ssdo_send_blk_up_sub_res(co_ssdo_t *sdo, bool last);
 
 /// Sends a Server-SDO 'block upload end' response.
 static void co_ssdo_send_blk_up_end_res(co_ssdo_t *sdo);
@@ -751,8 +751,8 @@ co_ssdo_update(co_ssdo_t *sdo)
 	// Abort any ongoing transfer.
 	co_ssdo_emit_abort(sdo, CO_SDO_AC_NO_SDO);
 
-	int valid_req = !(sdo->par.cobid_req & CO_SDO_COBID_VALID);
-	int valid_res = !(sdo->par.cobid_res & CO_SDO_COBID_VALID);
+	const bool valid_req = !(sdo->par.cobid_req & CO_SDO_COBID_VALID);
+	const bool valid_res = !(sdo->par.cobid_res & CO_SDO_COBID_VALID);
 	if (valid_req && valid_res) {
 		uint_least32_t id = sdo->par.cobid_req;
 		uint_least8_t flags = 0;
@@ -801,10 +801,10 @@ co_1200_dn_ind(co_sub_t *sub, struct co_sdo_req *req, co_unsigned32_t ac,
 
 		// The CAN-ID cannot be changed when the SDO is and remains
 		// valid.
-		int valid = !(cobid & CO_SDO_COBID_VALID);
-		int valid_old = !(cobid_old & CO_SDO_COBID_VALID);
-		uint_least32_t canid = cobid & CAN_MASK_EID;
-		uint_least32_t canid_old = cobid_old & CAN_MASK_EID;
+		const bool valid = !(cobid & CO_SDO_COBID_VALID);
+		const bool valid_old = !(cobid_old & CO_SDO_COBID_VALID);
+		const uint_least32_t canid = cobid & CAN_MASK_EID;
+		const uint_least32_t canid_old = cobid_old & CAN_MASK_EID;
 		if (valid && valid_old && canid != canid_old)
 			return CO_SDO_AC_PARAM_VAL;
 
@@ -825,10 +825,10 @@ co_1200_dn_ind(co_sub_t *sub, struct co_sdo_req *req, co_unsigned32_t ac,
 
 		// The CAN-ID cannot be changed when the SDO is and remains
 		// valid.
-		int valid = !(cobid & CO_SDO_COBID_VALID);
-		int valid_old = !(cobid_old & CO_SDO_COBID_VALID);
-		uint_least32_t canid = cobid & CAN_MASK_EID;
-		uint_least32_t canid_old = cobid_old & CAN_MASK_EID;
+		const bool valid = !(cobid & CO_SDO_COBID_VALID);
+		const bool valid_old = !(cobid_old & CO_SDO_COBID_VALID);
+		const uint_least32_t canid = cobid & CAN_MASK_EID;
+		const uint_least32_t canid_old = cobid_old & CAN_MASK_EID;
 		if (valid && valid_old && canid != canid_old)
 			return CO_SDO_AC_PARAM_VAL;
 
@@ -982,7 +982,7 @@ co_ssdo_dn_ini_on_recv(co_ssdo_t *sdo, const struct can_msg *msg)
 	co_sdo_req_init(&sdo->req, NULL);
 
 	// Obtain the size from the command specifier.
-	int exp = !!(cs & CO_SDO_INI_SIZE_EXP);
+	const bool exp = cs & CO_SDO_INI_SIZE_EXP;
 	if (exp) {
 		if (cs & CO_SDO_INI_SIZE_IND)
 			sdo->req.size = CO_SDO_INI_SIZE_EXP_GET(cs);
@@ -1065,7 +1065,7 @@ co_ssdo_dn_seg_on_recv(co_ssdo_t *sdo, const struct can_msg *msg)
 	size_t n = CO_SDO_SEG_SIZE_GET(cs);
 	if (msg->len < 1 + n)
 		return co_ssdo_abort_dn_res(sdo, CO_SDO_AC_NO_CS);
-	int last = !!(cs & CO_SDO_SEG_LAST);
+	const bool last = cs & CO_SDO_SEG_LAST;
 
 	if (sdo->req.offset + sdo->req.nbyte + n > sdo->req.size)
 		return co_ssdo_abort_dn_res(sdo, CO_SDO_AC_TYPE_LEN_HI);
@@ -1182,7 +1182,8 @@ co_ssdo_up_seg_on_recv(co_ssdo_t *sdo, const struct can_msg *msg)
 	if (ac)
 		return co_ssdo_abort_res(sdo, ac);
 
-	int last = co_sdo_req_last(&sdo->req) && sdo->nbyte == sdo->req.nbyte;
+	const bool last = (co_sdo_req_last(&sdo->req)
+			&& sdo->nbyte == sdo->req.nbyte);
 	co_ssdo_send_up_seg_res(sdo, last);
 
 	if (last) {
@@ -1285,7 +1286,7 @@ co_ssdo_blk_dn_sub_on_recv(co_ssdo_t *sdo, const struct can_msg *msg)
 	}
 
 	co_unsigned8_t seqno = cs & ~CO_SDO_SEQ_LAST;
-	int last = !!(cs & CO_SDO_SEQ_LAST);
+	const bool last = cs & CO_SDO_SEQ_LAST;
 
 	if (!seqno)
 		return co_ssdo_abort_dn_res(sdo, CO_SDO_AC_BLK_SEQ);
@@ -1557,7 +1558,8 @@ co_ssdo_blk_up_sub_on_recv(co_ssdo_t *sdo, const struct can_msg *msg)
 		sdo->blksize = (co_unsigned8_t)(
 				(membuf_size(&sdo->buf) + 6) / 7);
 	}
-	int last = co_sdo_req_last(&sdo->req) && sdo->nbyte == sdo->req.nbyte;
+	const bool last = (co_sdo_req_last(&sdo->req)
+			&& sdo->nbyte == sdo->req.nbyte);
 
 	if (sdo->timeout)
 		can_timer_timeout(sdo->timer, sdo->net, sdo->timeout);
@@ -1819,7 +1821,7 @@ co_ssdo_send_up_ini_res(co_ssdo_t *sdo)
 }
 
 static void
-co_ssdo_send_up_seg_res(co_ssdo_t *sdo, int last)
+co_ssdo_send_up_seg_res(co_ssdo_t *sdo, bool last)
 {
 	assert(sdo);
 	assert(!sdo->req.size || sdo->req.size > 4);
@@ -1895,7 +1897,7 @@ co_ssdo_send_blk_up_ini_res(co_ssdo_t *sdo)
 }
 
 static void
-co_ssdo_send_blk_up_sub_res(co_ssdo_t *sdo, int last)
+co_ssdo_send_blk_up_sub_res(co_ssdo_t *sdo, bool last)
 {
 	assert(sdo);
 

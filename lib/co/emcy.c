@@ -627,10 +627,10 @@ co_1014_dn_ind(co_sub_t *sub, struct co_sdo_req *req, co_unsigned32_t ac,
 		return 0;
 
 	// The CAN-ID cannot be changed when the EMCY is and remains valid.
-	int valid = !(cobid & CO_EMCY_COBID_VALID);
-	int valid_old = !(cobid_old & CO_EMCY_COBID_VALID);
-	uint_least32_t canid = cobid & CAN_MASK_EID;
-	uint_least32_t canid_old = cobid_old & CAN_MASK_EID;
+	const bool valid = !(cobid & CO_EMCY_COBID_VALID);
+	const bool valid_old = !(cobid_old & CO_EMCY_COBID_VALID);
+	const uint_least32_t canid = cobid & CAN_MASK_EID;
+	const uint_least32_t canid_old = cobid_old & CAN_MASK_EID;
 	if (valid && valid_old && canid != canid_old)
 		return CO_SDO_AC_PARAM_VAL;
 
@@ -703,10 +703,10 @@ co_1028_dn_ind(co_sub_t *sub, struct co_sdo_req *req, co_unsigned32_t ac,
 		return 0;
 
 	// The CAN-ID cannot be changed when the EMCY is and remains valid.
-	int valid = !(cobid & CO_EMCY_COBID_VALID);
-	int valid_old = !(cobid_old & CO_EMCY_COBID_VALID);
-	uint_least32_t canid = cobid & CAN_MASK_EID;
-	uint_least32_t canid_old = cobid_old & CAN_MASK_EID;
+	const bool valid = !(cobid & CO_EMCY_COBID_VALID);
+	const bool valid_old = !(cobid_old & CO_EMCY_COBID_VALID);
+	const uint_least32_t canid = cobid & CAN_MASK_EID;
+	const uint_least32_t canid_old = cobid_old & CAN_MASK_EID;
 	if (valid && valid_old && canid != canid_old)
 		return CO_SDO_AC_PARAM_VAL;
 

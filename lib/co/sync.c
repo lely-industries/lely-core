@@ -386,10 +386,10 @@ co_1005_dn_ind(co_sub_t *sub, struct co_sdo_req *req, co_unsigned32_t ac,
 
 	// The CAN-ID cannot be changed while the producer is and remains
 	// active.
-	int active = cobid & CO_SYNC_COBID_PRODUCER;
-	int active_old = cobid_old & CO_SYNC_COBID_PRODUCER;
-	uint_least32_t canid = cobid & CAN_MASK_EID;
-	uint_least32_t canid_old = cobid_old & CAN_MASK_EID;
+	const bool active = cobid & CO_SYNC_COBID_PRODUCER;
+	const bool active_old = cobid_old & CO_SYNC_COBID_PRODUCER;
+	const uint_least32_t canid = cobid & CAN_MASK_EID;
+	const uint_least32_t canid_old = cobid_old & CAN_MASK_EID;
 	if (active && active_old && canid != canid_old)
 		return CO_SDO_AC_PARAM_VAL;
 
