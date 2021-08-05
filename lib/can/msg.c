@@ -44,7 +44,7 @@ static uint_least16_t can_crc_bits(
 static uint_least16_t can_crc_bytes(
 		uint_least16_t crc, const unsigned char *bp, size_t n);
 
-int
+ssize_t
 can_msg_bits(const struct can_msg *msg, enum can_msg_bits_mode mode)
 {
 	assert(msg);
@@ -80,8 +80,8 @@ can_msg_bits(const struct can_msg *msg, enum can_msg_bits_mode mode)
 
 	uint_least8_t data[16] = { 0 };
 	uint_least8_t *bp = data;
-	int off = 0;
-	int bits = 0;
+	int_least8_t off = 0;
+	ssize_t bits = 0;
 
 	if (msg->flags & CAN_FLAG_IDE) {
 		// s = SOF, B = (base) Identifier, S = SRR, I = IDE,
@@ -146,10 +146,10 @@ can_msg_bits(const struct can_msg *msg, enum can_msg_bits_mode mode)
 	bits += 15;
 
 	// Count the stuffed bits.
-	int stuff = 0;
+	ssize_t stuff = 0;
 	uint_least8_t mask = 0x1fu;
 	uint_least8_t same = mask;
-	for (int i = off; i < off + bits;) {
+	for (ssize_t i = off; i < off + bits;) {
 		// Alternate between looking for a series of zeros and ones.
 		same = same ? 0 : mask;
 		// Extract 5 bits at i at look for a bit flip.
