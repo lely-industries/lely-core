@@ -177,11 +177,15 @@ co_nmt_hb_recv(const struct can_msg *msg, void *data)
 	if (st & CO_NMT_ST_TOGGLE)
 		return 0;
 
+#if LELY_NO_CO_NMT_BOOT
+	assert(hb->ms);
+#else
 	// This might happen upon receipt of a boot-up message. The 'boot slave'
 	// process has disabled the heartbeat consumer, but the event has
 	// already been scheduled.
 	if (!hb->ms)
 		return 0;
+#endif
 
 	// Update the state.
 	co_unsigned8_t old_st = hb->st;
