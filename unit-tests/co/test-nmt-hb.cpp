@@ -396,7 +396,7 @@ TEST(CO_NmtHb, CoNmtHbInd_ZeroId) {
   CreateNmt();
   const co_unsigned8_t nodeId = 0u;
 
-  co_nmt_hb_ind(nmt, nodeId, 0, 0, 0u);
+  co_nmt_hb_ind(nmt, nodeId, CO_NMT_EC_OCCURRED, CO_NMT_EC_STATE, 0u);
 
   CHECK_EQUAL(0u, CoNmtHbInd::GetNumCalled());
   CHECK_EQUAL(0u, CoNmtStInd::GetNumCalled());
@@ -415,7 +415,7 @@ TEST(CO_NmtHb, CoNmtHbInd_IdOverMax) {
   CreateNmt();
   const co_unsigned8_t nodeId = CO_NUM_NODES + 1u;
 
-  co_nmt_hb_ind(nmt, nodeId, 0, 0, 0u);
+  co_nmt_hb_ind(nmt, nodeId, CO_NMT_EC_OCCURRED, CO_NMT_EC_STATE, 0u);
 
   CHECK_EQUAL(0u, CoNmtHbInd::GetNumCalled());
   CHECK_EQUAL(0u, CoNmtStInd::GetNumCalled());
@@ -433,8 +433,8 @@ TEST(CO_NmtHb, CoNmtHbInd_IdOverMax) {
 ///       function is not called
 TEST(CO_NmtHb, CoNmtHbInd_Nominal_ReasonTimeout) {
   CreateNmt();
-  const int state = CO_NMT_EC_OCCURRED;
-  const int reason = CO_NMT_EC_TIMEOUT;
+  const auto state = CO_NMT_EC_OCCURRED;
+  const auto reason = CO_NMT_EC_TIMEOUT;
   const co_unsigned8_t st = 0;
   CoNmtHbInd::SkipCallToDefaultInd();
 
@@ -457,8 +457,8 @@ TEST(CO_NmtHb, CoNmtHbInd_Nominal_ReasonTimeout) {
 ///       function is called with the state of the node
 TEST(CO_NmtHb, CoNmtHbInd_Nominal_ReasonStateChange) {
   CreateNmt();
-  const int state = CO_NMT_EC_OCCURRED;
-  const int reason = CO_NMT_EC_STATE;
+  const auto state = CO_NMT_EC_OCCURRED;
+  const auto reason = CO_NMT_EC_STATE;
   const co_unsigned8_t st = CO_NMT_ST_STOP;
   CoNmtHbInd::SkipCallToDefaultInd();
 

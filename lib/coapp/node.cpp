@@ -65,7 +65,8 @@ struct Node::Impl_ {
   Impl_(Node* self, can_net_t* net, co_dev_t* dev);
 
   void OnCsInd(co_nmt_t* nmt, uint8_t cs) noexcept;
-  void OnHbInd(co_nmt_t* nmt, uint8_t id, int state, int reason) noexcept;
+  void OnHbInd(co_nmt_t* nmt, uint8_t id, co_nmt_ec_state_t state,
+               co_nmt_ec_reason_t reason) noexcept;
   void OnStInd(co_nmt_t* nmt, uint8_t id, uint8_t st) noexcept;
 
 #if !LELY_NO_CO_RPDO
@@ -493,8 +494,8 @@ Node::Impl_::Impl_(Node* self_, can_net_t* net, co_dev_t* dev)
 
   co_nmt_set_hb_ind(
       nmt.get(),
-      [](co_nmt_t* nmt, uint8_t id, int state, int reason,
-         void* data) noexcept {
+      [](co_nmt_t* nmt, uint8_t id, co_nmt_ec_state_t state,
+         co_nmt_ec_reason_t reason, void* data) noexcept {
         static_cast<Impl_*>(data)->OnHbInd(nmt, id, state, reason);
       },
       this);
@@ -637,8 +638,8 @@ Node::Impl_::OnCsInd(co_nmt_t* nmt, uint8_t cs) noexcept {
 }
 
 void
-Node::Impl_::OnHbInd(co_nmt_t* nmt, uint8_t id, int state,
-                     int reason) noexcept {
+Node::Impl_::OnHbInd(co_nmt_t* nmt, uint8_t id, co_nmt_ec_state_t state,
+                     co_nmt_ec_reason_t reason) noexcept {
   // Invoke the default behavior before notifying the implementation.
   co_nmt_on_hb(nmt, id, state, reason);
   // Only handle heartbeat timeout events. State changes are handled by OnSt().

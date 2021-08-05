@@ -77,19 +77,19 @@
 /// The CAN identifier used for both node guarding and heartbeat monitoring.
 #define CO_NMT_EC_CANID(id) (0x700 + ((id)&0x7f))
 
-enum {
+typedef enum co_nmt_ec_state {
 	/// An NMT error control event occurred.
 	CO_NMT_EC_OCCURRED,
 	/// An NMT error control event was resolved.
 	CO_NMT_EC_RESOLVED
-};
+} co_nmt_ec_state_t;
 
-enum {
+typedef enum co_nmt_ec_reason {
 	/// An NMT error control timeout event.
 	CO_NMT_EC_TIMEOUT,
 	/// An NMT error control state change event.
 	CO_NMT_EC_STATE
-};
+} co_nmt_ec_reason_t;
 
 typedef enum co_nmt_ecss_rdn_reason {
 	/// An NMT ECSS redundancy manager bus switch.
@@ -132,8 +132,8 @@ typedef void co_nmt_cs_ind_t(co_nmt_t *nmt, co_unsigned8_t cs, void *data);
  *               (#CO_NMT_EC_STATE).
  * @param data   a pointer to user-specified data.
  */
-typedef void co_nmt_ng_ind_t(co_nmt_t *nmt, co_unsigned8_t id, int state,
-		int reason, void *data);
+typedef void co_nmt_ng_ind_t(co_nmt_t *nmt, co_unsigned8_t id,
+		co_nmt_ec_state_t state, co_nmt_ec_reason_t reason, void *data);
 
 /**
  * The type of a CANopen NMT life guarding indication function, invoked when a
@@ -145,7 +145,8 @@ typedef void co_nmt_ng_ind_t(co_nmt_t *nmt, co_unsigned8_t id, int state,
  *              was resolved (#CO_NMT_EC_RESOLVED).
  * @param data  a pointer to user-specified data.
  */
-typedef void co_nmt_lg_ind_t(co_nmt_t *nmt, int state, void *data);
+typedef void co_nmt_lg_ind_t(
+		co_nmt_t *nmt, co_nmt_ec_state_t state, void *data);
 
 /**
  * The type of a CANopen NMT heartbeat indication function, invoked when a
@@ -161,8 +162,8 @@ typedef void co_nmt_lg_ind_t(co_nmt_t *nmt, int state, void *data);
  *               (#CO_NMT_EC_TIMEOUT) or a state change (#CO_NMT_EC_STATE).
  * @param data   a pointer to user-specified data.
  */
-typedef void co_nmt_hb_ind_t(co_nmt_t *nmt, co_unsigned8_t id, int state,
-		int reason, void *data);
+typedef void co_nmt_hb_ind_t(co_nmt_t *nmt, co_unsigned8_t id,
+		co_nmt_ec_state_t state, co_nmt_ec_reason_t reason, void *data);
 
 /**
  * The type of a CANopen NMT redundancy indication function, invoked when a
@@ -398,7 +399,8 @@ void co_nmt_set_ng_ind(co_nmt_t *nmt, co_nmt_ng_ind_t *ind, void *data);
  *
  * @see co_nmt_ng_ind_t
  */
-void co_nmt_on_ng(co_nmt_t *nmt, co_unsigned8_t id, int state, int reason);
+void co_nmt_on_ng(co_nmt_t *nmt, co_unsigned8_t id, co_nmt_ec_state_t state,
+		co_nmt_ec_reason_t reason);
 
 /**
  * Retrieves the indication function invoked when a life guarding event occurs.
@@ -435,7 +437,7 @@ void co_nmt_set_lg_ind(co_nmt_t *nmt, co_nmt_lg_ind_t *ind, void *data);
  *
  * @see co_nmt_lg_ind_t
  */
-void co_nmt_on_lg(co_nmt_t *nmt, int state);
+void co_nmt_on_lg(co_nmt_t *nmt, co_nmt_ec_state_t state);
 
 /**
  * Retrieves the indication function invoked when a redundancy event occurs.
@@ -501,7 +503,8 @@ void co_nmt_set_hb_ind(co_nmt_t *nmt, co_nmt_hb_ind_t *ind, void *data);
  *
  * @see co_nmt_hb_ind_t
  */
-void co_nmt_on_hb(co_nmt_t *nmt, co_unsigned8_t id, int state, int reason);
+void co_nmt_on_hb(co_nmt_t *nmt, co_unsigned8_t id, co_nmt_ec_state_t state,
+		co_nmt_ec_reason_t reason);
 
 /**
  * Retrieves the indication function invoked when a state change is detected.

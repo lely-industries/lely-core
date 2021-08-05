@@ -27,11 +27,12 @@
 
 class CoNmtHbInd {
  public:
-  static void Func(co_nmt_t* nmt, co_unsigned8_t id, int state, int reason,
-                   void* data);
+  static void Func(co_nmt_t* nmt, co_unsigned8_t id, co_nmt_ec_state_t state,
+                   co_nmt_ec_reason_t reason, void* data);
   static void Clear();
-  static void Check(const co_nmt_t* nmt, co_unsigned8_t id, int state,
-                    int reason, const void* data);
+  static void Check(const co_nmt_t* nmt, co_unsigned8_t id,
+                    co_nmt_ec_state_t state, co_nmt_ec_reason_t reason,
+                    const void* data);
   static inline size_t
   GetNumCalled() {
     return num_called;
@@ -43,8 +44,8 @@ class CoNmtHbInd {
   static size_t num_called;
   static co_nmt_t* nmt_;
   static co_unsigned8_t id_;
-  static int state_;
-  static int reason_;
+  static co_nmt_ec_state_t state_;
+  static co_nmt_ec_reason_t reason_;
   static void* data_;
 
   static bool skipCallToDefaultInd;
@@ -55,7 +56,8 @@ class CoNmtHbIndMock {
   co_nmt_hb_ind_t* GetFunc();
   void* GetData();
 
-  void Expect(co_nmt_t* nmt, co_unsigned8_t id, int state, int reason);
+  void Expect(co_nmt_t* nmt, co_unsigned8_t id, co_nmt_ec_state_t state,
+              co_nmt_ec_reason_t reason);
 
  private:
   uint32_t indData = 0;

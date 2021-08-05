@@ -44,11 +44,8 @@ struct co_nmt_hb {
 	co_unsigned8_t st;
 	/// The consumer heartbeat time (in milliseconds).
 	co_unsigned16_t ms;
-	/**
-	 * Indicates whether a heartbeat error occurred (#CO_NMT_EC_OCCURRED or
-	 * #CO_NMT_EC_RESOLVED).
-	 */
-	int state;
+	/// Indicates whether a heartbeat error occurred.
+	co_nmt_ec_state_t state;
 };
 
 /// Allocates memory for #co_nmt_hb_t object using allocator from #can_net_t.
@@ -188,7 +185,7 @@ co_nmt_hb_recv(const struct can_msg *msg, void *data)
 
 	// Update the state.
 	co_unsigned8_t old_st = hb->st;
-	int old_state = hb->state;
+	co_nmt_ec_state_t old_state = hb->state;
 	co_nmt_hb_set_st(hb, st);
 
 	if (old_state == CO_NMT_EC_OCCURRED) {

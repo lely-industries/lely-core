@@ -11,8 +11,8 @@
 #define NMT_TIMEOUT 1000
 
 void cs_ind(co_nmt_t *nmt, co_unsigned8_t cs, void *data);
-void hb_ind(co_nmt_t *nmt, co_unsigned8_t id, int state, int reason,
-		void *data);
+void hb_ind(co_nmt_t *nmt, co_unsigned8_t id, co_nmt_ec_state_t state,
+		co_nmt_ec_reason_t reason, void *data);
 void st_ind(co_nmt_t *nmt, co_unsigned8_t id, co_unsigned8_t st, void *data);
 #if !LELY_NO_CO_LSS
 void lss_req(co_nmt_t *nmt, co_lss_t *lss, void *data);
@@ -110,7 +110,8 @@ cs_ind(co_nmt_t *nmt, co_unsigned8_t cs, void *data)
 }
 
 void
-hb_ind(co_nmt_t *nmt, co_unsigned8_t id, int state, int reason, void *data)
+hb_ind(co_nmt_t *nmt, co_unsigned8_t id, co_nmt_ec_state_t state,
+		co_nmt_ec_reason_t reason, void *data)
 {
 	(void)nmt;
 	(void)data;
