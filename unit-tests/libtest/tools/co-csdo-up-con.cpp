@@ -24,6 +24,8 @@
 #include <config.h>
 #endif
 
+#include <algorithm>
+
 #include <CppUTest/TestHarness.h>
 
 #include "co-csdo-up-con.hpp"
@@ -49,7 +51,10 @@ CoCsdoUpCon::func(co_csdo_t* const sdo_, const co_unsigned16_t idx_,
   ptr = ptr_;
   n = n_;
   data = data_;
-  if (ptr_ != nullptr) memcpy(buf, static_cast<const uint_least8_t*>(ptr_), n_);
+  if (ptr_ != nullptr) {
+    const size_t limit = BUFSIZE;
+    memcpy(buf, static_cast<const uint_least8_t*>(ptr_), std::min(n_, limit));
+  }
   num_called++;
 }
 

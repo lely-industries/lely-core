@@ -4548,10 +4548,454 @@ TEST(CO_Csdo, CoCsdoBlkUpSubOnRecv_Nominal) {
 
 ///@}
 
+TEST_GROUP_BASE(CO_CsdoUpload, CO_CsdoBase) {
+  using small_type = co_unsigned16_t;
+  using large_type = co_unsigned64_t;
+
+  static const co_unsigned16_t IDX = 0x2020u;
+  static const co_unsigned8_t SUBIDX = 0x00u;
+#if LELY_NO_MALLOC
+  static const std::size_t POOL_SIZE = sizeof(large_type);
+  co_unsigned8_t pool[POOL_SIZE] = {0};
+#endif
+  membuf buffer = MEMBUF_INIT;
+
+  void CheckSdoAbortSent(const co_unsigned32_t ac) const {
+    CHECK_EQUAL(1u, CanSend::GetNumCalled());
+    const auto expected_abort =
+        SdoInitExpectedData::U32(CO_SDO_CS_ABORT, IDX, SUBIDX, ac);
+    CanSend::CheckMsg(DEFAULT_COBID_REQ, 0, CO_SDO_MSG_SIZE,
+                      expected_abort.data());
+  }
+
+  void CheckSentSegReq(const bool toggle) const {
+    co_unsigned8_t cs = CO_SDO_CCS_UP_SEG_REQ;
+    if (toggle) cs |= CO_SDO_SEG_TOGGLE;
+
+    CHECK_EQUAL(1u, CanSend::GetNumCalled());
+    const auto expected = SdoInitExpectedData::Empty(cs, 0u, 0u);
+    CanSend::CheckMsg(DEFAULT_COBID_REQ, 0, CO_SDO_MSG_SIZE, expected.data());
+  }
+
+  void CheckTransferAbortedLocally(const co_unsigned32_t ac) const {
+    CHECK_EQUAL(0u, CanSend::GetNumCalled());
+    CoCsdoUpCon::Check(csdo, IDX, SUBIDX, ac, nullptr, 0u, nullptr);
+    CHECK(co_csdo_is_idle(csdo));
+  }
+
+  void CheckDoneTransfer(const std::size_t expected_size,
+                         const std::vector<co_unsigned8_t>& expected_value)
+      const {
+    CHECK_EQUAL(0u, CanSend::GetNumCalled());
+    CoCsdoUpCon::Check(csdo, IDX, SUBIDX, 0u, membuf_begin(&buffer),
+                       expected_size, nullptr);
+    CHECK_EQUAL(expected_size, membuf_size(&buffer));
+    MEMCMP_EQUAL(expected_value.data(), membuf_begin(&buffer), expected_size);
+    CHECK(co_csdo_is_idle(csdo));
+  }
+
+  void ReceiveExpeditedUpIni(const co_unsigned8_t exp_flags,
+                             const std::vector<co_unsigned8_t>& value) const {
+    const can_msg msg = SdoCreateMsg::UpIniRes(IDX, SUBIDX, DEFAULT_COBID_RES,
+                                               exp_flags, value);
+    CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
+  }
+
+  void ReceiveSegmentedUpIni(const std::size_t size) const {
+    const can_msg msg =
+        SdoCreateMsg::UpIniResWithSize(IDX, SUBIDX, DEFAULT_COBID_RES, size);
+    CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
+  }
+
+  void AdvanceToUpSegState(const std::size_t size) const {
+    ReceiveSegmentedUpIni(size);
+    CoCsdoUpCon::Clear();
+    CoCsdoInd::Clear();
+    CanSend::Clear();
+  }
+
+  TEST_SETUP() override {
+    TEST_BASE_SETUP();
+
+#if LELY_NO_MALLOC
+    membuf_init(&buffer, pool, POOL_SIZE);
+    memset(pool, 0, POOL_SIZE);
+#else
+    membuf_init(&buffer, nullptr, 0u);
+#endif
+
+    CHECK_EQUAL(0, co_csdo_start(csdo));
+    CHECK_EQUAL(0, co_csdo_up_req(csdo, IDX, SUBIDX, &buffer, CoCsdoUpCon::func,
+                                  nullptr));
+
+    CoCsdoUpCon::Clear();
+    CoCsdoInd::Clear();
+    CanSend::Clear();
+  }
+
+  TEST_TEARDOWN() override {
+    membuf_fini(&buffer);
+
+    TEST_BASE_TEARDOWN();
+  }
+};
+
+/// @name CSDO initiate segmented upload
+///@{
+
+/// TODO(N7S): GWT
+TEST(CO_CsdoUpload, IniOnRecv_NoCs) {
+  can_msg msg = SdoCreateMsg::UpIniRes(IDX, SUBIDX, DEFAULT_COBID_RES);
+  msg.len = 0u;
+  CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
+
+  CheckSdoAbortSent(CO_SDO_AC_NO_CS);
+}
+
+/// TODO(N7S): GWT
+TEST(CO_CsdoUpload, IniOnRecv_CsAbort_IncompleteAc) {
+  can_msg msg =
+      SdoCreateMsg::Abort(IDX, SUBIDX, DEFAULT_COBID_RES, CO_SDO_AC_TIMEOUT);
+  msg.len = 7u;
+  CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
+
+  CheckTransferAbortedLocally(CO_SDO_AC_ERROR);
+}
+
+/// TODO(N7S): GWT
+TEST(CO_CsdoUpload, IniOnRecv_CsAbort) {
+  const co_unsigned32_t ac = CO_SDO_AC_TIMEOUT;
+
+  const can_msg msg = SdoCreateMsg::Abort(IDX, SUBIDX, DEFAULT_COBID_RES, ac);
+  CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
+
+  CheckTransferAbortedLocally(ac);
+}
+
+/// TODO(N7S): GWT
+TEST(CO_CsdoUpload, IniOnRecv_InvalidCs) {
+  can_msg msg = SdoCreateMsg::UpIniRes(IDX, SUBIDX, DEFAULT_COBID_RES);
+  msg.data[0] = CO_SDO_SCS_DN_INI_RES;
+  CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
+
+  CheckSdoAbortSent(CO_SDO_AC_NO_CS);
+}
+
+/// TODO(N7S): GWT
+TEST(CO_CsdoUpload, IniOnRecv_TooShortMultiplexer) {
+  can_msg msg = SdoCreateMsg::UpIniRes(IDX, SUBIDX, DEFAULT_COBID_RES);
+  msg.len = 3u;
+  CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
+
+  CheckSdoAbortSent(CO_SDO_AC_ERROR);
+}
+
+/// TODO(N7S): GWT
+TEST(CO_CsdoUpload, IniOnRecv_IncorrectIdx) {
+  const can_msg msg =
+      SdoCreateMsg::UpIniRes(IDX + 1u, SUBIDX, DEFAULT_COBID_RES);
+  CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
+
+  CheckSdoAbortSent(CO_SDO_AC_ERROR);
+}
+
+/// TODO(N7S): GWT
+TEST(CO_CsdoUpload, IniOnRecv_IncorrectSubidx) {
+  const can_msg msg =
+      SdoCreateMsg::UpIniRes(IDX, SUBIDX + 1u, DEFAULT_COBID_RES);
+  CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
+
+  CheckSdoAbortSent(CO_SDO_AC_ERROR);
+}
+
+#if LELY_NO_MALLOC
+/// TODO(N7S): GWT
+TEST(CO_CsdoUpload, IniOnRecv_Expedited_BufferTooSmall) {
+  const co_unsigned8_t zeroes[POOL_SIZE] = {0};
+  membuf_write(&buffer, zeroes, POOL_SIZE - 1u);
+
+  ReceiveExpeditedUpIni(CO_SDO_INI_SIZE_EXP, {0x12u, 0x34u});
+
+  CheckSdoAbortSent(CO_SDO_AC_NO_MEM);
+}
+#endif  // LELY_NO_MALLOC
+
+/// TODO(N7S): GWT
+TEST(CO_CsdoUpload, IniOnRecv_Expedited_NoSizeInd) {
+  const std::vector<co_unsigned8_t> expected_value = {0x12u, 0x34u, 0x00u,
+                                                      0x00u};
+
+  ReceiveExpeditedUpIni(CO_SDO_INI_SIZE_EXP, expected_value);
+
+  CheckDoneTransfer(4u, expected_value);
+}
+
+/// TODO(N7S): GWT
+TEST(CO_CsdoUpload, IniOnRecv_Expedited_Nominal) {
+  const std::vector<co_unsigned8_t> expected_value = {0x12u, 0x34u};
+
+  ReceiveExpeditedUpIni(CO_SDO_INI_SIZE_EXP | CO_SDO_INI_SIZE_IND |
+                            CO_SDO_INI_SIZE_EXP_SET(sizeof(small_type)),
+                        expected_value);
+
+  CheckDoneTransfer(sizeof(small_type), expected_value);
+}
+
+/// TODO(N7S): GWT
+TEST(CO_CsdoUpload, IniOnRecv_Segmented_NoInd) {
+  co_csdo_set_up_ind(csdo, nullptr, nullptr);
+
+  ReceiveSegmentedUpIni(sizeof(small_type));
+
+  CHECK_EQUAL(0u, CoCsdoInd::GetNumCalled());
+}
+
+/// TODO(N7S): GWT
+TEST(CO_CsdoUpload, IniOnRecv_Segmented_Nominal) {
+  co_csdo_set_up_ind(csdo, CoCsdoInd::Func, nullptr);
+
+  ReceiveSegmentedUpIni(sizeof(small_type));
+
+  CoCsdoInd::Check(csdo, IDX, SUBIDX, sizeof(small_type), 0u, nullptr);
+  CheckSentSegReq(false);
+}
+
+///@}
+
 /// @name CSDO upload segment
 ///@{
 
-/// TODO(N7S): test cases for co_csdo_up_seg_on_time()
-/// TODO(N7S): test cases for co_csdo_up_seg_on_recv()
+/// TODO(N7S): GWT
+TEST(CO_CsdoUpload, SegOnAbort_Nominal) {
+  AdvanceToUpSegState(sizeof(small_type));
+
+  const co_unsigned32_t ac = CO_SDO_AC_HARDWARE;
+
+  co_csdo_abort_req(csdo, ac);
+
+  CheckSdoAbortSent(ac);
+}
+
+/// TODO(N7S): GWT
+TEST(CO_CsdoUpload, SegOnTime_Nominal) {
+  co_csdo_set_timeout(csdo, 999);
+  AdvanceToUpSegState(sizeof(small_type));
+
+  CoCsdoUpDnReq::SetOneSecOnNet(net);
+
+  CheckSdoAbortSent(CO_SDO_AC_TIMEOUT);
+}
+
+/// TODO(N7S): GWT
+TEST(CO_CsdoUpload, SegOnRecv_NoCs) {
+  AdvanceToUpSegState(sizeof(small_type));
+
+  can_msg msg = SdoCreateMsg::UpSegRes(DEFAULT_COBID_RES, {});
+  msg.len = 0u;
+  CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
+
+  CheckSdoAbortSent(CO_SDO_AC_NO_CS);
+}
+
+/// TODO(N7S): GWT
+TEST(CO_CsdoUpload, SegOnRecv_CsAbort_IncompleteAc) {
+  AdvanceToUpSegState(sizeof(small_type));
+
+  can_msg msg =
+      SdoCreateMsg::Abort(IDX, SUBIDX, DEFAULT_COBID_RES, CO_SDO_AC_TIMEOUT);
+  msg.len = 7u;
+  CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
+
+  CheckTransferAbortedLocally(CO_SDO_AC_ERROR);
+}
+
+/// TODO(N7S): GWT
+TEST(CO_CsdoUpload, SegOnRecv_CsAbort) {
+  AdvanceToUpSegState(sizeof(small_type));
+
+  const co_unsigned32_t ac = CO_SDO_AC_TIMEOUT;
+
+  const can_msg msg = SdoCreateMsg::Abort(IDX, SUBIDX, DEFAULT_COBID_RES, ac);
+  CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
+
+  CheckTransferAbortedLocally(ac);
+}
+
+/// TODO(N7S): GWT
+TEST(CO_CsdoUpload, SegOnRecv_InvalidCs) {
+  AdvanceToUpSegState(sizeof(small_type));
+
+  can_msg msg = SdoCreateMsg::UpSegRes(DEFAULT_COBID_RES, {});
+  msg.data[0] = CO_SDO_SCS_DN_SEG_RES;
+  CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
+
+  CheckSdoAbortSent(CO_SDO_AC_NO_CS);
+}
+
+/// TODO(N7S): GWT
+TEST(CO_CsdoUpload, SegOnRecv_UnexpectedToggleBit) {
+  AdvanceToUpSegState(sizeof(small_type));
+
+  const can_msg msg =
+      SdoCreateMsg::UpSegRes(DEFAULT_COBID_RES, {}, CO_SDO_SEG_TOGGLE);
+  CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
+
+  CHECK_EQUAL(0u, CanSend::GetNumCalled());
+  CHECK_FALSE(CoCsdoUpCon::Called());
+}
+
+/// TODO(N7S): GWT
+TEST(CO_CsdoUpload, SegOnRecv_InvalidSegmentSize) {
+  AdvanceToUpSegState(sizeof(small_type));
+
+  const co_unsigned8_t seg_size = CO_SDO_SEG_SIZE_SET(sizeof(small_type));
+  can_msg msg = SdoCreateMsg::UpSegRes(DEFAULT_COBID_RES, {}, seg_size);
+  msg.len = 1u;
+  CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
+
+  CheckSdoAbortSent(CO_SDO_AC_NO_CS);
+}
+
+/// TODO(N7S): GWT
+TEST(CO_CsdoUpload, SegOnRecv_TooLargeSegment) {
+  AdvanceToUpSegState(sizeof(small_type));
+
+  const co_unsigned8_t seg_size = CO_SDO_SEG_SIZE_SET(sizeof(small_type) + 1u);
+  const can_msg msg = SdoCreateMsg::UpSegRes(DEFAULT_COBID_RES, {}, seg_size);
+  CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
+
+  CheckSdoAbortSent(CO_SDO_AC_TYPE_LEN_HI);
+}
+
+/// TODO(N7S): GWT
+TEST(CO_CsdoUpload, SegOnRecv_LastSegment_TooSmall) {
+  AdvanceToUpSegState(sizeof(small_type));
+
+  const co_unsigned8_t seg_size = CO_SDO_SEG_SIZE_SET(sizeof(small_type) - 1u);
+  const can_msg msg =
+      SdoCreateMsg::UpSegRes(DEFAULT_COBID_RES, {}, seg_size | CO_SDO_SEG_LAST);
+  CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
+
+  CheckSdoAbortSent(CO_SDO_AC_TYPE_LEN_LO);
+}
+
+/// TODO(N7S): GWT
+TEST(CO_CsdoUpload, SegOnRecv_LastSegment_NoInd) {
+  co_csdo_set_up_ind(csdo, nullptr, nullptr);
+  AdvanceToUpSegState(sizeof(small_type));
+
+  const std::vector<co_unsigned8_t> expected_value = {0x12u, 0x34u};
+  const co_unsigned8_t seg_size = CO_SDO_SEG_SIZE_SET(sizeof(small_type));
+  const can_msg msg = SdoCreateMsg::UpSegRes(DEFAULT_COBID_RES, expected_value,
+                                             seg_size | CO_SDO_SEG_LAST);
+  CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
+
+  CHECK_EQUAL(0u, CoCsdoInd::GetNumCalled());
+  CheckDoneTransfer(sizeof(small_type), expected_value);
+}
+
+/// TODO(N7S): GWT
+TEST(CO_CsdoUpload, SegOnRecv_LastSegment) {
+  co_csdo_set_up_ind(csdo, CoCsdoInd::Func, nullptr);
+  AdvanceToUpSegState(sizeof(small_type));
+
+  const std::size_t size = sizeof(small_type);
+  const std::vector<co_unsigned8_t> expected_value = {0x12u, 0x34u};
+  const co_unsigned8_t seg_size = CO_SDO_SEG_SIZE_SET(size);
+  const can_msg msg = SdoCreateMsg::UpSegRes(DEFAULT_COBID_RES, expected_value,
+                                             seg_size | CO_SDO_SEG_LAST);
+  CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
+
+  CoCsdoInd::Check(csdo, IDX, SUBIDX, size, size, nullptr);
+  CheckDoneTransfer(size, expected_value);
+}
+
+/// TODO(N7S): GWT
+TEST(CO_CsdoUpload, SegOnRecv_NotLast) {
+  AdvanceToUpSegState(sizeof(large_type));
+
+  const std::vector<co_unsigned8_t> expected_value(CO_SDO_SEG_MAX_DATA_SIZE,
+                                                   0xffu);
+  const co_unsigned8_t seg_size = CO_SDO_SEG_SIZE_SET(CO_SDO_SEG_MAX_DATA_SIZE);
+  const can_msg msg =
+      SdoCreateMsg::UpSegRes(DEFAULT_COBID_RES, expected_value, seg_size);
+  CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
+
+  CheckSentSegReq(true);
+}
+
+/// TODO(N7S): GWT
+TEST(CO_CsdoUpload, SegOnRecv_TimeoutSet) {
+  co_csdo_set_timeout(csdo, 999);
+  AdvanceToUpSegState(sizeof(large_type));
+
+  const std::vector<co_unsigned8_t> expected_value(CO_SDO_SEG_MAX_DATA_SIZE,
+                                                   0xffu);
+  const co_unsigned8_t seg_size = CO_SDO_SEG_SIZE_SET(CO_SDO_SEG_MAX_DATA_SIZE);
+  const can_msg msg =
+      SdoCreateMsg::UpSegRes(DEFAULT_COBID_RES, expected_value, seg_size);
+  CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
+
+  CheckSentSegReq(true);
+  CanSend::Clear();
+
+  CoCsdoUpDnReq::SetOneSecOnNet(net);
+
+  CheckSdoAbortSent(CO_SDO_AC_TIMEOUT);
+}
+
+/// TODO(N7S): GWT
+TEST(CO_CsdoUpload, SegOnRecv_LargeDataSet_PeriodicInd) {
+  co_csdo_set_up_ind(csdo, CoCsdoInd::Func, nullptr);
+
+  const std::size_t segments = 2u * CO_SDO_MAX_SEQNO + 1u;
+  const std::size_t size = segments * CO_SDO_SEG_MAX_DATA_SIZE;
+
+#if LELY_NO_MALLOC
+  std::vector<co_unsigned8_t> buf(size);
+  membuf_fini(&buffer);
+  membuf_init(&buffer, buf.data(), size);
+#endif
+
+  AdvanceToUpSegState(size);
+
+  const std::vector<co_unsigned8_t> seg_data(CO_SDO_SEG_MAX_DATA_SIZE, 0xffu);
+  const co_unsigned8_t seg_size = CO_SDO_SEG_SIZE_SET(CO_SDO_SEG_MAX_DATA_SIZE);
+
+  for (std::size_t i = 0; i < segments; ++i) {
+    co_unsigned8_t flags = seg_size;
+    if (i % 2 == 1) flags |= CO_SDO_SEG_TOGGLE;
+    if (i == segments - 1) flags |= CO_SDO_SEG_LAST;
+
+    const can_msg msg =
+        SdoCreateMsg::UpSegRes(DEFAULT_COBID_RES, seg_data, flags);
+    CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
+  }
+
+  CHECK(co_csdo_is_idle(csdo));
+
+  // 2 middle and 1 final upload progress indication function calls
+  CHECK_EQUAL(3u, CoCsdoInd::GetNumCalled());
+  CoCsdoInd::Check(csdo, IDX, SUBIDX, size, size, nullptr);
+
+  CHECK_EQUAL(size, membuf_size(&buffer));
+  for (std::size_t i = 0; i < size; ++i) {
+    CHECK_EQUAL(0xffu, static_cast<co_unsigned8_t>(buffer.begin[i]));
+  }
+}
+
+/// TODO(N7S): GWT
+TEST(CO_CsdoUpload, SegOnRecv_SizeZero) {
+  co_csdo_set_up_ind(csdo, CoCsdoInd::Func, nullptr);
+  AdvanceToUpSegState(0u);
+
+  const co_unsigned8_t size_zero = CO_SDO_SEG_SIZE_SET(0u);
+  const can_msg msg = SdoCreateMsg::UpSegRes(DEFAULT_COBID_RES, {},
+                                             size_zero | CO_SDO_SEG_LAST);
+  CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
+
+  CHECK_EQUAL(0u, CoCsdoInd::GetNumCalled());
+  CheckDoneTransfer(0u, {});
+}
 
 ///@}
