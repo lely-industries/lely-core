@@ -2702,7 +2702,7 @@ TEST_GROUP_BASE(CO_DevTpdoEvent, CO_DevTpdoBase) {
     sub = obj_holder->InsertSub(*sub_holder);
     CHECK(sub != nullptr);
 
-    co_sub_set_pdo_mapping(sub, 1);
+    co_sub_set_pdo_mapping(sub, true);
 
     CHECK_EQUAL(0, co_dev_insert_obj(dev, obj_holder->Take()));
   }
@@ -2753,7 +2753,7 @@ TEST(CO_DevTpdoEvent, CoDevTpdoEvent_InvalidIndices) {
 /// \Then the indication function was not called
 ///       \Calls co_dev_chk_tpdo()
 TEST(CO_DevTpdoEvent, CoDevTpdoEvent_OnlySubNoMapping) {
-  co_sub_set_pdo_mapping(sub, 0);
+  co_sub_set_pdo_mapping(sub, false);
 
   co_dev_tpdo_event(dev, OBJ_IDX, SUB_IDX);
 

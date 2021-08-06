@@ -647,7 +647,7 @@ TEST_GROUP_BASE(CO_SdoRpdo1600, CO_SdoRpdoBase) {
                              co_unsigned32_t{0xdeadbeefu});
     co_sub_t* const sub2021 = obj2021->GetLastSub();
     co_sub_set_access(sub2021, CO_ACCESS_RW);
-    co_sub_set_pdo_mapping(sub2021, 1);
+    co_sub_set_pdo_mapping(sub2021, true);
   }
 
   void SetNumOfMappings(const co_unsigned8_t mappings_num) {
