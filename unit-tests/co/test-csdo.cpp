@@ -4565,6 +4565,29 @@ TEST(CO_Csdo, CoCsdoBlkDnSubOnEnter_IncorrectBlksize) {
 }
 
 /// \Given a pointer to the CSDO service (co_csdo_t) which has initiated block
+///        download transfer (the correct request was sent by the client)
+///
+/// \When an SDO block download sub-block response is received, but
+///       specified block size is too large (greater than CO_SDO_MAX_SEQNO)
+///
+/// \Then an abort transfer SDO message with CO_SDO_AC_BLK_SIZE abort code
+///       is sent
+///       \Calls ldle_u16()
+TEST(CO_Csdo, CoCsdoBlkDnSubOnEnter_TooLargeBlksize) {
+  StartCSDO();
+  InitiateBlockDownloadRequest(IDX, SUBIDX, val_u16.GetVal());
+
+  const co_unsigned32_t blksize = CO_SDO_MAX_SEQNO + 1u;
+  const uint_least8_t sequence_number = 0;
+  const can_msg msg =
+      SdoCreateMsg::BlkDnSubRes(IDX, SUBIDX, DEFAULT_COBID_RES, sequence_number,
+                                CO_SDO_SC_INI_BLK, blksize);
+  CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
+
+  CheckSdoAbortSent(IDX, SUBIDX, CO_SDO_AC_BLK_SIZE);
+}
+
+/// \Given a pointer to the CSDO service (co_csdo_t) which has initiated block
 ///        download transfer (the correct request was sent by the client),
 ///        a custom download indication function is set
 ///
