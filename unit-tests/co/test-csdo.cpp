@@ -3136,6 +3136,80 @@ TEST(CO_Csdo, CoCsdoBlkUpReq_TimeoutSet) {
 
 ///@}
 
+/// @name CSDO: receive when idle
+///@{
+
+/// \Given a pointer to the started CSDO service (co_csdo_t) which has not
+///        initiated a transfer
+///
+/// \When an SDO message with length zero is received
+///
+/// \Then an SDO abort transfer message with CO_SDO_AC_NO_CS abort code is sent
+///       \Calls stle_u16()
+///       \Calls stle_u32()
+///       \Calls can_net_send()
+TEST(CO_Csdo, CoCsdoWaitOnRecv_NoCs) {
+  StartCSDO();
+
+  can_msg msg = SdoCreateMsg::Default(0xffffu, 0xffu, DEFAULT_COBID_RES);
+  msg.len = 0u;
+  CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
+
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
+  CheckSdoAbortSent(0u, 0u, CO_SDO_AC_NO_CS);
+}
+
+/// \Given a pointer to the started CSDO service (co_csdo_t) which has not
+///        initiated a transfer
+///
+/// \When an SDO message with an incorrect command specifier is received
+///
+/// \Then no SDO message is sent
+TEST(CO_Csdo, CoCsdoWaitOnRecv_IncorrectCs) {
+  StartCSDO();
+
+  can_msg msg = SdoCreateMsg::Default(0xffffu, 0xffu, DEFAULT_COBID_RES);
+  msg.data[0] |= 0xffu;
+  CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
+
+  CHECK_EQUAL(0u, CanSend::GetNumCalled());
+}
+
+/// \Given a pointer to the started CSDO service (co_csdo_t) which has not
+///        initiated a transfer
+///
+/// \When an abort transfer SDO message with a zero abort code is received
+///
+/// \Then no SDO message is sent
+///       \Calls ldle_u32()
+TEST(CO_Csdo, CoCsdoWaitOnRecv_AbortCs_ZeroAc) {
+  StartCSDO();
+
+  const can_msg msg = SdoCreateMsg::Abort(0xffffu, 0xffu, DEFAULT_COBID_RES);
+  CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
+
+  CHECK_EQUAL(0u, CanSend::GetNumCalled());
+}
+
+/// \Given a pointer to the started CSDO service (co_csdo_t) which has not
+///        initiated a transfer
+///
+/// \When an abort transfer SDO message with an incomplete abort code is
+///       received
+///
+/// \Then no SDO message is sent
+TEST(CO_Csdo, CoCsdoWaitOnRecv_AbortCs_IncompleteAc) {
+  StartCSDO();
+
+  can_msg msg = SdoCreateMsg::Abort(0xffffu, 0xffu, DEFAULT_COBID_RES);
+  msg.len = 7u;
+  CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
+
+  CHECK_EQUAL(0u, CanSend::GetNumCalled());
+}
+
+///@}
+
 /// @name CSDO: block upload initiate on receive
 ///@{
 
