@@ -104,7 +104,6 @@ typedef void diag_at_handler_t(void *handle, enum diag_severity severity,
  * @returns the number of characters read (excluding the termination character).
  */
 size_t floc_lex(struct floc *at, const char *begin, const char *end);
-#endif
 
 /**
  * Prints a file location to a string buffer. The filename, line and column are
@@ -124,6 +123,7 @@ size_t floc_lex(struct floc *at, const char *begin, const char *end);
  * `errno`.
  */
 int snprintf_floc(char *s, size_t n, const struct floc *at);
+#endif // !LELY_NO_STDIO
 
 #if !LELY_NO_DIAG
 /**
