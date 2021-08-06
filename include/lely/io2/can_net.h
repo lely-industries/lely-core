@@ -111,7 +111,7 @@ void io_can_net_fini(io_can_net_t *net);
  *                negative. the timeout is disabled.
  *
  * @returns a pointer to a new CAN network interface, or NULL on error. In the
- * latter case, the error number can be obtained with get_errc().
+ * latter case, the error code can be obtained with get_errc().
  */
 io_can_net_t *io_can_net_create(ev_exec_t *exec, io_timer_t *timer,
 		io_can_chan_t *chan, size_t txlen, int txtimeo);
@@ -295,8 +295,8 @@ void io_can_net_set_on_can_error_func(io_can_net_t *net,
 /**
  * Locks the mutex protecting the CAN network interface.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc();
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc();
  *
  * @see io_can_net_unlock()
  */
@@ -305,8 +305,8 @@ int io_can_net_lock(io_can_net_t *net);
 /**
  * Unlocks the mutex protecting the CAN network interface.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc();
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc();
  *
  * @see io_can_net_lock()
  */
@@ -328,8 +328,8 @@ struct can_net *io_can_net_get_net(const io_can_net_t *net);
  * The mutex protecting the CAN network interface MUST be locked for the
  * duration of this call.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  *
  * @see io_can_net_lock(), io_can_net_unlock()
  */

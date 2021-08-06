@@ -66,7 +66,7 @@ struct io_can_chan_read_result {
 	 * canceled). In the latter case, the error number is stored in #errc.
 	 */
 	int result;
-	/// The error number, obtained as if by get_errc(), if #result is -1.
+	/// The error code, obtained as if by get_errc(), if #result is -1.
 	int errc;
 };
 
@@ -120,8 +120,8 @@ struct io_can_chan_write {
 	 */
 	struct ev_task task;
 	/**
-	 * The error number, obtained as if by get_errc(), if an error occurred
-	 * or the operation was canceled.
+	 * The error code, obtained as if by get_errc(), if an error occurred or
+	 * the operation was canceled.
 	 */
 	int errc;
 };
@@ -163,8 +163,8 @@ struct io_can_chan_vtbl {
  * CAN frames. If the controller is already stopped, this function has no
  * effect.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  *
  * @post on success, io_can_ctrl_stopped() returns 1.
  */
@@ -172,15 +172,15 @@ LELY_IO_CAN_INLINE int io_can_ctrl_stop(io_can_ctrl_t *ctrl);
 
 /**
  * Returns 1 in the CAN controller is stopped, 0 if not, and -1 on error. In the
- * latter case, the error number can be obtained with get_errc().
+ * latter case, the error code can be obtained with get_errc().
  */
 LELY_IO_CAN_INLINE int io_can_ctrl_stopped(const io_can_ctrl_t *ctrl);
 
 /**
  * (Re)starts a CAN contoller.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  *
  * @post on success, io_can_ctrl_stopped() returns 0.
  */
@@ -197,8 +197,8 @@ LELY_IO_CAN_INLINE int io_can_ctrl_restart(io_can_ctrl_t *ctrl);
  *                 NULL). This bit rate is only defined for the CAN FD protocol;
  *                 the value will be 0 otherwise.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  */
 LELY_IO_CAN_INLINE int io_can_ctrl_get_bitrate(
 		const io_can_ctrl_t *ctrl, int *pnominal, int *pdata);
@@ -212,8 +212,8 @@ LELY_IO_CAN_INLINE int io_can_ctrl_get_bitrate(
  * @param data    the data bitrate. This bit rate is only defined for the CAN FD
  *                protocol; the value is ignored otherwise.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  *
  * @post io_can_ctrl_stopped() returns 1.
  */
@@ -223,8 +223,8 @@ LELY_IO_CAN_INLINE int io_can_ctrl_set_bitrate(
 /**
  * Returns the state of the CAN controller: one of #CAN_STATE_ACTIVE,
  * #CAN_STATE_PASSIVE, #CAN_STATE_BUSOFF, #CAN_STATE_SLEEPING or
- * #CAN_STATE_STOPPED, or -1 on error. In the latter case, the error number can
- * be obtained with get_errc().
+ * #CAN_STATE_STOPPED, or -1 on error. In the latter case, the error code can be
+ * obtained with get_errc().
  */
 LELY_IO_CAN_INLINE int io_can_ctrl_get_state(const io_can_ctrl_t *ctrl);
 
@@ -248,7 +248,7 @@ LELY_IO_CAN_INLINE io_dev_t *io_can_chan_get_dev(const io_can_chan_t *chan);
 /**
  * Returns the flafs of the CAN bus: any combination of #IO_CAN_BUS_FLAG_ERR,
  * #IO_CAN_BUS_FLAG_FDF and #IO_CAN_BUS_FLAG_BRS, or -1 on error. In the latter
- * case, the error number can be obtained with get_errc().
+ * case, the error code can be obtained with get_errc().
  */
 LELY_IO_CAN_INLINE int io_can_chan_get_flags(const io_can_chan_t *chan);
 
@@ -267,8 +267,7 @@ LELY_IO_CAN_INLINE int io_can_chan_get_flags(const io_can_chan_t *chan);
  *                indefinitely.
  *
  * @returns 1 if a CAN frame is received, 0 if an error frame is received, or -1
- * on error. In the latter case, the error number can be obtained with
- * get_errc().
+ * on error. In the latter case, the error code can be obtained with get_errc().
  */
 LELY_IO_CAN_INLINE int io_can_chan_read(io_can_chan_t *chan,
 		struct can_msg *msg, struct can_err *err, struct timespec *tp,
@@ -322,7 +321,7 @@ static inline size_t io_can_chan_abort_read(
  *              (can be NULL).
  *
  * @returns a pointer to a future, or NULL on error. In the latter case, the
- * error number can be obtained with get_errc().
+ * error code can be obtained with get_errc().
  */
 ev_future_t *io_can_chan_async_read(io_can_chan_t *chan, ev_exec_t *exec,
 		struct can_msg *msg, struct can_err *err, struct timespec *tp,
@@ -338,8 +337,8 @@ ev_future_t *io_can_chan_async_read(io_can_chan_t *chan, ev_exec_t *exec,
  *                If <b>timeout</b> is negative, this function will block
  *                indefinitely.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  */
 LELY_IO_CAN_INLINE int io_can_chan_write(
 		io_can_chan_t *chan, const struct can_msg *msg, int timeout);
@@ -377,7 +376,7 @@ static inline size_t io_can_chan_abort_write(
 /**
  * Submits an asynchronous write operation to a CAN channel and creates a future
  * which becomes ready once the write operation completes (or is canceled). The
- * result of the future is an `int` containing the error number.
+ * result of the future is an `int` containing the error code.
  *
  * @param chan   a pointer to a CAN channel.
  * @param exec   a pointer to the executor used to execute the completion
@@ -388,7 +387,7 @@ static inline size_t io_can_chan_abort_write(
  *               (can be NULL).
  *
  * @returns a pointer to a future, or NULL on error. In the latter case, the
- * error number can be obtained with get_errc().
+ * error code can be obtained with get_errc().
  */
 ev_future_t *io_can_chan_async_write(io_can_chan_t *chan, ev_exec_t *exec,
 		const struct can_msg *msg, struct io_can_chan_write **pwrite);

@@ -64,7 +64,7 @@ void __fwbuf_fini(struct __fwbuf *buf);
  *                 once all file operations have completed successfully.
  *
  * @returns a pointer to a new file buffer, or NULL on error. In the latter
- * case, the error number can be obtained with get_errc().
+ * case, the error code can be obtained with get_errc().
  *
  * @see fwbuf_destroy()
  */
@@ -81,8 +81,7 @@ void fwbuf_destroy(fwbuf_t *buf);
 
 /**
  * Returns the current size (in bytes) of the a write file buffer, or -1 on
- * error. In the latter case, the error number can be obtained with
- * get_errc().
+ * error. In the latter case, the error code can be obtained with get_errc().
  *
  * @see fwbuf_set_size()
  */
@@ -94,8 +93,8 @@ intmax_t fwbuf_get_size(fwbuf_t *buf);
  * may not be possible to discard bytes already written to the file, putting a
  * lower limit on the file size.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  *
  * @see fwbuf_get_size()
  */
@@ -103,8 +102,8 @@ int fwbuf_set_size(fwbuf_t *buf, intmax_t size);
 
 /**
  * Returns the current offset (in bytes) of a write file buffer with respect to
- * the beginning of the file, or -1 on error. In the latter case, the error
- * number can be obtained with get_errc().
+ * the beginning of the file, or -1 on error. In the latter case, the error code
+ * can be obtained with get_errc().
  *
  * The position indicates the location at which the next call to fwbuf_write()
  * will start writing, and it is only updated by that function or
@@ -118,8 +117,8 @@ intmax_t fwbuf_get_pos(fwbuf_t *buf);
  * of the file. In that case the file is extended with zeros the moment data is
  * written to the new position.
  *
- * @returns the new position, or -1 on error. In the latter case, the error
- * number can be obtained with get_errc().
+ * @returns the new position, or -1 on error. In the latter case, the error code
+ * can be obtained with get_errc().
  *
  * @see fwbuf_get_pos()
  */
@@ -135,7 +134,7 @@ intmax_t fwbuf_set_pos(fwbuf_t *buf, intmax_t pos);
  * @param size the number of bytes to write.
  *
  * @returns the number of bytes written, or -1 on error. In the latter case, the
- * error number can be obtained with get_errc().
+ * error code can be obtained with get_errc().
  *
  * @see fwbuf_pwrite()
  */
@@ -153,7 +152,7 @@ ssize_t fwbuf_write(fwbuf_t *buf, const void *ptr, size_t size);
  *             at which to start writing.
  *
  * @returns the number of bytes written, or -1 on error. In the latter case, the
- * error number can be obtained with get_errc().
+ * error code can be obtained with get_errc().
  *
  * @see fwbuf_write()
  */
@@ -175,7 +174,7 @@ ssize_t fwbuf_pwrite(fwbuf_t *buf, const void *ptr, size_t size, intmax_t pos);
  *              the map.
  *
  * @returns a pointer to the first byte in the memory map, or NULL on error. In
- * the latter case, the error number can be obtained with get_errc().
+ * the latter case, the error code can be obtained with get_errc().
  */
 void *fwbuf_map(fwbuf_t *buf, intmax_t pos, size_t *psize);
 
@@ -183,8 +182,8 @@ void *fwbuf_map(fwbuf_t *buf, intmax_t pos, size_t *psize);
  * Unmaps the current memory map of a write file buffer, if it exists, and
  * writes the changes to disk.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  *
  * @see fwbuf_map()
  */
@@ -200,7 +199,7 @@ void fwbuf_clearerr(fwbuf_t *buf);
 
 /**
  * Returns 1 if the error indicator of a write file buffer is set, and 0 if not.
- * In the former case, the error number of the first error encountered during a
+ * In the former case, the error code of the first error encountered during a
  * file operation can be obtained with get_errc().
  *
  * @see fwbuf_clearerr()
@@ -219,8 +218,8 @@ void fwbuf_cancel(fwbuf_t *buf);
  * return until all changes are physically written to disk. Any further file
  * operations will fail.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * of the first error encountered during a file operation can be obtained with
+ * @returns 0 on success, or -1 on error. In the latter case, the error code of
+ * the first error encountered during a file operation can be obtained with
  * get_errc().
  */
 int fwbuf_commit(fwbuf_t *buf);

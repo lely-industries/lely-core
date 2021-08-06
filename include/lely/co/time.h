@@ -94,7 +94,7 @@ size_t co_time_sizeof(void);
  * @param dev a pointer to a CANopen device.
  *
  * @returns a pointer to a new TIME service, or NULL on error. In the latter
- * case, the error number can be obtained with get_errc().
+ * case, the error code can be obtained with get_errc().
  *
  * @see co_time_destroy()
  */
@@ -108,8 +108,8 @@ void co_time_destroy(co_time_t *time);
  *
  * @post on success, co_time_is_stopped() returns <b>false</b>.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  *
  * @see co_time_stop()
  */

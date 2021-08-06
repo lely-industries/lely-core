@@ -114,7 +114,7 @@ co_dev_t *co_dev_init_from_sdev(co_dev_t *dev, const struct co_sdev *sdev);
  * Creates a CANopen device from a static device description.
  *
  * @returns a pointer to a new device, or NULL on error. In the latter case, the
- * error number can be obtained with get_errc().
+ * error code can be obtained with get_errc().
  */
 co_dev_t *co_dev_create_from_sdev(const struct co_sdev *sdev);
 
@@ -130,7 +130,7 @@ co_dev_t *co_dev_create_from_sdev(const struct co_sdev *sdev);
  *
  * @returns the number of characters that would have been written had the
  * buffer been sufficiently large, not counting the terminating null byte, or a
- * negative number on error. In the latter case, the error number is stored in
+ * negative number on error. In the latter case, the error code is stored in
  * `errno`.
  */
 int snprintf_c99_sdev(char *s, size_t n, const co_dev_t *dev);
@@ -145,7 +145,7 @@ int snprintf_c99_sdev(char *s, size_t n, const co_dev_t *dev);
  * @param dev a pointer to a CANopen device description to be printed.
  *
  * @returns the number of characters written, not counting the terminating null
- * byte, or a negative number on error. In the latter case, the error number is
+ * byte, or a negative number on error. In the latter case, the error code is
  * stored in `errno`.
  */
 int asprintf_c99_sdev(char **ps, const co_dev_t *dev);

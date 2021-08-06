@@ -87,7 +87,7 @@ void ev_loop_fini(ev_loop_t *loop);
  *                  parameter is ignored.
  *
  * @returns a pointer to the new event loop, or NULL on error. In the latter
- * case, the error number can be obtained with get_errc().
+ * case, the error code can be obtained with get_errc().
  */
 ev_loop_t *ev_loop_create(ev_poll_t *poll, size_t npoll, int poll_task);
 

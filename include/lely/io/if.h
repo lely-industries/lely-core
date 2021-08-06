@@ -91,7 +91,7 @@ extern "C" {
  *                <b>maxinfo</b> structures describing the network interfaces.
  *
  * @returns the total number of interfaces (which may be different from
- * <b>maxinfo</b>), or -1 on error. In the latter case, the error number can be
+ * <b>maxinfo</b>), or -1 on error. In the latter case, the error code can be
  * obtained with get_errc().
  */
 int io_get_ifinfo(int maxinfo, struct io_ifinfo *info);

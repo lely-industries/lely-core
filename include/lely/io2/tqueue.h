@@ -42,8 +42,8 @@ struct io_tqueue_wait {
 	 */
 	struct ev_task task;
 	/**
-	 * The error number, obtained as if by get_errc(), if an error occurred
-	 * or the operation was canceled.
+	 * The error code, obtained as if by get_errc(), if an error occurred or
+	 * the operation was canceled.
 	 */
 	int errc;
 	struct pnode _node;
@@ -75,7 +75,7 @@ void io_tqueue_fini(io_tqueue_t *tq);
  *              <b>exec</b> is NULL, the executor of the I/O timer is used.
  *
  * @returns a pointer to a new timer queue, or NULL on error. In the latter
- * case, the error number can be obtained with get_errc().
+ * case, the error code can be obtained with get_errc().
  */
 io_tqueue_t *io_tqueue_create(io_timer_t *timer, ev_exec_t *exec);
 
@@ -119,7 +119,7 @@ size_t io_tqueue_abort_wait(io_tqueue_t *tq, struct io_tqueue_wait *wait);
 /**
  * Submits an asynchronous wait operation to a timer queue and creates a future
  * which becomes ready once the wait operation completes (or is canceled). The
- * result of the future is an `int` containing the error number.
+ * result of the future is an `int` containing the error code.
  *
  * @param tq    a pointer to a timer queue.
  * @param exec  a pointer to the executor used to execute the completion
@@ -130,7 +130,7 @@ size_t io_tqueue_abort_wait(io_tqueue_t *tq, struct io_tqueue_wait *wait);
  *              (can be NULL).
  *
  * @returns a pointer to a future, or NULL on error. In the latter case, the
- * error number can be obtained with get_errc().
+ * error code can be obtained with get_errc().
  */
 ev_future_t *io_tqueue_async_wait(io_tqueue_t *tq, ev_exec_t *exec,
 		const struct timespec *value, struct io_tqueue_wait **pwait);

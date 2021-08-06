@@ -78,7 +78,7 @@ size_t co_tpdo_sizeof(void);
  *            <b>dev</b>.
  *
  * @returns a pointer to a new Transmit-PDO service, or NULL on error. In the
- * latter case, the error number can be obtained with get_errc().
+ * latter case, the error code can be obtained with get_errc().
  *
  * @see co_tpdo_destroy()
  */
@@ -92,8 +92,8 @@ void co_tpdo_destroy(co_tpdo_t *pdo);
  *
  * @post on success, co_tpdo_is_stopped() returns <b>false</b>.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  *
  * @see co_tpdo_stop()
  */
@@ -201,8 +201,8 @@ void co_tpdo_set_sample_ind(
  * Triggers the transmission of an acyclic or event-driven PDO. This function
  * returns an error if the inhibit time has not yet elapsed.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  *
  * @see co_tpdo_sync()
  */
@@ -214,8 +214,8 @@ int co_tpdo_event(co_tpdo_t *pdo);
  * @param pdo a pointer to a Transmit-PDO service.
  * @param cnt the counter value (in the range [0..240]).
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  *
  * @see co_tpdo_event()
  */
@@ -229,8 +229,8 @@ int co_tpdo_sync(co_tpdo_t *pdo, co_unsigned8_t cnt);
  * @param ac  the SDO abort code (0 on success). The PDO is not sent if
  *            `ac != 0`.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  *
  * @see co_tpdo_sample_ind_t
  */

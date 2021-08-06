@@ -102,7 +102,7 @@ extern "C" {
  * Initializes a CANopen NMT service manager.
  *
  * @returns <b>srv</b> on success, or NULL on error. In the latter case, the
- * error number can be obtained with get_errc().
+ * error code can be obtained with get_errc().
  *
  * @see co_nmt_srv_fini()
  */

@@ -92,7 +92,7 @@ typedef void daemon_handler_t(int sig, void *handle);
  *             The array MUST be NULL-terminated, i.e., `argv[argc] == NULL`.
  *
  * @returns 0 on completion, or -1 on error. In the latter case, the error
- * number can be obtained with get_errc().
+ * code can be obtained with get_errc().
  */
 int daemon_start(const char *name, int (*init)(int, char **),
 		void (*main)(void), void (*fini)(void), int argc, char *argv[]);
@@ -102,8 +102,8 @@ int daemon_start(const char *name, int (*init)(int, char **),
  * `daemon_signal(DAEMON_STOP)`. It is the responsibility of the user to invoke
  * `daemon_status(DAEMON_STOP)` once the daemon is stopped.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  */
 int daemon_stop(void);
 
@@ -112,8 +112,8 @@ int daemon_stop(void);
  * `daemon_signal(DAEMON_PAUSE)`. It is the responsibility of the user to invoke
  * `daemon_status(DAEMON_PAUSE)` once the daemon is paused.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  */
 int daemon_pause(void);
 
@@ -123,8 +123,8 @@ int daemon_pause(void);
  * invoke `daemon_status(DAEMON_CONTINUE)` once the daemon continues its normal
  * operation.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  */
 int daemon_continue(void);
 
@@ -133,8 +133,8 @@ int daemon_continue(void);
  * `daemon_signal(DAEMON_RELOAD)`. The user does _not_ need to invoke
  * daemon_status() to acknowledge execution of the reload operation.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  */
 int daemon_reload(void);
 

@@ -34,8 +34,8 @@ extern "C" {
  * multiple times, as long as it is matched by an equal number of calls to
  * io_ixxat_fini().
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  */
 int io_ixxat_init(void);
 
@@ -69,7 +69,7 @@ void io_ixxat_ctrl_fini(io_can_ctrl_t *ctrl);
  *                protocol; the value is ignored otherwise.
  *
  * @returns a pointer to a new CAN controller, or NULL on error. In the latter
- * case, the error number can be obtained with get_errc().
+ * case, the error code can be obtained with get_errc().
  *
  * @see io_ixxat_ctrl_create_from_luid()
  */
@@ -91,7 +91,7 @@ io_can_ctrl_t *io_ixxat_ctrl_create_from_index(UINT32 dwIndex, UINT32 dwCanNo,
  *                protocol; the value is ignored otherwise.
  *
  * @returns a pointer to a new CAN controller, or NULL on error. In the latter
- * case, the error number can be obtained with get_errc().
+ * case, the error code can be obtained with get_errc().
  *
  * @see io_ixxat_ctrl_create_from_index()
  */
@@ -129,7 +129,7 @@ void io_ixxat_chan_fini(io_can_chan_t *chan);
  *                is negative, the write function will wait indefinitely.
  *
  * @returns a pointer to a new CAN channel, or NULL on error. In the latter
- * case, the error number can be obtained with get_errc().
+ * case, the error code can be obtained with get_errc().
  */
 io_can_chan_t *io_ixxat_chan_create(
 		io_ctx_t *ctx, ev_exec_t *exec, int rxtimeo, int txtimeo);
@@ -156,8 +156,8 @@ HANDLE io_ixxat_chan_get_handle(const io_can_chan_t *chan);
  *                    <b>wTxFifoSize</b> is 0, the default value
  *                    #LELY_IO_IXXAT_TX_FIFO_SIZE is used.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  *
  * @post on success, io_ixxat_chan_is_open() returns 1.
  */
@@ -174,8 +174,8 @@ int io_ixxat_chan_open(io_can_chan_t *chan, const io_can_ctrl_t *ctrl,
  * @param dwTscClkFreq the clock frequency of the time stamp counter (in Hz).
  * @param dwTscDivisor the divisor for the message time stamp counter.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  *
  * @post on success, io_ixxat_chan_is_open() returns 1.
  */
@@ -203,8 +203,8 @@ int io_ixxat_chan_is_open(const io_can_chan_t *chan);
  * Closes a CAN channel. Any pending read or write operations are canceled as if
  * by io_can_chan_cancel_read() and io_can_chan_cancel_write().
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  *
  * @post io_ixxat_chan_is_open() returns 0.
  */

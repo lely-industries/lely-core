@@ -169,7 +169,7 @@ typedef co_unsigned32_t co_sub_up_ind_t(const co_sub_t *sub,
  * Allocates memory for #co_obj_t structure.
  *
  * @returns a pointer to an uninitialized #co_obj_t instance, or NULL on error.
- * In the latter case, the error number can be obtained with get_errc().
+ * In the latter case, the error code can be obtained with get_errc().
  *
  * @see co_obj_free()
  */
@@ -195,8 +195,8 @@ void co_obj_free(void *ptr);
  *             sub-objects to store values.
  * @param size size of the memory.
  *
- * @returns <b>obj</b>, or NULL on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns <b>obj</b>, or NULL on error. In the latter case, the error code can
+ * be obtained with get_errc().
  *
  * @see co_obj_fini()
  */
@@ -220,7 +220,7 @@ void co_obj_fini(co_obj_t *obj);
  * @param idx the object index.
  *
  * @returns a pointer to a new CANopen object, or NULL on error. In the latter
- * case, the error number can be obtained with get_errc().
+ * case, the error code can be obtained with get_errc().
  *
  * @see co_obj_destroy()
  */
@@ -332,8 +332,8 @@ const char *co_obj_get_name(const co_obj_t *obj);
 /**
  * Sets the name of a CANopen object.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  *
  * @see co_obj_get_name()
  */
@@ -350,8 +350,8 @@ co_unsigned8_t co_obj_get_code(const co_obj_t *obj);
  *             #CO_OBJECT_DEFTYPE, #CO_OBJECT_DEFSTRUCT, #CO_OBJECT_VAR,
  *             #CO_OBJECT_ARRAY or #CO_OBJECT_RECORD).
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  *
  * @see co_obj_get_code()
  */
@@ -392,7 +392,7 @@ const void *co_obj_get_val(const co_obj_t *obj, co_unsigned8_t subidx);
  *               SHOULD exclude the terminating null byte(s).
  *
  * @returns the number of bytes copied (i.e., <b>n</b>), or 0 on error. In the
- * latter case, the error number can be obtained with get_errc().
+ * latter case, the error code can be obtained with get_errc().
  *
  * @see co_obj_get_val(), co_sub_set_val()
  */
@@ -417,8 +417,8 @@ size_t co_obj_set_val(co_obj_t *obj, co_unsigned8_t subidx, const void *ptr,
  * @param data a pointer to user-specified data (can be NULL). <b>data</b> is
  *             passed as the last parameter to <b>func</b>.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  */
 void co_obj_set_dn_ind(co_obj_t *obj, co_sub_dn_ind_t *ind, void *data);
 
@@ -440,7 +440,7 @@ void co_obj_set_up_ind(co_obj_t *obj, co_sub_up_ind_t *ind, void *data);
  * Allocates memory for #co_sub_t structure.
  *
  * @returns a pointer to an uninitialized #co_sub_t instance, or NULL on error.
- * In the latter case, the error number can be obtained with get_errc().
+ * In the latter case, the error code can be obtained with get_errc().
  *
  * @see co_sub_free()
  */
@@ -467,8 +467,8 @@ void co_sub_free(void *ptr);
  * @param val    pointer to the memory to be used by sub-object to store its
  *               value.
  *
- * @returns <b>sub</b>, or NULL on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns <b>sub</b>, or NULL on error. In the latter case, the error code can
+ * be obtained with get_errc().
  *
  * @see co_sub_fini()
  */
@@ -494,7 +494,7 @@ void co_sub_fini(co_sub_t *sub);
  *               This MUST be the object index of one of the static data types.
  *
  * @returns a pointer to a new CANopen sub-object, or NULL on error. In the
- * latter case, the error number can be obtained with get_errc().
+ * latter case, the error code can be obtained with get_errc().
  *
  * @see co_sub_destroy()
  */
@@ -540,8 +540,8 @@ const char *co_sub_get_name(const co_sub_t *sub);
 /**
  * Sets the name of a CANopen sub-object.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  *
  * @see co_sub_get_name()
  */
@@ -587,7 +587,7 @@ const void *co_sub_get_min(const co_sub_t *sub);
  *            SHOULD exclude the terminating null byte(s).
  *
  * @returns the number of bytes copied (i.e., <b>n</b>), or 0 on error. In the
- * latter case, the error number can be obtained with get_errc().
+ * latter case, the error code can be obtained with get_errc().
  *
  * @see co_sub_get_min()
  */
@@ -630,7 +630,7 @@ const void *co_sub_get_max(const co_sub_t *sub);
  *            SHOULD exclude the terminating null byte(s).
  *
  * @returns the number of bytes copied (i.e., <b>n</b>), or 0 on error. In the
- * latter case, the error number can be obtained with get_errc().
+ * latter case, the error code can be obtained with get_errc().
  *
  * @see co_sub_get_max()
  */
@@ -671,7 +671,7 @@ const void *co_sub_get_def(const co_sub_t *sub);
  *            SHOULD exclude the terminating null byte(s).
  *
  * @returns the number of bytes copied (i.e., <b>n</b>), or 0 on error. In the
- * latter case, the error number can be obtained with get_errc().
+ * latter case, the error code can be obtained with get_errc().
  *
  * @see co_sub_get_def()
  */
@@ -712,7 +712,7 @@ const void *co_sub_get_val(const co_sub_t *sub);
  *            SHOULD exclude the terminating null byte(s).
  *
  * @returns the number of bytes copied (i.e., <b>n</b>), or 0 on error. In the
- * latter case, the error number can be obtained with get_errc().
+ * latter case, the error code can be obtained with get_errc().
  *
  * @see co_sub_get_val()
  */
@@ -750,8 +750,8 @@ co_unsigned8_t co_sub_get_access(const co_sub_t *sub);
  * @param access the access type (one of #CO_ACCESS_RO, #CO_ACCESS_WO,
  *               #CO_ACCESS_RW or #CO_ACCESS_CONST).
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  *
  * @see co_sub_get_access()
  */
@@ -793,8 +793,8 @@ const char *co_sub_get_upload_file(const co_sub_t *sub);
  * @param filename a pointer to the null-terminated string to be copied to the
  *                 UploadFile attribute.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  *
  * @pre the result of co_sub_get_flags() contains #CO_OBJ_FLAGS_UPLOAD_FILE.
  *
@@ -817,8 +817,8 @@ const char *co_sub_get_download_file(const co_sub_t *sub);
  * @param filename a pointer to the null-terminated string to be copied to the
  *                 DownloadFile attribute.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  *
  * @pre the result of co_sub_get_flags() contains #CO_OBJ_FLAGS_DOWNLOAD_FILE.
  *
@@ -929,8 +929,8 @@ co_unsigned32_t co_sub_dn_ind_val(co_sub_t *sub, co_unsigned16_t type,
  *            domains, this MUST be the address of pointer (which is set to NULL
  *            if the value is moved).
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  *
  * @see co_val_move()
  */

@@ -44,7 +44,7 @@
  *               number of bytes in the buffer (can be NULL).
  *
  * @returns 1 if all segments have been copied, 0 if one or more segments
- * remain, or -1 on error. In the latter case, the error number can be obtained
+ * remain, or -1 on error. In the latter case, the error code can be obtained
  * with get_errc().
  */
 static int co_sdo_req_dn_buf(

@@ -92,8 +92,8 @@ alloc_t *co_nmt_boot_get_alloc(const co_nmt_boot_t *boot);
  *                passed as the last parameter to <b>dn_ind</b> and
  *                <b>up_ind</b>.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  */
 int co_nmt_boot_boot_req(co_nmt_boot_t *boot, int_least32_t timeout,
 		co_csdo_ind_t *dn_ind, co_csdo_ind_t *up_ind, void *data);

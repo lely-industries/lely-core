@@ -74,8 +74,8 @@ extern "C" {
  * safe, but can be invoked multiple times, as long as it is matched by an equal
  * number of calls to lely_io_fini().
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  */
 int lely_io_init(void);
 
@@ -113,15 +113,15 @@ int io_handle_unique(io_handle_t handle);
 /**
  * Closes an I/O device.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  */
 int io_close(io_handle_t handle);
 
 /**
  * Returns the type of an I/O device (one of #IO_TYPE_CAN, #IO_TYPE_FILE,
  * #IO_TYPE_PIPE, #IO_TYPE_SERIAL or #IO_TYPE_SOCK), or -1 on error. In the
- * latter case, the error number can be obtained with get_errc().
+ * latter case, the error code can be obtained with get_errc().
  */
 int io_get_type(io_handle_t handle);
 
@@ -137,7 +137,7 @@ int io_get_fd(io_handle_t handle);
  *
  * @returns the active flags (any combination of #IO_FLAG_NO_CLOSE,
  * #IO_FLAG_NONBLOCK and #IO_FLAG_LOOPBACK), or -1 on error. In the latter case,
- * the error number can be obtained with get_errc().
+ * the error code can be obtained with get_errc().
  *
  * @see io_set_flags()
  */
@@ -150,8 +150,8 @@ int io_get_flags(io_handle_t handle);
  * @param flags  the I/O device flags (any combination of #IO_FLAG_NO_CLOSE,
  *               #IO_FLAG_NONBLOCK and #IO_FLAG_LOOPBACK).
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  *
  * @see io_get_flags()
  */
@@ -166,7 +166,7 @@ int io_set_flags(io_handle_t handle, int flags);
  * @param nbytes the number of bytes to read.
  *
  * @returns the number of bytes read on success, or -1 on error. In the latter
- * case, the error number can be obtained with get_errc().
+ * case, the error code can be obtained with get_errc().
  */
 ssize_t io_read(io_handle_t handle, void *buf, size_t nbytes);
 
@@ -179,7 +179,7 @@ ssize_t io_read(io_handle_t handle, void *buf, size_t nbytes);
  * @param nbytes the number of bytes to write.
  *
  * @returns the number of bytes written on success, or -1 on error. In the
- * latter case, the error number can be obtained with get_errc().
+ * latter case, the error code can be obtained with get_errc().
  */
 ssize_t io_write(io_handle_t handle, const void *buf, size_t nbytes);
 
@@ -187,8 +187,8 @@ ssize_t io_write(io_handle_t handle, const void *buf, size_t nbytes);
  * Flushes the write buffer of a an I/O device. This function waits until all
  * buffered data has been written.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  */
 int io_flush(io_handle_t handle);
 

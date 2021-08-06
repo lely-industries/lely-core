@@ -147,7 +147,7 @@ extern "C" {
  *             #CAN_MSG_BITS_MODE_EXACT).
  *
  * @returns the number of bits on success, or -1 on error. In the latter case,
- * the error number can be obtained with get_errc().
+ * the error code can be obtained with get_errc().
  */
 ssize_t can_msg_bits(const struct can_msg *msg, enum can_msg_bits_mode mode);
 

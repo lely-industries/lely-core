@@ -102,7 +102,7 @@ typedef void co_dev_tpdo_event_ind_t(co_unsigned16_t num, void *data);
  * Allocates memory for the #co_dev_t structure.
  *
  * @returns a pointer to an uninitialized #co_dev_t instance, or NULL on error.
- * In the latter case, the error number can be obtained with get_errc().
+ * In the latter case, the error code can be obtained with get_errc().
  *
  * @see co_dev_free()
  */
@@ -126,8 +126,8 @@ void co_dev_free(void *ptr);
  * @param id  the node-ID of the device (in the range [1..127, 255]). If
  *            <b>id</b> is 255, the device is unconfigured.
  *
- * @returns <b>dev</b>, or NULL on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns <b>dev</b>, or NULL on error. In the latter case, the error code can
+ * be obtained with get_errc().
  *
  * @see co_dev_fini()
  */
@@ -151,7 +151,7 @@ void co_dev_fini(co_dev_t *dev);
  *           <b>id</b> is 255, the device is unconfigured.
  *
  * @returns a pointer to a new CANopen device, or NULL on error. In the latter
- * case, the error number can be obtained with get_errc().
+ * case, the error code can be obtained with get_errc().
  *
  * @see co_dev_destroy()
  */
@@ -172,8 +172,8 @@ co_unsigned8_t co_dev_get_netid(const co_dev_t *dev);
 /**
  * Sets the network-ID of a CANopen device.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  *
  * @see co_dev_get_netid()
  */
@@ -186,8 +186,8 @@ co_unsigned8_t co_dev_get_id(const co_dev_t *dev);
  * Sets the node-ID of a CANopen device. This function will also update any
  * sub-object values of the form `$NODEID { "+" number }`.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  *
  * @see co_dev_get_id()
  */
@@ -288,8 +288,8 @@ const char *co_dev_get_name(const co_dev_t *dev);
 /**
  * Sets the name of a CANopen device.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  *
  * @see co_dev_get_name()
  */
@@ -305,8 +305,8 @@ const char *co_dev_get_vendor_name(const co_dev_t *dev);
 /**
  * Sets the vendor name of a CANopen device.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  *
  * @see co_dev_get_vendor_name()
  */
@@ -332,8 +332,8 @@ const char *co_dev_get_product_name(const co_dev_t *dev);
 /**
  * Sets the product name of a CANopen device.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  *
  * @see co_dev_get_product_name()
  */
@@ -365,8 +365,8 @@ const char *co_dev_get_order_code(const co_dev_t *dev);
 /**
  * Sets the order code of a CANopen device.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  *
  * @see co_dev_get_order_code()
  */
@@ -463,7 +463,7 @@ const void *co_dev_get_val(const co_dev_t *dev, co_unsigned16_t idx,
  *               SHOULD exclude the terminating null byte(s).
  *
  * @returns the number of bytes copied (i.e., <b>n</b>), or 0 on error. In the
- * latter case, the error number can be obtained with get_errc().
+ * latter case, the error code can be obtained with get_errc().
  *
  * @see co_dev_get_val(), co_sub_set_val()
  */
@@ -554,8 +554,8 @@ size_t co_dev_read_dcf(co_dev_t *dev, co_unsigned16_t *pmin,
  *                 be NULL).
  * @param filename a pointer to the name of the file.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  *
  * @see co_dev_read_dcf()
  */
@@ -590,8 +590,8 @@ size_t co_dev_write_dcf(const co_dev_t *dev, co_unsigned16_t min,
  * @param max      the maximum object index.
  * @param filename a pointer to the name of the file.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  *
  * @see co_dev_write_dcf()
  */

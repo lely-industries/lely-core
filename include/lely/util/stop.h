@@ -132,7 +132,7 @@ void stop_token_remove(stop_token_t *token, struct stop_func *func);
  * once the last reference to it is released.
  *
  * @returns a reference to the new stop source on succes, or NULL on error. In
- * the latter case, the error number can be obtained with get_errc().
+ * the latter case, the error code can be obtained with get_errc().
  *
  * @see stop_source_release()
  */

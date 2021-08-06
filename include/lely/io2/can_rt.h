@@ -44,7 +44,7 @@ struct io_can_rt_read_msg_result {
 	 * the completion task of the read operation finishes executing.
 	 */
 	const struct can_msg *msg;
-	/// The error number, obtained as if by get_errc(), if #msg is NULL.
+	/// The error code, obtained as if by get_errc(), if #msg is NULL.
 	int errc;
 };
 
@@ -87,12 +87,12 @@ struct io_can_rt_read_msg {
 struct io_can_rt_read_err_result {
 	/**
 	 * A pointer to the received CAN error frame, or NULL on error (or if
-	 * the operation is canceled). In the latter case, the error number is
+	 * the operation is canceled). In the latter case, the error code is
 	 * stored in #errc. The CAN error frame is only guaranteed to be valid
 	 * until the completion task of the read operation finishes executing.
 	 */
 	const struct can_err *err;
-	/// The error number, obtained as if by get_errc(), if #err is NULL.
+	/// The error code, obtained as if by get_errc(), if #err is NULL.
 	int errc;
 };
 
@@ -132,7 +132,7 @@ void io_can_rt_fini(io_can_rt_t *rt);
  * @param exec a pointer to the executor used to execute asynchronous tasks.
  *
  * @returns a pointer to a new CAN frame router, or NULL on error. In the latter
- * case, the error number can be obtained with get_errc().
+ * case, the error code can be obtained with get_errc().
  */
 io_can_rt_t *io_can_rt_create(io_can_chan_t *chan, ev_exec_t *exec);
 
@@ -200,7 +200,7 @@ size_t io_can_rt_abort_read_msg(
  *                  operation (can be NULL).
  *
  * @returns a pointer to a future, or NULL on error. In the latter case, the
- * error number can be obtained with get_errc().
+ * error code can be obtained with get_errc().
  */
 ev_future_t *io_can_rt_async_read_msg(io_can_rt_t *rt, uint_least32_t id,
 		uint_least8_t flags, struct io_can_rt_read_msg **pread_msg);
@@ -247,7 +247,7 @@ size_t io_can_rt_abort_read_err(
  *                  operation (can be NULL).
  *
  * @returns a pointer to a future, or NULL on error. In the latter case, the
- * error number can be obtained with get_errc().
+ * error code can be obtained with get_errc().
  */
 ev_future_t *io_can_rt_async_read_err(
 		io_can_rt_t *rt, struct io_can_rt_read_err **pread_err);
@@ -259,7 +259,7 @@ ev_future_t *io_can_rt_async_read_err(
  * reader has finished executing).
  *
  * @returns a pointer to a future, or NULL on error. In the latter case, the
- * error number can be obtained with get_errc().
+ * error code can be obtained with get_errc().
  */
 ev_future_t *io_can_rt_async_shutdown(io_can_rt_t *rt);
 

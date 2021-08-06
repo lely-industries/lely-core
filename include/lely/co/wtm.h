@@ -227,7 +227,7 @@ const char *co_wtm_ac_str(uint_least32_t ac);
  * Creates a new CANopen Wireless Transmission Media (WTM) interface.
  *
  * @returns a pointer to a new WTM interface, or NULL on error. In the latter
- * case, the error number can be obtained with get_errc().
+ * case, the error code can be obtained with get_errc().
  *
  * @see co_wtm_destroy()
  */
@@ -253,8 +253,8 @@ uint_least8_t co_wtm_get_nif(const co_wtm_t *wtm);
  * @param wtm a pointer to a CANopen WTM interface.
  * @param nif the WTM interface indicator (in the range [1..127]).
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  *
  * @see co_wtm_get_nif()
  */
@@ -282,8 +282,8 @@ int co_wtm_set_nif(co_wtm_t *wtm, uint_least8_t nif);
  * @param coc  the CAN controller overrun counter (in the range [0..0xfffe], or
  *             0xffff if the information is not available).
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  */
 int co_wtm_set_diag_can(co_wtm_t *wtm, uint_least8_t nif, uint_least8_t st,
 		uint_least8_t err, uint_least8_t load, uint_least16_t ec,
@@ -296,8 +296,8 @@ int co_wtm_set_diag_can(co_wtm_t *wtm, uint_least8_t nif, uint_least8_t st,
  * @param quality the link quality percentage (in the range [0..100], or 0xff if
  *                the information is not available).
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  */
 int co_wtm_set_diag_wtm(co_wtm_t *wtm, uint_least8_t quality);
 
@@ -494,8 +494,8 @@ void co_wtm_set_recv_func(co_wtm_t *wtm, co_wtm_recv_func_t *func, void *data);
  * @param nif the CAN interface indicator (in the range [1..127]).
  * @param tp  the address at which to store the current time (can be NULL).
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  *
  * @see co_wtm_set_time()
  */
@@ -510,8 +510,8 @@ int co_wtm_get_time(
  * @param nif the CAN interface indicator (in the range [1..127]).
  * @param tp  a pointer to the current time.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  *
  * @see co_wtm_get_time()
  */
@@ -528,8 +528,8 @@ int co_wtm_set_time(
  * @param nif the CAN interface indicator (in the range [1..127]).
  * @param msg a pointer to the CAN frame to be sent.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  */
 int co_wtm_send(co_wtm_t *wtm, uint_least8_t nif, const struct can_msg *msg);
 
@@ -537,8 +537,8 @@ int co_wtm_send(co_wtm_t *wtm, uint_least8_t nif, const struct can_msg *msg);
  * Sends a keep-alive message from a CANopen WTM interface. This function MAY
  * invoke the callback function set by co_wtm_set_send_func().
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  */
 int co_wtm_send_alive(co_wtm_t *wtm);
 
@@ -549,8 +549,8 @@ int co_wtm_send_alive(co_wtm_t *wtm);
  * @param wtm a pointer to a CANopen WTM interface.
  * @param nif the remote CAN interface indicator (in the range [1..127]).
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  */
 int co_wtm_send_diag_can_req(co_wtm_t *wtm, uint_least8_t nif);
 
@@ -561,8 +561,8 @@ int co_wtm_send_diag_can_req(co_wtm_t *wtm, uint_least8_t nif);
  * @param wtm a pointer to a CANopen WTM interface.
  * @param nif the remote WTM interface indicator (in the range [1..127]).
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  */
 int co_wtm_send_diag_wtm_req(co_wtm_t *wtm, uint_least8_t nif);
 
@@ -572,8 +572,8 @@ int co_wtm_send_diag_wtm_req(co_wtm_t *wtm, uint_least8_t nif);
  * @param wtm a pointer to a CANopen WTM interface.
  * @param nif the remote CAN interface indicator (in the range [1..127]).
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  */
 int co_wtm_send_diag_can_rst(co_wtm_t *wtm, uint_least8_t nif);
 
@@ -583,8 +583,8 @@ int co_wtm_send_diag_can_rst(co_wtm_t *wtm, uint_least8_t nif);
  * @param wtm a pointer to a CANopen WTM interface.
  * @param nif the remote WTM interface indicator (in the range [1..127]).
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  */
 int co_wtm_send_diag_wtm_rst(co_wtm_t *wtm, uint_least8_t nif);
 
@@ -595,8 +595,8 @@ int co_wtm_send_diag_wtm_rst(co_wtm_t *wtm, uint_least8_t nif);
  * @param wtm a pointer to a CANopen WTM interface.
  * @param ac  the abort code.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  */
 int co_wtm_send_diag_ac(co_wtm_t *wtm, uint_least32_t ac);
 
@@ -604,8 +604,8 @@ int co_wtm_send_diag_ac(co_wtm_t *wtm, uint_least32_t ac);
  * Flushes the current send buffer of a CANopen WTM interface. This function MAY
  * invoke the callback function set by co_wtm_set_send_func().
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  */
 int co_wtm_flush(co_wtm_t *wtm);
 

@@ -45,7 +45,7 @@ void io_timer_fini(io_timer_t *timer);
  *                `CLOCK_MONOTONIC`).
  *
  * @returns a pointer to a new timer, or NULL on error. In the latter case, the
- * error number can be obtained with get_errc().
+ * error code can be obtained with get_errc().
  */
 io_timer_t *io_timer_create(
 		io_poll_t *poll, ev_exec_t *exec, clockid_t clockid);

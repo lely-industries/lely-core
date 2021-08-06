@@ -511,8 +511,8 @@ extern "C" {
  * @param val  the address of the value to be initialized. In the case of
  *             strings or domains, this MUST be the address of pointer.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  *
  * @see co_val_fini()
  */
@@ -527,8 +527,8 @@ int co_val_init(co_unsigned16_t type, void *val);
  *             strings or domains, this MUST be the address of pointer, which
  *             will be set to NULL.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  *
  * @see co_val_fini()
  */
@@ -543,8 +543,8 @@ int co_val_init_min(co_unsigned16_t type, void *val);
  *             strings or domains, this MUST be the address of pointer, which
  *             will be set to NULL.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  *
  * @see co_val_fini()
  */
@@ -558,8 +558,8 @@ int co_val_init_max(co_unsigned16_t type, void *val);
  * @param vs  a pointer to the (null-terminated) string with which *<b>val</b>
  *            should be initialized (can be NULL).
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  *
  * @see co_val_fini()
  */
@@ -576,8 +576,8 @@ int co_val_init_vs(char **val, const char *vs);
  *            terminating null byte) and the maximum number of characters to
  *            copy from <b>vs</b> (unless <b>vs</b> is NULL).
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  *
  * @see co_val_fini()
  */
@@ -593,8 +593,8 @@ int co_val_init_vs_n(char **val, const char *vs, size_t n);
  * @param n   the number of octets in the value to be created (and the number of
  *            octets at <b>os</b> unless <b>os</b> is NULL).
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  *
  * @see co_val_fini()
  */
@@ -609,8 +609,8 @@ int co_val_init_os(uint_least8_t **val, const uint_least8_t *os, size_t n);
  * @param us  a pointer to the (null-terminated) string with which *<b>val</b>
  *            should be initialized (can be NULL).
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  *
  * @see co_val_fini()
  */
@@ -629,8 +629,8 @@ int co_val_init_us(char16_t **val, const char16_t *us);
  *            number of characters to copy from <b>us</b> (unless <b>us</b> is
  *            NULL).
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  *
  * @see co_val_fini()
  */
@@ -646,8 +646,8 @@ int co_val_init_us_n(char16_t **val, const char16_t *us, size_t n);
  * @param n   the number of bytes in the value to be created (and the number of
  *            bytes at <b>dom</b> unless <b>dom</b> is NULL).
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  *
  * @see co_val_fini()
  */
@@ -717,7 +717,7 @@ size_t co_val_sizeof(co_unsigned16_t type, const void *val);
  *             SHOULD exclude the terminating null byte(s).
  *
  * @returns the number of bytes copied (i.e., <b>n</b>), or 0 on error. In the
- * latter case, the error number can be obtained with get_errc().
+ * latter case, the error code can be obtained with get_errc().
  */
 size_t co_val_make(co_unsigned16_t type, void *val, const void *ptr, size_t n);
 
@@ -735,7 +735,7 @@ size_t co_val_make(co_unsigned16_t type, void *val, const void *ptr, size_t n);
  *
  * @returns the number of bytes copied (i.e., the result of
  * `co_val_sizeof(type, src)`), or 0 on error. In the latter case, the error
- * number can be obtained with get_errc().
+ * code can be obtained with get_errc().
  *
  * @see co_val_move()
  */
@@ -755,7 +755,7 @@ size_t co_val_copy(co_unsigned16_t type, void *dst, const void *src);
  *             exit).
  *
  * @returns the number of bytes copied (i.e., the result of
- * `co_type_sizeof(type)`), or 0 on error. In the latter case, the error number
+ * `co_type_sizeof(type)`), or 0 on error. In the latter case, the error code
  * can be obtained with get_errc().
  *
  * @see co_val_copy()
@@ -793,7 +793,7 @@ int co_val_cmp(co_unsigned16_t type, const void *v1, const void *v2);
  *              bytes are considered to be part of the value.
  *
  * @returns the number of bytes read, or 0 on error. In the latter case, the
- * error number can be obtained with get_errc().
+ * error code can be obtained with get_errc().
  *
  * @see co_val_write()
  */
@@ -815,7 +815,7 @@ size_t co_val_read(co_unsigned16_t type, void *val, const uint_least8_t *begin,
  * @param filename a pointer to the name of the file.
  *
  * @returns the number of bytes read, or 0 on error. In the latter case, the
- * error number can be obtained with get_errc().
+ * error code can be obtained with get_errc().
  *
  * @see co_val_read_frbuf()
  */
@@ -835,7 +835,7 @@ size_t co_val_read_file(co_unsigned16_t type, void *val, const char *filename);
  * @param buf  a pointer to a read file buffer.
  *
  * @returns the number of bytes read, or 0 on error. In the latter case, the
- * error number can be obtained with get_errc().
+ * error code can be obtained with get_errc().
  *
  * @see co_val_read_file(), frbuf_read()
  */
@@ -878,8 +878,8 @@ co_unsigned32_t co_val_read_sdo(
  *              written.
  *
  * @returns the number of bytes that would have been written had the buffer been
- * sufficiently large, or 0 on error. In the latter case, the error number can
- * be obtained with get_errc().
+ * sufficiently large, or 0 on error. In the latter case, the error code can be
+ * obtained with get_errc().
  *
  * @see co_val_read()
  */
@@ -898,7 +898,7 @@ size_t co_val_write(co_unsigned16_t type, const void *val, uint_least8_t *begin,
  * @param filename a pointer to the name of the file.
  *
  * @returns the number of bytes written, or 0 on error. In the latter case, the
- * error number can be obtained with get_errc().
+ * error code can be obtained with get_errc().
  *
  * @see co_val_write_fwbuf()
  */
@@ -916,7 +916,7 @@ size_t co_val_write_file(
  * @param buf  a pointer to a write file buffer.
  *
  * @returns the number of bytes written, or 0 on error. In the latter case, the
- * error number can be obtained with get_errc().
+ * error code can be obtained with get_errc().
  *
  * @see co_val_write_file(), fwbuf_write()
  */

@@ -36,8 +36,8 @@ extern "C" {
  * This function is not thread-safe, but can be invoked multiple times, as long
  * as it is matched by an equal number of calls to io_fini().
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  */
 int io_init(void);
 

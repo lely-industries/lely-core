@@ -117,8 +117,8 @@ extern "C" {
  *                   used.
  *
  * @returns 1 if the calling thread is already initialized, 0 if it has been
- * successfully initialized, or -1 on error. In the latter case, the error
- * number can be obtained with get_errc().
+ * successfully initialized, or -1 on error. In the latter case, the error code
+ * can be obtained with get_errc().
  */
 int ev_fiber_thrd_init(int flags, size_t stack_size, size_t max_unused);
 
@@ -143,7 +143,7 @@ void ev_fiber_exec_fini(ev_exec_t *exec);
  *                   single-threaded executor.
  *
  * @returns a pointer to a new fiber executor, or NULL on error. In the latter
- * case, the error number can be obtained with get_errc().
+ * case, the error code can be obtained with get_errc().
  */
 ev_exec_t *ev_fiber_exec_create(ev_exec_t *inner_exec);
 

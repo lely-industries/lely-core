@@ -48,7 +48,7 @@ size_t co_ssdo_sizeof(void);
  *            <b>dev</b>.
  *
  * @returns a pointer to a new Server-SDO service, or NULL on error. In the
- * latter case, the error number can be obtained with get_errc().
+ * latter case, the error code can be obtained with get_errc().
  *
  * @see co_ssdo_destroy()
  */
@@ -62,8 +62,8 @@ void co_ssdo_destroy(co_ssdo_t *sdo);
  *
  * @post on success, co_ssdo_is_stopped() returns <b>false</b>.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  *
  * @see co_ssdo_stop()
  */

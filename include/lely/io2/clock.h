@@ -53,8 +53,8 @@ struct io_clock_vtbl {
  * @param clock a pointer to a clock.
  * @param res   the address at which to store the resolution (can be NULL).
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  */
 LELY_IO_CLOCK_INLINE int io_clock_getres(
 		const io_clock_t *clock, struct timespec *res);
@@ -65,8 +65,8 @@ LELY_IO_CLOCK_INLINE int io_clock_getres(
  * @param clock a pointer to a clock.
  * @param tp    the address at which to store the time value.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  */
 LELY_IO_CLOCK_INLINE int io_clock_gettime(
 		const io_clock_t *clock, struct timespec *tp);
@@ -80,8 +80,8 @@ LELY_IO_CLOCK_INLINE int io_clock_gettime(
  *              nearest multiple of the clock resolution given by
  *              io_clock_getres().
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  */
 LELY_IO_CLOCK_INLINE int io_clock_settime(
 		io_clock_t *clock, const struct timespec *tp);

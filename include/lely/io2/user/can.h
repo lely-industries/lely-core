@@ -80,7 +80,7 @@ void io_user_can_chan_fini(io_can_chan_t *chan);
  *                <b>func</b>.
  *
  * @returns a pointer to a new channel, or NULL on error. In the latter case,
- * the error number can be obtained with get_errc().
+ * the error code can be obtained with get_errc().
  */
 io_can_chan_t *io_user_can_chan_create(io_ctx_t *ctx, ev_exec_t *exec,
 		int flags, size_t rxlen, int txtimeo,
@@ -100,8 +100,8 @@ void io_user_can_chan_destroy(io_can_chan_t *chan);
  *                when the receive queue is full. If <b>timeout</b> is negative,
  *                this function will block indefinitely.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  */
 int io_user_can_chan_on_msg(io_can_chan_t *chan, const struct can_msg *msg,
 		const struct timespec *tp, int timeout);
@@ -117,8 +117,8 @@ int io_user_can_chan_on_msg(io_can_chan_t *chan, const struct can_msg *msg,
  *                when the receive queue is full. If <b>timeout</b> is negative,
  *                this function will block indefinitely.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  */
 int io_user_can_chan_on_err(io_can_chan_t *chan, const struct can_err *err,
 		const struct timespec *tp, int timeout);

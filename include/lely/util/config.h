@@ -67,7 +67,7 @@ void __config_fini(struct __config *config);
  * @param flags either 0 or #CONFIG_CASE.
  *
  * @returns a pointer to a new configuration struct, or NULL on error. In the
- * latter case, the error number can be obtained with get_errc().
+ * latter case, the error code can be obtained with get_errc().
  *
  * @see config_destroy()
  */
@@ -139,7 +139,7 @@ const char *config_get(
  *
  * @returns a pointer to the value (which will differ from <b>value</b> due to
  * duplication), or NULL on error or when the key is deleted. In case of an
- * error, the error number can be obtained with get_errc().
+ * error, the error code can be obtained with get_errc().
  */
 const char *config_set(config_t *config, const char *section, const char *key,
 		const char *value);

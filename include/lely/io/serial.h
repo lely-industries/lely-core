@@ -43,7 +43,7 @@ extern "C" {
  *             be NULL).
  *
  * @returns a I/O device handle, or #IO_HANDLE_ERROR on error. In the latter
- * case, the error number can be obtained with get_errc().
+ * case, the error code can be obtained with get_errc().
  */
 io_handle_t io_open_serial(const char *path, io_attr_t *attr);
 
@@ -54,8 +54,8 @@ io_handle_t io_open_serial(const char *path, io_attr_t *attr);
  * @param flags  a flag specifying which of the buffers is to be discarded (any
  *               combination of #IO_PURGE_RX and #IO_PURGE_TX).
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  *
  * @see io_serial_flush()
  */
@@ -65,8 +65,8 @@ int io_purge(io_handle_t handle, int flags);
  * Retrieves the current attributes of a serial I/O device and stores them in
  * *<b>attr</b>.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  *
  * @see io_serial_set_attr()
  */
@@ -75,8 +75,8 @@ int io_serial_get_attr(io_handle_t handle, io_attr_t *attr);
 /**
  * Sets the attributes of a serial I/O device to those in *<b>attr</b>.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  *
  * @see io_serial_get_attr()
  */

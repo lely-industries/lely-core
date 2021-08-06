@@ -54,7 +54,7 @@ void __frbuf_fini(struct __frbuf *buf);
  * @param filename a pointer to the name of the file to be read into a buffer.
  *
  * @returns a pointer to a new file buffer, or NULL on error. In the latter
- * case, the error number can be obtained with get_errc().
+ * case, the error code can be obtained with get_errc().
  *
  * @see frbuf_destroy()
  */
@@ -70,14 +70,14 @@ void frbuf_destroy(frbuf_t *buf);
 
 /**
  * Returns the size (in bytes) of the a read file buffer, or -1 on error. In the
- * latter case, the error number can be obtained with get_errc().
+ * latter case, the error code can be obtained with get_errc().
  */
 intmax_t frbuf_get_size(frbuf_t *buf);
 
 /**
  * Returns the current offset (in bytes) of a read file buffer with respect to
- * the beginning of the file, or -1 on error. In the latter case, the error
- * number can be obtained with get_errc().
+ * the beginning of the file, or -1 on error. In the latter case, the error code
+ * can be obtained with get_errc().
  *
  * The position indicates the location at which the next call to frbuf_read()
  * will starting reading, and it is only updated by that function or
@@ -90,8 +90,8 @@ intmax_t frbuf_get_pos(frbuf_t *buf);
  * beginning of the file. The new position cannot be larger that the size of the
  * file.
  *
- * @returns the new position, or -1 on error. In the latter case, the error
- * number can be obtained with get_errc().
+ * @returns the new position, or -1 on error. In the latter case, the error code
+ * can be obtained with get_errc().
  *
  * @see frbuf_get_pos()
  */
@@ -106,7 +106,7 @@ intmax_t frbuf_set_pos(frbuf_t *buf, intmax_t pos);
  * @param size the number of bytes to read.
  *
  * @returns the number of bytes read, or -1 on error. In the latter case, the
- * error number can be obtained with get_errc().
+ * error code can be obtained with get_errc().
  *
  * @see frbuf_pread()
  */
@@ -123,7 +123,7 @@ ssize_t frbuf_read(frbuf_t *buf, void *ptr, size_t size);
  *             at which to start reading.
  *
  * @returns the number of bytes read, or -1 on error. In the latter case, the
- * error number can be obtained with get_errc().
+ * error code can be obtained with get_errc().
  *
  * @see frbuf_read()
  */
@@ -143,7 +143,7 @@ ssize_t frbuf_pread(frbuf_t *buf, void *ptr, size_t size, intmax_t pos);
  *              success, *<b>psize</b> contains the size of the map.
  *
  * @returns a pointer to the first byte in the memory map, or NULL on error. In
- * the latter case, the error number can be obtained with get_errc(). Note that
+ * the latter case, the error code can be obtained with get_errc(). Note that
  * it is an error to modify bytes in the memory map which may lead to a
  * segmentation fault.
  */
@@ -152,8 +152,8 @@ const void *frbuf_map(frbuf_t *buf, intmax_t pos, size_t *psize);
 /**
  * Unmaps the current memory map of a read file buffer, if it exists.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  *
  * @see frbuf_map()
  */

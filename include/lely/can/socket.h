@@ -50,7 +50,7 @@ extern "C" {
  *               are set in *<b>perror</b>, but existing flags are not cleared.
  *
  * @returns 1 if the CAN frame is an error frame, 0 if not, and -1 on error. In
- * the latter case, the error number can be obtained with get_errc().
+ * the latter case, the error code can be obtained with get_errc().
  */
 int can_frame_is_error(const struct can_frame *frame, enum can_state *pstate,
 		enum can_error *perror);
@@ -58,8 +58,8 @@ int can_frame_is_error(const struct can_frame *frame, enum can_state *pstate,
 /**
  * Converts a SocketCAN CAN frame to a #can_msg frame.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  *
  * @see can_msg2can_frame()
  */
@@ -68,8 +68,8 @@ int can_frame2can_msg(const struct can_frame *src, struct can_msg *dst);
 /**
  * Converts a #can_msg frame to a SocketCAN CAN frame.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  *
  * @see can_frame2can_msg()
  */
@@ -80,8 +80,8 @@ int can_msg2can_frame(const struct can_msg *src, struct can_frame *dst);
 /**
  * Converts a SocketCAN CAN FD frame to a #can_msg frame.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  *
  * @see can_msg2canfd_frame()
  */
@@ -90,8 +90,8 @@ int canfd_frame2can_msg(const struct canfd_frame *src, struct can_msg *dst);
 /**
  * Converts a #can_msg frame to a SocketCAN CAN FD frame.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  *
  * @see canfd_frame2can_msg()
  */

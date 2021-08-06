@@ -82,7 +82,7 @@ extern "C" {
  *               #IO_SOCK_DGRAM).
  *
  * @returns a new I/O device handle, or #IO_HANDLE_ERROR on error. In the latter
- * case, the error number can be obtained with get_errc().
+ * case, the error code can be obtained with get_errc().
  */
 io_handle_t io_open_socket(int domain, int type);
 
@@ -96,8 +96,8 @@ io_handle_t io_open_socket(int domain, int type);
  * @param handle_vector a 2-value array which, on success, contains the device
  *                      handles of the socket pair.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  */
 int io_open_socketpair(int domain, int type, io_handle_t handle_vector[2]);
 
@@ -113,7 +113,7 @@ int io_open_socketpair(int domain, int type, io_handle_t handle_vector[2]);
  *               #IO_MSG_OOB and #IO_MSG_WAITALL).
  *
  * @returns the number of bytes received on success, or -1 on error. In the
- * latter case, the error number can be obtained with get_errc().
+ * latter case, the error code can be obtained with get_errc().
  */
 ssize_t io_recv(io_handle_t handle, void *buf, size_t nbytes, io_addr_t *addr,
 		int flags);
@@ -129,7 +129,7 @@ ssize_t io_recv(io_handle_t handle, void *buf, size_t nbytes, io_addr_t *addr,
  * @param flags  type type of message transmission (0 or #IO_MSG_OOB).
  *
  * @returns the number of bytes sent on success, or -1 on error. In the latter
- * case, the error number can be obtained with get_errc().
+ * case, the error code can be obtained with get_errc().
  */
 ssize_t io_send(io_handle_t handle, const void *buf, size_t nbytes,
 		const io_addr_t *addr, int flags);
@@ -142,7 +142,7 @@ ssize_t io_send(io_handle_t handle, const void *buf, size_t nbytes,
  *               incoming network address.
  *
  * @returns a new I/O device handle, or #IO_HANDLE_ERROR on error. In the latter
- * case, the error number can be obtained with get_errc().
+ * case, the error code can be obtained with get_errc().
  *
  * @see io_sock_listen()
  */
@@ -154,8 +154,8 @@ io_handle_t io_accept(io_handle_t handle, io_addr_t *addr);
  * @param handle a valid socket device handle.
  * @param addr   a pointer to the network address to which to connect.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  */
 int io_connect(io_handle_t handle, const io_addr_t *addr);
 
@@ -164,8 +164,7 @@ int io_connect(io_handle_t handle, const io_addr_t *addr);
  * io_open_socket() or io_open_socketpair()).
  *
  * @returns #IO_SOCK_BTH, #IO_SOCK_IPV4, #IO_SOCK_IPV6 or #IO_SOCK_UNIX, or -1
- * on error. In the latter case, the error number can be obtained with
- * get_errc().
+ * on error. In the latter case, the error code can be obtained with get_errc().
  *
  * @see io_sock_get_type(), io_addr_get_domain()
  */
@@ -176,7 +175,7 @@ int io_sock_get_domain(io_handle_t handle);
  * io_open_socket() or io_open_socketpair()).
  *
  * @returns #IO_SOCK_STREAM or #IO_SOCK_DGRAM, or -1 on error. In the latter
- * case, the error number can be obtained with get_errc().
+ * case, the error code can be obtained with get_errc().
  *
  * @see io_sock_get_domain()
  */
@@ -185,8 +184,8 @@ int io_sock_get_type(io_handle_t handle);
 /**
  * Binds a local network address to a socket.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  */
 int io_sock_bind(io_handle_t handle, const io_addr_t *addr);
 
@@ -199,8 +198,8 @@ int io_sock_bind(io_handle_t handle, const io_addr_t *addr);
  *                io_sock_get_maxconn(). If <b>backlog</b> is 0, an
  *                implementation-defined minimum value is used.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  *
  * @see io_accept()
  */
@@ -213,8 +212,8 @@ int io_sock_listen(io_handle_t handle, int backlog);
  * @param how    the type of shutdown (one of #IO_SHUT_RD, #IO_SHUT_WR or
  *               #IO_SHUT_RDWR).
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  */
 int io_sock_shutdown(io_handle_t handle, int how);
 
@@ -222,8 +221,8 @@ int io_sock_shutdown(io_handle_t handle, int how);
  * Obtains the locally-bound name of a socket and stores the resulting address
  * in *<b>addr</b>. The socket name is set by io_sock_bind() and io_connect().
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  */
 int io_sock_get_sockname(io_handle_t handle, io_addr_t *addr);
 
@@ -231,8 +230,8 @@ int io_sock_get_sockname(io_handle_t handle, io_addr_t *addr);
  * Obtains the peer address of a socket and stores the result in *<b>addr</b>.
  * The peer name is set by io_accept() and io_connect().
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  */
 int io_sock_get_peername(io_handle_t handle, io_addr_t *addr);
 
@@ -249,8 +248,7 @@ int io_sock_get_maxconn(void);
  * function implements the SOL_SOCKET/SO_ACCEPTCONN option.
  *
  * @returns 1 if the socket is accepting connections and 0 if not, or -1 on
- * error. In the latter case, the error number can be obtained with
- * get_errc().
+ * error. In the latter case, the error code can be obtained with get_errc().
  *
  * @see io_sock_listen()
  */
@@ -261,7 +259,7 @@ int io_sock_get_acceptconn(io_handle_t handle);
  * implements the SOL_SOCKET/SO_BROADCAST option.
  *
  * @returns 1 if address reuse is enabled and 0 if not, or -1 on error. In the
- * latter case, the error number can be obtained with get_errc().
+ * latter case, the error code can be obtained with get_errc().
  *
  * @see io_sock_set_broadcast()
  */
@@ -272,8 +270,8 @@ int io_sock_get_broadcast(io_handle_t handle);
  * and disables this option otherwise (disabled by default). This function
  * implements the SOL_SOCKET/SO_BROADCAST option.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  *
  * @see io_sock_get_broadcast()
  */
@@ -284,7 +282,7 @@ int io_sock_set_broadcast(io_handle_t handle, int broadcast);
  * SOL_SOCKET/SO_DEBUG option.
  *
  * @returns 1 if debugging is enabled and 0 if not, or -1 on error. In the
- * latter case, the error number can be obtained with get_errc().
+ * latter case, the error code can be obtained with get_errc().
  *
  * @see io_sock_set_debug()
  */
@@ -295,8 +293,8 @@ int io_sock_get_debug(io_handle_t handle);
  * non-zero, and disables this option otherwise (disabled by default). This
  * function implements the SOL_SOCKET/SO_DEBUG option.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  *
  * @see io_sock_get_debug()
  */
@@ -307,7 +305,7 @@ int io_sock_set_debug(io_handle_t handle, int debug);
  * SOL_SOCKET/SO_DONTROUTE option.
  *
  * @returns 1 if routing is disabled and 0 if not, or -1 on error. In the latter
- * case, the error number can be obtained with get_errc().
+ * case, the error code can be obtained with get_errc().
  *
  * @see io_sock_set_dontroute()
  */
@@ -318,19 +316,19 @@ int io_sock_get_dontroute(io_handle_t handle);
  * disables this option otherwise (disabled by default). This function
  * implements the SOL_SOCKET/SO_DONTROUTE option.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  *
  * @see io_sock_get_dontroute()
  */
 int io_sock_set_dontroute(io_handle_t handle, int dontroute);
 
 /**
- * Obtains and clears the current error number of a socket, and stores the value
+ * Obtains and clears the current error code of a socket, and stores the value
  * in *<b>perror</b>. This function implements the SOL_SOCKET/SO_ERROR option.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  */
 int io_sock_get_error(io_handle_t handle, int *perror);
 
@@ -339,7 +337,7 @@ int io_sock_get_error(io_handle_t handle, int *perror);
  * implements the SOL_SOCKET/KEEPALIVE option.
  *
  * @returns 1 if TCP keep-alive is enabled and 0 if not, or -1 on error. In the
- * latter case, the error number can be obtained with get_errc().
+ * latter case, the error code can be obtained with get_errc().
  *
  * @see io_sock_set_keepalive()
  */
@@ -361,8 +359,8 @@ int io_sock_get_keepalive(io_handle_t handle);
  *                  packets if no acknowledgment is received. This parameter is
  *                  unused if <b>keepalive</b> is zero.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  *
  * @see io_sock_get_keepalive()
  */
@@ -373,8 +371,8 @@ int io_sock_set_keepalive(
  * Obtains the linger time (in seconds) of a socket. This function implements
  * the SOL_SOCKET/SO_LINGER option.
  *
- * @returns the linger time, or -1 on error. In the latter case, the error
- * number can be obtained with get_errc().
+ * @returns the linger time, or -1 on error. In the latter case, the error code
+ * can be obtained with get_errc().
  *
  * @see io_sock_set_linger()
  */
@@ -385,8 +383,8 @@ int io_sock_get_linger(io_handle_t handle);
  * sent. If <b>time</b> is 0, lingering is disabled. This function implements
  * the SOL_SOCKET/SO_LINGER option.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  *
  * @see io_sock_getlinger()
  */
@@ -397,8 +395,8 @@ int io_sock_set_linger(io_handle_t handle, int time);
  * This function implements the SOL_SOCKET/SO_OOBINLINE option.
  *
  * @returns 1 if out-of-band data is received in the normal data stream and 0 if
- * not, or -1 on error. In the latter case, the error number can be obtained
- * with get_errc().
+ * not, or -1 on error. In the latter case, the error code can be obtained with
+ * get_errc().
  *
  * @see io_sock_set_oobinline()
  */
@@ -410,8 +408,8 @@ int io_sock_get_oobinline(io_handle_t handle);
  * (disabled by default). This function implements the SOL_SOCKET/SO_OOBINLINE
  * option.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  *
  * @see io_sock_get_oobinline()
  */
@@ -422,7 +420,7 @@ int io_sock_set_oobinline(io_handle_t handle, int oobinline);
  * implements the SOL_SOCKET/SO_RCVBUF option.
  *
  * @returns the size of the receive buffer, or -1 on error. In the latter case,
- * the error number can be obtained with get_errc().
+ * the error code can be obtained with get_errc().
  *
  * @see io_sock_set_rcvbuf()
  */
@@ -432,8 +430,8 @@ int io_sock_get_rcvbuf(io_handle_t handle);
  * Sets the size (in bytes) of the receive buffer of a socket. This function
  * implements the SOL_SOCKET/SO_RCVBUF option.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  *
  * @see io_sock_get_rcvbuf()
  */
@@ -443,8 +441,8 @@ int io_sock_set_rcvbuf(io_handle_t handle, int size);
  * Sets the timeout (in milliseconds) of a receive operation on a socket. This
  * function implements the SOL_SOCKET/SO_RCVTIMEO option.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  */
 int io_sock_set_rcvtimeo(io_handle_t handle, int timeout);
 
@@ -453,7 +451,7 @@ int io_sock_set_rcvtimeo(io_handle_t handle, int timeout);
  * use. This function implements the SOL_SOCKET/SO_REUSEADDR option.
  *
  * @returns 1 if address reuse is enabled and 0 if not, or -1 on error. In the
- * latter case, the error number can be obtained with get_errc().
+ * latter case, the error code can be obtained with get_errc().
  *
  * @see io_sock_set_reuseaddr()
  */
@@ -464,8 +462,8 @@ int io_sock_get_reuseaddr(io_handle_t handle);
  * <b>reuseaddr</b> is non-zero, and disables this option otherwise (disabled by
  * default). This function implements the SOL_SOCKET/SO_REUSEADDR option.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  *
  * @see io_sock_get_reuseaddr()
  */
@@ -476,7 +474,7 @@ int io_sock_set_reuseaddr(io_handle_t handle, int reuseaddr);
  * implements the SOL_SOCKET/SO_SNDBUF option.
  *
  * @returns the size of the send buffer, or -1 on error. In the latter case, the
- * error number can be obtained with get_errc().
+ * error code can be obtained with get_errc().
  *
  * @see io_sock_set_sndbuf()
  */
@@ -486,8 +484,8 @@ int io_sock_get_sndbuf(io_handle_t handle);
  * Sets the size (in bytes) of the send buffer of a socket. This function
  * implements the SOL_SOCKET/SO_SNDBUF option.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  *
  * @see io_sock_get_sndbuf()
  */
@@ -497,8 +495,8 @@ int io_sock_set_sndbuf(io_handle_t handle, int size);
  * Sets the timeout (in milliseconds) of a send operation on a socket. This
  * function implements the SOL_SOCKET/SO_SNDTIMEO option.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  */
 int io_sock_set_sndtimeo(io_handle_t handle, int timeout);
 
@@ -507,7 +505,7 @@ int io_sock_set_sndtimeo(io_handle_t handle, int timeout);
  * function implements the IPPROTO_TCP/TCP_NODELAY option.
  *
  * @returns 1 if Nagle's algorithm is disabled and 0 otherwise, or -1 on error.
- * In the latter case, the error number can be obtained with get_errc().
+ * In the latter case, the error code can be obtained with get_errc().
  *
  * @see io_sock_set_tcp_nodelay()
  */
@@ -518,8 +516,8 @@ int io_sock_get_tcp_nodelay(io_handle_t handle);
  * and enables it otherwise. This function implements the
  * IPPROTO_TCP/TCP_NODELAY option. Nagle's algorithm is enabled by default.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  *
  * @see io_sock_get_tcp_nodelay()
  */
@@ -529,7 +527,7 @@ int io_sock_set_tcp_nodelay(io_handle_t handle, int nodelay);
  * Obtains the amount of data (in bytes) in the input buffer of a socket.
  *
  * @returns the number of bytes that can be read, or -1 on error. In the latter
- * case, the error number can be obtained with get_errc().
+ * case, the error code can be obtained with get_errc().
  */
 ssize_t io_sock_get_nread(io_handle_t handle);
 
@@ -539,7 +537,7 @@ ssize_t io_sock_get_nread(io_handle_t handle);
  * IPPROTO_IPV6/IPV6_MULTICAST_LOOP options.
  *
  * @returns 1 if multicast loopback is enabled and 0 if not, or -1 on error. In
- * the latter case, the error number can be obtained with get_errc().
+ * the latter case, the error code can be obtained with get_errc().
  *
  * @see io_sock_set_mcast_loop()
  */
@@ -551,8 +549,8 @@ int io_sock_get_mcast_loop(io_handle_t handle);
  * default). This function implements the IPPROTO_IP/IP_MULTICAST_LOOP and
  * IPPROTO_IPV6/IPV6_MULTICAST_LOOP options.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  *
  * @see io_sock_get_mcast_loop()
  */
@@ -564,7 +562,7 @@ int io_sock_set_mcast_loop(io_handle_t handle, int loop);
  * IPPROTO_IPV6/IPV6_MULTICAST_HOPS options.
  *
  * @returns the TTL for IP multicast traffic, or -1 on error. In the latter
- * case, the error number can be obtained with get_errc().
+ * case, the error code can be obtained with get_errc().
  *
  * @see io_sock_set_mcast_ttl()
  */
@@ -575,8 +573,8 @@ int io_sock_get_mcast_ttl(io_handle_t handle);
  * default is 1). This function implements the IPPROTO_IP/IP_MULTICAST_TTL and
  * IPPROTO_IPV6/IPV6_MULTICAST_HOPS options.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  *
  * @see io_sock_get_mcast_ttl()
  */
@@ -590,8 +588,8 @@ int io_sock_set_mcast_ttl(io_handle_t handle, int ttl);
  *               interface is chosen automatically.
  * @param group  a pointer to the address of the group to join.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  *
  * @see io_sock_mcast_leave_group()
  */
@@ -607,8 +605,8 @@ int io_sock_mcast_join_group(
  * @param group  a pointer to the address of the multicast group.
  * @param source a pointer to the address of the source to block.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  *
  * @see io_sock_mcast_unblock_source()
  */
@@ -624,8 +622,8 @@ int io_sock_mcast_block_source(io_handle_t handle, unsigned int index,
  * @param group  a pointer to the address of the multicast group.
  * @param source a pointer to the address of the source to unblock.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  *
  * @see io_sock_mcast_block_source()
  */
@@ -640,8 +638,8 @@ int io_sock_mcast_unblock_source(io_handle_t handle, unsigned int index,
  *               interface is chosen automatically.
  * @param group  a pointer to the address of the group to leave.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  *
  * @see io_sock_mcast_join_group()
  */
@@ -658,8 +656,8 @@ int io_sock_mcast_leave_group(
  * @param source a pointer to the address of the source from which to receive
  *               data.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  *
  * @see io_sock_mcast_join_source_group()
  */
@@ -676,8 +674,8 @@ int io_sock_mcast_join_source_group(io_handle_t handle, unsigned int index,
  * @param source a pointer to the address of the source from which data was
  *               received.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  *
  * @see io_sock_mcast_leave_source_group()
  */

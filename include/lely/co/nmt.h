@@ -315,7 +315,7 @@ size_t co_nmt_sizeof(void);
  * @param dev a pointer to a CANopen device.
  *
  * @returns a pointer to a new NMT service, or NULL on error. In the latter
- * case, the error number can be obtained with get_errc().
+ * case, the error code can be obtained with get_errc().
  *
  * @see co_nmt_destroy()
  */
@@ -774,8 +774,8 @@ co_unsigned8_t co_nmt_get_id(const co_nmt_t *nmt);
  * @param nmt a pointer to an NMT master/slave service.
  * @param id  the node-ID of the device (in the range [1..127, 255]).
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  *
  * @see co_nmt_get_id(), co_dev_set_id()
  */
@@ -801,8 +801,8 @@ bool co_nmt_is_master(const co_nmt_t *nmt);
  * @param nmt    a pointer to an NMT master service.
  * @param bus_id a CAN bus identifier.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  */
 int co_nmt_set_alternate_bus_id(co_nmt_t *nmt, co_unsigned8_t bus_id);
 
@@ -817,6 +817,9 @@ uint_least8_t co_nmt_get_active_bus_id(const co_nmt_t *nmt);
  *
  * @param nmt    a pointer to an NMT master service.
  * @param bus_id a CAN bus identifier.
+ *
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  */
 int co_nmt_set_active_bus(co_nmt_t *nmt, uint_least8_t bus_id);
 
@@ -849,8 +852,8 @@ void co_nmt_set_timeout(co_nmt_t *nmt, int_least32_t timeout);
  *            #CO_NMT_CS_RESET_COMM).
  * @param id  the node-ID (0 for all nodes, [1..127] for a specific slave).
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  */
 int co_nmt_cs_req(co_nmt_t *nmt, co_unsigned8_t cs, co_unsigned8_t id);
 
@@ -859,8 +862,8 @@ int co_nmt_cs_req(co_nmt_t *nmt, co_unsigned8_t cs, co_unsigned8_t id);
  * function specified to co_nmt_set_lss_req() MUST cause this function to be
  * invoked.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  */
 int co_nmt_lss_con(co_nmt_t *nmt);
 
@@ -872,8 +875,8 @@ int co_nmt_lss_con(co_nmt_t *nmt);
  * @param id      the node-ID (in the range [1..127]).
  * @param timeout the SDO timeout (in milliseconds). See co_csdo_set_timeout().
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  */
 int co_nmt_boot_req(co_nmt_t *nmt, co_unsigned8_t id, int_least32_t timeout);
 
@@ -891,7 +894,7 @@ bool co_nmt_is_booting(const co_nmt_t *nmt, co_unsigned8_t id);
  *            slave).
  *
  * @returns 1 if a boot-up message was received, 0 if not, or -1 on error. In
- * the latter case, the error number can be obtained with get_errc().
+ * the latter case, the error code can be obtained with get_errc().
  */
 int co_nmt_chk_bootup(const co_nmt_t *nmt, co_unsigned8_t id);
 
@@ -906,8 +909,8 @@ int co_nmt_chk_bootup(const co_nmt_t *nmt, co_unsigned8_t id);
  * @param data    a pointer to user-specified data (can be NULL). <b>data</b> is
  *                passed as the last parameter to <b>con</b>.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  */
 int co_nmt_cfg_req(co_nmt_t *nmt, co_unsigned8_t id, int_least32_t timeout,
 		co_nmt_cfg_con_t *con, void *data);
@@ -921,8 +924,8 @@ int co_nmt_cfg_req(co_nmt_t *nmt, co_unsigned8_t id, int_least32_t timeout,
  * @param id  the node-ID (in the range [1..127]).
  * @param ac  the SDO abort code (0 on success).
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  */
 int co_nmt_cfg_res(co_nmt_t *nmt, co_unsigned8_t id, co_unsigned32_t ac);
 
@@ -936,8 +939,8 @@ int co_nmt_cfg_res(co_nmt_t *nmt, co_unsigned8_t id, co_unsigned32_t ac);
  * @param gt  the guard time (in milliseconds).
  * @param ltf the lifetime factor.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  */
 int co_nmt_ng_req(co_nmt_t *nmt, co_unsigned8_t id, co_unsigned16_t gt,
 		co_unsigned8_t ltf);
@@ -959,8 +962,8 @@ int co_nmt_ng_req(co_nmt_t *nmt, co_unsigned8_t id, co_unsigned16_t gt,
  *            #CO_NMT_CS_STOP, #CO_NMT_CS_ENTER_PREOP, #CO_NMT_CS_RESET_NODE or
  *            #CO_NMT_CS_RESET_COMM).
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  */
 int co_nmt_cs_ind(co_nmt_t *nmt, co_unsigned8_t cs);
 
@@ -979,8 +982,8 @@ void co_nmt_comm_err_ind(co_nmt_t *nmt);
  * @param nmt a pointer to an NMT master service.
  * @param id  the node-ID (in the range [1..127]).
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  */
 int co_nmt_node_err_ind(co_nmt_t *nmt, co_unsigned8_t id);
 

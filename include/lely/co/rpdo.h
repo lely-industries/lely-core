@@ -75,7 +75,7 @@ size_t co_rpdo_sizeof(void);
  *            <b>dev</b>.
  *
  * @returns a pointer to a new Receive-PDO service, or NULL on error. In the
- * latter case, the error number can be obtained with get_errc().
+ * latter case, the error code can be obtained with get_errc().
  *
  * @see co_rpdo_destroy()
  */
@@ -89,8 +89,8 @@ void co_rpdo_destroy(co_rpdo_t *pdo);
  *
  * @post on success, co_rpdo_is_stopped() returns <b>false</b>.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  *
  * @see co_rpdo_stop()
  */
@@ -193,16 +193,16 @@ void co_rpdo_set_err(co_rpdo_t *pdo, co_rpdo_err_t *err, void *data);
  * @param pdo a pointer to a Receive-PDO service.
  * @param cnt the counter value (in the range [0..240]).
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  */
 int co_rpdo_sync(co_rpdo_t *pdo, co_unsigned8_t cnt);
 
 /**
  * Requests the transmission of a PDO.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  */
 int co_rpdo_rtr(co_rpdo_t *pdo);
 

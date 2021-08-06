@@ -74,7 +74,7 @@ size_t co_sync_sizeof(void);
  * @param dev a pointer to a CANopen device.
  *
  * @returns a pointer to a new SYNC service, or NULL on error. In the latter
- * case, the error number can be obtained with get_errc().
+ * case, the error code can be obtained with get_errc().
  *
  * @see co_sync_destroy()
  */
@@ -88,8 +88,8 @@ void co_sync_destroy(co_sync_t *sync);
  *
  * @post on success, co_sync_is_stopped() returns <b>false</b>.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  *
  * @see co_sync_stop()
  */

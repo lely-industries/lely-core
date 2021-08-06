@@ -85,8 +85,8 @@ size_t co_gw_txt_pending(const co_gw_txt_t *gw);
  * @param gw  a pointer to a CANopen ASCII gateway.
  * @param srv a pointer to the service parameters.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  */
 int co_gw_txt_recv(co_gw_txt_t *gw, const struct co_gw_srv *srv);
 

@@ -41,7 +41,7 @@ extern "C" {
  *               are set in *<b>perror</b>, but existing flags are not cleared.
  *
  * @returns 1 if the CAN message is an error message, 0 if not, and -1 on error.
- * In the latter case, the error number can be obtained with get_errc().
+ * In the latter case, the error code can be obtained with get_errc().
  */
 int CANMSG_is_error(const void *msg, enum can_state *pstate,
 		enum can_error *perror);
@@ -49,8 +49,8 @@ int CANMSG_is_error(const void *msg, enum can_state *pstate,
 /**
  * Converts an IXXAT VCI CAN message to a #can_msg frame.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  *
  * @see can_msg2CANMSG()
  */
@@ -59,8 +59,8 @@ int CANMSG2can_msg(const void *src, struct can_msg *dst);
 /**
  * Converts a #can_msg frame to an IXXAT VCI CAN message.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  *
  * @see CANMSG2can_msg()
  */
