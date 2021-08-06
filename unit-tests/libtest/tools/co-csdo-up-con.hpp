@@ -34,7 +34,7 @@ struct CoCsdoUpCon {
   static size_t n;
   static void* data;
   static size_t num_called;
-  static constexpr size_t BUFSIZE = 2u;
+  static constexpr size_t BUFSIZE = 4u;
   static uint_least8_t buf[BUFSIZE];
 
   static void func(co_csdo_t* sdo_, co_unsigned16_t idx_,

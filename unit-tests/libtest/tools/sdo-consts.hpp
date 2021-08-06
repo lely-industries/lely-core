@@ -35,6 +35,7 @@ constexpr uint8_t CO_SDO_CCS_BLK_DN_REQ = 0xc0u;
 
 constexpr uint8_t CO_SDO_CS_ABORT = 0x80u;
 
+constexpr uint8_t CO_SDO_SCS_UP_SEG_RES = 0x00u;
 constexpr uint8_t CO_SDO_SCS_DN_SEG_RES = 0x20u;
 constexpr uint8_t CO_SDO_SCS_UP_INI_RES = 0x40u;
 constexpr uint8_t CO_SDO_SCS_DN_INI_RES = 0x60u;

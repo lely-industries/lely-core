@@ -62,13 +62,21 @@ can_msg DnSegReq(co_unsigned16_t idx, co_unsigned8_t subidx,
 // upload initiate request
 can_msg UpIniReq(co_unsigned16_t idx, co_unsigned8_t subidx,
                  uint_least32_t recipient_id);
-// upload initiate response
+// upload initiate response - generic
 can_msg UpIniRes(co_unsigned16_t idx, co_unsigned8_t subidx,
-                 uint_least32_t recipient_id);
+                 uint_least32_t recipient_id, uint_least8_t cs_flags = 0,
+                 const std::vector<uint_least8_t>& data = {});
+// upload initiate response - with optional size indication
+can_msg UpIniResWithSize(co_unsigned16_t idx, co_unsigned8_t subidx,
+                         uint_least32_t recipient_id, size_t size);
 // upload segment request
 can_msg UpSeg(uint_least32_t recipient_id, uint_least8_t seqno,
               const std::vector<uint_least8_t>& data,
               co_unsigned8_t cs_flags = 0);
+// upload segment response
+can_msg UpSegRes(uint_least32_t recipient_id,
+                 const std::vector<uint_least8_t>& data,
+                 co_unsigned8_t cs_flags = 0);
 // block upload initiate request
 can_msg BlkUpIniReq(co_unsigned16_t idx, co_unsigned8_t subidx,
                     uint_least32_t recipient_id,

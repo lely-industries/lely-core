@@ -152,11 +152,29 @@ SdoCreateMsg::UpIniReq(const co_unsigned16_t idx, const co_unsigned8_t subidx,
 
 can_msg
 SdoCreateMsg::UpIniRes(const co_unsigned16_t idx, const co_unsigned8_t subidx,
-                       const uint_least32_t recipient_id) {
+                       const uint_least32_t recipient_id,
+                       const uint_least8_t cs_flags,
+                       const std::vector<uint_least8_t>& data) {
+  assert(data.size() <= 4u);
+
   can_msg msg = SdoCreateMsg::Default(idx, subidx, recipient_id);
-  msg.data[0] = CO_SDO_SCS_UP_INI_RES;
+  msg.data[0] = CO_SDO_SCS_UP_INI_RES | cs_flags;
+  std::copy(std::begin(data), std::end(data), msg.data + 4u);
 
   return msg;
+}
+
+can_msg
+SdoCreateMsg::UpIniResWithSize(const co_unsigned16_t idx,
+                               const co_unsigned8_t subidx,
+                               const uint_least32_t recipient_id,
+                               const size_t size) {
+  if (size == 0) return UpIniRes(idx, subidx, recipient_id);
+
+  std::vector<uint_least8_t> buf(4u);
+  stle_u32(buf.data(), static_cast<co_unsigned32_t>(size));
+
+  return UpIniRes(idx, subidx, recipient_id, CO_SDO_INI_SIZE_IND, buf);
 }
 
 can_msg
@@ -168,6 +186,20 @@ SdoCreateMsg::UpSeg(const uint_least32_t recipient_id,
 
   can_msg msg = SdoCreateMsg::Default(0, 0, recipient_id);
   msg.data[0] = seqno;
+  msg.data[0] |= cs_flags;
+  std::copy(data.begin(), data.end(), msg.data + 1u);
+
+  return msg;
+}
+
+can_msg
+SdoCreateMsg::UpSegRes(const uint_least32_t recipient_id,
+                       const std::vector<uint_least8_t>& data,
+                       const co_unsigned8_t cs_flags) {
+  assert(data.size() <= CO_SDO_SEG_MAX_DATA_SIZE);
+
+  can_msg msg = SdoCreateMsg::Default(0u, 0u, recipient_id);
+  msg.data[0] = CO_SDO_SCS_UP_SEG_RES;
   msg.data[0] |= cs_flags;
   std::copy(data.begin(), data.end(), msg.data + 1u);
 
