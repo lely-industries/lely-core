@@ -84,6 +84,9 @@
 #endif
 #endif // LELY_NO_MALLOC
 
+#define CO_NMT_TPDO_EVENT_MASK_BIT 32u
+#define CO_NMT_TPDO_EVENT_MASK_COUNT (CO_NUM_PDOS / CO_NMT_TPDO_EVENT_MASK_BIT)
+
 struct co_nmt_state;
 /// An opaque CANopen NMT state type.
 typedef const struct co_nmt_state co_nmt_state_t;
@@ -320,7 +323,7 @@ struct co_nmt {
 	 * co_nmt_on_tpdo_event() that have been postponed because
 	 * #tpdo_event_wait > 0.
 	 */
-	unsigned long tpdo_event_mask[CO_NUM_PDOS / LONG_BIT];
+	uint_least32_t tpdo_event_mask[CO_NMT_TPDO_EVENT_MASK_COUNT];
 #endif
 };
 
@@ -504,6 +507,9 @@ static void co_nmt_up_ind(const co_csdo_t *sdo, co_unsigned16_t idx,
 #if !LELY_NO_CO_TPDO
 /// The Transmit-PDO event indication function. @see co_dev_tpdo_event_ind_t
 static void co_nmt_tpdo_event_ind(co_unsigned16_t n, void *data);
+
+/// Sets TPDO event mask for given event.
+static inline void co_nmt_tpdo_event_mask_set(co_nmt_t *nmt, co_unsigned16_t n);
 #endif
 
 /**
@@ -1396,8 +1402,7 @@ co_nmt_on_tpdo_event(co_nmt_t *nmt, co_unsigned16_t n)
 		co_tpdo_t *pdo = co_nmt_get_tpdo(nmt, n);
 		if (pdo) {
 			if (nmt->tpdo_event_wait)
-				nmt->tpdo_event_mask[(n - 1u) / LONG_BIT] |= 1uL
-						<< ((n - 1u) % LONG_BIT);
+				co_nmt_tpdo_event_mask_set(nmt, n);
 			else
 				co_tpdo_event(pdo);
 		}
@@ -1407,8 +1412,7 @@ co_nmt_on_tpdo_event(co_nmt_t *nmt, co_unsigned16_t n)
 			if (!pdo)
 				continue;
 			if (nmt->tpdo_event_wait)
-				nmt->tpdo_event_mask[(n - 1) / LONG_BIT] |= 1uL
-						<< ((n - 1u) % LONG_BIT);
+				co_nmt_tpdo_event_mask_set(nmt, n);
 			else
 				co_tpdo_event(pdo);
 		}
@@ -1435,10 +1439,11 @@ co_nmt_on_tpdo_event_unlock(co_nmt_t *nmt)
 
 	// Issue an indication for every postponed Transmit-PDO event.
 	int errsv = get_errc();
-	for (size_t i = 0; i < CO_NUM_PDOS / LONG_BIT; i++) {
+	for (size_t i = 0; i < CO_NMT_TPDO_EVENT_MASK_COUNT; i++) {
 		if (nmt->tpdo_event_mask[i]) {
-			co_unsigned16_t n = i * LONG_BIT + 1;
-			for (size_t j = 0; j < LONG_BIT && n <= nmt->srv.ntpdo
+			co_unsigned16_t n = i * CO_NMT_TPDO_EVENT_MASK_BIT + 1;
+			for (size_t j = 0; j < CO_NMT_TPDO_EVENT_MASK_BIT
+					&& n <= nmt->srv.ntpdo
 					&& nmt->tpdo_event_mask[i];
 					j++, n++) {
 				if (!(nmt->tpdo_event_mask[i] & (1uL << j)))
@@ -3046,6 +3051,14 @@ co_nmt_tpdo_event_ind(co_unsigned16_t n, void *data)
 
 	co_nmt_on_tpdo_event(nmt, n);
 }
+
+static inline void
+co_nmt_tpdo_event_mask_set(co_nmt_t *nmt, co_unsigned16_t n)
+{
+	nmt->tpdo_event_mask[(n - 1u) / CO_NMT_TPDO_EVENT_MASK_BIT] |= 1uL
+			<< ((n - 1u) % CO_NMT_TPDO_EVENT_MASK_BIT);
+}
+
 #endif
 
 static void
@@ -3365,7 +3378,7 @@ co_nmt_start_on_enter(co_nmt_t *nmt)
 
 #if !LELY_NO_CO_TPDO
 	// Reset all Transmit-PDO events.
-	for (size_t i = 0; i < CO_NUM_PDOS / LONG_BIT; i++)
+	for (size_t i = 0; i < CO_NMT_TPDO_EVENT_MASK_COUNT; i++)
 		nmt->tpdo_event_mask[i] = 0;
 #endif
 
@@ -4342,7 +4355,7 @@ co_nmt_init(co_nmt_t *nmt, can_net_t *net, co_dev_t *dev)
 
 #if !LELY_NO_CO_TPDO
 	nmt->tpdo_event_wait = 0;
-	for (size_t i = 0; i < CO_NUM_PDOS / LONG_BIT; i++)
+	for (size_t i = 0; i < CO_NMT_TPDO_EVENT_MASK_COUNT; i++)
 		nmt->tpdo_event_mask[i] = 0;
 
 	// Set the Transmit-PDO event indication function.
