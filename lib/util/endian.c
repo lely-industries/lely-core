@@ -36,8 +36,8 @@ static inline void bitcpy(
 		uint_least8_t *dst, uint_least8_t src, uint_least8_t mask);
 
 void
-bcpybe(uint_least8_t *dst, int dstbit, const uint_least8_t *src, int srcbit,
-		size_t n)
+bcpybe(uint_least8_t *dst, ptrdiff_t dstbit, const uint_least8_t *src,
+		ptrdiff_t srcbit, size_t n)
 {
 	if (!n)
 		return;
@@ -63,7 +63,7 @@ bcpybe(uint_least8_t *dst, int dstbit, const uint_least8_t *src, int srcbit,
 	uint_least8_t first = 0xffu >> dstbit_num;
 	uint_least8_t last = ~(0xffu >> ((dstbit_num + n) % 8u)) & 0xffu;
 
-	int shift = dstbit - srcbit;
+	const ptrdiff_t shift = dstbit - srcbit;
 	if (shift) {
 		uint_least8_t right = ((uint_least8_t)shift) & (8 - 1);
 		uint_least8_t left = ((uint_least8_t)-shift) & (8 - 1);
@@ -121,8 +121,8 @@ bcpybe(uint_least8_t *dst, int dstbit, const uint_least8_t *src, int srcbit,
 }
 
 void
-bcpyle(uint_least8_t *dst, int dstbit, const uint_least8_t *src, int srcbit,
-		size_t n)
+bcpyle(uint_least8_t *dst, ptrdiff_t dstbit, const uint_least8_t *src,
+		ptrdiff_t srcbit, size_t n)
 {
 	if (!n)
 		return;
@@ -148,7 +148,7 @@ bcpyle(uint_least8_t *dst, int dstbit, const uint_least8_t *src, int srcbit,
 	uint_least8_t first = (0xffu << dstbit_num) & 0xffu;
 	uint_least8_t last = ~(0xffu << ((dstbit_num + n) % 8u)) & 0xffu;
 
-	int shift = dstbit - srcbit;
+	const ptrdiff_t shift = dstbit - srcbit;
 	if (shift) {
 		uint_least8_t right = ((uint_least8_t)-shift) & (8 - 1);
 		uint_least8_t left = ((uint_least8_t)shift) & (8 - 1);
