@@ -151,6 +151,7 @@ extern "C" {
  */
 ssize_t can_msg_bits(const struct can_msg *msg, enum can_msg_bits_mode mode);
 
+#if !LELY_NO_STDIO
 /**
  * Prints the contents of a CAN or CAN FD format frame to a string buffer. The
  * output mimics that of candump.
@@ -167,6 +168,7 @@ ssize_t can_msg_bits(const struct can_msg *msg, enum can_msg_bits_mode mode);
  * `errno`.
  */
 int snprintf_can_msg(char *s, size_t n, const struct can_msg *msg);
+#endif // !LELY_NO_STDIO
 
 #if !LELY_NO_MALLOC
 /**
