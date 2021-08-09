@@ -4850,7 +4850,39 @@ TEST(CO_Csdo, CoCsdoBlkDnEndOnTime_Nominal) {
 ///@{
 
 /// TODO(N7S): test cases for co_csdo_send_blk_up_sub_res()
-/// TODO(N7S): test cases for co_csdo_send_blk_up_end_res()
+
+/// \Given a pointer to the CSDO service (co_csdo_t) which has initiated block
+///        download transfer (the correct request was sent by the client) and
+///        an SDO upload last segment request was received
+///
+/// \When an SDO block upload response with a CO_SDO_SC_END_BLK subcommand and
+///       the correct size set is received
+///
+/// \Then an SDO block upload request with CO_SDO_SC_END_BLK command specifier
+///       is sent
+///       \Calls membuf_size()
+///       \Calls can_net_send()
+TEST(CO_Csdo, CoCsdoSendBlkUpEndRes_Nominal) {
+  StartCSDO();
+  InitiateBlockUploadRequest();
+
+  const uint_least8_t sequence_number = 1u;
+  const auto msg_up_seg =
+      SdoCreateMsg::UpSeg(DEFAULT_COBID_RES, sequence_number,
+                          val_u16.GetSegmentData(), CO_SDO_SEQ_LAST);
+  CHECK_EQUAL(1, can_net_recv(net, &msg_up_seg, 0));
+  CanSend::Clear();
+
+  const auto msg_blk_up_res = SdoCreateMsg::BlkUpRes(
+      DEFAULT_COBID_RES, sizeof(sub_type), CO_SDO_SC_END_BLK);
+  CHECK_EQUAL(1, can_net_recv(net, &msg_blk_up_res, 0));
+
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
+  const auto expected_msg =
+      SdoCreateMsg::BlkUpReq(DEFAULT_COBID_REQ, CO_SDO_SC_END_BLK);
+  CanSend::CheckMsg(expected_msg);
+}
+
 /// TODO(N7S): test cases for co_csdo_blk_up_end_res()
 
 ///@}

@@ -81,6 +81,11 @@ can_msg UpSegRes(uint_least32_t recipient_id,
 can_msg BlkUpIniReq(co_unsigned16_t idx, co_unsigned8_t subidx,
                     uint_least32_t recipient_id,
                     co_unsigned8_t blksize = CO_SDO_MAX_SEQNO);
+// block upload request
+can_msg BlkUpReq(uint_least32_t recipient_id, co_unsigned8_t cs_flags = 0);
+// block upload response
+can_msg BlkUpRes(uint_least32_t recipient_id, co_unsigned8_t size = 0,
+                 co_unsigned8_t cs_flags = 0);
 // block upload initiate response
 can_msg BlkUpIniRes(co_unsigned16_t idx, co_unsigned8_t subidx,
                     uint_least32_t recipient_id, co_unsigned32_t size = 0);
