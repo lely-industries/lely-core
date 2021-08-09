@@ -1180,11 +1180,10 @@ TEST_GROUP_BASE(CO_Csdo, CO_CsdoBase) {
     CanSend::Clear();
   }
 
-  void ReceiveBlockDownloadSubInitiateResponse(
-      const co_unsigned16_t idx, const co_unsigned8_t subidx,
-      const uint_least8_t sequence_number = 0) {
-    const can_msg msg = SdoCreateMsg::BlkDnSubRes(
-        idx, subidx, DEFAULT_COBID_RES, sequence_number, CO_SDO_SC_INI_BLK);
+  void ReceiveBlockDownloadSubInitiateResponse(const co_unsigned16_t idx,
+                                               const co_unsigned8_t subidx) {
+    const can_msg msg = SdoCreateMsg::BlkDnIniRes(
+        idx, subidx, DEFAULT_COBID_RES, CO_SDO_SC_INI_BLK);
     CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
   }
 
@@ -4278,8 +4277,8 @@ TEST(CO_Csdo, CoCsdoBlkDnIniOnRecv_IncorrectSC) {
 
   InitiateBlockDownloadRequest();
 
-  can_msg msg = SdoCreateMsg::BlkDnSubRes(IDX, SUBIDX, DEFAULT_COBID_RES, 0,
-                                          CO_SDO_SC_INI_BLK, sizeof(sub_type));
+  can_msg msg = SdoCreateMsg::BlkDnIniRes(IDX, SUBIDX, DEFAULT_COBID_RES, 0,
+                                          CO_SDO_SC_INI_BLK);
   msg.data[0] |= 0x01u;  // break the subcommand
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
@@ -4302,9 +4301,8 @@ TEST(CO_Csdo, CoCsdoBlkDnIniOnRecv_IncorrectSubidx) {
 
   InitiateBlockDownloadRequest();
 
-  const can_msg msg =
-      SdoCreateMsg::BlkDnSubRes(IDX, SUBIDX + 1u, DEFAULT_COBID_RES, 0,
-                                CO_SDO_SC_INI_BLK, sizeof(sub_type));
+  const can_msg msg = SdoCreateMsg::BlkDnIniRes(
+      IDX, SUBIDX + 1u, DEFAULT_COBID_RES, 0, CO_SDO_SC_INI_BLK);
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
   CheckSdoAbortSent(IDX, SUBIDX, CO_SDO_AC_ERROR);
@@ -4392,8 +4390,8 @@ TEST(CO_Csdo, CoCsdoBlkDnIniOnRecv_MissingIdx) {
 
   InitiateBlockDownloadRequest();
 
-  can_msg msg = SdoCreateMsg::BlkDnSubRes(IDX, SUBIDX, DEFAULT_COBID_RES, 0,
-                                          CO_SDO_SC_INI_BLK, sizeof(sub_type));
+  can_msg msg = SdoCreateMsg::BlkDnIniRes(IDX, SUBIDX, DEFAULT_COBID_RES, 0,
+                                          CO_SDO_SC_INI_BLK);
   msg.len = 3u;  // no index
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
@@ -4416,9 +4414,8 @@ TEST(CO_Csdo, CoCsdoBlkDnIniOnRecv_IncorrectIdx) {
 
   InitiateBlockDownloadRequest();
 
-  const can_msg msg =
-      SdoCreateMsg::BlkDnSubRes(IDX + 1u, SUBIDX, DEFAULT_COBID_RES, 0,
-                                CO_SDO_SC_INI_BLK, sizeof(sub_type));
+  const can_msg msg = SdoCreateMsg::BlkDnIniRes(
+      IDX + 1u, SUBIDX, DEFAULT_COBID_RES, 0, CO_SDO_SC_INI_BLK);
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
   CheckSdoAbortSent(IDX, SUBIDX, CO_SDO_AC_ERROR);
@@ -4441,7 +4438,7 @@ TEST(CO_Csdo, CoCsdoBlkDnIniOnRecv_MissingNumOfSegments) {
 
   InitiateBlockDownloadRequest();
 
-  can_msg msg = SdoCreateMsg::BlkDnSubRes(IDX, SUBIDX, DEFAULT_COBID_RES, 0,
+  can_msg msg = SdoCreateMsg::BlkDnIniRes(IDX, SUBIDX, DEFAULT_COBID_RES,
                                           CO_SDO_SC_INI_BLK, sizeof(sub_type));
   msg.len = 4u;  // no number of segments per block
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
@@ -4486,13 +4483,11 @@ TEST(CO_Csdo, CoCsdoBlkDnIniOnRecv_Nominal) {
 
   InitiateBlockDownloadRequest(IDX, SUBIDX, val_u16.GetVal());
 
-  uint_least8_t sequence_number = 0;
-  const can_msg msg =
-      SdoCreateMsg::BlkDnSubRes(IDX, SUBIDX, DEFAULT_COBID_RES, sequence_number,
-                                CO_SDO_SC_INI_BLK, sizeof(sub_type));
+  const can_msg msg = SdoCreateMsg::BlkDnIniRes(
+      IDX, SUBIDX, DEFAULT_COBID_RES, CO_SDO_SC_INI_BLK, sizeof(sub_type));
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
-  ++sequence_number;
+  const uint_least8_t sequence_number = 1u;
   CHECK_EQUAL(1u, CanSend::GetNumCalled());
   const auto expected_last = SdoInitExpectedData::Segment(
       CO_SDO_SEQ_LAST | sequence_number, val_u16.GetSegmentData());
@@ -4555,10 +4550,8 @@ TEST(CO_Csdo, CoCsdoBlkDnSubOnEnter_IncorrectBlksize) {
   InitiateBlockDownloadRequest(IDX, SUBIDX, val_u16.GetVal());
 
   const co_unsigned32_t blksize = 0;  // incorrect
-  const uint_least8_t sequence_number = 0;
-  const can_msg msg =
-      SdoCreateMsg::BlkDnSubRes(IDX, SUBIDX, DEFAULT_COBID_RES, sequence_number,
-                                CO_SDO_SC_INI_BLK, blksize);
+  const can_msg msg = SdoCreateMsg::BlkDnIniRes(IDX, SUBIDX, DEFAULT_COBID_RES,
+                                                CO_SDO_SC_INI_BLK, blksize);
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
   CheckSdoAbortSent(IDX, SUBIDX, CO_SDO_AC_BLK_SIZE);
@@ -4578,10 +4571,8 @@ TEST(CO_Csdo, CoCsdoBlkDnSubOnEnter_TooLargeBlksize) {
   InitiateBlockDownloadRequest(IDX, SUBIDX, val_u16.GetVal());
 
   const co_unsigned32_t blksize = CO_SDO_MAX_SEQNO + 1u;
-  const uint_least8_t sequence_number = 0;
-  const can_msg msg =
-      SdoCreateMsg::BlkDnSubRes(IDX, SUBIDX, DEFAULT_COBID_RES, sequence_number,
-                                CO_SDO_SC_INI_BLK, blksize);
+  const can_msg msg = SdoCreateMsg::BlkDnIniRes(IDX, SUBIDX, DEFAULT_COBID_RES,
+                                                CO_SDO_SC_INI_BLK, blksize);
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
   CheckSdoAbortSent(IDX, SUBIDX, CO_SDO_AC_BLK_SIZE);
@@ -4604,16 +4595,14 @@ TEST(CO_Csdo, CoCsdoBlkDnSubOnEnter_WithDnInd) {
 
   InitiateBlockDownloadRequest(IDX, SUBIDX, val_u16.GetVal());
 
-  uint_least8_t sequence_number = 0;
-  const can_msg msg =
-      SdoCreateMsg::BlkDnSubRes(IDX, SUBIDX, DEFAULT_COBID_RES, sequence_number,
-                                CO_SDO_SC_INI_BLK, sizeof(sub_type));
+  const can_msg msg = SdoCreateMsg::BlkDnIniRes(
+      IDX, SUBIDX, DEFAULT_COBID_RES, CO_SDO_SC_INI_BLK, sizeof(sub_type));
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
   CHECK_EQUAL(1u, CoCsdoInd::GetNumCalled());
   CoCsdoInd::Check(csdo, IDX, SUBIDX, sizeof(sub_type), 0, &data);
 
-  ++sequence_number;
+  const uint_least8_t sequence_number = 1u;
   CHECK_EQUAL(1u, CanSend::GetNumCalled());
   const auto expected_last = SdoInitExpectedData::Segment(
       CO_SDO_SEQ_LAST | sequence_number, val_u16.GetSegmentData());
@@ -4637,15 +4626,13 @@ TEST(CO_Csdo, CoCsdoBlkDnSubOnEnter_TimeoutSet) {
 
   InitiateBlockDownloadRequest(IDX, SUBIDX, val_u16.GetVal());
 
-  uint_least8_t sequence_number = 0;
-  const can_msg msg =
-      SdoCreateMsg::BlkDnSubRes(IDX, SUBIDX, DEFAULT_COBID_RES, sequence_number,
-                                CO_SDO_SC_INI_BLK, sizeof(sub_type));
+  const can_msg msg = SdoCreateMsg::BlkDnIniRes(
+      IDX, SUBIDX, DEFAULT_COBID_RES, CO_SDO_SC_INI_BLK, sizeof(sub_type));
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
   CHECK_EQUAL(1u, CoCsdoInd::GetNumCalled());
 
-  ++sequence_number;
+  const uint_least8_t sequence_number = 1u;
   CHECK_EQUAL(1u, CanSend::GetNumCalled());
   const auto expected_last = SdoInitExpectedData::Segment(
       CO_SDO_SEQ_LAST | sequence_number, val_u16.GetSegmentData());
@@ -4679,13 +4666,11 @@ TEST(CO_Csdo, CoCsdoBlkDnSubOnRecv_Nominal) {
 
   InitiateBlockDownloadRequest(IDX, SUBIDX, val_u16.GetVal());
 
-  uint_least8_t sequence_number = 0;
-  const can_msg msg =
-      SdoCreateMsg::BlkDnSubRes(IDX, SUBIDX, DEFAULT_COBID_RES, sequence_number,
-                                CO_SDO_SC_INI_BLK, sizeof(sub_type));
+  const can_msg msg = SdoCreateMsg::BlkDnIniRes(
+      IDX, SUBIDX, DEFAULT_COBID_RES, CO_SDO_SC_INI_BLK, sizeof(sub_type));
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
-  ++sequence_number;
+  const uint_least8_t sequence_number = 1u;
   CHECK_EQUAL(1u, CanSend::GetNumCalled());
   const auto expected_last = SdoInitExpectedData::Segment(
       CO_SDO_SEQ_LAST | sequence_number, val_u16.GetSegmentData());
@@ -4781,7 +4766,7 @@ TEST(CO_Csdo, CoCsdoBlkDnEndOnRecv_IncorrectSc) {
   const co_unsigned8_t subidx_os = SUBIDX + 1u;
   AdvanceToBlkDnEndState(IDX, subidx_os);
 
-  auto msg = SdoCreateMsg::BlkDnSubRes(0xffffu, 0xffu, DEFAULT_COBID_RES, 0);
+  auto msg = SdoCreateMsg::BlkDnIniRes(0xffffu, 0xffu, DEFAULT_COBID_RES);
   msg.data[0] |= 0x03u;  // break the subcommand
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
@@ -4795,8 +4780,8 @@ TEST(CO_Csdo, CoCsdoBlkDnEndOnRecv_Nominal) {
   const co_unsigned8_t subidx_os = SUBIDX + 1u;
   AdvanceToBlkDnEndState(IDX, subidx_os);
 
-  const auto msg = SdoCreateMsg::BlkDnSubRes(0xffffu, 0xffu, DEFAULT_COBID_RES,
-                                             0, CO_SDO_SC_END_BLK);
+  const auto msg = SdoCreateMsg::BlkDnIniRes(0xffffu, 0xffu, DEFAULT_COBID_RES,
+                                             CO_SDO_SC_END_BLK);
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
   CHECK_EQUAL(0u, CanSend::GetNumCalled());
