@@ -200,8 +200,8 @@ int asprintf_can_msg(char **ps, const struct can_msg *msg);
  *
  * @returns the updated CRC.
  */
-uint_least16_t can_crc(
-		uint_least16_t crc, const void *ptr, int off, size_t bits);
+uint_least16_t can_crc(uint_least16_t crc, const void *ptr, ptrdiff_t off,
+		size_t bits);
 
 #ifdef __cplusplus
 }
