@@ -1934,7 +1934,7 @@ co_nmt_node_err_ind(co_nmt_t *nmt, co_unsigned8_t id)
 	// Ignore the error event if the slave is no longer in the network list.
 	if (!(assignment & 0x01))
 		return 0;
-	int mandatory = !!(assignment & 0x08);
+	const bool mandatory = assignment & 0x08;
 
 	diag(DIAG_INFO, 0, "NMT: error indicated for %s slave %d",
 			mandatory ? "mandatory" : "optional", id);
