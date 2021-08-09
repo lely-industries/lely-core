@@ -4,7 +4,7 @@
  *
  * @see lely/util/rbtree.h
  *
- * @copyright 2014-2020 Lely Industries N.V.
+ * @copyright 2014-2021 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -26,6 +26,7 @@
 #include <lely/util/rbtree.h>
 
 #include <assert.h>
+#include <stdbool.h>
 
 /// Returns the parent of <b>node</b>. <b>node</b> MUST NOT be NULL.
 static inline struct rbnode *rbnode_get_parent(const struct rbnode *node);
@@ -36,14 +37,21 @@ static inline struct rbnode *rbnode_get_parent(const struct rbnode *node);
  */
 static void rbnode_set_parent(struct rbnode *node, const struct rbnode *parent);
 
-/// Returns the color of <b>node</b>, or 0 (black) if <b>node</b> is NULL.
-static inline int rbnode_get_color(const struct rbnode *node);
+/// Returns <b>true</b> when the node's color is red, <b>false</b> otherwise (black or NULL).
+static inline bool rbnode_is_red(const struct rbnode *node);
 
 /**
- * Sets the color of <b>node</b> to 0 (black) if <b>color</b> is 0, or to 1
- * (red) otherwise. If <b>node</b> is NULL, this function has no effect.
+ * Assigns color from <b>other</b> to the <b>node</b>.  If <b>other</b> is NULL
+ * assumes color black.  If <b>node</b> is NULL, this function has no effect.
  */
-static inline void rbnode_set_color(struct rbnode *node, int color);
+static inline void rbnode_copy_color(
+		struct rbnode *node, const struct rbnode *other);
+
+/// Marks the node as red. If <b>node</b> is NULL, this function has no effect.
+static inline void rbnode_mark_red(struct rbnode *node);
+
+/// Marks the node as black. If <b>node</b> is NULL, this function has no effect.
+static inline void rbnode_mark_black(struct rbnode *node);
 
 /// Returns the leftmost descendant of <b>node</b>.
 static struct rbnode *rbnode_min(struct rbnode *node);
@@ -131,18 +139,18 @@ rbtree_insert(struct rbtree *tree, struct rbnode *node)
 	tree->num_nodes++;
 	// Initialize the node.
 	rbnode_set_parent(node, parent);
-	rbnode_set_color(node, 1);
+	rbnode_mark_red(node);
 	node->left = NULL;
 	node->right = NULL;
 	// Fix violations of the red-black properties.
-	while (rbnode_get_color(parent)) {
+	while (rbnode_is_red(parent)) {
 		struct rbnode *gparent = rbnode_get_parent(parent);
 		if (parent == gparent->left) {
-			if (rbnode_get_color(gparent->right)) {
+			if (rbnode_is_red(gparent->right)) {
 				// Case 1: flip colors.
-				rbnode_set_color(gparent, 1);
-				rbnode_set_color(parent, 0);
-				rbnode_set_color(gparent->right, 0);
+				rbnode_mark_red(gparent);
+				rbnode_mark_black(parent);
+				rbnode_mark_black(gparent->right);
 				node = gparent;
 			} else {
 				if (node == parent->right) {
@@ -153,16 +161,16 @@ rbtree_insert(struct rbtree *tree, struct rbnode *node)
 					gparent = rbnode_get_parent(parent);
 				}
 				// Case 3: right rotate at grandparent.
-				rbnode_set_color(gparent, 1);
-				rbnode_set_color(parent, 0);
+				rbnode_mark_red(gparent);
+				rbnode_mark_black(parent);
 				rbtree_ror(tree, gparent);
 			}
 		} else {
-			if (rbnode_get_color(gparent->left)) {
+			if (rbnode_is_red(gparent->left)) {
 				// Case 1: flip colors.
-				rbnode_set_color(gparent, 1);
-				rbnode_set_color(parent, 0);
-				rbnode_set_color(gparent->left, 0);
+				rbnode_mark_red(gparent);
+				rbnode_mark_black(parent);
+				rbnode_mark_black(gparent->left);
 				node = gparent;
 			} else {
 				if (node == parent->left) {
@@ -173,14 +181,14 @@ rbtree_insert(struct rbtree *tree, struct rbnode *node)
 					gparent = rbnode_get_parent(parent);
 				}
 				// Case 3: left rotate at grandparent.
-				rbnode_set_color(gparent, 1);
-				rbnode_set_color(parent, 0);
+				rbnode_mark_red(gparent);
+				rbnode_mark_black(parent);
 				rbtree_rol(tree, gparent);
 			}
 		}
 		parent = rbnode_get_parent(node);
 	}
-	rbnode_set_color(tree->root, 0);
+	rbnode_mark_black(tree->root);
 }
 
 void
@@ -189,7 +197,7 @@ rbtree_remove(struct rbtree *tree, struct rbnode *node)
 	assert(tree);
 	assert(node);
 
-	int color = rbnode_get_color(node);
+	bool red = rbnode_is_red(node);
 	struct rbnode *parent = rbnode_get_parent(node);
 	// Remove the node from the tree. After removal, node points to the
 	// subtree in which we might have introduced red-black property
@@ -209,8 +217,8 @@ rbtree_remove(struct rbtree *tree, struct rbnode *node)
 		// node by its successor. First, find the successor and give it
 		// the same color as the node to be removed.
 		struct rbnode *next = rbnode_min(node->right);
-		color = rbnode_get_color(next);
-		rbnode_set_color(next, rbnode_get_color(node));
+		red = rbnode_is_red(next);
+		rbnode_copy_color(next, node);
 		struct rbnode *tmp = next->right;
 		if (rbnode_get_parent(next) == node) {
 			parent = next;
@@ -233,73 +241,73 @@ rbtree_remove(struct rbtree *tree, struct rbnode *node)
 	tree->num_nodes--;
 	// Fix violations of the red-black properties. This can only occur if
 	// the removed node (or its successor) was black.
-	if (color)
+	if (red)
 		return;
-	while (node != tree->root && !rbnode_get_color(node)) {
+	while (node != tree->root && !rbnode_is_red(node)) {
 		if (node == parent->left) {
 			struct rbnode *tmp = parent->right;
-			if (rbnode_get_color(tmp)) {
+			if (rbnode_is_red(tmp)) {
 				// Case 1: left rotate at parent.
-				rbnode_set_color(parent, 1);
-				rbnode_set_color(tmp, 0);
+				rbnode_mark_red(parent);
+				rbnode_mark_black(tmp);
 				rbtree_rol(tree, parent);
 				tmp = parent->right;
 			}
-			if (!rbnode_get_color(tmp->left)
-					&& !rbnode_get_color(tmp->right)) {
+			if (!rbnode_is_red(tmp->left)
+					&& !rbnode_is_red(tmp->right)) {
 				// Case 2: color flip at sibling.
-				rbnode_set_color(tmp, 1);
+				rbnode_mark_red(tmp);
 				node = parent;
 				parent = rbnode_get_parent(node);
 			} else {
-				if (!rbnode_get_color(tmp->right)) {
+				if (!rbnode_is_red(tmp->right)) {
 					// Case 3: right rotate at sibling.
-					rbnode_set_color(tmp, 1);
-					rbnode_set_color(tmp->left, 0);
+					rbnode_mark_red(tmp);
+					rbnode_mark_black(tmp->left);
 					rbtree_ror(tree, tmp);
 					tmp = parent->right;
 				}
 				// Case 4: left rotate at parent and color flip.
-				rbnode_set_color(tmp, rbnode_get_color(parent));
-				rbnode_set_color(parent, 0);
-				rbnode_set_color(tmp->right, 0);
+				rbnode_copy_color(tmp, parent);
+				rbnode_mark_black(parent);
+				rbnode_mark_black(tmp->right);
 				rbtree_rol(tree, parent);
 				node = tree->root;
 			}
 		} else {
 			struct rbnode *tmp = parent->left;
-			if (rbnode_get_color(tmp)) {
+			if (rbnode_is_red(tmp)) {
 				// Case 1: right rotate at parent.
-				rbnode_set_color(parent, 1);
-				rbnode_set_color(tmp, 0);
+				rbnode_mark_red(parent);
+				rbnode_mark_black(tmp);
 				rbtree_ror(tree, parent);
 				tmp = parent->left;
 			}
-			if (!rbnode_get_color(tmp->right)
-					&& !rbnode_get_color(tmp->left)) {
+			if (!rbnode_is_red(tmp->right)
+					&& !rbnode_is_red(tmp->left)) {
 				// Case 2: color flip at sibling.
-				rbnode_set_color(tmp, 1);
+				rbnode_mark_red(tmp);
 				node = parent;
 				parent = rbnode_get_parent(node);
 			} else {
-				if (!rbnode_get_color(tmp->left)) {
+				if (!rbnode_is_red(tmp->left)) {
 					// Case 3: left rotate at sibling.
-					rbnode_set_color(tmp, 1);
-					rbnode_set_color(tmp->right, 0);
+					rbnode_mark_red(tmp);
+					rbnode_mark_black(tmp->right);
 					rbtree_rol(tree, tmp);
 					tmp = parent->left;
 				}
 				// Case 4: right rotate at parent and color
 				// flip.
-				rbnode_set_color(tmp, rbnode_get_color(parent));
-				rbnode_set_color(parent, 0);
-				rbnode_set_color(tmp->left, 0);
+				rbnode_copy_color(tmp, parent);
+				rbnode_mark_black(parent);
+				rbnode_mark_black(tmp->left);
 				rbtree_ror(tree, parent);
 				node = tree->root;
 			}
 		}
 	}
-	rbnode_set_color(node, 0);
+	rbnode_mark_black(node);
 }
 
 struct rbnode *
@@ -361,25 +369,36 @@ rbnode_set_parent(struct rbnode *node, const struct rbnode *parent)
 	if (!node)
 		return;
 
-	node->parent = (uintptr_t)parent | (uintptr_t)rbnode_get_color(node);
+	node->parent = (uintptr_t)parent | (uintptr_t)rbnode_is_red(node);
 }
 
-static inline int
-rbnode_get_color(const struct rbnode *node)
+static inline bool
+rbnode_is_red(const struct rbnode *node)
 {
-	return node ? node->parent & (uintptr_t)1 : 0;
+	return node ? node->parent & (uintptr_t)1 : false;
 }
 
 static inline void
-rbnode_set_color(struct rbnode *node, int color)
+rbnode_mark_red(struct rbnode *node)
 {
-	if (!node)
-		return;
-
-	if (color)
+	if (node)
 		node->parent |= (uintptr_t)1;
-	else
+}
+
+static inline void
+rbnode_mark_black(struct rbnode *node)
+{
+	if (node)
 		node->parent &= ~(uintptr_t)1;
+}
+
+static inline void
+rbnode_copy_color(struct rbnode *node, const struct rbnode *other)
+{
+	if (rbnode_is_red(other))
+		rbnode_mark_red(node);
+	else
+		rbnode_mark_black(node);
 }
 
 static struct rbnode *
