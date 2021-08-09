@@ -526,11 +526,11 @@ co_dev_get_lss(const co_dev_t *dev)
 }
 
 void
-co_dev_set_lss(co_dev_t *dev, int lss)
+co_dev_set_lss(co_dev_t *dev, bool lss)
 {
 	assert(dev);
 
-	dev->lss = !!lss;
+	dev->lss = lss;
 }
 
 co_unsigned32_t
