@@ -71,7 +71,7 @@ size_t co_nmt_cfg_sizeof(void);
  * @param id  the node-ID.
  *
  * @returns a pointer to a new NMT 'configuration request', or NULL on error. In
- * the latter case, the error number can be obtained with get_errc().
+ * the latter case, the error code can be obtained with get_errc().
  *
  * @see co_nmt_cfg_destroy()
  */
@@ -102,8 +102,8 @@ alloc_t *co_nmt_cfg_get_alloc(const co_nmt_cfg_t *cfg);
  *                passed as the last parameter to <b>dn_ind</b> and
  *                <b>up_ind</b>.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  */
 int co_nmt_cfg_cfg_req(co_nmt_cfg_t *cfg, int_least32_t timeout,
 		co_csdo_ind_t *dn_ind, co_csdo_ind_t *up_ind, void *data);
@@ -115,8 +115,8 @@ int co_nmt_cfg_cfg_req(co_nmt_cfg_t *cfg, int_least32_t timeout,
  * @param cfg a pointer to an NMT 'configuration request'.
  * @param ac  the SDO abort code (0 on success).
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  */
 int co_nmt_cfg_cfg_res(co_nmt_cfg_t *cfg, co_unsigned32_t ac);
 

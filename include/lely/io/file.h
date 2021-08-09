@@ -64,7 +64,7 @@ extern "C" {
  *              #IO_FILE_TRUNCATE.
  *
  * @returns a I/O device handle, or #IO_HANDLE_ERROR on error. In the latter
- * case, the error number can be obtained with get_errc().
+ * case, the error code can be obtained with get_errc().
  */
 io_handle_t io_open_file(const char *path, int flags);
 
@@ -79,8 +79,7 @@ io_handle_t io_open_file(const char *path, int flags);
  * @param whence one of #IO_SEEK_BEGIN, #IO_SEEK_CURRENT or #IO_SEEK_END.
  *
  * @returns the current offset with respect to the beginning of the file, or -1
- * on error. In the latter case, the error number can be obtained with
- * get_errc().
+ * on error. In the latter case, the error code can be obtained with get_errc().
  */
 io_off_t io_seek(io_handle_t handle, io_off_t offset, int whence);
 
@@ -94,7 +93,7 @@ io_off_t io_seek(io_handle_t handle, io_off_t offset, int whence);
  * @param offset the offset (in bytes) at which to start reading.
  *
  * @returns the number of bytes read on success, or -1 on error. In the latter
- * case, the error number can be obtained with get_errc().
+ * case, the error code can be obtained with get_errc().
  */
 ssize_t io_pread(io_handle_t handle, void *buf, size_t nbytes, io_off_t offset);
 
@@ -108,7 +107,7 @@ ssize_t io_pread(io_handle_t handle, void *buf, size_t nbytes, io_off_t offset);
  * @param offset the offset (in bytes) at which to start writing.
  *
  * @returns the number of bytes written on success, or -1 on error. In the
- * latter case, the error number can be obtained with get_errc().
+ * latter case, the error code can be obtained with get_errc().
  */
 ssize_t io_pwrite(io_handle_t handle, const void *buf, size_t nbytes,
 		io_off_t offset);

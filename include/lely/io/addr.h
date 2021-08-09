@@ -116,8 +116,8 @@ int io_addr_cmp(const void *p1, const void *p2);
  *             <b>port</b> is not NULL, *<b>port</b> contains the port number or
  *             channel.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  *
  * @see io_addr_set_rfcomm_a()
  */
@@ -134,7 +134,7 @@ int io_addr_get_rfcomm_a(const io_addr_t *addr, char *ba, int *port);
  * @param port the port number or channel. If <b>port</b> is 0, io_socket_bind()
  *             will dynamically assign a port number.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
+ * @returns 0 on success, or -1 on error. In the latter case, the error code
  * can be obtained with get_errc().
  *
  * @see io_addr_get_rfcomm_a()
@@ -153,8 +153,8 @@ int io_addr_set_rfcomm_a(io_addr_t *addr, const char *ba, int port);
  *             <b>port</b> is not NULL, *<b>port</b> contains the port number or
  *             channel.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  *
  * @see io_addr_set_rfcomm_n()
  */
@@ -195,8 +195,8 @@ void io_addr_set_rfcomm_local(io_addr_t *addr, int port);
  * @param port the address of a port number (can be NULL). On success, if
  *             <b>port</b> is not NULL, *<b>port</b> contains the port number.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  *
  * @see io_addr_set_ipv4_a()
  */
@@ -224,8 +224,8 @@ int io_addr_set_ipv4_a(io_addr_t *addr, const char *ip, int port);
  * @param port the address of a port number (can be NULL). On success, if
  *             <b>port</b> is not NULL, *<b>port</b> contains the port number.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  *
  * @see io_addr_set_ipv4_n()
  */
@@ -271,8 +271,8 @@ void io_addr_set_ipv4_broadcast(io_addr_t *addr, int port);
  * @param port the address of a port number (can be NULL). On success, if
  *             <b>port</b> is not NULL, *<b>port</b> contains the port number.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  *
  * @see io_addr_set_ipv6_a()
  */
@@ -286,8 +286,8 @@ int io_addr_get_ipv6_a(const io_addr_t *addr, char *ip, int *port);
  *             or an empty string, the wildcard address (in6addr_any) is used.
  * @param port the port number.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  *
  * @see io_addr_get_ipv6_a()
  */
@@ -303,8 +303,8 @@ int io_addr_set_ipv6_a(io_addr_t *addr, const char *ip, int port);
  * @param port the address of a port number (can be NULL). On success, if
  *             <b>port</b> is not NULL, *<b>port</b> contains the port number.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  *
  * @see io_addr_set_ipv6_a()
  */
@@ -339,8 +339,8 @@ void io_addr_set_ipv6_loopback(io_addr_t *addr, int port);
  *             characters (can be NULL). On success, if <b>path</b> is not NULL,
  *             *<b>path</b> contains the path name.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  *
  * @see io_addr_set_unix()
  */
@@ -360,8 +360,7 @@ void io_addr_set_unix(io_addr_t *addr, const char *path);
  * Obtains the domain of a network address.
  *
  * @returns #IO_SOCK_BTH, #IO_SOCK_IPV4, #IO_SOCK_IPV6 or #IO_SOCK_UNIX, or -1
- * on error. In the latter case, the error number can be obtained with
- * get_errc().
+ * on error. In the latter case, the error code can be obtained with get_errc().
  *
  * @see io_sock_get_domain()
  */
@@ -374,8 +373,8 @@ int io_addr_get_domain(const io_addr_t *addr);
  * @param port the address of a port number (can be NULL). On success, if
  *             <b>port</b> is not NULL, *<b>port</b> contains the port number.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  *
  * @see io_addr_set_port()
  */
@@ -387,8 +386,8 @@ int io_addr_get_port(const io_addr_t *addr, int *port);
  * @param addr a pointer to the network address to be initialized.
  * @param port the port number.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  *
  * @see io_addr_set_port()
  */
@@ -421,7 +420,7 @@ int io_addr_is_multicast(const io_addr_t *addr);
  *                 *<b>hints</b> are taken into account, if they are non-zero.
  *
  * @returns the total number of addresses (which may be different from
- * <b>maxinfo</b>), or -1 on error. In the latter case, the error number can be
+ * <b>maxinfo</b>), or -1 on error. In the latter case, the error code can be
  * obtained with get_errc().
  */
 int io_get_addrinfo(int maxinfo, struct io_addrinfo *info, const char *nodename,

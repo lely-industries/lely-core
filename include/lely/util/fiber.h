@@ -117,7 +117,7 @@ typedef fiber_t *fiber_func_t(fiber_t *fiber, void *arg);
  *
  * @returns 1 if a fiber already is associated with the calling thread, 0 if it
  * has been successfully initialized, or -1 on error. In the latter case, the
- * error number can be obtained with get_errc().
+ * error code can be obtained with get_errc().
  *
  * @see fiber_thrd_fini()
  */
@@ -149,7 +149,7 @@ void fiber_thrd_fini(void);
  *                   #LELY_FIBER_MINSTKSZ bytes.
  *
  * @returns a pointer to the new fiber, or NULL on error. In the latter case,
- * the error number can be obtained with get_errc().
+ * the error code can be obtained with get_errc().
  */
 fiber_t *fiber_create(fiber_func_t *func, void *arg, int flags,
 		size_t data_size, size_t stack_size);

@@ -124,8 +124,8 @@ void can_net_get_time(const can_net_t *net, struct timespec *tp);
  * @param net a pointer to a CAN network interface.
  * @param tp  a pointer to the current time.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * set by the first failed CAN timer callback function can be obtained with
+ * @returns 0 on success, or -1 on error. In the latter case, the error code set
+ * by the first failed CAN timer callback function can be obtained with
  * get_errc().
  *
  * @see can_net_get_time()
@@ -171,8 +171,8 @@ void can_net_set_next_func(can_net_t *net, can_timer_func_t *func, void *data);
  * @param bus_id a CAN bus identifier.
  *
  * @returns the number of processed frames, or -1 on error. In the latter case,
- * the error number set by the first failed CAN frame receiver callback
- * function can be obtained with get_errc().
+ * the error code set by the first failed CAN frame receiver callback function
+ * can be obtained with get_errc().
  */
 ssize_t can_net_recv(can_net_t *net, const struct can_msg *msg,
 		uint_least8_t bus_id);
@@ -184,8 +184,8 @@ ssize_t can_net_recv(can_net_t *net, const struct can_msg *msg,
  * @param net a pointer to a CAN network interface.
  * @param msg a pointer to the CAN frame to be sent.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * set by the CAN send callback function can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code set
+ * by the CAN send callback function can be obtained with get_errc().
  */
 int can_net_send(can_net_t *net, const struct can_msg *msg);
 

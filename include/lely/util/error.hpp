@@ -1,7 +1,7 @@
 /**@file
  * This header file is part of the utilities library; it contains C++
  * convenience functions for creating std::error_code instances and throwing
- * std::system_error exceptions corresponding to native error numbers.
+ * std::system_error exceptions corresponding to native error codes.
  *
  * @copyright 2018-2020 Lely Industries N.V.
  *
@@ -52,7 +52,7 @@ namespace util {
 
 /**
  * Creates an error code value corresponding to the specified or current
- * (thread-specific) native error number.
+ * (thread-specific) native error code.
  */
 inline ::std::error_code
 make_error_code(int errc = get_errc()) noexcept {
@@ -86,7 +86,7 @@ throw_error_code(const char* what_arg, ::std::errc e) {
 
 /**
  * Throws an std::system_error exception corresponding to the specified or
- * current (thread-specific) native error number.
+ * current (thread-specific) native error code.
  */
 [[noreturn]] inline void
 throw_errc(int errc = get_errc()) {
@@ -95,7 +95,7 @@ throw_errc(int errc = get_errc()) {
 
 /**
  * Throws an std::system_error exception corresponding to the specified or
- * current (thread-specific) native error number. The string returned by the
+ * current (thread-specific) native error code. The string returned by the
  * `what()` method of the resulting exception is guaranteed to contain
  * <b>what_arg</b> as a substring.
  */
@@ -112,7 +112,7 @@ throw_errc(const char* what_arg, int errc = get_errc()) {
 
 /**
  * Throws an std::system_error exception corresponding to the specified
- * platform-independent error number.
+ * platform-independent error code.
  */
 [[noreturn]] inline void
 throw_errnum(errnum_t errnum) {
@@ -121,7 +121,7 @@ throw_errnum(errnum_t errnum) {
 
 /**
  * Throws an std::system_error exception corresponding to the specified
- * platform-independent error number. The string returned by the `what()`
+ * platform-independent error code. The string returned by the `what()`
  * method of the resulting exception is guaranteed to contain <b>what_arg</b> as
  * a substring.
  */

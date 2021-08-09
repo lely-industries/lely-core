@@ -45,8 +45,8 @@ extern "C" {
  * @param size the requested size (in number of bits) of the set. This number is
  *             rounded up to the nearest multiple of `sizeof(int) * CHAR_BIT`.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  *
  * @see bitset_fini()
  */
@@ -66,7 +66,7 @@ int bitset_size(const struct bitset *set);
  *             rounded up to the nearest multiple of `sizeof(int) * CHAR_BIT`.
  *
  * @returns the new size (in number of bits) of the bitset, or 0 on error. In
- * the latter case, the error number can be obtained with get_errc().
+ * the latter case, the error code can be obtained with get_errc().
  */
 int bitset_resize(struct bitset *set, int size);
 

@@ -115,7 +115,7 @@ LELY_CAN_BUF_INLINE size_t can_buf_capacity(const struct can_buf *buf);
  * requested capacity.
  *
  * @returns the new capacity of the buffer (in number of frames), or 0 on error.
- * In the latter case, the error number can be obtained with get_errc().
+ * In the latter case, the error code can be obtained with get_errc().
  */
 size_t can_buf_reserve(struct can_buf *buf, size_t n);
 

@@ -115,7 +115,7 @@ LELY_UTIL_PRINT_INLINE int xtoc(int i);
  *               <b>format</b>.
  *
  * @returns the number of characters that would have been written had the buffer
- * been sufficiently large, or 0 on error. In the latter case, the error number
+ * been sufficiently large, or 0 on error. In the latter case, the error code
  * can be obtained with get_errc().
  */
 size_t print_fmt(char **pbegin, char *end, const char *format, ...)
@@ -226,7 +226,7 @@ size_t print_c99_str(char **pbegin, char *end, const char *s, size_t n);
 	@param name   the value to be written.
 	@returns the number of characters that would have been written had the
 	buffer been sufficiently large, or 0 on error. In the latter case, the
-	error number can be obtained with get_errc().*/ \
+	error code can be obtained with get_errc().*/ \
 	size_t print_c99_##suffix( \
 			char **pbegin, char *end, type name);
 // clang-format on

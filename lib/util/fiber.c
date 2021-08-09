@@ -91,7 +91,7 @@ static long page_size;
  *             pages.
  *
  * @returns a pointer to the first usable byte in the mapping (i.e., after the
- * guard page), or NULL on error. In the latter case, the error number can be
+ * guard page), or NULL on error. In the latter case, the error code can be
  * obtained with get_errc().
  *
  * @see guard_munmap()

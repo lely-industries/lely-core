@@ -46,7 +46,7 @@ struct io_timer_wait_result {
 	 * stored in #errc.
 	 */
 	int result;
-	/// The error number, obtained as if by get_errc(), if #result is -1.
+	/// The error code, obtained as if by get_errc(), if #result is -1.
 	int errc;
 };
 
@@ -106,7 +106,7 @@ LELY_IO_TIMER_INLINE io_clock_t *io_timer_get_clock(const io_timer_t *timer);
  * processed before the next expiration, a timer overrun occurs.
  *
  * @returns the overrun counter, or -1 on error. In the latter case, the error
- * number can be obtained with get_errc().
+ * code can be obtained with get_errc().
  */
 LELY_IO_TIMER_INLINE int io_timer_getoverrun(const io_timer_t *timer);
 
@@ -121,8 +121,8 @@ LELY_IO_TIMER_INLINE int io_timer_getoverrun(const io_timer_t *timer);
  *              <b>it_interval</b> member shall contain the reload value last
  *              set by io_timer_settime().
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  */
 LELY_IO_TIMER_INLINE int io_timer_gettime(
 		const io_timer_t *timer, struct itimerspec *value);
@@ -193,7 +193,7 @@ static inline size_t io_timer_abort_wait(
  *              (can be NULL).
  *
  * @returns a pointer to a future, or NULL on error. In the latter case, the
- * error number can be obtained with get_errc().
+ * error code can be obtained with get_errc().
  */
 ev_future_t *io_timer_async_wait(io_timer_t *timer, ev_exec_t *exec,
 		struct io_timer_wait **pwait);

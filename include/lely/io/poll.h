@@ -110,8 +110,8 @@ void io_poll_destroy(io_poll_t *poll);
  * @param keep   a flag indicating whether to keep watching the file descriptor
  *               after an event occurs.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  */
 int io_poll_watch(io_poll_t *poll, io_handle_t handle, struct io_event *event,
 		int keep);
@@ -136,8 +136,8 @@ int io_poll_watch(io_poll_t *poll, io_handle_t handle, struct io_event *event,
  *                  indefinitely.
  *
  * @returns the number of events in *<b>events</b>, or -1 on error. In the
- * latter case, the error number can be obtained with get_errc(). This
- * function returns 0 if the timeout elapses without an event occurring.
+ * latter case, the error code can be obtained with get_errc(). This function
+ * returns 0 if the timeout elapses without an event occurring.
  */
 int io_poll_wait(io_poll_t *poll, int maxevents, struct io_event *events,
 		int timeout);
@@ -150,8 +150,8 @@ int io_poll_wait(io_poll_t *poll, int maxevents, struct io_event *events,
  * @param poll a pointer to an I/O polling interface.
  * @param sig  the signal number.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  */
 int io_poll_signal(io_poll_t *poll, unsigned char sig);
 

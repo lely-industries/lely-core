@@ -90,7 +90,7 @@ size_t co_nmt_rdn_sizeof(void);
  * @param nmt a pointer to an NMT master/slave service.
  *
  * @returns a pointer to a new redundancy manger service, or NULL on error. In
- * the latter case, the error number can be obtained with get_errc().
+ * the latter case, the error code can be obtained with get_errc().
  *
  * @see co_nmt_rdn_destroy()
  */
@@ -123,8 +123,8 @@ void co_nmt_rdn_set_alternate_bus_id(co_nmt_rdn_t *rdn, co_unsigned8_t bus_id);
  * @param id  the Redundancy Master's Node-ID (in the range [1..127]).
  * @param ms  the Redundancy Master's heartbeat time (in milliseconds).
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  */
 int co_nmt_rdn_set_master_id(
 		co_nmt_rdn_t *rdn, co_unsigned8_t id, co_unsigned16_t ms);

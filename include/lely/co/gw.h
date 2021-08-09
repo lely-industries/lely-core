@@ -1001,8 +1001,8 @@ void co_gw_destroy(co_gw_t *gw);
  *            network-ID is obtained from the CANopen device of the NMT service.
  * @param nmt a pointer to the NMT service of the gateway node in the network.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  *
  * @see co_gw_fini_net()
  */
@@ -1014,8 +1014,8 @@ int co_gw_init_net(co_gw_t *gw, co_unsigned16_t id, co_nmt_t *nmt);
  * @param gw a pointer to a CANopen gateway.
  * @param id the network-ID (in the range [1..127]).
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  *
  * @see co_gw_init_net()
  */
@@ -1027,8 +1027,8 @@ int co_gw_fini_net(co_gw_t *gw, co_unsigned16_t id);
  * @param gw  a pointer to a CANopen gateway.
  * @param req a pointer to the parameters of the request.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  */
 int co_gw_recv(co_gw_t *gw, const struct co_gw_req *req);
 

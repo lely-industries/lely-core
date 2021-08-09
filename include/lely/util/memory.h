@@ -53,7 +53,7 @@ struct alloc_vtbl {
  *                  to the nearest integral multiple if <b>alignment</b>.
  *
  * returns a pointer to the allocated space, or NULL on error. In the latter
- * case, the error number can be obtained with get_errc().
+ * case, the error code can be obtained with get_errc().
  */
 void *mem_alloc(alloc_t *alloc, size_t alignment, size_t size);
 

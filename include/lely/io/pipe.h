@@ -35,8 +35,8 @@ extern "C" {
  *                      handles of the pipe. `handle_vector[0]` corresponds to
  *                      the read end and `handle_vector[1]` to the write end.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  */
 int io_open_pipe(io_handle_t handle_vector[2]);
 

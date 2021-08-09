@@ -62,7 +62,7 @@ void io_user_timer_fini(io_timer_t *timer);
  *             <b>func</b>.
  *
  * @returns a pointer to a new timer, or NULL on error. In the latter case, the
- * error number can be obtained with get_errc().
+ * error code can be obtained with get_errc().
  */
 io_timer_t *io_user_timer_create(io_ctx_t *ctx, ev_exec_t *exec,
 		io_user_timer_setnext_t *func, void *arg);

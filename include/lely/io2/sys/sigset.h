@@ -60,7 +60,7 @@ void io_sigset_fini(io_sigset_t *sigset);
  * @param exec a pointer to the executor used to execute asynchronous tasks.
  *
  * @returns a pointer to a new signal handler, or NULL on error. In the latter
- * case, the error number can be obtained with get_errc().
+ * case, the error code can be obtained with get_errc().
  */
 io_sigset_t *io_sigset_create(io_poll_t *poll, ev_exec_t *exec);
 

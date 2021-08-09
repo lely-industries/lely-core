@@ -155,7 +155,7 @@ size_t co_lss_sizeof(void);
  * @param nmt a pointer to an NMT master/slave service.
  *
  * @returns a pointer to a new LSS service, or NULL on error. In the latter
- * case, the error number can be obtained with get_errc().
+ * case, the error code can be obtained with get_errc().
  *
  * @see co_lss_destroy()
  */
@@ -169,8 +169,8 @@ void co_lss_destroy(co_lss_t *lss);
  *
  * @post on success, co_lss_is_stopped() returns <b>false</b>.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  *
  * @see co_lss_stop()
  */
@@ -326,8 +326,8 @@ void co_lss_abort_req(co_lss_t *lss);
  * @param mode 0 to switch to all slaves the LSS waiting state, 1 to switch all
  *             slaves to the LSS configuration state.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  */
 int co_lss_switch_req(co_lss_t *lss, co_unsigned8_t mode);
 
@@ -342,8 +342,8 @@ int co_lss_switch_req(co_lss_t *lss, co_unsigned8_t mode);
  * @param data a pointer to user-specified data (can be NULL). <b>data</b> is
  *             passed as the last parameter to <b>ind</b>.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  */
 int co_lss_switch_sel_req(co_lss_t *lss, const struct co_id *id,
 		co_lss_cs_ind_t *ind, void *data);
@@ -360,8 +360,8 @@ int co_lss_switch_sel_req(co_lss_t *lss, const struct co_id *id,
  * @param data a pointer to user-specified data (can be NULL). <b>data</b> is
  *             passed as the last parameter to <b>ind</b>.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  */
 int co_lss_set_id_req(co_lss_t *lss, co_unsigned8_t id, co_lss_err_ind_t *ind,
 		void *data);
@@ -380,8 +380,8 @@ int co_lss_set_id_req(co_lss_t *lss, co_unsigned8_t id, co_lss_err_ind_t *ind,
  * @param data a pointer to user-specified data (can be NULL). <b>data</b> is
  *             passed as the last parameter to <b>ind</b>.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  */
 int co_lss_set_rate_req(co_lss_t *lss, co_unsigned16_t rate,
 		co_lss_err_ind_t *ind, void *data);
@@ -395,8 +395,8 @@ int co_lss_set_rate_req(co_lss_t *lss, co_unsigned16_t rate,
  * @param delay the delay (in milliseconds) before the switch and the delay
  *              after the switch during which CAN frames MUST NOT be sent.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  */
 int co_lss_switch_rate_req(co_lss_t *lss, int delay);
 
@@ -412,8 +412,8 @@ int co_lss_switch_rate_req(co_lss_t *lss, int delay);
  * @param data a pointer to user-specified data (can be NULL). <b>data</b> is
  *             passed as the last parameter to <b>ind</b>.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  */
 int co_lss_store_req(co_lss_t *lss, co_lss_err_ind_t *ind, void *data);
 
@@ -429,8 +429,8 @@ int co_lss_store_req(co_lss_t *lss, co_lss_err_ind_t *ind, void *data);
  * @param data a pointer to user-specified data (can be NULL). <b>data</b> is
  *             passed as the last parameter to <b>ind</b>.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  */
 int co_lss_get_vendor_id_req(
 		co_lss_t *lss, co_lss_lssid_ind_t *ind, void *data);
@@ -447,8 +447,8 @@ int co_lss_get_vendor_id_req(
  * @param data a pointer to user-specified data (can be NULL). <b>data</b> is
  *             passed as the last parameter to <b>ind</b>.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  */
 int co_lss_get_product_code_req(
 		co_lss_t *lss, co_lss_lssid_ind_t *ind, void *data);
@@ -465,8 +465,8 @@ int co_lss_get_product_code_req(
  * @param data a pointer to user-specified data (can be NULL). <b>data</b> is
  *             passed as the last parameter to <b>ind</b>.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  */
 int co_lss_get_revision_req(co_lss_t *lss, co_lss_lssid_ind_t *ind, void *data);
 
@@ -482,8 +482,8 @@ int co_lss_get_revision_req(co_lss_t *lss, co_lss_lssid_ind_t *ind, void *data);
  * @param data a pointer to user-specified data (can be NULL). <b>data</b> is
  *             passed as the last parameter to <b>ind</b>.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  */
 int co_lss_get_serial_nr_req(
 		co_lss_t *lss, co_lss_lssid_ind_t *ind, void *data);
@@ -499,8 +499,8 @@ int co_lss_get_serial_nr_req(
  * @param data a pointer to user-specified data (can be NULL). <b>data</b> is
  *             passed as the last parameter to <b>ind</b>.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  */
 int co_lss_get_id_req(co_lss_t *lss, co_lss_nid_ind_t *ind, void *data);
 
@@ -518,8 +518,8 @@ int co_lss_get_id_req(co_lss_t *lss, co_lss_nid_ind_t *ind, void *data);
  * @param data a pointer to user-specified data (can be NULL). <b>data</b> is
  *             passed as the last parameter to <b>ind</b>.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  */
 int co_lss_id_slave_req(co_lss_t *lss, const struct co_id *lo,
 		const struct co_id *hi, co_lss_cs_ind_t *ind, void *data);
@@ -535,8 +535,8 @@ int co_lss_id_slave_req(co_lss_t *lss, const struct co_id *lo,
  * @param data a pointer to user-specified data (can be NULL). <b>data</b> is
  *             passed as the last parameter to <b>ind</b>.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  */
 int co_lss_id_non_cfg_slave_req(
 		co_lss_t *lss, co_lss_cs_ind_t *ind, void *data);
@@ -557,8 +557,8 @@ int co_lss_id_non_cfg_slave_req(
  * @param data a pointer to user-specified data (can be NULL). <b>data</b> is
  *             passed as the last parameter to <b>ind</b>.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  */
 int co_lss_slowscan_req(co_lss_t *lss, const struct co_id *lo,
 		const struct co_id *hi, co_lss_scan_ind_t *ind, void *data);
@@ -581,8 +581,8 @@ int co_lss_slowscan_req(co_lss_t *lss, const struct co_id *lo,
  * @param data a pointer to user-specified data (can be NULL). <b>data</b> is
  *             passed as the last parameter to <b>ind</b>.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  */
 int co_lss_fastscan_req(co_lss_t *lss, const struct co_id *id,
 		const struct co_id *mask, co_lss_scan_ind_t *ind, void *data);

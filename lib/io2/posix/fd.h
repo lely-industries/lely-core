@@ -51,8 +51,8 @@ int io_fd_set_nonblock(int fd);
  * Waits for one or more of the I/O events in *<b>events</b> to occur as if by
  * POSIX `poll()`. On succes, the reported events are stored in *<b>events</b>.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained from `errno`.
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained from `errno`.
  */
 int io_fd_wait(int fd, int *events, int timeout);
 

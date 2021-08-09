@@ -63,7 +63,7 @@ void io_vcan_ctrl_fini(io_can_ctrl_t *ctrl);
  *                is #CAN_STATE_STOPPED, the controller is stopped.
  *
  * @returns a pointer to a new CAN controller, or NULL on error. In the latter
- * case, the error number can be obtained with get_errc().
+ * case, the error code can be obtained with get_errc().
  */
 io_can_ctrl_t *io_vcan_ctrl_create(
 		io_clock_t *clock, int flags, int nominal, int data, int state);
@@ -78,7 +78,7 @@ void io_vcan_ctrl_destroy(io_can_ctrl_t *ctrl);
  *
  * If the requested state is #CAN_STATE_STOPPED, the controller will be stopped
  * as if by io_can_ctrl_stop() and all pending and future I/O operations will
- * fail with error number #ERRNUM_NETDOWN. Subsequent calls to this function
+ * fail with error code #ERRNUM_NETDOWN. Subsequent calls to this function
  * have no effect until the controller is restarted with io_can_ctrl_restart().
  *
  * If the requested state differs from the current state and is _not_
@@ -101,8 +101,8 @@ void io_vcan_ctrl_set_state(io_can_ctrl_t *ctrl, int state);
  *                If <b>timeout</b> is negative, this function will block
  *                indefinitely.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  *
  * @see io_vcan_ctrl_write_err()
  */
@@ -122,8 +122,8 @@ int io_vcan_ctrl_write_msg(
  *                If <b>timeout</b> is negative, this function will block
  *                indefinitely.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  *
  * @see io_vcan_ctrl_write_msg()
  */
@@ -147,7 +147,7 @@ void io_vcan_chan_fini(io_can_chan_t *chan);
  *              used.
  *
  * @returns a pointer to a new CAN channel, or NULL on error. In the latter
- * case, the error number can be obtained with get_errc().
+ * case, the error code can be obtained with get_errc().
  */
 io_can_chan_t *io_vcan_chan_create(
 		io_ctx_t *ctx, ev_exec_t *exec, size_t rxlen);

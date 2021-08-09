@@ -94,8 +94,8 @@ typedef void co_csdo_ind_t(const co_csdo_t *sdo, co_unsigned16_t idx,
  * @param data   a pointer to user-specified data (can be NULL). <b>data</b> is
  *               passed as the last parameter to <b>con</b>.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  */
 int co_dev_dn_req(co_dev_t *dev, co_unsigned16_t idx, co_unsigned8_t subidx,
 		const void *ptr, size_t n, co_csdo_dn_con_t *con, void *data);
@@ -117,8 +117,8 @@ int co_dev_dn_req(co_dev_t *dev, co_unsigned16_t idx, co_unsigned8_t subidx,
  * @param data   a pointer to user-specified data (can be NULL). <b>data</b> is
  *               passed as the last parameter to <b>con</b>.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  */
 int co_dev_dn_val_req(co_dev_t *dev, co_unsigned16_t idx, co_unsigned8_t subidx,
 		co_unsigned16_t type, const void *val, struct membuf *buf,
@@ -137,8 +137,8 @@ int co_dev_dn_val_req(co_dev_t *dev, co_unsigned16_t idx, co_unsigned8_t subidx,
  * @param data  a pointer to user-specified data (can be NULL). <b>data</b> is
  *              passed as the last parameter to <b>con</b>.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  */
 int co_dev_dn_dcf_req(co_dev_t *dev, const uint_least8_t *begin,
 		const uint_least8_t *end, co_csdo_dn_con_t *con, void *data);
@@ -156,8 +156,8 @@ int co_dev_dn_dcf_req(co_dev_t *dev, const uint_least8_t *begin,
  * @param data   a pointer to user-specified data (can be NULL). <b>data</b> is
  *               passed as the last parameter to <b>con</b>.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  */
 int co_dev_up_req(const co_dev_t *dev, co_unsigned16_t idx,
 		co_unsigned8_t subidx, struct membuf *buf,
@@ -181,7 +181,7 @@ size_t co_csdo_sizeof(void);
  *            range [1..127]) and the default SDO parameters are used.
  *
  * @returns a pointer to a new Client-SDO service, or NULL on error. In the
- * latter case, the error number can be obtained with get_errc().
+ * latter case, the error code can be obtained with get_errc().
  *
  * @see co_csdo_destroy()
  */
@@ -195,8 +195,8 @@ void co_csdo_destroy(co_csdo_t *sdo);
  *
  * @post on success, co_csdo_is_stopped() returns <b>false</b>.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  *
  * @see co_csdo_stop()
  */
@@ -353,8 +353,8 @@ void co_csdo_abort_req(co_csdo_t *sdo, co_unsigned32_t ac);
  * @param data   a pointer to user-specified data (can be NULL). <b>data</b> is
  *               passed as the last parameter to <b>con</b>.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  */
 int co_csdo_dn_req(co_csdo_t *sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
 		const void *ptr, size_t n, co_csdo_dn_con_t *con, void *data);
@@ -378,8 +378,8 @@ int co_csdo_dn_req(co_csdo_t *sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
  * @param data   a pointer to user-specified data (can be NULL). <b>data</b> is
  *               passed as the last parameter to <b>con</b>.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  */
 int co_csdo_dn_val_req(co_csdo_t *sdo, co_unsigned16_t idx,
 		co_unsigned8_t subidx, co_unsigned16_t type, const void *val,
@@ -398,8 +398,8 @@ int co_csdo_dn_val_req(co_csdo_t *sdo, co_unsigned16_t idx,
  * @param data  a pointer to user-specified data (can be NULL). <b>data</b> is
  *              passed as the last parameter to <b>con</b>.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  */
 int co_csdo_dn_dcf_req(co_csdo_t *sdo, const uint_least8_t *begin,
 		const uint_least8_t *end, co_csdo_dn_con_t *con, void *data);
@@ -419,8 +419,8 @@ int co_csdo_dn_dcf_req(co_csdo_t *sdo, const uint_least8_t *begin,
  * @param data   a pointer to user-specified data (can be NULL). <b>data</b> is
  *               passed as the last parameter to <b>con</b>.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  */
 int co_csdo_up_req(co_csdo_t *sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
 		struct membuf *buf, co_csdo_up_con_t *con, void *data);
@@ -440,8 +440,8 @@ int co_csdo_up_req(co_csdo_t *sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
  * @param data   a pointer to user-specified data (can be NULL). <b>data</b> is
  *               passed as the last parameter to <b>con</b>.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  */
 int co_csdo_blk_dn_req(co_csdo_t *sdo, co_unsigned16_t idx,
 		co_unsigned8_t subidx, const void *ptr, size_t n,
@@ -464,8 +464,8 @@ int co_csdo_blk_dn_req(co_csdo_t *sdo, co_unsigned16_t idx,
  * @param data   a pointer to user-specified data (can be NULL). <b>data</b> is
  *               passed as the last parameter to <b>con</b>.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  */
 int co_csdo_blk_dn_val_req(co_csdo_t *sdo, co_unsigned16_t idx,
 		co_unsigned8_t subidx, co_unsigned16_t type, const void *val,
@@ -489,8 +489,8 @@ int co_csdo_blk_dn_val_req(co_csdo_t *sdo, co_unsigned16_t idx,
  * @param data   a pointer to user-specified data (can be NULL). <b>data</b> is
  *               passed as the last parameter to <b>con</b>.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  */
 int co_csdo_blk_up_req(co_csdo_t *sdo, co_unsigned16_t idx,
 		co_unsigned8_t subidx, co_unsigned8_t pst, struct membuf *buf,

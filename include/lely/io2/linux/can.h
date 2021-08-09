@@ -59,7 +59,7 @@ void io_can_ctrl_fini(io_can_ctrl_t *ctrl);
  *              #LELY_IO_CAN_TXLEN is used.
  *
  * @returns a pointer to a new CAN controller, or NULL on error. In the latter
- * case, the error number can be obtained with get_errc().
+ * case, the error code can be obtained with get_errc().
  *
  * @see io_can_ctrl_create_from_index()
  */
@@ -77,7 +77,7 @@ io_can_ctrl_t *io_can_ctrl_create_from_name(const char *name, size_t txlen);
  *              #LELY_IO_CAN_TXLEN is used.
  *
  * @returns a pointer to a new CAN controller, or NULL on error. In the latter
- * case, the error number can be obtained with get_errc().
+ * case, the error code can be obtained with get_errc().
  *
  * @see io_can_ctrl_create_from_name()
  */
@@ -122,7 +122,7 @@ void io_can_chan_fini(io_can_chan_t *chan);
  *              #LELY_IO_CAN_RXLEN is used.
  *
  * @returns a pointer to a new CAN channel, or NULL on error. In the latter
- * case, the error number can be obtained with get_errc().
+ * case, the error code can be obtained with get_errc().
  */
 io_can_chan_t *io_can_chan_create(
 		io_poll_t *poll, ev_exec_t *exec, size_t rxlen);
@@ -147,8 +147,8 @@ int io_can_chan_get_handle(const io_can_chan_t *chan);
  *              combination of #IO_CAN_BUS_FLAG_ERR, #IO_CAN_BUS_FLAG_FDF and
  *              #IO_CAN_BUS_FLAG_BRS).
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  *
  * @post on success, io_can_chan_is_open() returns 1.
  */
@@ -164,8 +164,8 @@ int io_can_chan_open(io_can_chan_t *chan, const io_can_ctrl_t *ctrl, int flags);
  * If the channel was already open, it is first closed as if by
  * io_can_chan_close().
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  *
  * @post on success, io_can_chan_is_open() returns 1.
  */
@@ -193,8 +193,8 @@ int io_can_chan_is_open(const io_can_chan_t *chan);
  * pending read or write operations are canceled as if by
  * io_can_chan_cancel_read() and io_can_chan_cancel_write().
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc(). Note that the file descriptor is closed even
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc(). Note that the file descriptor is closed even
  * when this function reports error.
  *
  * @post io_can_chan_is_open() returns 0.

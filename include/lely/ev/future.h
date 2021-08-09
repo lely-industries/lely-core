@@ -63,7 +63,7 @@ typedef void ev_promise_dtor_t(void *ptr);
  *             be NULL).
  *
  * @returns a reference to the new promise, or NULL on error. In the latter
- * case, the error number can be obtained with get_errc().
+ * case, the error code can be obtained with get_errc().
  *
  * @see ev_promise_release()
  */
@@ -255,7 +255,7 @@ ev_future_t *ev_future_when_all_v(
  *                0).
  *
  * @returns a pointer to a new future, or NULL on error. In the latter case, the
- * error number can be obtained with get_errc().
+ * error code can be obtained with get_errc().
  */
 ev_future_t *ev_future_when_all_n(
 		ev_exec_t *exec, size_t n, ev_future_t *const *futures);
@@ -292,7 +292,7 @@ ev_future_t *ev_future_when_any_v(
  *                0).
  *
  * @returns a pointer to a new future, or NULL on error. In the latter case, the
- * error number can be obtained with get_errc().
+ * error code can be obtained with get_errc().
  */
 ev_future_t *ev_future_when_any_n(
 		ev_exec_t *exec, size_t n, ev_future_t *const *futures);

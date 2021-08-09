@@ -48,7 +48,7 @@ void ev_strand_fini(ev_exec_t *exec);
  * @param inner_exec a pointer to the inner executor used to execute the tasks.
  *
  * @returns a pointer to a new strand executor, or NULL on error. In the latter
- * case, the error number can be obtained with get_errc().
+ * case, the error code can be obtained with get_errc().
  */
 ev_exec_t *ev_strand_create(ev_exec_t *inner_exec);
 

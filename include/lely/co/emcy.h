@@ -69,7 +69,7 @@ size_t co_emcy_sizeof(void);
  * @param dev a pointer to a CANopen device.
  *
  * @returns a pointer to a new EMCY service, or NULL on error. In the latter
- * case, the error number can be obtained with get_errc().
+ * case, the error code can be obtained with get_errc().
  *
  * @see co_emcy_destroy()
  */
@@ -83,8 +83,8 @@ void co_emcy_destroy(co_emcy_t *emcy);
  *
  * @post on success, co_emcy_is_stopped() returns <b>false</b>.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  *
  * @see co_emcy_stop()
  */
@@ -132,8 +132,8 @@ co_dev_t *co_emcy_get_dev(const co_emcy_t *emcy);
  * @param er   the error register.
  * @param msef the manufacturer-specific error code (can be NULL).
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  *
  * @see co_emcy_pop(), co_emcy_peek(), co_emcy_clear()
  */
@@ -149,8 +149,8 @@ int co_emcy_push(co_emcy_t *emcy, co_unsigned16_t eec, co_unsigned8_t er,
  *             NULL).
  * @param per  the address at which to store the error register (can be NULL).
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  *
  * @see co_emcy_push(), co_emcy_peek(), co_emcy_clear()
  */
@@ -174,8 +174,8 @@ void co_emcy_peek(const co_emcy_t *emcy, co_unsigned16_t *peec,
  * Clears the CANopen EMCY message stack and broadcasts the 'error reset/no
  * error' message if the EMCY producer service is active.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  *
  * @see co_emcy_push(), co_emcy_pop(), co_emcy_peek()
  */

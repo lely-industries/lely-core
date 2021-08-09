@@ -91,8 +91,8 @@ LELY_IO_SIGSET_INLINE io_dev_t *io_sigset_get_dev(const io_sigset_t *sigset);
 /**
  * Clears the set of signals being monitored by a signal handler.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  *
  * @see io_sigset_insert(), io_sigset_remove()
  */
@@ -102,8 +102,8 @@ LELY_IO_SIGSET_INLINE int io_sigset_clear(io_sigset_t *sigset);
  * Insert the specified signal number into the set of signals being monitored by
  * a signal handler.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  *
  * @see io_sigset_clear(), io_sigset_remove()
  */
@@ -113,8 +113,8 @@ LELY_IO_SIGSET_INLINE int io_sigset_insert(io_sigset_t *sigset, int signo);
  * Removes the specified signal number from the set of signals being monitored
  * by a signal handler.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns 0 on success, or -1 on error. In the latter case, the error code can
+ * be obtained with get_errc().
  *
  * @see io_sigset_clear(), io_sigset_insert()
  */
@@ -163,7 +163,7 @@ static inline size_t io_sigset_abort_wait(
  *               (can be NULL).
  *
  * @returns a pointer to a future, or NULL on error. In the latter case, the
- * error number can be obtained with get_errc().
+ * error code can be obtained with get_errc().
  */
 ev_future_t *io_sigset_async_wait(io_sigset_t *sigset, ev_exec_t *exec,
 		struct io_sigset_wait **pwait);
