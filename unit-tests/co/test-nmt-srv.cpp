@@ -32,6 +32,10 @@
 
 #include <libtest/allocators/default.hpp>
 #include <libtest/allocators/limited.hpp>
+#include <libtest/tools/can-send.hpp>
+#include <libtest/tools/co-nmt-sync-ind.hpp>
+#include <libtest/tools/co-rpdo-ind.hpp>
+#include <libtest/tools/co-tpdo-sample-ind.hpp>
 #include <libtest/tools/lely-cpputest-ext.hpp>
 #include <libtest/tools/lely-unit-test.hpp>
 
@@ -46,6 +50,7 @@
 #include <lely/co/ssdo.h>
 #include <lely/co/sync.h>
 #include <lely/co/tpdo.h>
+#include <lely/co/type.h>
 
 #include <lely/util/error.h>
 
@@ -74,6 +79,11 @@ TEST_BASE(CO_NmtSrvBase) {
   static const co_unsigned8_t SSDO_NUM = 3u;
   static const co_unsigned8_t CSDO_NUM = 2u;
   static const co_unsigned32_t SYNC_COBID = 0x80u;
+
+  static const co_unsigned16_t PDO_MAPPED_IDX = 0x2020u;
+  static const co_unsigned8_t PDO_MAPPED_SUBIDX = 0x00u;
+  static const co_unsigned16_t PDO_MAPPED_DEFTYPE = CO_DEFTYPE_UNSIGNED8;
+  using pdo_mapped_type = co_unsigned8_t;
 
   std::unique_ptr<CoDevTHolder> dev_holder;
   std::vector<std::unique_ptr<CoObjTHolder>> objects;
@@ -119,14 +129,15 @@ TEST_BASE(CO_NmtSrvBase) {
     objects.push_back(std::move(obj1280));
   }
 
-  void CreateObj1400Defaults(const co_unsigned16_t rpdo_num = RPDO_NUM) {
+  void CreateObj1400Defaults(const co_unsigned16_t rpdo_num = RPDO_NUM,
+                             const co_unsigned8_t tsm = 0xfeu) {
     std::unique_ptr<CoObjTHolder> obj1400;
 
     dev_holder->CreateObj<Obj1400RpdoCommPar>(
         obj1400, Obj1400RpdoCommPar::min_idx + rpdo_num - 1u);
     obj1400->EmplaceSub<Obj1400RpdoCommPar::Sub00HighestSubidxSupported>(0x02u);
     obj1400->EmplaceSub<Obj1400RpdoCommPar::Sub01CobId>(DEV_ID);
-    obj1400->EmplaceSub<Obj1400RpdoCommPar::Sub02TransmissionType>(0xfeu);
+    obj1400->EmplaceSub<Obj1400RpdoCommPar::Sub02TransmissionType>(tsm);
 
     objects.push_back(std::move(obj1400));
   }
@@ -137,19 +148,26 @@ TEST_BASE(CO_NmtSrvBase) {
     dev_holder->CreateObj<Obj1600RpdoMapPar>(
         obj1600, Obj1600RpdoMapPar::min_idx + rpdo_num - 1u);
     obj1600->EmplaceSub<Obj1600RpdoMapPar::Sub00NumOfMappedObjs>(0x01u);
-    obj1600->EmplaceSub<Obj1600RpdoMapPar::SubNthAppObject>(0x01u, 0x12340004u);
+
+    const co_unsigned32_t mapping =
+        (static_cast<co_unsigned32_t>(PDO_MAPPED_IDX) << 16u) |
+        (static_cast<co_unsigned32_t>(PDO_MAPPED_SUBIDX) << 8u) |
+        static_cast<co_unsigned32_t>(co_type_sizeof(PDO_MAPPED_DEFTYPE) * 8u);
+    obj1600->EmplaceSub<Obj1600RpdoMapPar::SubNthAppObject>(0x01u, mapping);
 
     objects.push_back(std::move(obj1600));
   }
 
-  void CreateObj1800Defaults(const co_unsigned16_t tpdo_num = TPDO_NUM) {
+  void CreateObj1800Defaults(const co_unsigned16_t tpdo_num = TPDO_NUM,
+                             const co_unsigned32_t cobid = DEV_ID,
+                             const co_unsigned8_t tsm = 0x00u) {
     std::unique_ptr<CoObjTHolder> obj1800;
 
     dev_holder->CreateObj<Obj1800TpdoCommPar>(
         obj1800, Obj1800TpdoCommPar::min_idx + tpdo_num - 1u);
     obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub00HighestSubidxSupported>(0x02u);
-    obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub01CobId>(0);
-    obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub02TransmissionType>(0);
+    obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub01CobId>(cobid);
+    obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub02TransmissionType>(tsm);
 
     objects.push_back(std::move(obj1800));
   }
@@ -160,9 +178,23 @@ TEST_BASE(CO_NmtSrvBase) {
     dev_holder->CreateObj<Obj1a00TpdoMapPar>(
         obj1a00, Obj1a00TpdoMapPar::min_idx + tpdo_num - 1u);
     obj1a00->EmplaceSub<Obj1a00TpdoMapPar::Sub00NumOfMappedObjs>(0x01u);
-    obj1a00->EmplaceSub<Obj1a00TpdoMapPar::SubNthAppObject>(0x01u, 0);
+
+    const co_unsigned32_t mapping =
+        (static_cast<co_unsigned32_t>(PDO_MAPPED_IDX) << 16u) |
+        (static_cast<co_unsigned32_t>(PDO_MAPPED_SUBIDX) << 8u) |
+        static_cast<co_unsigned32_t>(co_type_sizeof(PDO_MAPPED_DEFTYPE) * 8u);
+    obj1a00->EmplaceSub<Obj1a00TpdoMapPar::SubNthAppObject>(0x01u, mapping);
 
     objects.push_back(std::move(obj1a00));
+  }
+
+  void CreateObj2020PdoMapped() {
+    std::unique_ptr<CoObjTHolder> obj2020;
+    dev_holder->CreateAndInsertObj(obj2020, PDO_MAPPED_IDX);
+    obj2020->InsertAndSetSub(PDO_MAPPED_SUBIDX, PDO_MAPPED_DEFTYPE,
+                             pdo_mapped_type{0});
+    co_sub_set_pdo_mapping(obj2020->GetLastSub(), true);
+    objects.push_back(std::move(obj2020));
   }
 
   TEST_SETUP() {
@@ -191,6 +223,16 @@ TEST_GROUP_BASE(CO_NmtSrv, CO_NmtSrvBase) {
   void CreateNmtAndReset() {
     CreateNmt();
     CHECK_EQUAL(0, co_nmt_cs_ind(nmt, CO_NMT_CS_RESET_NODE));
+    CanSend::Clear();
+  }
+
+  can_msg CreatePdoMsg(const co_unsigned32_t cobid, const co_unsigned8_t len)
+      const {
+    can_msg msg = CAN_MSG_INIT;
+    msg.id = cobid;
+    msg.len = len;
+
+    return msg;
   }
 
   TEST_SETUP() {
@@ -198,9 +240,16 @@ TEST_GROUP_BASE(CO_NmtSrv, CO_NmtSrvBase) {
 
     net = can_net_create(allocator.ToAllocT(), 0);
     POINTER_NOT_NULL(net);
+
+    can_net_set_send_func(net, CanSend::Func, nullptr);
   }
 
   TEST_TEARDOWN() {
+    CanSend::Clear();
+    CoRpdoInd::Clear();
+    CoTpdoSampleInd::Clear();
+    CoNmtSyncInd::Clear();
+
     co_nmt_destroy(nmt);
     can_net_destroy(net);
 
@@ -208,23 +257,18 @@ TEST_GROUP_BASE(CO_NmtSrv, CO_NmtSrvBase) {
   }
 };
 
-#if !LELY_NO_MALLOC
-TEST(CO_NmtSrv, Dummy) {
-  // this is a dummy test case to solve the container errors about no tests
-}
-#endif  // !LELY_NO_MALLOC
-
 #if LELY_NO_MALLOC
-/// @name NMT service manager services initialization
-///@{
+
+  /// @name the NMT service manager services initialization
+  ///@{
 
 #if !LELY_NO_CO_RPDO
-/// \Given a pointer to the network (can_net_t), a pointer to a device
+/// \Given a pointer to a network (can_net_t), a pointer to a device
 ///        (co_dev_t) with RPDO service(s) partially configured - the object
 ///        dictionary does not contain an RPDO mapping parameter matching the
 ///        RPDO communication parameter
 ///
-/// \When NMT service is created
+/// \When an NMT service is created
 ///
 /// \Then only the fully configured RPDO services are initialized
 ///       \Calls co_nmt_get_alloc()
@@ -247,10 +291,10 @@ TEST(CO_NmtSrv, CoNmtSrvInit_RpdoMissingMappingParameterObject) {
   POINTERS_EQUAL(nullptr, co_nmt_get_rpdo(nmt, RPDO_NUM + 2u));
 }
 
-/// \Given a pointer to the network (can_net_t), a pointer to a device
+/// \Given a pointer to a network (can_net_t), a pointer to a device
 ///        (co_dev_t) with RPDO service(s) configured
 ///
-/// \When NMT service is created
+/// \When an NMT service is created
 ///
 /// \Then the configured RPDO services are initialized
 ///       \Calls co_nmt_get_alloc()
@@ -274,10 +318,10 @@ TEST(CO_NmtSrv, CoNmtSrvInit_RpdoNominal) {
   CHECK_EQUAL(RPDO_NUM, co_rpdo_get_num(rpdo));
 }
 #else
-/// \Given a pointer to the network (can_net_t), a pointer to a device
+/// \Given a pointer to a network (can_net_t), a pointer to a device
 ///        (co_dev_t)
 ///
-/// \When NMT service is created
+/// \When an NMT service is created
 ///
 /// \Then no RPDO services are initialized
 ///       \Calls co_nmt_get_alloc()
@@ -290,12 +334,12 @@ TEST(CO_NmtSrv, CoNmtSrvInit_NoRpdoService) {
 #endif  // !LELY_NO_CO_RPDO
 
 #if !LELY_NO_CO_TPDO
-/// \Given a pointer to the network (can_net_t), a pointer to a device
+/// \Given a pointer to a network (can_net_t), a pointer to a device
 ///        (co_dev_t) with TPDO service(s) partially configured - the object
 ///        dictionary does not contain a TPDO mapping parameter matching the
 ///        TPDO communication parameter
 ///
-/// \When NMT service is created
+/// \When an NMT service is created
 ///
 /// \Then only the fully configured TPDO services are initialized
 ///       \Calls co_nmt_get_alloc()
@@ -317,10 +361,10 @@ TEST(CO_NmtSrv, CoNmtSrvInit_TpdoMissingMappingParameterObject) {
   POINTERS_EQUAL(nullptr, co_nmt_get_tpdo(nmt, TPDO_NUM + 2u));
 }
 
-/// \Given a pointer to the network (can_net_t), a pointer to a device
+/// \Given a pointer to a network (can_net_t), a pointer to a device
 ///        (co_dev_t) with TPDO service(s) configured
 ///
-/// \When NMT service is created
+/// \When an NMT service is created
 ///
 /// \Then the configured TPDO services are initialized
 ///       \Calls co_nmt_get_alloc()
@@ -343,10 +387,10 @@ TEST(CO_NmtSrv, CoNmtSrvInit_TpdoNominal) {
   CHECK_EQUAL(TPDO_NUM, co_tpdo_get_num(tpdo));
 }
 #else
-/// \Given a pointer to the network (can_net_t), a pointer to a device
+/// \Given a pointer to a network (can_net_t), a pointer to a device
 ///        (co_dev_t)
 ///
-/// \When NMT service is created
+/// \When an NMT service is created
 ///
 /// \Then no TPDO services are initialized
 ///       \Calls co_nmt_get_alloc()
@@ -359,44 +403,69 @@ TEST(CO_NmtSrv, CoNmtSrvInit_NoTpdoService) {
 #endif  // !LELY_NO_CO_TPDO
 
 #if !LELY_NO_CO_SDO
-/// \Given a pointer to the network (can_net_t), a pointer to a device
-///        (co_dev_t) with Server SDO service(s) configured
+/// \Given a pointer to a network (can_net_t), a pointer to a device
+///        (co_dev_t) with Server-SDO service(s) configured
 ///
-/// \When NMT service is created
+/// \When an NMT service is created
 ///
-/// \Then the default and configured Server SDO services are initialized
+/// \Then the default and configured Server-SDO services are initialized
 ///       \Calls co_nmt_get_alloc()
 ///       \Calls co_nmt_get_net()
 ///       \Calls co_nmt_get_dev()
 ///       \Calls co_dev_find_obj()
 ///       \Calls mem_alloc()
 ///       \Calls co_ssdo_create()
-TEST(CO_NmtSrv, CoNmtSrvInit_ServerSdoNominal) {
+TEST(CO_NmtSrv, CoNmtSrvInit_ServerSdo_Init) {
   CreateObj1201Defaults();
 
   CreateNmt();
 
   const co_ssdo_t* const default_ssdo = co_nmt_get_ssdo(nmt, DEFAULT_SSDO_NUM);
+#if !LELY_NO_MALLOC
+  POINTERS_EQUAL(nullptr, default_ssdo);
+#else
   POINTER_NOT_NULL(default_ssdo);
   CHECK(co_ssdo_is_stopped(default_ssdo));
+  CHECK_EQUAL(DEFAULT_SSDO_NUM, co_ssdo_get_num(default_ssdo));
+#endif
+
+  const co_ssdo_t* const ssdo = co_nmt_get_ssdo(nmt, SSDO_NUM);
+#if !LELY_NO_MALLOC
+  POINTERS_EQUAL(nullptr, ssdo);
+#else
+  POINTER_NOT_NULL(ssdo);
+  CHECK(co_ssdo_is_stopped(ssdo));
+  CHECK_EQUAL(SSDO_NUM, co_ssdo_get_num(ssdo));
+#endif
+
+  POINTERS_EQUAL(nullptr, co_nmt_get_ssdo(nmt, SSDO_NUM + 1u));
+}
+
+TEST(CO_NmtSrv, CoNmtSrvInit_ServerSdo_Started) {
+  CreateObj1201Defaults();
+
+  CreateNmtAndReset();
+
+  const co_ssdo_t* const default_ssdo = co_nmt_get_ssdo(nmt, DEFAULT_SSDO_NUM);
+  POINTER_NOT_NULL(default_ssdo);
+  CHECK_FALSE(co_ssdo_is_stopped(default_ssdo));
   CHECK_EQUAL(DEFAULT_SSDO_NUM, co_ssdo_get_num(default_ssdo));
 
   const co_ssdo_t* const ssdo = co_nmt_get_ssdo(nmt, SSDO_NUM);
   POINTER_NOT_NULL(ssdo);
-  CHECK(co_ssdo_is_stopped(ssdo));
+  CHECK_FALSE(co_ssdo_is_stopped(ssdo));
   CHECK_EQUAL(SSDO_NUM, co_ssdo_get_num(ssdo));
 
-  POINTERS_EQUAL(nullptr, co_nmt_get_ssdo(nmt, 0u));
   POINTERS_EQUAL(nullptr, co_nmt_get_ssdo(nmt, SSDO_NUM + 1u));
 }
 
 #if !LELY_NO_CO_CSDO
-/// \Given a pointer to the network (can_net_t), a pointer to a device
-///        (co_dev_t) with Client SDO service(s) configured
+/// \Given a pointer to a network (can_net_t), a pointer to a device
+///        (co_dev_t) with Client-SDO service(s) configured
 ///
-/// \When NMT service is created
+/// \When an NMT service is created
 ///
-/// \Then the configured Client SDO services are initialized
+/// \Then the configured Client-SDO services are initialized
 ///       \Calls co_nmt_get_alloc()
 ///       \Calls co_nmt_get_net()
 ///       \Calls co_nmt_get_dev()
@@ -417,12 +486,12 @@ TEST(CO_NmtSrv, CoNmtSrvInit_ClientSdoNominal) {
   POINTERS_EQUAL(nullptr, co_nmt_get_csdo(nmt, CSDO_NUM + 1u));
 }
 #else   // !LELY_NO_CO_CSDO
-/// \Given a pointer to the network (can_net_t), a pointer to a device
+/// \Given a pointer to a network (can_net_t), a pointer to a device
 ///        (co_dev_t)
 ///
-/// \When NMT service is created
+/// \When an NMT service is created
 ///
-/// \Then no Client SDO services are initialized
+/// \Then no Client-SDO services are initialized
 ///       \Calls co_nmt_get_alloc()
 ///       \Calls co_nmt_get_net()
 ///       \Calls co_nmt_get_dev()
@@ -432,12 +501,12 @@ TEST(CO_NmtSrv, CoNmtSrvInit_NoClientSdoService) {
 }
 #endif  // !LELY_NO_CO_CSDO
 #else   // !LELY_NO_CO_SDO
-/// \Given a pointer to the network (can_net_t), a pointer to a device
+/// \Given a pointer to a network (can_net_t), a pointer to a device
 ///        (co_dev_t)
 ///
-/// \When NMT service is created
+/// \When an NMT service is created
 ///
-/// \Then no Server SDO services are initialized
+/// \Then no Server-SDO services are initialized
 TEST(CO_NmtSrv, CoNmtSrvInit_NoServerSdoService) {
   CreateNmt();
   POINTERS_EQUAL(nullptr, co_nmt_get_ssdo(nmt, DEFAULT_SSDO_NUM));
@@ -445,11 +514,11 @@ TEST(CO_NmtSrv, CoNmtSrvInit_NoServerSdoService) {
 #endif  // !LELY_NO_CO_SDO
 
 #if !LELY_NO_CO_SYNC
-/// \Given a pointer to the network (can_net_t), a pointer to a device
+/// \Given a pointer to a network (can_net_t), a pointer to a device
 ///        (co_dev_t), the object dictionary does not contain the COB-ID SYNC
 ///        Message object (0x1005)
 ///
-/// \When NMT service is created
+/// \When an NMT service is created
 ///
 /// \Then the SYNC service is not initialized
 ///       \Calls co_nmt_get_net()
@@ -461,11 +530,11 @@ TEST(CO_NmtSrv, CoNmtSrvInit_NoObj1005) {
   POINTERS_EQUAL(nullptr, co_nmt_get_sync(nmt));
 }
 
-/// \Given a pointer to the network (can_net_t), a pointer to a device
+/// \Given a pointer to a network (can_net_t), a pointer to a device
 ///        (co_dev_t), the object dictionary contains the COB-ID SYNC Message
 ///        object (0x1005)
 ///
-/// \When NMT service is created
+/// \When an NMT service is created
 ///
 /// \Then the SYNC service is initialized
 ///       \Calls co_nmt_get_net()
@@ -484,10 +553,10 @@ TEST(CO_NmtSrv, CoNmtSrvInit_SyncNominal) {
   CHECK(co_sync_is_stopped(sync));
 }
 #else
-/// \Given a pointer to the network (can_net_t), a pointer to a device
+/// \Given a pointer to a network (can_net_t), a pointer to a device
 ///        (co_dev_t)
 ///
-/// \When NMT service is created
+/// \When an NMT service is created
 ///
 /// \Then the SYNC service is not initialized
 TEST(CO_NmtSrv, CoNmtSrvInit_NoSyncService) {
@@ -497,10 +566,10 @@ TEST(CO_NmtSrv, CoNmtSrvInit_NoSyncService) {
 #endif  // !LELY_NO_CO_SYNC
 
 #if LELY_NO_CO_TIME
-/// \Given a pointer to the network (can_net_t), a pointer to a device
+/// \Given a pointer to a network (can_net_t), a pointer to a device
 ///        (co_dev_t)
 ///
-/// \When NMT service is created
+/// \When an NMT service is created
 ///
 /// \Then the TIME service is not initialized
 TEST(CO_NmtSrv, CoNmtSrvInit_NoTimeService) {
@@ -510,11 +579,11 @@ TEST(CO_NmtSrv, CoNmtSrvInit_NoTimeService) {
 #endif  // LELY_NO_CO_TIME
 
 #if !LELY_NO_CO_EMCY
-/// \Given a pointer to the network (can_net_t), a pointer to a device
+/// \Given a pointer to a network (can_net_t), a pointer to a device
 ///        (co_dev_t), the object dictionary does not contain the Error Register
 ///        object (0x1001)
 ///
-/// \When NMT service is created
+/// \When an NMT service is created
 ///
 /// \Then the EMCY service is not initialized
 ///       \Calls co_nmt_get_net()
@@ -526,11 +595,11 @@ TEST(CO_NmtSrv, CoNmtSrvInit_NoObj1001) {
   POINTERS_EQUAL(nullptr, co_nmt_get_emcy(nmt));
 }
 
-/// \Given a pointer to the network (can_net_t), a pointer to a device
+/// \Given a pointer to a network (can_net_t), a pointer to a device
 ///        (co_dev_t), the object dictionary contains the Error Register object
 ///        (0x1001)
 ///
-/// \When NMT service is created
+/// \When an NMT service is created
 ///
 /// \Then the EMCY service is initialized
 ///       \Calls co_nmt_get_net()
@@ -547,10 +616,10 @@ TEST(CO_NmtSrv, CoNmtSrvInit_EmcyNominal) {
   CHECK(co_emcy_is_stopped(emcy));
 }
 #else
-/// \Given a pointer to the network (can_net_t), a pointer to a device
+/// \Given a pointer to a network (can_net_t), a pointer to a device
 ///        (co_dev_t)
 ///
-/// \When NMT service is created
+/// \When an NMT service is created
 ///
 /// \Then the EMCY service is not initialized
 TEST(CO_NmtSrv, CoNmtSrvInit_NoEmcyService) {
@@ -560,10 +629,10 @@ TEST(CO_NmtSrv, CoNmtSrvInit_NoEmcyService) {
 #endif  // !LELY_NO_CO_EMCY
 
 #if LELY_NO_CO_LSS
-/// \Given a pointer to the network (can_net_t), a pointer to a device
+/// \Given a pointer to a network (can_net_t), a pointer to a device
 ///        (co_dev_t)
 ///
-/// \When NMT service is created
+/// \When an NMT service is created
 ///
 /// \Then the LSS service is not initialized
 TEST(CO_NmtSrv, CoNmtSrvInit_NoLssService) {
@@ -574,11 +643,13 @@ TEST(CO_NmtSrv, CoNmtSrvInit_NoLssService) {
 
 ///@}
 
-/// @name NMT service manager services startup
+#endif  // LELY_NO_MALLOC
+
+/// @name the NMT service manager services startup
 ///@{
 
 #if !LELY_NO_CO_RPDO
-/// \Given a pointer to the network (can_net_t), a pointer to a device
+/// \Given a pointer to a network (can_net_t), a pointer to a device
 ///        (co_dev_t) with RPDO service(s) configured, a pointer to an
 ///        initialized NMT service (co_nmt_t)
 ///
@@ -600,7 +671,7 @@ TEST(CO_NmtSrv, CoNmtSrv_StartRpdo) {
 }
 
 #if !LELY_NO_CO_EMCY
-/// \Given a pointer to the network (can_net_t), a pointer to a device
+/// \Given a pointer to a network (can_net_t), a pointer to a device
 ///        (co_dev_t), with EMCY and RPDO service(s) configured, a pointer to a
 ///        started NMT service (co_nmt_t)
 ///
@@ -628,7 +699,7 @@ TEST(CO_NmtSrv, CoNmtSrv_RpdoErr) {
 #endif  // !LELY_NO_CO_RPDO
 
 #if !LELY_NO_CO_TPDO
-/// \Given a pointer to the network (can_net_t), a pointer to a device
+/// \Given a pointer to a network (can_net_t), a pointer to a device
 ///        (co_dev_t) with TPDO service(s) configured, a pointer to an
 ///        initialized NMT service (co_nmt_t)
 ///
@@ -651,13 +722,13 @@ TEST(CO_NmtSrv, CoNmtSrv_StartTpdo) {
 #endif  // !LELY_NO_CO_TPDO
 
 #if !LELY_NO_CO_SDO
-/// \Given a pointer to the network (can_net_t), a pointer to a device
-///        (co_dev_t) with Server SDO service(s) configured, a pointer to an
+/// \Given a pointer to a network (can_net_t), a pointer to a device
+///        (co_dev_t) with Server-SDO service(s) configured, a pointer to an
 ///        initialized NMT service (co_nmt_t)
 ///
 /// \When co_nmt_cs_ind() is called with the NMT 'reset node' command specifier
 ///
-/// \Then the default and configured Server SDO services are started
+/// \Then the default and configured Server-SDO services are started
 ///       \Calls get_errc()
 ///       \Calls set_errc()
 ///       \Calls co_ssdo_start()
@@ -676,13 +747,13 @@ TEST(CO_NmtSrv, CoNmtSrv_StartServerSdo) {
 }
 
 #if !LELY_NO_CO_CSDO
-/// \Given a pointer to the network (can_net_t), a pointer to a device
-///        (co_dev_t) with Client SDO service(s) configured, a pointer to an
+/// \Given a pointer to a network (can_net_t), a pointer to a device
+///        (co_dev_t) with Client-SDO service(s) configured, a pointer to an
 ///        initialized NMT service (co_nmt_t)
 ///
 /// \When co_nmt_cs_ind() is called with the NMT 'reset node' command specifier
 ///
-/// \Then the configured Client SDO services are started
+/// \Then the configured Client-SDO services are started
 ///       \Calls get_errc()
 ///       \Calls set_errc()
 ///       \Calls co_csdo_start()
@@ -700,7 +771,7 @@ TEST(CO_NmtSrv, CoNmtSrv_StartClientSdo) {
 #endif  // !LELY_NO_CO_SDO
 
 #if !LELY_NO_CO_SYNC
-/// \Given a pointer to the network (can_net_t), a pointer to a device
+/// \Given a pointer to a network (can_net_t), a pointer to a device
 ///        (co_dev_t) with the SYNC service configured, a pointer to an
 ///        initialized NMT service (co_nmt_t)
 ///
@@ -720,20 +791,7 @@ TEST(CO_NmtSrv, CoNmtSrv_StartSync) {
   CHECK_FALSE(co_sync_is_stopped(sync));
 }
 
-namespace {
-struct NmtSyncInd {
-  static bool was_called;
-
-  static void
-  Func(co_nmt_t*, co_unsigned8_t, void*) {
-    was_called = true;
-  }
-};
-}  // namespace
-
-bool NmtSyncInd::was_called = false;
-
-/// \Given a pointer to the network (can_net_t), a pointer to a device
+/// \Given a pointer to a network (can_net_t), a pointer to a device
 ///        (co_dev_t), with the SYNC service configured, a pointer to a started
 ///        NMT service (co_nmt_t) with a SYNC indication function set
 ///
@@ -744,19 +802,18 @@ bool NmtSyncInd::was_called = false;
 TEST(CO_NmtSrv, CoNmtSrv_SyncInd) {
   CreateObj1005Defaults();
   CreateNmtAndReset();
-  co_nmt_set_sync_ind(nmt, &NmtSyncInd::Func, nullptr);
-  NmtSyncInd::was_called = false;
+  co_nmt_set_sync_ind(nmt, &CoNmtSyncInd::Func, nullptr);
 
   can_msg msg = CAN_MSG_INIT;
   msg.id = SYNC_COBID;
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
-  CHECK(NmtSyncInd::was_called);
+  CHECK_EQUAL(1u, CoNmtSyncInd::GetNumCalled());
 }
 #endif  // !LELY_NO_CO_SYNC
 
 #if !LELY_NO_CO_EMCY
-/// \Given a pointer to the network (can_net_t), a pointer to a device
+/// \Given a pointer to a network (can_net_t), a pointer to a device
 ///        (co_dev_t) with the EMCY service configured, a pointer to an
 ///        initialized NMT service (co_nmt_t)
 ///
@@ -778,7 +835,7 @@ TEST(CO_NmtSrv, CoNmtSrv_StartEmcy) {
 #endif  // !LELY_NO_CO_EMCY
 
 #if !LELY_NO_CO_EMCY && !LELY_NO_CO_SYNC
-/// \Given a pointer to the network (can_net_t), a pointer to a device
+/// \Given a pointer to a network (can_net_t), a pointer to a device
 ///        (co_dev_t), with EMCY and SYNC services configured, a pointer to a
 ///        started NMT service (co_nmt_t)
 ///
@@ -801,14 +858,14 @@ TEST(CO_NmtSrv, CoNmtSrv_SyncErr) {
 }
 #endif  // !LELY_NO_CO_EMCY && !LELY_NO_CO_SYNC
 
-/// \Given a pointer to the network (can_net_t), a pointer to a device
+/// \Given a pointer to a network (can_net_t), a pointer to a device
 ///        (co_dev_t) with no services configured, a pointer to an
 ///        initialized NMT service (co_nmt_t)
 ///
 /// \When co_nmt_cs_ind() is called with the NMT 'reset node' command specifier
 ///
 /// \Then no services are initialized; if SDO support is enabled, the default
-///       Server SDO service is started
+///       Server-SDO service is started
 ///       \Calls get_errc()
 ///       \Calls set_errc()
 ///       \IfCalls{!LELY_NO_CO_SDO, co_ssdo_start()}
@@ -829,6 +886,437 @@ TEST(CO_NmtSrv, CoNmtSrv_StartServices_NoneConfigured) {
 }
 
 ///@}
+
+/// @name co_nmt_on_sync()
+///@{
+
+/// \Given a pointer to a started NMT service (co_nmt_t) with no PDOs
+///        configured; a NMT SYNC indication function is set
+///
+/// \When co_nmt_on_sync() is called with any counter value
+///
+/// \Then the NMT SYNC indication function is called with the passed counter
+///       value and a user-specified data pointer
+TEST(CO_NmtSrv, CoNmtOnSync_NoPDOs) {
+  CreateNmtAndReset();
+  co_nmt_set_sync_ind(nmt, &CoNmtSyncInd::Func, nullptr);
+  const co_unsigned8_t cnt = 5u;
+
+  co_nmt_on_sync(nmt, cnt);
+
+  CHECK_EQUAL(1u, CoNmtSyncInd::GetNumCalled());
+  CoNmtSyncInd::Check(nmt, cnt, nullptr);
+}
+
+/// \Given a pointer to a started NMT service (co_nmt_t) with no PDOs
+///        configured; no NMT SYNC indication function is set
+///
+/// \When co_nmt_on_sync() is called with any counter value
+///
+/// \Then nothing is changed
+TEST(CO_NmtSrv, CoNmtOnSync_NoSyncInd) {
+  CreateNmtAndReset();
+
+  co_nmt_on_sync(nmt, 0);
+}
+
+/// \Given a pointer to a started NMT service (co_nmt_t) with a Transmit-PDO
+///        (synchronous) and a Receive-PDO configured and started; there is
+///        a received PDO message waiting for actuation
+///
+/// \When co_nmt_on_sync() is called with any counter value
+///
+/// \Then the NMT SYNC indication function is called with the passed counter
+///       value and a user-specified data pointer; the transmission of the
+///       synchronous PDO is triggered - the Transmit-PDO sampling indication
+///       function is called; the actuation of a received synchronous PDO is
+///       triggered - the RPDO indication function is called with zero abort
+///       code, a pointer to the received bytes (stored internally), a number
+///       of the received bytes and a user-specified data pointer
+TEST(CO_NmtSrv, CoNmtOnSync_Nominal) {
+  CreateObj2020PdoMapped();
+#if !LELY_NO_CO_RPDO
+  CreateObj1400Defaults(RPDO_NUM, 0x00u);
+  CreateObj1600Defaults(RPDO_NUM);
+#endif
+#if !LELY_NO_CO_TPDO
+  CreateObj1800Defaults(TPDO_NUM, DEV_ID, 0x01u);
+  CreateObj1a00Defaults(TPDO_NUM);
+#endif
+  CreateNmtAndReset();
+
+#if !LELY_NO_CO_RPDO
+  co_rpdo_set_ind(co_nmt_get_rpdo(nmt, RPDO_NUM), CoRpdoInd::Func, nullptr);
+#endif
+#if !LELY_NO_CO_TPDO
+  co_tpdo_set_sample_ind(co_nmt_get_tpdo(nmt, TPDO_NUM), CoTpdoSampleInd::Func,
+                         nullptr);
+#endif
+
+  co_nmt_set_sync_ind(nmt, &CoNmtSyncInd::Func, nullptr);
+
+#if !LELY_NO_CO_RPDO
+  can_msg msg = CAN_MSG_INIT;
+  msg.id = DEV_ID;
+  msg.len = 1u;
+  CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
+  CHECK_EQUAL(0, CoRpdoInd::GetNumCalled());
+#endif
+
+  const co_unsigned8_t cnt = 5u;
+
+  co_nmt_on_sync(nmt, cnt);
+
+  CHECK_EQUAL(1u, CoNmtSyncInd::GetNumCalled());
+  CoNmtSyncInd::Check(nmt, cnt, nullptr);
+#if !LELY_NO_CO_TPDO
+  CHECK_EQUAL(1u, CoTpdoSampleInd::GetNumCalled());
+  CoTpdoSampleInd::Check(co_nmt_get_tpdo(nmt, TPDO_NUM), nullptr);
+#endif
+#if !LELY_NO_CO_RPDO
+  CHECK_EQUAL(1u, CoRpdoInd::GetNumCalled());
+  CoRpdoInd::Check(co_nmt_get_rpdo(nmt, RPDO_NUM), 0, nullptr,
+                   co_type_sizeof(PDO_MAPPED_DEFTYPE), nullptr);
+#endif
+}
+
+///@}
+
+#if !LELY_NO_CO_TPDO
+
+/// @name co_nmt_on_tpdo_event()
+///@{
+
+/// \Given a pointer to a started NMT service (co_nmt_t) with no PDOs
+///        configured
+///
+/// \When co_nmt_on_tpdo_event() is called with any PDO number
+///
+/// \Then nothing is changed
+TEST(CO_NmtSrv, CoNmtOnTpdoEvent_NoPDOs) {
+  CreateNmtAndReset();
+
+  const errnum_t error_num = ERRNUM_FAULT;
+  set_errnum(error_num);
+
+  co_nmt_on_tpdo_event(nmt, 0);
+
+  CHECK_EQUAL(error_num, get_errnum());
+  CHECK_EQUAL(0, CanSend::GetNumCalled());
+}
+
+/// \Given a pointer to a started NMT service (co_nmt_t) with at least one
+///        Transmit-PDO (event driven) configured
+///
+/// \When co_nmt_on_tpdo_event() is called with the TPDO number
+///
+/// \Then the PDO message is transmitted for the configured Transmit-PDO; the
+///       error number is not changed
+TEST(CO_NmtSrv, CoNmtOnTpdoEvent_SinglePDO_Transmit) {
+  CreateObj2020PdoMapped();
+  CreateObj1800Defaults(TPDO_NUM, DEV_ID + TPDO_NUM, 0xfeu);
+  CreateObj1a00Defaults(TPDO_NUM);
+  CreateObj1800Defaults(TPDO_NUM + 1u, DEV_ID + TPDO_NUM, 0xfeu);
+  CreateObj1a00Defaults(TPDO_NUM + 1u);
+  CreateNmtAndReset();
+
+  const errnum_t error_num = ERRNUM_FAULT;
+  set_errnum(error_num);
+
+  co_nmt_on_tpdo_event(nmt, TPDO_NUM);
+
+  CHECK_EQUAL(error_num, get_errnum());
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
+  CanSend::CheckMsg(
+      DEV_ID + TPDO_NUM, 0,
+      static_cast<uint_least8_t>(co_type_sizeof(PDO_MAPPED_DEFTYPE)), nullptr);
+}
+
+/// \Given a pointer to a started NMT service (co_nmt_t) with at least one
+///        Transmit-PDO (event driven) configured
+///
+/// \When co_nmt_on_tpdo_event() is called with the TPDO number, but
+///       co_nmt_on_tpdo_event_lock() was called before
+///
+/// \Then nothing is changed; after co_nmt_on_tpdo_event_unlock() is called
+///       the postponed PDO message is transmitted for the configured
+///       Transmit-PDO; the error number is not changed
+TEST(CO_NmtSrv, CoNmtOnTpdoEvent_SinglePDO_Wait) {
+  CreateObj2020PdoMapped();
+  CreateObj1800Defaults(TPDO_NUM, DEV_ID + TPDO_NUM, 0xfeu);
+  CreateObj1a00Defaults(TPDO_NUM);
+  CreateObj1800Defaults(CO_NUM_PDOS, DEV_ID + CO_NUM_PDOS, 0xfeu);
+  CreateObj1a00Defaults(CO_NUM_PDOS);
+  CreateNmtAndReset();
+
+  co_nmt_on_tpdo_event_lock(nmt);
+
+  const errnum_t error_num = ERRNUM_FAULT;
+  set_errnum(error_num);
+
+  co_nmt_on_tpdo_event(nmt, TPDO_NUM);
+
+  CHECK_EQUAL(error_num, get_errnum());
+  CHECK_EQUAL(0, CanSend::GetNumCalled());
+
+  co_nmt_on_tpdo_event_unlock(nmt);
+
+  CHECK_EQUAL(error_num, get_errnum());
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
+  CanSend::CheckMsg(
+      DEV_ID + TPDO_NUM, 0,
+      static_cast<uint_least8_t>(co_type_sizeof(PDO_MAPPED_DEFTYPE)), nullptr);
+}
+
+/// \Given a pointer to a started NMT service (co_nmt_t) with many
+///        Transmit-PDOs (event driven) configured
+///
+/// \When co_nmt_on_tpdo_event() is called with a zero PDO number (transmit all
+///       PDOs)
+///
+/// \Then the PDO messages are transmitted for each configured Transmit-PDO,
+///       the error number is not changed
+TEST(CO_NmtSrv, CoNmtOnTpdoEvent_AllPDOs) {
+  CreateObj2020PdoMapped();
+  CreateObj1800Defaults(TPDO_NUM, DEV_ID + TPDO_NUM, 0xfeu);
+  CreateObj1a00Defaults(TPDO_NUM);
+  CreateObj1800Defaults(TPDO_NUM + 1u, DEV_ID + TPDO_NUM + 1u, 0xfeu);
+  CreateObj1a00Defaults(TPDO_NUM + 1u);
+  CreateNmtAndReset();
+
+  const CanSend::MsgSeq msgs = {
+      CreatePdoMsg(DEV_ID + TPDO_NUM, static_cast<uint_least8_t>(
+                                          co_type_sizeof(PDO_MAPPED_DEFTYPE))),
+      CreatePdoMsg(
+          DEV_ID + TPDO_NUM + 1u,
+          static_cast<uint_least8_t>(co_type_sizeof(PDO_MAPPED_DEFTYPE))),
+  };
+  CanSend::SetCheckSeq(msgs);
+
+  const errnum_t error_num = ERRNUM_FAULT;
+  set_errnum(error_num);
+
+  co_nmt_on_tpdo_event(nmt, 0);
+
+  CHECK_EQUAL(error_num, get_errnum());
+  CHECK_EQUAL(2u, CanSend::GetNumCalled());
+}
+
+/// \Given a pointer to a started NMT service (co_nmt_t) with many
+///        Transmit-PDOs (event driven) configured
+///
+/// \When co_nmt_on_tpdo_event() is called with a zero PDO number (transmit all
+///       PDOs), but co_nmt_on_tpdo_event_lock() was called before
+///
+/// \Then nothing is changed; after co_nmt_on_tpdo_event_unlock() is called
+///       the postponed PDO messages are transmitted for each configured
+///       Transmit-PDO; the error number is not changed
+TEST(CO_NmtSrv, CoNmtOnTpdoEvent_AllPDOs_Wait) {
+  CreateObj2020PdoMapped();
+  CreateObj1800Defaults(TPDO_NUM, DEV_ID + TPDO_NUM, 0xfeu);
+  CreateObj1a00Defaults(TPDO_NUM);
+  CreateObj1800Defaults(TPDO_NUM + 1u, DEV_ID + TPDO_NUM + 1u, 0xfeu);
+  CreateObj1a00Defaults(TPDO_NUM + 1u);
+  CreateNmtAndReset();
+  co_nmt_on_tpdo_event_lock(nmt);
+
+  const errnum_t error_num = ERRNUM_FAULT;
+  set_errnum(error_num);
+
+  co_nmt_on_tpdo_event(nmt, 0);
+
+  CHECK_EQUAL(error_num, get_errnum());
+  CHECK_EQUAL(0, CanSend::GetNumCalled());
+
+  const CanSend::MsgSeq msgs = {
+      CreatePdoMsg(DEV_ID + TPDO_NUM, static_cast<uint_least8_t>(
+                                          co_type_sizeof(PDO_MAPPED_DEFTYPE))),
+      CreatePdoMsg(
+          DEV_ID + TPDO_NUM + 1u,
+          static_cast<uint_least8_t>(co_type_sizeof(PDO_MAPPED_DEFTYPE))),
+  };
+  CanSend::SetCheckSeq(msgs);
+
+  co_nmt_on_tpdo_event_unlock(nmt);
+
+  CHECK_EQUAL(error_num, get_errnum());
+  CHECK_EQUAL(2u, CanSend::GetNumCalled());
+}
+
+/// \Given a pointer to a started NMT service (co_nmt_t) with a Transmit-PDO
+///        (event driven) configured
+///
+/// \When co_nmt_on_tpdo_event() is called with a PDO number of a non-existing
+///       Transmit-PDO, but co_nmt_on_tpdo_event_lock() was called before
+///
+/// \Then nothing is changed; after co_nmt_on_tpdo_event_unlock() is called
+///       no PDO message is transmitted; the error number is not changed
+TEST(CO_NmtSrv, CoNmtOnTpdoEvent_NoWaitingPDOs_Unlock) {
+  CreateObj2020PdoMapped();
+  CreateObj1800Defaults(TPDO_NUM, DEV_ID, 0xfeu);
+  CreateObj1a00Defaults();
+  CreateNmtAndReset();
+  co_nmt_on_tpdo_event_lock(nmt);
+
+  const errnum_t error_num = ERRNUM_FAULT;
+  set_errnum(error_num);
+
+  co_nmt_on_tpdo_event(nmt, TPDO_NUM + 1u);
+
+  CHECK_EQUAL(error_num, get_errnum());
+
+  co_nmt_on_tpdo_event_unlock(nmt);
+
+  CHECK_EQUAL(error_num, get_errnum());
+  CHECK_EQUAL(0, CanSend::GetNumCalled());
+}
+
+/// \Given a pointer to a started NMT service (co_nmt_t) with a Transmit-PDO
+///        (event driven) configured
+///
+/// \When co_nmt_on_tpdo_event() is called with a PDO number of the
+///       Transmit-PDO, but co_nmt_on_tpdo_event_lock() was called twice before
+///
+/// \Then nothing is changed; after co_nmt_on_tpdo_event_unlock() is called
+///       no PDO message is transmitted; the error number is not changed
+TEST(CO_NmtSrv, CoNmtOnTpdoEvent_DoubleLock_Unlock) {
+  CreateObj2020PdoMapped();
+  CreateObj1800Defaults(TPDO_NUM, DEV_ID, 0xfeu);
+  CreateObj1a00Defaults();
+  CreateNmtAndReset();
+
+  co_nmt_on_tpdo_event_lock(nmt);
+  co_nmt_on_tpdo_event_lock(nmt);
+
+  const errnum_t error_num = ERRNUM_FAULT;
+  set_errnum(error_num);
+
+  co_nmt_on_tpdo_event(nmt, TPDO_NUM + 1u);
+
+  CHECK_EQUAL(error_num, get_errnum());
+
+  co_nmt_on_tpdo_event_unlock(nmt);
+
+  CHECK_EQUAL(error_num, get_errnum());
+  CHECK_EQUAL(0, CanSend::GetNumCalled());
+}
+
+/// \Given a pointer to a started NMT service (co_nmt_t) with a Transmit-PDO
+///        (event driven) configured
+///
+/// \When co_nmt_on_tpdo_event() is called with a PDO number of the
+///       Transmit-PDO, but the NMT service is stopped
+///
+/// \Then nothing is changed, no PDO message is transmitted; the error number
+///       is not changed
+TEST(CO_NmtSrv, CoNmtOnTpdoEvent_Stop) {
+  CreateObj2020PdoMapped();
+  CreateObj1800Defaults(TPDO_NUM, DEV_ID + TPDO_NUM, 0xfeu);
+  CreateObj1a00Defaults(TPDO_NUM);
+  CreateNmtAndReset();
+  CHECK_EQUAL(0, co_nmt_cs_ind(nmt, CO_NMT_CS_STOP));
+
+  const errnum_t error_num = ERRNUM_FAULT;
+  set_errnum(error_num);
+
+  co_nmt_on_tpdo_event(nmt, TPDO_NUM);
+
+  CHECK_EQUAL(error_num, get_errnum());
+  CHECK_EQUAL(0, CanSend::GetNumCalled());
+}
+
+/// \Given a pointer to a started NMT service (co_nmt_t) with a Transmit-PDO
+///        (event driven) configured
+///
+/// \When co_nmt_on_tpdo_event() is called with a PDO number of the
+///       Transmit-PDO, but co_nmt_on_tpdo_event_lock() was called before
+///
+/// \Then nothing is changed; after the service is stopped and
+///       co_nmt_on_tpdo_event_unlock() is called no PDO message is
+///       transmitted; the error number is not changed
+TEST(CO_NmtSrv, CoNmtOnTpdoEvent_Stop_Unlock) {
+  CreateObj2020PdoMapped();
+  CreateObj1800Defaults(TPDO_NUM, DEV_ID + TPDO_NUM, 0xfeu);
+  CreateObj1a00Defaults(TPDO_NUM);
+  CreateNmtAndReset();
+
+  co_nmt_on_tpdo_event_lock(nmt);
+
+  const errnum_t error_num = ERRNUM_FAULT;
+  set_errnum(error_num);
+
+  co_nmt_on_tpdo_event(nmt, TPDO_NUM);
+
+  CHECK_EQUAL(0, co_nmt_cs_ind(nmt, CO_NMT_CS_STOP));
+
+  co_nmt_on_tpdo_event_unlock(nmt);
+
+  CHECK_EQUAL(error_num, get_errnum());
+  CHECK_EQUAL(0, CanSend::GetNumCalled());
+}
+
+/// \Given a pointer to a started NMT service (co_nmt_t) with a Transmit-PDO
+///        (event driven) configured
+///
+/// \When co_nmt_on_tpdo_event() is called with a PDO number of the
+///       Transmit-PDO, but co_nmt_on_tpdo_event_lock() was called before
+///
+/// \Then nothing is changed; after the service is stopped, started and then
+///       co_nmt_on_tpdo_event_unlock() is called no PDO message is
+///       transmitted; the error number is not changed
+TEST(CO_NmtSrv, CoNmtOnTpdoEvent_StopStart_Unlock) {
+  CreateObj2020PdoMapped();
+  CreateObj1800Defaults(TPDO_NUM, DEV_ID + TPDO_NUM, 0xfeu);
+  CreateObj1a00Defaults(TPDO_NUM);
+  CreateNmtAndReset();
+
+  co_nmt_on_tpdo_event_lock(nmt);
+
+  const errnum_t error_num = ERRNUM_FAULT;
+  set_errnum(error_num);
+
+  co_nmt_on_tpdo_event(nmt, TPDO_NUM);
+
+  CHECK_EQUAL(0, co_nmt_cs_ind(nmt, CO_NMT_CS_STOP));
+  CHECK_EQUAL(0, co_nmt_cs_ind(nmt, CO_NMT_CS_START));
+
+  co_nmt_on_tpdo_event_unlock(nmt);
+
+  CHECK_EQUAL(error_num, get_errnum());
+  CHECK_EQUAL(0, CanSend::GetNumCalled());
+}
+
+///@}
+
+/// @name the NMT Transmit-PDO event indication function
+///@{
+
+/// \Given a pointer to a started NMT service (co_nmt_t) with a Transmit-PDO
+///        (event driven) configured
+///
+/// \When co_dev_tpdo_event() is called for a sub-object mapped into the
+///       Transmit-PDO
+///
+/// \Then the PDO message is transmitted for the configured Transmit-PDO
+TEST(CO_NmtSrv, CoNmtTpdoEventInd_Nominal) {
+  CreateObj2020PdoMapped();
+  CreateObj1800Defaults(TPDO_NUM, DEV_ID + TPDO_NUM, 0xfeu);
+  CreateObj1a00Defaults(TPDO_NUM);
+  CreateNmtAndReset();
+
+  co_dev_tpdo_event(dev, PDO_MAPPED_IDX, PDO_MAPPED_SUBIDX);
+
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
+  CanSend::CheckMsg(
+      DEV_ID + TPDO_NUM, 0,
+      static_cast<uint_least8_t>(co_type_sizeof(PDO_MAPPED_DEFTYPE)), nullptr);
+}
+
+///@}
+
+#endif  // !LELY_NO_CO_TPDO
+
+#if LELY_NO_MALLOC
 
 TEST_GROUP_BASE(CO_NmtSrvAllocation, CO_NmtSrvBase) {
   Allocators::Limited limitedAllocator;
@@ -857,11 +1345,11 @@ TEST_GROUP_BASE(CO_NmtSrvAllocation, CO_NmtSrvBase) {
   }
 };
 
-  /// @name NMT service manager services initialization
+  /// @name the NMT service manager services initialization
   ///@{
 
 #if !LELY_NO_CO_RPDO
-/// \Given a pointer to the network (can_net_t), a pointer to a device with RPDO
+/// \Given a pointer to a network (can_net_t), a pointer to a device with RPDO
 ///        service(s) configured; the allocator has not enough memory for an
 ///        array of pointers to RPDO services
 ///
@@ -885,7 +1373,7 @@ TEST(CO_NmtSrvAllocation, CoNmtSrvInit_FailRpdoServiceArrayAllocation) {
   ExpectNmtCreateFailure();
 }
 
-/// \Given a pointer to the network (can_net_t), a pointer to a device with RPDO
+/// \Given a pointer to a network (can_net_t), a pointer to a device with RPDO
 ///        service(s) configured; the allocator has not enough memory for RPDO
 ///        services
 ///
@@ -914,7 +1402,7 @@ TEST(CO_NmtSrvAllocation, CoNmtSrvInit_FailRpdoServiceInstanceAllocation) {
 #endif  // !LELY_NO_CO_RPDO
 
 #if !LELY_NO_CO_TPDO
-/// \Given a pointer to the network (can_net_t), a pointer to a device with TPDO
+/// \Given a pointer to a network (can_net_t), a pointer to a device with TPDO
 ///        service(s) configured; the allocator has not enough memory for an
 ///        array of pointers to TPDO services
 ///
@@ -938,7 +1426,7 @@ TEST(CO_NmtSrvAllocation, CoNmtSrvInit_FailTpdoServiceArrayAllocation) {
   ExpectNmtCreateFailure();
 }
 
-/// \Given a pointer to the network (can_net_t), a pointer to a device with TPDO
+/// \Given a pointer to a network (can_net_t), a pointer to a device with TPDO
 ///        service(s) configured; the allocator has not enough memory for TPDO
 ///        services
 ///
@@ -968,9 +1456,9 @@ TEST(CO_NmtSrvAllocation, CoNmtSrvInit_FailTpdoServiceInstanceAllocation) {
 
 #if !LELY_NO_CO_SDO
 
-/// \Given a pointer to the network (can_net_t), a pointer to a device with
-///        Server SDO service(s) configured; the allocator has not enough memory
-///        for an array of pointers to Server SDO services
+/// \Given a pointer to a network (can_net_t), a pointer to a device with
+///        Server-SDO service(s) configured; the allocator has not enough memory
+///        for an array of pointers to Server-SDO services
 ///
 /// \When co_nmt_create() is called with a pointer to the device
 ///
@@ -989,9 +1477,9 @@ TEST(CO_NmtSrvAllocation, CoNmtSrvInit_FailServerSdoServiceArrayAllocation) {
   ExpectNmtCreateFailure();
 }
 
-/// \Given a pointer to the network (can_net_t), a pointer to a device with
-///        Server SDO service(s) configured; the allocator has not enough memory
-///        for Server SDO services
+/// \Given a pointer to a network (can_net_t), a pointer to a device with
+///        Server-SDO service(s) configured; the allocator has not enough memory
+///        for Server-SDO services
 ///
 /// \When co_nmt_create() is called with a pointer to the device
 ///
@@ -1014,9 +1502,9 @@ TEST(CO_NmtSrvAllocation, CoNmtSrvInit_FailServerSdoServiceInstanceAllocation) {
 
 #if !LELY_NO_CO_CSDO
 
-/// \Given a pointer to the network (can_net_t), a pointer to a device with
-///        Client SDO service(s) configured; the allocator has not enough memory
-///        for an array of pointers to Client SDO services
+/// \Given a pointer to a network (can_net_t), a pointer to a device with
+///        Client-SDO service(s) configured; the allocator has not enough memory
+///        for an array of pointers to Client-SDO services
 ///
 /// \When co_nmt_create() is called with a pointer to the device
 ///
@@ -1039,9 +1527,9 @@ TEST(CO_NmtSrvAllocation, CoNmtSrvInit_FailClientSdoServiceArrayAllocation) {
   ExpectNmtCreateFailure();
 }
 
-/// \Given a pointer to the network (can_net_t), a pointer to a device with
-///        Client SDO service(s) configured; the allocator has not enough memory
-///        for Client SDO services
+/// \Given a pointer to a network (can_net_t), a pointer to a device with
+///        Client-SDO service(s) configured; the allocator has not enough memory
+///        for Client-SDO services
 ///
 /// \When co_nmt_create() is called with a pointer to the device
 ///
@@ -1072,7 +1560,7 @@ TEST(CO_NmtSrvAllocation, CoNmtSrvInit_FailClientSdoServiceInstanceAllocation) {
 #endif  // !LELY_NO_CO_SDO
 
 #if !LELY_NO_CO_SYNC
-/// \Given a pointer to the network (can_net_t), a pointer to a device with the
+/// \Given a pointer to a network (can_net_t), a pointer to a device with the
 ///        COB-ID SYNC Message object (0x1005); the allocator has not enough
 ///        memory to create the SYNC service
 ///
@@ -1097,7 +1585,7 @@ TEST(CO_NmtSrvAllocation, CoNmtSrvInit_FailSyncServiceCreation) {
 #endif  // !LELY_NO_CO_SYNC
 
 #if !LELY_NO_CO_EMCY
-/// \Given a pointer to the network (can_net_t), a pointer to a device with the
+/// \Given a pointer to a network (can_net_t), a pointer to a device with the
 ///        Error Register object (0x1001); the allocator has not enough memory
 ///        to create the EMCY service
 ///
@@ -1121,6 +1609,6 @@ TEST(CO_NmtSrvAllocation, CoNmtSrvInit_FailEmcyServiceCreation) {
 }
 #endif  // !LELY_NO_CO_EMCY
 
-#endif  // LELY_NO_MALLOC
-
 ///@}
+
+#endif  // LELY_NO_MALLOC

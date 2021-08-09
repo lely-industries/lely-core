@@ -649,6 +649,21 @@ TEST(CO_Tpdo, CoTpdoSetSampleInd) {
 /// @name co_tpdo_event()
 ///@{
 
+TEST(CO_Tpdo, CoTpdoEvent_Stopped) {
+  SetComm00HighestSubidxSupported(0x02u);
+  SetComm01CobId(DEV_ID);
+  SetComm02TransmissionType(0x00u);
+
+  CreateTpdo();
+  co_tpdo_stop(tpdo);
+
+  const auto ret = co_tpdo_event(tpdo);
+
+  CHECK_EQUAL(0, ret);
+  CHECK(!CoTpdoInd::called);
+  CHECK_EQUAL(0, CanSend::GetNumCalled());
+}
+
 TEST(CO_Tpdo, CoTpdoEvent_InvalidCobId) {
   SetComm00HighestSubidxSupported(0x02u);
   SetComm01CobId(DEV_ID | CO_PDO_COBID_VALID);
