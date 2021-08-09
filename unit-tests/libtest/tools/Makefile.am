@@ -14,9 +14,12 @@ liblely_unit_test_src += co-csdo-up-con.cpp
 liblely_unit_test_src += co-nmt-cs-ind.cpp
 liblely_unit_test_src += co-nmt-hb-ind.cpp
 liblely_unit_test_src += co-nmt-st-ind.cpp
+liblely_unit_test_src += co-nmt-sync-ind.cpp
 liblely_unit_test_src += co-nmt-rdn-ind.cpp
+liblely_unit_test_src += co-rpdo-ind.cpp
 liblely_unit_test_src += co-sub-dn-ind.cpp
 liblely_unit_test_src += co-sub-up-ind.cpp
+liblely_unit_test_src += co-tpdo-sample-ind.cpp
 liblely_unit_test_src += sdo-init-expected-data.cpp
 liblely_unit_test_src += sdo-create-message.cpp
 

@@ -1445,8 +1445,8 @@ co_nmt_on_tpdo_event_unlock(co_nmt_t *nmt)
 					continue;
 				nmt->tpdo_event_mask[i] &= ~(1uL << j);
 				co_tpdo_t *pdo = co_nmt_get_tpdo(nmt, n);
-				if (pdo)
-					co_tpdo_event(pdo);
+				assert(pdo);
+				co_tpdo_event(pdo);
 			}
 			nmt->tpdo_event_mask[i] = 0;
 		}

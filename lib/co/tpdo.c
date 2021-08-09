@@ -404,6 +404,9 @@ co_tpdo_event(co_tpdo_t *pdo)
 {
 	assert(pdo);
 
+	if (pdo->stopped)
+		return 0;
+
 	// Check whether the PDO exists and is valid.
 	if (pdo->comm.cobid & CO_PDO_COBID_VALID)
 		return 0;
