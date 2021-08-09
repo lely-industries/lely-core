@@ -381,8 +381,8 @@ rbnode_is_red(const struct rbnode *node)
 static inline void
 rbnode_mark_red(struct rbnode *node)
 {
-	if (node)
-		node->parent |= (uintptr_t)1;
+	assert(node);
+	node->parent |= (uintptr_t)1;
 }
 
 static inline void
