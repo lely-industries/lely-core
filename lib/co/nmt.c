@@ -276,7 +276,7 @@ struct co_nmt {
 	 * A flag indicating if the startup procedure was halted because of a
 	 * mandatory slave boot failure.
 	 */
-	int halt;
+	bool halt;
 	/// An array containing the state of each NMT slave.
 	struct co_nmt_slave slaves[CO_NUM_NODES];
 	/**
@@ -3117,7 +3117,7 @@ co_nmt_reset_node_on_enter(co_nmt_t *nmt)
 #if !LELY_NO_CO_MASTER
 	// Disable NMT slave management.
 	co_nmt_slaves_fini(nmt);
-	nmt->halt = 0;
+	nmt->halt = false;
 #endif
 
 	// Disable all services.
@@ -3162,7 +3162,7 @@ co_nmt_reset_comm_on_enter(co_nmt_t *nmt)
 #if !LELY_NO_CO_MASTER
 	// Disable NMT slave management.
 	co_nmt_slaves_fini(nmt);
-	nmt->halt = 0;
+	nmt->halt = false;
 #endif
 
 	// Disable all services.
@@ -3299,7 +3299,7 @@ co_nmt_preop_on_enter(co_nmt_t *nmt)
 #if !LELY_NO_CO_MASTER
 	// Disable NMT slave management.
 	co_nmt_slaves_fini(nmt);
-	nmt->halt = 0;
+	nmt->halt = false;
 #endif
 
 	// Enable all services except PDO.
@@ -3341,10 +3341,10 @@ co_nmt_preop_on_boot(
 	// If the 'boot slave' process failed for a mandatory slave, halt the
 	// network boot-up procedure.
 	if ((nmt->slaves[id - 1].assignment & 0x09) == 0x09 && es && es != 'L')
-		nmt->halt = 1;
+		nmt->halt = true;
 
 	// Wait for any mandatory slaves that have not yet finished booting.
-	int wait = nmt->halt;
+	bool wait = nmt->halt;
 	for (co_unsigned8_t id = 1; !wait && id <= CO_NUM_NODES; id++)
 		wait = (nmt->slaves[id - 1].assignment & 0x09) == 0x09
 				&& nmt->slaves[id - 1].boot;
@@ -3522,7 +3522,7 @@ co_nmt_startup_master(co_nmt_t *nmt)
 	case -1:
 		// Halt the network boot-up procedure if the 'boot slave'
 		// process failed for a mandatory slave.
-		nmt->halt = 1;
+		nmt->halt = true;
 		return NULL;
 	case 0: return co_nmt_startup_slave(nmt);
 	default:
@@ -4235,7 +4235,7 @@ co_nmt_init(co_nmt_t *nmt, can_net_t *net, co_dev_t *dev)
 	nmt->lss_data = NULL;
 #endif
 
-	nmt->halt = 0;
+	nmt->halt = false;
 
 	for (co_unsigned8_t id = 1; id <= CO_NUM_NODES; id++) {
 		struct co_nmt_slave *slave = &nmt->slaves[id - 1];
