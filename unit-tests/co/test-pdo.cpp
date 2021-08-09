@@ -123,7 +123,7 @@ TEST(CO_Pdo, CoDevChkRpdo_NoAccessRpdo) {
                               co_unsigned8_t{0x00u});
   co_sub_t* const sub = obj_default.GetLastSub();
   CHECK_EQUAL(0, co_sub_set_access(sub, CO_ACCESS_RWR));
-  co_sub_set_pdo_mapping(sub, 1);
+  co_sub_set_pdo_mapping(sub, true);
   CHECK_EQUAL(0, co_dev_insert_obj(dev, obj_default.Take()));
 
   const auto ret = co_dev_chk_rpdo(dev, DEFAULT_OBJ_IDX, 0x00u);
@@ -138,7 +138,7 @@ TEST(CO_Pdo, CoDevChkRpdo_PdoMappingFalse) {
                               co_unsigned8_t{0x00u});
   co_sub_t* const sub = obj_default.GetLastSub();
   CHECK_EQUAL(0, co_sub_set_access(sub, CO_ACCESS_WO));
-  co_sub_set_pdo_mapping(sub, 0);
+  co_sub_set_pdo_mapping(sub, false);
   CHECK_EQUAL(0, co_dev_insert_obj(dev, obj_default.Take()));
 
   const auto ret = co_dev_chk_rpdo(dev, DEFAULT_OBJ_IDX, 0x00u);
@@ -163,7 +163,7 @@ TEST(CO_Pdo, CoDevChkRpdo) {
                               co_unsigned8_t{0x00u});
   co_sub_t* const sub = obj_default.GetLastSub();
   CHECK_EQUAL(0, co_sub_set_access(sub, CO_ACCESS_WO));
-  co_sub_set_pdo_mapping(sub, 1);
+  co_sub_set_pdo_mapping(sub, true);
   CHECK_EQUAL(0, co_dev_insert_obj(dev, obj_default.Take()));
 
   const auto ret = co_dev_chk_rpdo(dev, DEFAULT_OBJ_IDX, 0x00u);
@@ -914,7 +914,7 @@ TEST(CO_Pdo, CoDevChkTpdo_NoTPDOAccess) {
   co_sub_t* const sub = obj_default.GetLastSub();
   CHECK_EQUAL(0, co_dev_insert_obj(dev, obj_default.Take()));
   CHECK_EQUAL(0, co_sub_set_access(sub, CO_ACCESS_RWW));
-  co_sub_set_pdo_mapping(sub, 1);
+  co_sub_set_pdo_mapping(sub, true);
 
   const auto ret = co_dev_chk_tpdo(dev, DEFAULT_OBJ_IDX, 0x00u);
 
@@ -929,7 +929,7 @@ TEST(CO_Pdo, CoDevChkTpdo) {
   co_sub_t* const sub = obj_default.GetLastSub();
   CHECK_EQUAL(0, co_dev_insert_obj(dev, obj_default.Take()));
   CHECK_EQUAL(0, co_sub_set_access(sub, CO_ACCESS_RWR));
-  co_sub_set_pdo_mapping(sub, 1);
+  co_sub_set_pdo_mapping(sub, true);
 
   const auto ret = co_dev_chk_tpdo(dev, DEFAULT_OBJ_IDX, 0x00u);
 
@@ -1406,7 +1406,7 @@ TEST(CoPdo_CoPdoDn, DownloadIndicatorReturnsError) {
   obj0000.InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t{0x00u});
   co_sub_t* const sub0000_0 = obj0000.GetLastSub();
   CHECK_EQUAL(0, co_sub_set_access(sub0000_0, CO_ACCESS_RW));
-  co_sub_set_pdo_mapping(sub0000_0, 1);
+  co_sub_set_pdo_mapping(sub0000_0, true);
   co_sub_set_dn_ind(sub0000_0, &co_sub_dn_ind_error, nullptr);
   CHECK_EQUAL(0, co_dev_insert_obj(dev, obj0000.Take()));
 
@@ -1443,7 +1443,7 @@ TEST(CoPdo_CoPdoDn, Nominal) {
   obj0000.InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t{0x00u});
   co_sub_t* const sub0000_0 = obj0000.GetLastSub();
   CHECK_EQUAL(0, co_sub_set_access(sub0000_0, CO_ACCESS_RW));
-  co_sub_set_pdo_mapping(sub0000_0, 1);
+  co_sub_set_pdo_mapping(sub0000_0, true);
   co_sub_set_dn_ind(sub0000_0, &co_sub_dn_ind_ok, nullptr);
   CHECK_EQUAL(0, co_dev_insert_obj(dev, obj0000.Take()));
 
@@ -1536,7 +1536,7 @@ TEST(CoPdo_CoPdoUp, NotReqFirst) {
   obj0000.InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t{0x00u});
   co_sub_t* const sub = obj0000.GetLastSub();
   CHECK_EQUAL(0, co_sub_set_access(sub, CO_ACCESS_RO));
-  co_sub_set_pdo_mapping(sub, 1);
+  co_sub_set_pdo_mapping(sub, true);
   co_sub_set_up_ind(sub, &sub_ind_not_req_first, nullptr);
   CHECK_EQUAL(0, co_dev_insert_obj(dev, obj0000.Take()));
 
@@ -1556,7 +1556,7 @@ TEST(CoPdo_CoPdoUp, NotReqLast) {
   obj0000.InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t{0x00u});
   co_sub_t* const sub = obj0000.GetLastSub();
   CHECK_EQUAL(0, co_sub_set_access(sub, CO_ACCESS_RO));
-  co_sub_set_pdo_mapping(sub, 1);
+  co_sub_set_pdo_mapping(sub, true);
   co_sub_set_up_ind(sub, &sub_ind_not_req_last, nullptr);
   CHECK_EQUAL(0, co_dev_insert_obj(dev, obj0000.Take()));
 
@@ -1576,7 +1576,7 @@ TEST(CoPdo_CoPdoUp, ReqLast) {
   obj0000.InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t{0x00u});
   co_sub_t* const sub = obj0000.GetLastSub();
   CHECK_EQUAL(0, co_sub_set_access(sub, CO_ACCESS_RO));
-  co_sub_set_pdo_mapping(sub, 1);
+  co_sub_set_pdo_mapping(sub, true);
   co_sub_set_up_ind(sub, &sub_ind_req_last, nullptr);
   CHECK_EQUAL(0, co_dev_insert_obj(dev, obj0000.Take()));
 
@@ -1596,7 +1596,7 @@ TEST(CoPdo_CoPdoUp, IndError) {
   obj0000.InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t{0x00u});
   co_sub_t* const sub = obj0000.GetLastSub();
   CHECK_EQUAL(0, co_sub_set_access(sub, CO_ACCESS_RO));
-  co_sub_set_pdo_mapping(sub, 1);
+  co_sub_set_pdo_mapping(sub, true);
   co_sub_set_up_ind(sub, &sub_ind_req_error, nullptr);
   CHECK_EQUAL(0, co_dev_insert_obj(dev, obj0000.Take()));
 
@@ -1626,7 +1626,7 @@ TEST(CoPdo_CoPdoUp, MapIsOneObjAndSubAsPDO) {
   obj0000.InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t{0x00u});
   co_sub_t* const sub = obj0000.GetLastSub();
   CHECK_EQUAL(0, co_sub_set_access(sub, CO_ACCESS_RO));
-  co_sub_set_pdo_mapping(sub, 1);
+  co_sub_set_pdo_mapping(sub, true);
   CHECK_EQUAL(0, co_dev_insert_obj(dev, obj0000.Take()));
 
   const auto ret = co_pdo_up(&par, dev, &req, buf, &n);
@@ -1645,7 +1645,7 @@ TEST(CoPdo_CoPdoUp, BufNull) {
   obj0000.InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t{0x00u});
   co_sub_t* const sub = obj0000.GetLastSub();
   CHECK_EQUAL(0, co_sub_set_access(sub, CO_ACCESS_RO));
-  co_sub_set_pdo_mapping(sub, 1);
+  co_sub_set_pdo_mapping(sub, true);
   CHECK_EQUAL(0, co_dev_insert_obj(dev, obj0000.Take()));
 
   const auto ret = co_pdo_up(&par, dev, &req, nullptr, &n);
@@ -1663,7 +1663,7 @@ TEST(CoPdo_CoPdoUp, PnNull) {
   obj0000.InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t{0x00u});
   co_sub_t* const sub = obj0000.GetLastSub();
   CHECK_EQUAL(0, co_sub_set_access(sub, CO_ACCESS_RO));
-  co_sub_set_pdo_mapping(sub, 1);
+  co_sub_set_pdo_mapping(sub, true);
   CHECK_EQUAL(0, co_dev_insert_obj(dev, obj0000.Take()));
 
   const auto ret = co_pdo_up(&par, dev, &req, buf, nullptr);
@@ -1681,7 +1681,7 @@ TEST(CoPdo_CoPdoUp, Nominal) {
   CHECK(obj0000.Get() != nullptr);
   obj0000.InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t{0x03u});
   co_sub_t* const sub = obj0000.GetLastSub();
-  co_sub_set_pdo_mapping(sub, 1);
+  co_sub_set_pdo_mapping(sub, true);
   obj0000.InsertAndSetSub(0x01u, CO_DEFTYPE_UNSIGNED16,
                           co_unsigned16_t{0xbbddu});
   CHECK_EQUAL(0, co_dev_insert_obj(dev, obj0000.Take()));

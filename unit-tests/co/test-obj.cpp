@@ -2153,7 +2153,7 @@ TEST(CO_Sub, CoSubSetAccess_Invalid) {
 ///
 /// \Then PDO mapping of the sub-object is enabled
 TEST(CO_Sub, CoSubSetPdoMapping_Nominal) {
-  co_sub_set_pdo_mapping(sub, 1u);
+  co_sub_set_pdo_mapping(sub, true);
 
   CHECK_EQUAL(true, co_sub_get_pdo_mapping(sub));
 }
