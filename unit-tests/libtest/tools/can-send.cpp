@@ -80,10 +80,10 @@ void
 CanSend::CheckMsg(const can_msg& expected_msg) {
   CHECK_COMPARE(num_called, >, 0);
 
-  CHECK_EQUAL(msg.id, expected_msg.id);
-  CHECK_EQUAL(msg.flags, expected_msg.flags);
-  CHECK_EQUAL(msg.len, expected_msg.len);
-  MEMCMP_EQUAL(msg.data, expected_msg.data, expected_msg.len);
+  CHECK_EQUAL(expected_msg.id, msg.id);
+  CHECK_EQUAL(expected_msg.flags, msg.flags);
+  CHECK_EQUAL(expected_msg.len, msg.len);
+  MEMCMP_EQUAL(expected_msg.data, msg.data, msg.len);
 }
 
 void

@@ -219,6 +219,27 @@ SdoCreateMsg::BlkUpIniReq(const co_unsigned16_t idx,
 }
 
 can_msg
+SdoCreateMsg::BlkUpReq(const uint_least32_t recipient_id,
+                       const co_unsigned8_t cs_flags) {
+  can_msg msg = SdoCreateMsg::Default(0, 0, recipient_id);
+  msg.data[0] = CO_SDO_CCS_BLK_UP_REQ | cs_flags;
+
+  return msg;
+}
+
+can_msg
+SdoCreateMsg::BlkUpRes(const uint_least32_t recipient_id,
+                       const co_unsigned8_t size,
+                       const co_unsigned8_t cs_flags) {
+  auto msg = SdoCreateMsg::Default(0, 0, recipient_id);
+  msg.data[0] = CO_SDO_SCS_BLK_UP_RES;
+  msg.data[0] |= cs_flags;
+  msg.data[0] |= CO_SDO_BLK_SIZE_SET(size);
+
+  return msg;
+}
+
+can_msg
 SdoCreateMsg::BlkUpIniRes(const co_unsigned16_t idx,
                           const co_unsigned8_t subidx,
                           const uint_least32_t recipient_id,
