@@ -205,7 +205,7 @@ co_nmt_rdn_slave_missed_hb(co_nmt_rdn_t *rdn)
 			CO_NMT_RDN_TTOGGLE_SUBIDX);
 	assert(ttoggle != 0);
 
-	const int timeout = rdn->master_ms
+	const int_least32_t timeout = (int_least32_t)rdn->master_ms
 			* (ttoggle - 1u); // the first HB interval already passed
 	can_timer_timeout(rdn->bus_toggle_timer, rdn->net, timeout);
 }
