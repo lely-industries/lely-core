@@ -829,7 +829,7 @@ int co_nmt_set_active_bus(co_nmt_t *nmt, uint_least8_t bus_id);
  *
  * @see co_nmt_set_timeout()
  */
-int co_nmt_get_timeout(const co_nmt_t *nmt);
+int_least32_t co_nmt_get_timeout(const co_nmt_t *nmt);
 
 /**
  * Sets the default SDO timeout used during the NMT 'boot slave' and

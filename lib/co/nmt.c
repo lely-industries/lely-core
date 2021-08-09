@@ -1557,7 +1557,7 @@ co_nmt_set_active_bus(co_nmt_t *nmt, const uint_least8_t bus_id)
 	return 0;
 }
 
-int
+int_least32_t
 co_nmt_get_timeout(const co_nmt_t *nmt)
 {
 	assert(nmt);
