@@ -26,6 +26,8 @@
 #include <lely/util/bits.h>
 #include <lely/util/float.h>
 
+#include <stddef.h>
+
 #if !LELY_NO_HOSTED && defined(__linux__)
 #include <endian.h>
 #define betoh16 be16toh
@@ -312,8 +314,8 @@ LELY_UTIL_ENDIAN_INLINE flt64_t ldle_flt64(const uint_least8_t src[8]);
  * @param srcbit the source offset (in bits) with respect to <b>src</b>.
  * @param n      the number of bits to copy.
  */
-void bcpybe(uint_least8_t *dst, int dstbit, const uint_least8_t *src,
-		int srcbit, size_t n);
+void bcpybe(uint_least8_t *dst, ptrdiff_t dstbit, const uint_least8_t *src,
+		ptrdiff_t srcbit, size_t n);
 
 /**
  * Copies <b>n</b> bits from a source to a destination buffer. The buffers MUST
@@ -327,8 +329,8 @@ void bcpybe(uint_least8_t *dst, int dstbit, const uint_least8_t *src,
  * @param srcbit the source offset (in bits) with respect to <b>src</b>.
  * @param n      the number of bits to copy.
  */
-void bcpyle(uint_least8_t *dst, int dstbit, const uint_least8_t *src,
-		int srcbit, size_t n);
+void bcpyle(uint_least8_t *dst, ptrdiff_t dstbit, const uint_least8_t *src,
+		ptrdiff_t srcbit, size_t n);
 
 #ifndef htobe16
 LELY_UTIL_ENDIAN_INLINE uint_least16_t

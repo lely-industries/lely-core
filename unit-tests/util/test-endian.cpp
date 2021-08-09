@@ -59,8 +59,8 @@ TEST_GROUP(Util_Endian_Bcpy) {
 ///
 /// \Then nothing is changed
 TEST(Util_Endian_Bcpy, Bcpybe_CopyZero) {
-  const int dstbit = 0;
-  const int srcbit = 0;
+  const ptrdiff_t dstbit = 0;
+  const ptrdiff_t srcbit = 0;
   const size_t n = 0u;
 
   bcpybe(dst, dstbit, src, srcbit, n);
@@ -77,8 +77,8 @@ TEST(Util_Endian_Bcpy, Bcpybe_CopyZero) {
 ///
 /// \Then requested bits are copied from source to destination buffer
 TEST(Util_Endian_Bcpy, Bcpybe_DstbitPlusNMoreThan8) {
-  const int dstbit = 3;
-  const int srcbit = 2;
+  const ptrdiff_t dstbit = 3;
+  const ptrdiff_t srcbit = 2;
   const size_t n = 6u;
 
   bcpybe(dst, dstbit, src, srcbit, n);
@@ -95,8 +95,8 @@ TEST(Util_Endian_Bcpy, Bcpybe_DstbitPlusNMoreThan8) {
 ///
 /// \Then requested bits are copied from source to destination buffer
 TEST(Util_Endian_Bcpy, Bcpybe_LastIsZero) {
-  const int dstbit = 3;
-  const int srcbit = 2;
+  const ptrdiff_t dstbit = 3;
+  const ptrdiff_t srcbit = 2;
   const size_t n = 5u;
 
   bcpybe(dst, dstbit, src, srcbit, n);
@@ -117,8 +117,8 @@ TEST(Util_Endian_Bcpy, Bcpybe_LastIsZero) {
 ///
 /// \Then requested bits are copied from source to destination buffer
 TEST(Util_Endian_Bcpy, Bcpyle_LastIsZero) {
-  const int dstbit = 3;
-  const int srcbit = 2;
+  const ptrdiff_t dstbit = 3;
+  const ptrdiff_t srcbit = 2;
   const size_t n = 5u;
 
   bcpyle(dst, dstbit, src, srcbit, n);
@@ -134,8 +134,8 @@ TEST(Util_Endian_Bcpy, Bcpyle_LastIsZero) {
 ///
 /// \Then requested bits are copied from source to destination buffer
 TEST(Util_Endian_Bcpy, Bcpyle_NoShiftDstbitPlusNMoreThan8) {
-  const int dstbit = 2;
-  const int srcbit = 2;
+  const ptrdiff_t dstbit = 2;
+  const ptrdiff_t srcbit = 2;
   const size_t n = 17u;
 
   bcpyle(dst, dstbit, src, srcbit, n);
@@ -153,8 +153,8 @@ TEST(Util_Endian_Bcpy, Bcpyle_NoShiftDstbitPlusNMoreThan8) {
 ///
 /// \Then requested bits are copied from source to destination buffer
 TEST(Util_Endian_Bcpy, Bcpyle_NoShiftDstbitPlusNMoreThan8LastZero) {
-  const int dstbit = 2;
-  const int srcbit = 2;
+  const ptrdiff_t dstbit = 2;
+  const ptrdiff_t srcbit = 2;
   const size_t n = 22u;
 
   bcpyle(dst, dstbit, src, srcbit, n);
@@ -172,8 +172,8 @@ TEST(Util_Endian_Bcpy, Bcpyle_NoShiftDstbitPlusNMoreThan8LastZero) {
 ///
 /// \Then requested single bit is copied from source to destination buffer
 TEST(Util_Endian_Bcpy, Bcpyle_NoShiftDstbitPlusNLessThan8LastNotZero) {
-  const int dstbit = 6;
-  const int srcbit = 6;
+  const ptrdiff_t dstbit = 6;
+  const ptrdiff_t srcbit = 6;
   const size_t n = 1u;
 
   dst[0] = 0xbfu;
@@ -190,8 +190,8 @@ TEST(Util_Endian_Bcpy, Bcpyle_NoShiftDstbitPlusNLessThan8LastNotZero) {
 ///
 /// \Then requested bits are copied from source to destination buffer
 TEST(Util_Endian_Bcpy, Bcpyle_CopyAll) {
-  const int dstbit = 0;
-  const int srcbit = 0;
+  const ptrdiff_t dstbit = 0;
+  const ptrdiff_t srcbit = 0;
   const size_t n = 8u;
 
   bcpyle(dst, dstbit, src, srcbit, n);
@@ -220,8 +220,8 @@ TEST_GROUP(Util_Endian_BcpyOutOfRange) {
 ///
 /// \Then requested bits are copied from source to destination buffer
 TEST(Util_Endian_BcpyOutOfRange, Bcpybe_DstbitIsZeroCopyMoreThan8) {
-  const int dstbit = 0;
-  const int srcbit = 0;
+  const ptrdiff_t dstbit = 0;
+  const ptrdiff_t srcbit = 0;
   const size_t n = 9u;
 
   bcpybe(dst, dstbit, src, srcbit, n);
@@ -240,8 +240,8 @@ TEST(Util_Endian_BcpyOutOfRange, Bcpybe_DstbitIsZeroCopyMoreThan8) {
 ///
 /// \Then requested bits are copied from source to destination buffer
 TEST(Util_Endian_BcpyOutOfRange, Bcpybe_PositiveShiftSrcbitPlusNMoreThan8) {
-  const int dstbit = 3;
-  const int srcbit = 4;
+  const ptrdiff_t dstbit = 3;
+  const ptrdiff_t srcbit = 4;
   const size_t n = 5u;
 
   bcpybe(dst, dstbit, src, srcbit, n);
@@ -260,8 +260,8 @@ TEST(Util_Endian_BcpyOutOfRange, Bcpybe_PositiveShiftSrcbitPlusNMoreThan8) {
 ///
 /// \Then requested bits are copied from source to destination buffer
 TEST(Util_Endian_BcpyOutOfRange, Bcpybe_NegativeShiftSrcbitPlusNMoreThan8) {
-  const int dstbit = 1;
-  const int srcbit = 2;
+  const ptrdiff_t dstbit = 1;
+  const ptrdiff_t srcbit = 2;
   const size_t n = 7u;
 
   bcpybe(dst, dstbit, src, srcbit, n);
@@ -279,8 +279,8 @@ TEST(Util_Endian_BcpyOutOfRange, Bcpybe_NegativeShiftSrcbitPlusNMoreThan8) {
 ///
 /// \Then requested bits are copied from source to destination buffer
 TEST(Util_Endian_BcpyOutOfRange, Bcpybe_NegativeShiftDstbitPlusNMoreThan8) {
-  const int dstbit = 2;
-  const int srcbit = 3;
+  const ptrdiff_t dstbit = 2;
+  const ptrdiff_t srcbit = 3;
   const size_t n = 17u;
 
   bcpybe(dst, dstbit, src, srcbit, n);
@@ -300,8 +300,8 @@ TEST(Util_Endian_BcpyOutOfRange, Bcpybe_NegativeShiftDstbitPlusNMoreThan8) {
 /// \Then requested bits are copied from source to destination buffer
 TEST(Util_Endian_BcpyOutOfRange,
      Bcpybe_NegativeShiftDstbitPlusNMoreThan8LastIsZero) {
-  const int dstbit = 2;
-  const int srcbit = 3;
+  const ptrdiff_t dstbit = 2;
+  const ptrdiff_t srcbit = 3;
   const size_t n = 22u;
 
   bcpybe(dst, dstbit, src, srcbit, n);
@@ -320,8 +320,8 @@ TEST(Util_Endian_BcpyOutOfRange,
 ///
 /// \Then requested bits are copied from source to destination buffer
 TEST(Util_Endian_BcpyOutOfRange, Bcpybe_NoShiftDstbitPlusNMoreThan8) {
-  const int dstbit = 2;
-  const int srcbit = 2;
+  const ptrdiff_t dstbit = 2;
+  const ptrdiff_t srcbit = 2;
   const size_t n = 17u;
 
   bcpybe(dst, dstbit, src, srcbit, n);
@@ -340,8 +340,8 @@ TEST(Util_Endian_BcpyOutOfRange, Bcpybe_NoShiftDstbitPlusNMoreThan8) {
 ///
 /// \Then requested bits are copied from source to destination buffer
 TEST(Util_Endian_BcpyOutOfRange, Bcpybe_NoShiftDstbitPlusNMoreThan8LastZero) {
-  const int dstbit = 2;
-  const int srcbit = 2;
+  const ptrdiff_t dstbit = 2;
+  const ptrdiff_t srcbit = 2;
   const size_t n = 22u;
 
   bcpybe(dst, dstbit, src, srcbit, n);
@@ -361,8 +361,8 @@ TEST(Util_Endian_BcpyOutOfRange, Bcpybe_NoShiftDstbitPlusNMoreThan8LastZero) {
 /// \Then requested single bit is copied from source to destination buffer
 TEST(Util_Endian_BcpyOutOfRange,
      Bcpybe_NoShiftDstbitPlusNLessThan8LastNotZero) {
-  const int dstbit = 6;
-  const int srcbit = 6;
+  const ptrdiff_t dstbit = 6;
+  const ptrdiff_t srcbit = 6;
   const size_t n = 1u;
 
   bcpybe(dst, dstbit, src, srcbit, n);
@@ -379,8 +379,8 @@ TEST(Util_Endian_BcpyOutOfRange,
 ///
 /// \Then requested bits are copied from source to destination buffer
 TEST(Util_Endian_BcpyOutOfRange, Bcpybe_CopyAll) {
-  const int dstbit = 0;
-  const int srcbit = 0;
+  const ptrdiff_t dstbit = 0;
+  const ptrdiff_t srcbit = 0;
   const size_t n = 8u;
 
   bcpybe(dst, dstbit, src, srcbit, n);
@@ -403,8 +403,8 @@ TEST(Util_Endian_BcpyOutOfRange, Bcpybe_CopyAll) {
 ///
 /// \Then requested bits are copied from source to destination buffer
 TEST(Util_Endian_BcpyOutOfRange, Bcpyle_DstbitIsZeroCopyMoreThan8) {
-  const int dstbit = 0;
-  const int srcbit = 0;
+  const ptrdiff_t dstbit = 0;
+  const ptrdiff_t srcbit = 0;
   const size_t n = 9u;
 
   bcpyle(dst, dstbit, src, srcbit, n);
@@ -423,8 +423,8 @@ TEST(Util_Endian_BcpyOutOfRange, Bcpyle_DstbitIsZeroCopyMoreThan8) {
 ///
 /// \Then requested bits are copied from source to destination buffer
 TEST(Util_Endian_BcpyOutOfRange, Bcpyle_PositiveShift) {
-  const int dstbit = 3;
-  const int srcbit = 4;
+  const ptrdiff_t dstbit = 3;
+  const ptrdiff_t srcbit = 4;
   const size_t n = 5u;
 
   bcpyle(dst, dstbit, src, srcbit, n);
@@ -443,8 +443,8 @@ TEST(Util_Endian_BcpyOutOfRange, Bcpyle_PositiveShift) {
 ///
 /// \Then requested bits are copied from source to destination buffer
 TEST(Util_Endian_BcpyOutOfRange, Bcpyle_NegativeShiftSrcbitPlusNMoreThan8) {
-  const int dstbit = 1;
-  const int srcbit = 2;
+  const ptrdiff_t dstbit = 1;
+  const ptrdiff_t srcbit = 2;
   const size_t n = 7u;
 
   bcpyle(dst, dstbit, src, srcbit, n);
@@ -462,8 +462,8 @@ TEST(Util_Endian_BcpyOutOfRange, Bcpyle_NegativeShiftSrcbitPlusNMoreThan8) {
 ///
 /// \Then requested bits are copied from source to destination buffer
 TEST(Util_Endian_BcpyOutOfRange, Bcpyle_NegativeShiftDstbitPlusNMoreThan8) {
-  const int dstbit = 2;
-  const int srcbit = 3;
+  const ptrdiff_t dstbit = 2;
+  const ptrdiff_t srcbit = 3;
   const size_t n = 17u;
 
   bcpyle(dst, dstbit, src, srcbit, n);
@@ -484,8 +484,8 @@ TEST(Util_Endian_BcpyOutOfRange, Bcpyle_NegativeShiftDstbitPlusNMoreThan8) {
 /// \Then requested bits are copied from source to destination buffer
 TEST(Util_Endian_BcpyOutOfRange,
      Bcpyle_NegativeShiftDstbitPlusNMoreThan8LastIsZero) {
-  const int dstbit = 2;
-  const int srcbit = 3;
+  const ptrdiff_t dstbit = 2;
+  const ptrdiff_t srcbit = 3;
   const size_t n = 22u;
 
   bcpyle(dst, dstbit, src, srcbit, n);
@@ -504,8 +504,8 @@ TEST(Util_Endian_BcpyOutOfRange,
 ///
 /// \Then nothing is changed
 TEST(Util_Endian_BcpyOutOfRange, Bcpyle_CopyZero) {
-  const int dstbit = 0;
-  const int srcbit = 0;
+  const ptrdiff_t dstbit = 0;
+  const ptrdiff_t srcbit = 0;
   const size_t n = 0u;
 
   bcpyle(dst, dstbit, src, srcbit, n);
@@ -523,8 +523,8 @@ TEST(Util_Endian_BcpyOutOfRange, Bcpyle_CopyZero) {
 ///
 /// \Then requested bits are copied from source to destination buffer
 TEST(Util_Endian_BcpyOutOfRange, Bcpyle_DstbitPlusNMoreThan8) {
-  const int dstbit = 3;
-  const int srcbit = 2;
+  const ptrdiff_t dstbit = 3;
+  const ptrdiff_t srcbit = 2;
   const size_t n = 6u;
 
   bcpyle(dst, dstbit, src, srcbit, n);
@@ -547,8 +547,8 @@ TEST(Util_Endian_BcpyOutOfRange, Bcpyle_DstbitPlusNMoreThan8) {
 ///
 /// \Then requested bits are copied from source to destination buffer
 TEST(Util_Endian_BcpyOutOfRange, Bcpybe_OffsetsLowerThan0) {
-  const int dstbit = -1;
-  const int srcbit = -1;
+  const ptrdiff_t dstbit = -1;
+  const ptrdiff_t srcbit = -1;
   const size_t n = 4u;
 
   bcpybe(dst, dstbit, src, srcbit, n);
@@ -566,8 +566,8 @@ TEST(Util_Endian_BcpyOutOfRange, Bcpybe_OffsetsLowerThan0) {
 ///
 /// \Then requested single bit is copied from source to destination buffer
 TEST(Util_Endian_BcpyOutOfRange, Bcpybe_SrcbitOffsetLowerThan0) {
-  const int dstbit = 0;
-  const int srcbit = -1;
+  const ptrdiff_t dstbit = 0;
+  const ptrdiff_t srcbit = -1;
   const size_t n = 1u;
 
   bcpybe(dst, dstbit, src, srcbit, n);
@@ -589,8 +589,8 @@ TEST(Util_Endian_BcpyOutOfRange, Bcpybe_SrcbitOffsetLowerThan0) {
 ///
 /// \Then requested bits are copied from source to destination buffer
 TEST(Util_Endian_BcpyOutOfRange, Bcpyle_OffsetsLowerThan0) {
-  const int dstbit = -1;
-  const int srcbit = -1;
+  const ptrdiff_t dstbit = -1;
+  const ptrdiff_t srcbit = -1;
   const size_t n = 4u;
 
   bcpyle(dst, dstbit, src, srcbit, n);
@@ -608,8 +608,8 @@ TEST(Util_Endian_BcpyOutOfRange, Bcpyle_OffsetsLowerThan0) {
 ///
 /// \Then requested single bit is copied from source to destination buffer
 TEST(Util_Endian_BcpyOutOfRange, Bcpyle_SrcbitOffsetLowerThan0) {
-  const int dstbit = 0;
-  const int srcbit = -1;
+  const ptrdiff_t dstbit = 0;
+  const ptrdiff_t srcbit = -1;
   const size_t n = 1u;
 
   bcpyle(dst, dstbit, src, srcbit, n);
