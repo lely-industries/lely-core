@@ -1,0 +1,167 @@
+@INCLUDE=Doxyfile
+
+# ----------------------------------------------------------
+# EXCLUDE libs
+# ----------------------------------------------------------
+EXCLUDE_PATTERNS       += */coapp/*
+EXCLUDE_PATTERNS       += */ev/*
+EXCLUDE_PATTERNS       += */io/*
+EXCLUDE_PATTERNS       += */io2/*
+EXCLUDE_PATTERNS       += */tap/*
+EXCLUDE_PATTERNS       += */include/lely/*.hpp
+
+# includes
+EXCLUDE                += @top_srcdir@/include/lely/compat/chrono.hpp
+EXCLUDE                += @top_srcdir@/include/lely/compat/stdio.h
+EXCLUDE                += @top_srcdir@/include/lely/compat/stdlib.h
+EXCLUDE                += @top_srcdir@/include/lely/compat/threads.h
+EXCLUDE                += @top_srcdir@/include/lely/util/bimap.h
+EXCLUDE                += @top_srcdir@/include/lely/util/coroutine.h
+EXCLUDE                += @top_srcdir@/include/lely/util/sllist.h
+EXCLUDE                += @top_srcdir@/include/lely/util/spscring.h
+EXCLUDE                += @top_srcdir@/include/lely/util/bitset.h
+EXCLUDE                += @top_srcdir@/include/lely/util/config.h
+EXCLUDE                += @top_srcdir@/include/lely/util/daemon.h
+EXCLUDE                += @top_srcdir@/include/lely/util/fiber.h
+EXCLUDE                += @top_srcdir@/include/lely/util/frbuf.h
+EXCLUDE                += @top_srcdir@/include/lely/util/fwbuf.h
+EXCLUDE                += @top_srcdir@/include/lely/util/lex.h
+EXCLUDE                += @top_srcdir@/include/lely/util/mkjmp.h
+EXCLUDE                += @top_srcdir@/include/lely/util/print.h
+EXCLUDE                += @top_srcdir@/include/lely/util/stop.h
+EXCLUDE                += @top_srcdir@/include/lely/can/socket.h
+EXCLUDE                += @top_srcdir@/include/lely/can/vci.h
+EXCLUDE                += @top_srcdir@/include/lely/co/dcf.h
+EXCLUDE                += @top_srcdir@/include/lely/co/gw.h
+EXCLUDE                += @top_srcdir@/include/lely/co/gw_txt.h
+EXCLUDE                += @top_srcdir@/include/lely/co/lss.h
+EXCLUDE                += @top_srcdir@/include/lely/co/sdev.h
+EXCLUDE                += @top_srcdir@/include/lely/co/time.h
+EXCLUDE                += @top_srcdir@/include/lely/co/wtm.h
+
+# lib/can
+EXCLUDE                += @top_srcdir@/lib/can/socket.c
+EXCLUDE                += @top_srcdir@/lib/can/vci.c
+
+# lib/compat
+EXCLUDE                += @top_srcdir@/lib/compat/clock.c
+EXCLUDE                += @top_srcdir@/lib/compat/getopt.c
+EXCLUDE                += @top_srcdir@/lib/compat/stdio.c
+EXCLUDE                += @top_srcdir@/lib/compat/stdlib.c
+EXCLUDE                += @top_srcdir@/lib/compat/sleep.c
+EXCLUDE                += @top_srcdir@/lib/compat/threads-pthread.c
+EXCLUDE                += @top_srcdir@/lib/compat/threads-win32.c
+EXCLUDE                += @top_srcdir@/lib/compat/time.c
+
+# lib/co
+EXCLUDE                += @top_srcdir@/lib/co/dcf.c
+EXCLUDE                += @top_srcdir@/lib/co/gw.c
+EXCLUDE                += @top_srcdir@/lib/co/gw_txt.c
+EXCLUDE                += @top_srcdir@/lib/co/lss.c
+EXCLUDE                += @top_srcdir@/lib/co/nmt_boot.c
+EXCLUDE                += @top_srcdir@/lib/co/nmt_boot.h
+EXCLUDE                += @top_srcdir@/lib/co/nmt_cfg.c
+EXCLUDE                += @top_srcdir@/lib/co/nmt_cfg.h
+EXCLUDE                += @top_srcdir@/lib/co/sdev.c
+EXCLUDE                += @top_srcdir@/lib/co/time.c
+EXCLUDE                += @top_srcdir@/lib/co/wtm.c
+
+# lib/util
+EXCLUDE                += @top_srcdir@/lib/util/bimap.c
+EXCLUDE                += @top_srcdir@/lib/util/sllist.c
+EXCLUDE                += @top_srcdir@/lib/util/spscring.c
+EXCLUDE                += @top_srcdir@/lib/util/bitset.c
+EXCLUDE                += @top_srcdir@/lib/util/config.c
+EXCLUDE                += @top_srcdir@/lib/util/config_ini.c
+EXCLUDE                += @top_srcdir@/lib/util/daemon.c
+EXCLUDE                += @top_srcdir@/lib/util/fiber.c
+EXCLUDE                += @top_srcdir@/lib/util/frbuf.c
+EXCLUDE                += @top_srcdir@/lib/util/fwbuf.c
+EXCLUDE                += @top_srcdir@/lib/util/lex.c
+EXCLUDE                += @top_srcdir@/lib/util/mkjmp.c
+EXCLUDE                += @top_srcdir@/lib/util/print.c
+EXCLUDE                += @top_srcdir@/lib/util/stop.c
+
+# unit-tests/util
+EXCLUDE                += @top_srcdir@/unit-tests/util/test-bitset.cpp
+EXCLUDE                += @top_srcdir@/unit-tests/util/test-mutex.cpp
+EXCLUDE                += @top_srcdir@/unit-tests/util/test-sllist.cpp
+EXCLUDE                += @top_srcdir@/unit-tests/util/test-spscring.cpp
+EXCLUDE                += @top_srcdir@/unit-tests/util/test-diag.cpp
+
+# ----------------------------------------------------------
+# Preprocessor
+# ----------------------------------------------------------
+
+PREDEFINED             =
+
+PREDEFINED             += DOXYGEN_SHOULD_SKIP_THIS
+
+PREDEFINED             += __STDC_VERSION__=199901L
+
+PREDEFINED             += __clang__=1
+PREDEFINED             += __clang_major__=6
+PREDEFINED             += __clang_minor__=0
+
+PREDEFINED             += __GNUC__=7
+PREDEFINED             += __GNUC_MINOR__=4
+
+PREDEFINED             += "_Alignas(x)="
+
+PREDEFINED             += "format_printf__(i, j)="
+
+PREDEFINED             += __WORDSIZE=64
+
+PREDEFINED             += LELY_COMPAT_STRINGS_INLINE=inline
+
+PREDEFINED             += LELY_UTIL_BITS_INLINE=inline
+PREDEFINED             += LELY_UTIL_CMP_INLINE=inline
+PREDEFINED             += LELY_UTIL_DIAG_INLINE=inline
+PREDEFINED             += LELY_UTIL_DLLIST_INLINE=inline
+PREDEFINED             += LELY_UTIL_ENDIAN_INLINE=inline
+PREDEFINED             += LELY_UTIL_ERROR_INLINE=inline
+PREDEFINED             += LELY_UTIL_MEMBUF_INLINE=inline
+PREDEFINED             += LELY_UTIL_PHEAP_INLINE=inline
+PREDEFINED             += LELY_UTIL_RBTREE_INLINE=inline
+PREDEFINED             += LELY_UTIL_TIME_INLINE=inline
+PREDEFINED             += LELY_UTIL_USTRING_INLINE=inline
+
+PREDEFINED             += LELY_CAN_BUF_INLINE=inline
+
+PREDEFINED             += LELY_CO_SDO_INLINE=inline
+
+PREDEFINED             += LELY_NO_HOSTED=1
+PREDEFINED             += LELY_NO_RT=1
+PREDEFINED             += LELY_NO_THREADS=1
+PREDEFINED             += LELY_NO_ERRNO=1
+PREDEFINED             += LELY_NO_MALLOC=1
+PREDEFINED             += LELY_NO_STDIO=1
+PREDEFINED             += LELY_NO_CXX=1
+PREDEFINED             += LELY_NO_DAEMON=1
+PREDEFINED             += LELY_NO_DIAG=1
+PREDEFINED             += LELY_NO_CANFD=1
+PREDEFINED             += LELY_NO_CO_DCF=1
+PREDEFINED             += LELY_NO_CO_DCF_RESTORE=1
+PREDEFINED             += LELY_NO_CO_OBJ_DEFAULT=1
+PREDEFINED             += LELY_NO_CO_OBJ_FILE=1
+PREDEFINED             += LELY_NO_CO_OBJ_LIMITS=0
+PREDEFINED             += LELY_NO_CO_OBJ_NAME=1
+PREDEFINED             += LELY_NO_CO_OBJ_UPLOAD=0
+PREDEFINED             += LELY_NO_CO_SDEV=1
+PREDEFINED             += LELY_NO_CO_CSDO=0
+PREDEFINED             += LELY_NO_CO_RPDO=0
+PREDEFINED             += LELY_NO_CO_TPDO=0
+PREDEFINED             += LELY_NO_CO_SYNC=0
+PREDEFINED             += LELY_NO_CO_TIME=1
+PREDEFINED             += LELY_NO_CO_EMCY=0
+PREDEFINED             += LELY_NO_CO_LSS=1
+PREDEFINED             += LELY_NO_CO_WTM=1
+PREDEFINED             += LELY_NO_CO_MASTER=0
+PREDEFINED             += LELY_NO_CO_NG=1
+PREDEFINED             += LELY_NO_CO_ECSS_REDUNDANCY=0
+PREDEFINED             += LELY_NO_CO_NMT_BOOT=1
+PREDEFINED             += LELY_NO_CO_NMT_CFG=1
+PREDEFINED             += LELY_NO_CO_GW=1
+PREDEFINED             += LELY_NO_CO_GW_TXT=1
+PREDEFINED             += LELY_NO_COAPP_MASTER=0
+PREDEFINED             += LELY_NO_COAPP_SLAVE=0
