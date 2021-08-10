@@ -73,13 +73,15 @@ SdoCreateMsg::BlkDnIniReq(const co_unsigned16_t idx,
 }
 
 can_msg
-SdoCreateMsg::BlkDnSubReq(const co_unsigned16_t idx,
-                          const co_unsigned8_t subidx,
-                          const uint_least32_t recipient_id,
+SdoCreateMsg::BlkDnSubReq(const uint_least32_t recipient_id,
                           const co_unsigned8_t seqno,
-                          const co_unsigned8_t last) {
-  can_msg msg = SdoCreateMsg::Default(idx, subidx, recipient_id);
-  msg.data[0] = last | seqno;
+                          const co_unsigned8_t cs_flags,
+                          const std::vector<uint_least8_t>& data) {
+  assert(data.size() <= 7u);
+
+  can_msg msg = SdoCreateMsg::Default(0, 0, recipient_id);
+  msg.data[0] = cs_flags | seqno;
+  std::copy(std::begin(data), std::end(data), msg.data + 1u);
 
   return msg;
 }

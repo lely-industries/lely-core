@@ -40,9 +40,9 @@ can_msg BlkDnIniReq(co_unsigned16_t idx, co_unsigned8_t subidx,
                     uint_least32_t recipient_id, co_unsigned8_t cs_flags = 0,
                     size_t size = 0);
 // block download sub-block request
-can_msg BlkDnSubReq(co_unsigned16_t idx, co_unsigned8_t subidx,
-                    uint_least32_t recipient_id, co_unsigned8_t seqno,
-                    co_unsigned8_t last = 0);
+can_msg BlkDnSubReq(uint_least32_t recipient_id, co_unsigned8_t seqno,
+                    co_unsigned8_t cs_flags = 0,
+                    const std::vector<uint_least8_t>& data = {});
 // block download sub-block response
 can_msg BlkDnIniRes(co_unsigned16_t idx, co_unsigned8_t subidx,
                     uint_least32_t recipient_id, co_unsigned8_t cs_flags = 0,
