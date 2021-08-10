@@ -63,13 +63,13 @@ can_msg_bits(const struct can_msg *msg, enum can_msg_bits_mode mode)
 
 	switch (mode) {
 	case CAN_MSG_BITS_MODE_NO_STUFF: {
-		int bits = (msg->flags & CAN_FLAG_IDE) ? 67 : 47;
+		ssize_t bits = (msg->flags & CAN_FLAG_IDE) ? 67 : 47;
 		if (!(msg->flags & CAN_FLAG_RTR))
 			bits += msg->len * 8;
 		return bits;
 	}
 	case CAN_MSG_BITS_MODE_WORST: {
-		int bits = (msg->flags & CAN_FLAG_IDE) ? 80 : 55;
+		ssize_t bits = (msg->flags & CAN_FLAG_IDE) ? 80 : 55;
 		if (!(msg->flags & CAN_FLAG_RTR))
 			bits += msg->len * 10;
 		return bits;
