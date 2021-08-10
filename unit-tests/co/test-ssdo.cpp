@@ -2993,8 +2993,7 @@ TEST_GROUP_BASE(CoSsdoBlkDn, CO_Ssdo) {
   }
 
   void ChangeStateToEnd() {
-    can_msg msg_first_blk =
-        SdoCreateMsg::BlkDnSubReq(IDX, SUBIDX, DEFAULT_COBID_REQ, 1u);
+    can_msg msg_first_blk = SdoCreateMsg::BlkDnSubReq(DEFAULT_COBID_REQ, 1u);
     msg_first_blk.data[1] = 0x01u;
     msg_first_blk.data[2] = 0x23u;
     msg_first_blk.data[3] = 0x45u;
@@ -3006,8 +3005,8 @@ TEST_GROUP_BASE(CoSsdoBlkDn, CO_Ssdo) {
 
     CHECK_EQUAL(0, CanSend::GetNumCalled());
 
-    can_msg msg_last_blk = SdoCreateMsg::BlkDnSubReq(
-        IDX, SUBIDX, DEFAULT_COBID_REQ, 2u, CO_SDO_SEQ_LAST);
+    can_msg msg_last_blk =
+        SdoCreateMsg::BlkDnSubReq(DEFAULT_COBID_REQ, 2u, CO_SDO_SEQ_LAST);
     msg_last_blk.data[1] = 0xefu;
     CHECK_EQUAL(1, can_net_recv(net, &msg_last_blk, 0));
 
@@ -3039,7 +3038,7 @@ TEST(CoSsdoBlkDn, Sub_NoCS) {
 
   InitBlkDn2020Sub00(sizeof(sub_type64));
 
-  can_msg msg = SdoCreateMsg::BlkDnSubReq(IDX, SUBIDX, DEFAULT_COBID_REQ, 1u);
+  can_msg msg = SdoCreateMsg::BlkDnSubReq(DEFAULT_COBID_REQ, 1u);
   msg.len = 0;
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
@@ -3056,8 +3055,7 @@ TEST(CoSsdoBlkDn, Sub_CSAbort_OnFirstSeg) {
 
   InitBlkDn2020Sub00(sizeof(sub_type64));
 
-  can_msg msg_first_blk =
-      SdoCreateMsg::BlkDnSubReq(IDX, SUBIDX, DEFAULT_COBID_REQ, 1u);
+  can_msg msg_first_blk = SdoCreateMsg::BlkDnSubReq(DEFAULT_COBID_REQ, 1u);
   msg_first_blk.data[0] = CO_SDO_CS_ABORT;
   CHECK_EQUAL(1, can_net_recv(net, &msg_first_blk, 0));
 
@@ -3071,8 +3069,7 @@ TEST(CoSsdoBlkDn, Sub_SeqnoZero) {
 
   InitBlkDn2020Sub00(sizeof(sub_type64));
 
-  can_msg msg_first_blk =
-      SdoCreateMsg::BlkDnSubReq(IDX, SUBIDX, DEFAULT_COBID_REQ, 1u);
+  can_msg msg_first_blk = SdoCreateMsg::BlkDnSubReq(DEFAULT_COBID_REQ, 1u);
   msg_first_blk.data[0] = 0;
   CHECK_EQUAL(1, can_net_recv(net, &msg_first_blk, 0));
 
@@ -3089,7 +3086,7 @@ TEST(CoSsdoBlkDn, Sub_NoCrc) {
 
   InitBlkDn2020Sub00(sizeof(sub_type64), 0);
 
-  can_msg msg = SdoCreateMsg::BlkDnSubReq(IDX, SUBIDX, DEFAULT_COBID_REQ, 1u);
+  can_msg msg = SdoCreateMsg::BlkDnSubReq(DEFAULT_COBID_REQ, 1u);
   msg.data[1] = 0x01u;
   msg.data[2] = 0x23u;
   msg.data[3] = 0x45u;
@@ -3101,8 +3098,8 @@ TEST(CoSsdoBlkDn, Sub_NoCrc) {
 
   CHECK_EQUAL(0, CanSend::GetNumCalled());
 
-  can_msg msg_last_blk = SdoCreateMsg::BlkDnSubReq(
-      IDX, SUBIDX, DEFAULT_COBID_REQ, 2u, CO_SDO_SEQ_LAST);
+  can_msg msg_last_blk =
+      SdoCreateMsg::BlkDnSubReq(DEFAULT_COBID_REQ, 2u, CO_SDO_SEQ_LAST);
   msg_last_blk.data[1] = 0xefu;
   CHECK_EQUAL(1, can_net_recv(net, &msg_last_blk, 0));
 
@@ -3128,7 +3125,7 @@ TEST(CoSsdoBlkDn, Sub_NoSub) {
 
   InitBlkDn2020Sub00(sizeof(sub_type64));
 
-  can_msg msg = SdoCreateMsg::BlkDnSubReq(IDX, SUBIDX, DEFAULT_COBID_REQ, 1u);
+  can_msg msg = SdoCreateMsg::BlkDnSubReq(DEFAULT_COBID_REQ, 1u);
   msg.data[1] = 0x01u;
   msg.data[2] = 0x23u;
   msg.data[3] = 0x45u;
@@ -3151,7 +3148,7 @@ TEST(CoSsdoBlkDn, Sub_RequestLessThanSize) {
 
   InitBlkDn2020Sub00(6u);
 
-  can_msg msg = SdoCreateMsg::BlkDnSubReq(IDX, SUBIDX, DEFAULT_COBID_REQ, 1u);
+  can_msg msg = SdoCreateMsg::BlkDnSubReq(DEFAULT_COBID_REQ, 1u);
   msg.data[1] = 0x01u;
   msg.data[2] = 0x23u;
   msg.data[3] = 0x45u;
@@ -3177,15 +3174,14 @@ TEST(CoSsdoBlkDn, Sub_Nominal) {
   const sub_type64 val = 0xefcdab9078563412u;
   uint_least8_t val_buf[sizeof(sub_type64)] = {0};
   stle_u64(val_buf, val);
-  can_msg msg_first_blk =
-      SdoCreateMsg::BlkDnSubReq(IDX, SUBIDX, DEFAULT_COBID_REQ, 1u);
+  can_msg msg_first_blk = SdoCreateMsg::BlkDnSubReq(DEFAULT_COBID_REQ, 1u);
   memcpy(msg_first_blk.data + 1u, val_buf, 7u);
   CHECK_EQUAL(1, can_net_recv(net, &msg_first_blk, 0));
 
   CHECK_EQUAL(0, CanSend::GetNumCalled());
 
-  can_msg msg_last_blk = SdoCreateMsg::BlkDnSubReq(
-      IDX, SUBIDX, DEFAULT_COBID_REQ, 2u, CO_SDO_SEQ_LAST);
+  can_msg msg_last_blk =
+      SdoCreateMsg::BlkDnSubReq(DEFAULT_COBID_REQ, 2u, CO_SDO_SEQ_LAST);
   msg_last_blk.data[1] = val_buf[7];
   CHECK_EQUAL(1, can_net_recv(net, &msg_last_blk, 0));
 
@@ -3224,8 +3220,7 @@ TEST(CoSsdoBlkDn, Sub_CSAbort_OnSubsequentSeg) {
   const sub_type64 val = 0xefcdab9078563412uL;
   uint_least8_t val_buf[sizeof(sub_type64)] = {0};
   stle_u64(val_buf, val);
-  can_msg msg_first_blk =
-      SdoCreateMsg::BlkDnSubReq(IDX, SUBIDX, DEFAULT_COBID_REQ, 1u);
+  can_msg msg_first_blk = SdoCreateMsg::BlkDnSubReq(DEFAULT_COBID_REQ, 1u);
   memcpy(msg_first_blk.data + 1u, val_buf, 7u);
   CHECK_EQUAL(1, can_net_recv(net, &msg_first_blk, 0));
 
@@ -3260,8 +3255,7 @@ TEST(CoSsdoBlkDn, Sub_CSAbort_NoAbortCodeOnSubsequentSeg) {
   const sub_type64 val = 0xefcdab9078563412uL;
   uint_least8_t val_buf[sizeof(sub_type64)] = {0};
   stle_u64(val_buf, val);
-  can_msg msg_first_blk =
-      SdoCreateMsg::BlkDnSubReq(IDX, SUBIDX, DEFAULT_COBID_REQ, 1u);
+  can_msg msg_first_blk = SdoCreateMsg::BlkDnSubReq(DEFAULT_COBID_REQ, 1u);
   memcpy(msg_first_blk.data + 1u, val_buf, 7u);
   CHECK_EQUAL(1, can_net_recv(net, &msg_first_blk, 0));
 
@@ -3282,8 +3276,8 @@ TEST(CoSsdoBlkDn, Sub_InvalidSeqno_LastInBlk) {
 
   InitBlkDn2020Sub00(sizeof(sub_type64));
 
-  can_msg msg_first_blk = SdoCreateMsg::BlkDnSubReq(
-      IDX, SUBIDX, DEFAULT_COBID_REQ, CO_SDO_MAX_SEQNO);
+  can_msg msg_first_blk =
+      SdoCreateMsg::BlkDnSubReq(DEFAULT_COBID_REQ, CO_SDO_MAX_SEQNO);
   msg_first_blk.data[1] = 0x12u;
   msg_first_blk.data[2] = 0x34u;
   msg_first_blk.data[3] = 0x56u;
@@ -3311,8 +3305,7 @@ TEST(CoSsdoBlkDn, Sub_CrcError) {
 
   InitBlkDn2020Sub00(sizeof(sub_type64));
 
-  can_msg msg_first_blk =
-      SdoCreateMsg::BlkDnSubReq(IDX, SUBIDX, DEFAULT_COBID_REQ, 1u);
+  can_msg msg_first_blk = SdoCreateMsg::BlkDnSubReq(DEFAULT_COBID_REQ, 1u);
   msg_first_blk.data[1] = 0x01u;
   msg_first_blk.data[2] = 0x23u;
   msg_first_blk.data[3] = 0x45u;
@@ -3324,8 +3317,8 @@ TEST(CoSsdoBlkDn, Sub_CrcError) {
 
   CHECK_EQUAL(0, CanSend::GetNumCalled());
 
-  can_msg msg_last_blk = SdoCreateMsg::BlkDnSubReq(
-      IDX, SUBIDX, DEFAULT_COBID_REQ, 2u, CO_SDO_SEQ_LAST);
+  can_msg msg_last_blk =
+      SdoCreateMsg::BlkDnSubReq(DEFAULT_COBID_REQ, 2u, CO_SDO_SEQ_LAST);
   msg_last_blk.data[1] = 0xefu;
   CHECK_EQUAL(1, can_net_recv(net, &msg_last_blk, 0));
 
@@ -3361,8 +3354,7 @@ TEST(CoSsdoBlkDn, Sub_TimeoutTriggered) {
 
   InitBlkDn2020Sub00(sizeof(sub_type64));
 
-  can_msg msg_first_blk =
-      SdoCreateMsg::BlkDnSubReq(IDX, SUBIDX, DEFAULT_COBID_REQ, 1u);
+  can_msg msg_first_blk = SdoCreateMsg::BlkDnSubReq(DEFAULT_COBID_REQ, 1u);
   msg_first_blk.data[1] = 0x01u;
   msg_first_blk.data[2] = 0x23u;
   msg_first_blk.data[3] = 0x45u;
@@ -3390,8 +3382,7 @@ TEST(CoSsdoBlkDn, EndAbort) {
 
   InitBlkDn2020Sub00(sizeof(sub_type64));
 
-  can_msg msg_first_blk =
-      SdoCreateMsg::BlkDnSubReq(IDX, SUBIDX, DEFAULT_COBID_REQ, 1u);
+  can_msg msg_first_blk = SdoCreateMsg::BlkDnSubReq(DEFAULT_COBID_REQ, 1u);
   msg_first_blk.data[1] = 0x12u;
   msg_first_blk.data[2] = 0x34u;
   msg_first_blk.data[3] = 0x56u;
@@ -3403,8 +3394,8 @@ TEST(CoSsdoBlkDn, EndAbort) {
 
   CHECK_EQUAL(0, CanSend::GetNumCalled());
 
-  can_msg msg_last_blk = SdoCreateMsg::BlkDnSubReq(
-      IDX, SUBIDX, DEFAULT_COBID_REQ, 1, CO_SDO_SEQ_LAST);
+  can_msg msg_last_blk =
+      SdoCreateMsg::BlkDnSubReq(DEFAULT_COBID_REQ, 1, CO_SDO_SEQ_LAST);
   msg_last_blk.data[1] = 0xefu;
 
   CHECK_EQUAL(1, can_net_recv(net, &msg_last_blk, 0));
@@ -3543,8 +3534,7 @@ TEST(CoSsdoBlkDn, EndRecv_InvalidLen) {
   StartSSDO();
 
   InitBlkDn2020Sub00(sizeof(sub_type64));
-  can_msg msg_first_blk =
-      SdoCreateMsg::BlkDnSubReq(IDX, SUBIDX, DEFAULT_COBID_REQ, 1u);
+  can_msg msg_first_blk = SdoCreateMsg::BlkDnSubReq(DEFAULT_COBID_REQ, 1u);
   msg_first_blk.data[1] = 0x01u;
   msg_first_blk.data[2] = 0x23u;
   msg_first_blk.data[3] = 0x45u;
@@ -3556,8 +3546,8 @@ TEST(CoSsdoBlkDn, EndRecv_InvalidLen) {
 
   CHECK_EQUAL(0, CanSend::GetNumCalled());
 
-  can_msg msg_last_blk = SdoCreateMsg::BlkDnSubReq(
-      IDX, SUBIDX, DEFAULT_COBID_REQ, 1u, CO_SDO_SEQ_LAST);
+  can_msg msg_last_blk =
+      SdoCreateMsg::BlkDnSubReq(DEFAULT_COBID_REQ, 1u, CO_SDO_SEQ_LAST);
   msg_last_blk.data[1] = 0xefu;
   CHECK_EQUAL(1, can_net_recv(net, &msg_last_blk, 0));
 
@@ -3645,15 +3635,14 @@ TEST(CoSsdoBlkDn, EndRecv_FailingDnInd) {
   const sub_type64 val = 0xffffffffffffffffu;
   uint_least8_t val_buf[sizeof(sub_type64)] = {0};
   stle_u64(val_buf, val);
-  can_msg msg_first_blk =
-      SdoCreateMsg::BlkDnSubReq(IDX, SUBIDX, DEFAULT_COBID_REQ, 1u);
+  can_msg msg_first_blk = SdoCreateMsg::BlkDnSubReq(DEFAULT_COBID_REQ, 1u);
   memcpy(msg_first_blk.data + 1u, val_buf, 7u);
   CHECK_EQUAL(1, can_net_recv(net, &msg_first_blk, 0));
 
   CHECK_EQUAL(0, CanSend::GetNumCalled());
 
-  can_msg msg_last_blk = SdoCreateMsg::BlkDnSubReq(
-      IDX, SUBIDX, DEFAULT_COBID_REQ, 2u, CO_SDO_SEQ_LAST);
+  can_msg msg_last_blk =
+      SdoCreateMsg::BlkDnSubReq(DEFAULT_COBID_REQ, 2u, CO_SDO_SEQ_LAST);
   msg_last_blk.data[1] = val_buf[7u];
 
   CHECK_EQUAL(1, can_net_recv(net, &msg_last_blk, 0));
