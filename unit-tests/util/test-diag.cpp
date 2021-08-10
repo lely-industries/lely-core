@@ -49,9 +49,9 @@ TEST_GROUP(Util_Diag_FlocLex) {
 TEST(Util_Diag_FlocLex, FlocLex_FlocNull) {
   const std::string buf = "";
 
-  const auto ret = floc_lex(nullptr, buf.data(), buf.data() + 1UL);
+  const auto ret = floc_lex(nullptr, buf.data(), buf.data() + buf.size());
 
-  CHECK_EQUAL(0UL, ret);
+  CHECK_EQUAL(buf.size(), ret);
 }
 
 TEST(Util_Diag_FlocLex, FlocLex_FlocNullBufferWithTab) {

@@ -228,6 +228,8 @@ ev_loop_init(ev_loop_t *loop, ev_poll_t *poll, size_t npoll, int poll_task)
 	loop->npoll = npoll;
 
 	loop->impl_vptr = &ev_loop_std_exec_impl_vtbl;
+	// Suppress a GCC maybe-uninitialized warning.
+	loop->exec.exec_vptr = NULL;
 	ev_std_exec_init(ev_loop_get_exec(loop), &loop->impl_vptr);
 
 #if !LELY_NO_THREADS
