@@ -435,8 +435,46 @@ TEST(CO_NmtSdo1016, Co1016DnInd_SubN_ConsumerHeartbeatTime_DuplicatedNodeId) {
 ///        Consumer Heartbeat Time object (0x1016) with a heartbeat consumer
 ///        entry set up for a node
 ///
-/// \When a new value with the same Node-ID as the existing one is downloaded
-///       to the sub-object
+/// \When a new value with the same Node-ID as the existing, inactive one is
+///       downloaded to the sub-object
+///
+/// \Then a zero abort code is passed to the download confirmation function,
+///       the sub-object is set to the requested value, the heartbeat consumer
+///       for the node is updated
+///       \Calls co_sub_get_type()
+///       \Calls co_sdo_req_dn_val()
+///       \Calls co_sub_get_subidx()
+///       \Calls co_sub_get_val_u32()
+///       \Calls co_dev_find_obj()
+///       \Calls co_sub_dn()
+///       \Calls co_nmt_hb_set_1016()
+TEST(CO_NmtSdo1016,
+     Co1016DnInd_SubN_ConsumerHeartbeatTime_DuplicatedInactiveEntry) {
+  const co_unsigned8_t idx = 0x02u;
+  obj1016->SetSub<Obj1016ConsumerHb::Sub00HighestSubidxSupported>(idx);
+  obj1016->SetSub<Obj1016ConsumerHb::SubNthConsumerHbTime>(
+      0x01u, Obj1016ConsumerHb::MakeHbConsumerEntry(HB_NODE_ID, 0));
+  obj1016->EmplaceSub<Obj1016ConsumerHb::SubNthConsumerHbTime>(idx, 0);
+  CreateNmtAndReset();
+
+  const co_unsigned32_t val =
+      Obj1016ConsumerHb::MakeHbConsumerEntry(HB_NODE_ID, HB_TIMEOUT_MS);
+
+  const auto ret = co_dev_dn_val_req(dev, 0x1016u, idx, CO_DEFTYPE_UNSIGNED32,
+                                     &val, nullptr, CoCsdoDnCon::Func, nullptr);
+
+  CHECK_EQUAL(0, ret);
+  CoCsdoDnCon::Check(nullptr, 0x1016u, idx, 0, nullptr);
+  CHECK_EQUAL(val,
+              obj1016->GetSub<Obj1016ConsumerHb::SubNthConsumerHbTime>(idx));
+  CheckHbConsumer(true, HB_NODE_ID, HB_TIMEOUT_MS);
+}
+
+/// \Given a started NMT service (co_nmt_t), the object dictionary contains the
+///        Consumer Heartbeat Time object (0x1016) with a heartbeat consumer
+///        entry set up for a node
+///
+/// \When a new value is downloaded to the sub-object
 ///
 /// \Then a zero abort code is passed to the download confirmation function,
 ///       the sub-object is set to the requested value, the heartbeat consumer
@@ -1078,7 +1116,7 @@ TEST(CO_NmtRdnSdo, CoRdnDnInd_NoSub) {
 
 /// \Given a started NMT service (co_nmt_t), the object dictionary contains the
 ///        Consumer Heartbeat Time object (0x1016) with the heartbeat consumer
-///        entry set up for the Redundnacy Master; the NMT redundancy manager
+///        entry set up for the Redundancy Master; the NMT redundancy manager
 ///        service is enabled
 ///
 /// \When any value is downloaded to the sub-object
@@ -1110,6 +1148,43 @@ TEST(CO_NmtRdnSdo, Co1016DnInd_SubN_ConsumerHeartbeatTime_UpdateRdnMaster) {
                        CO_NMT_RDN_MASTER_HB_IDX));
   CheckRdnService(true, obj_rdn->GetSub<ObjNmtRedundancy::Sub02Ttoggle>(),
                   NEW_MASTER_ID);
+}
+
+/// \Given a started NMT service (co_nmt_t), the object dictionary contains the
+///        Consumer Heartbeat Time object (0x1016) with the heartbeat consumer
+///        entries set up for the Redundancy Master and some other node; the
+///        NMT redundancy manager service is enabled
+///
+/// \When any value is downloaded to the sub-object with the other node's entry
+///
+/// \Then a zero abort code is passed to the download confirmation function,
+///       the sub-object is set to the requested value, the Redundancy Master's
+///       Node-ID is not changed
+///       \Calls co_sub_get_type()
+///       \Calls co_sdo_req_dn_val()
+///       \Calls co_sub_get_subidx()
+///       \Calls co_sub_get_val_u32()
+///       \Calls co_dev_find_obj()
+///       \Calls co_sub_dn()
+///       \Calls co_nmt_hb_set_1016()
+TEST(CO_NmtRdnSdo, Co1016DnInd_SubN_ConsumerHeartbeatTime_UpdateNonMaster) {
+  const co_unsigned8_t other_id = 0x05u;
+  const co_unsigned8_t idx = 0x02u;
+  obj1016->SetSub<Obj1016ConsumerHb::Sub00HighestSubidxSupported>(idx);
+  obj1016->EmplaceSub<Obj1016ConsumerHb::SubNthConsumerHbTime>(idx, 0);
+  CreateNmtAndReset();
+
+  const co_unsigned32_t val =
+      Obj1016ConsumerHb::MakeHbConsumerEntry(other_id, HB_TIMEOUT_MS);
+  const auto ret = co_dev_dn_val_req(dev, 0x1016u, idx, CO_DEFTYPE_UNSIGNED32,
+                                     &val, nullptr, CoCsdoDnCon::Func, nullptr);
+
+  CHECK_EQUAL(0, ret);
+  CoCsdoDnCon::Check(nullptr, 0x1016u, idx, 0, nullptr);
+  CHECK_EQUAL(val,
+              obj1016->GetSub<Obj1016ConsumerHb::SubNthConsumerHbTime>(idx));
+  CheckRdnService(true, obj_rdn->GetSub<ObjNmtRedundancy::Sub02Ttoggle>(),
+                  MASTER_DEV_ID);
 }
 
 ///@}

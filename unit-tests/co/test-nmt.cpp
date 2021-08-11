@@ -30,7 +30,9 @@
 #include <CppUTest/TestHarness.h>
 
 #include <lely/co/nmt.h>
+#include <lely/co/csdo.h>
 #include <lely/co/ssdo.h>
+#include <lely/util/time.h>
 
 #include <libtest/allocators/default.hpp>
 #include <libtest/allocators/limited.hpp>
@@ -38,6 +40,7 @@
 #include <libtest/tools/can-send.hpp>
 #include <libtest/tools/co-nmt-cs-ind.hpp>
 #include <libtest/tools/co-nmt-st-ind.hpp>
+#include <libtest/tools/co-csdo-dn-con.hpp>
 #include <libtest/tools/lely-cpputest-ext.hpp>
 #include <libtest/tools/lely-unit-test.hpp>
 
@@ -46,8 +49,11 @@
 #include "holder/sub.hpp"
 #include "common/nmt-alloc-sizes.hpp"
 
+#include "obj-init/emcy-error-register.hpp"
+#include "obj-init/emcy-predefined-error-field.hpp"
 #include "obj-init/error-behavior-object.hpp"
 #include "obj-init/nmt-hb-consumer.hpp"
+#include "obj-init/nmt-hb-producer.hpp"
 #include "obj-init/nmt-slave-assignment.hpp"
 #include "obj-init/nmt-startup.hpp"
 
@@ -81,6 +87,7 @@ TEST_BASE(CO_NmtBase) {
   static const co_unsigned8_t MASTER_DEV_ID = DEV_ID;
   static const co_unsigned8_t SLAVE_DEV_ID = 0x02u;
   static const co_unsigned8_t OTHER_NODE_ID = 0x05u;
+  static const co_unsigned16_t HB_TIMEOUT_MS = 550u;
 
   can_net_t* net = nullptr;
   co_dev_t* dev = nullptr;
@@ -118,9 +125,7 @@ TEST_BASE(CO_NmtBase) {
   }
 
   void CreateObj1017ProducerHeartbeatTime(const co_unsigned16_t hb_time) {
-    dev_holder->CreateAndInsertObj(obj1017, 0x1017u);
-    obj1017->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED16,
-                             co_unsigned16_t{hb_time});
+    dev_holder->CreateObjValue<Obj1017ProducerHb>(obj1017, hb_time);
   }
 
   void CreateObj1f80NmtStartup(const Obj1f80NmtStartup::sub_type startup) {
@@ -847,8 +852,8 @@ TEST(CO_NmtAllocation, CoNmtCreate_NoMemoryForDcfParams) {
 
 #if !LELY_NO_CO_DCF_RESTORE
 /// \Given initialized device (co_dev_t) and network (can_net_t) with a memory
-///        allocator limited to only allocate the NMT service instance and DCF
-///        for application parameters
+///        allocator limited to only allocate the NMT service instance and the
+///        concise DCF backup for application parameters
 ///
 /// \When co_nmt_create() is called with pointers to the network and the device
 ///
@@ -881,8 +886,9 @@ TEST(CO_NmtAllocation, CoNmtCreate_NoMemoryForDcfCommParams) {
 #if LELY_NO_MALLOC && !LELY_NO_CO_SDO
 
 /// \Given initialized device (co_dev_t) and network (can_net_t) with a memory
-///        allocator limited to only allocate the NMT service instance, DCF for
-///        application parameters and DCF for communication parameters
+///        allocator limited to only allocate the NMT service instance, the
+///        concise DCF backups for application parameters and communication
+///        parameters
 ///
 /// \When co_nmt_create() is called with pointers to the network and the device
 ///
@@ -1305,7 +1311,11 @@ TEST_GROUP_BASE(CO_Nmt, CO_NmtBase) {
 
   co_nmt_t* nmt = nullptr;
 
+  std::unique_ptr<CoObjTHolder> obj1001;
+  std::unique_ptr<CoObjTHolder> obj1003;
   std::unique_ptr<CoObjTHolder> obj102a;
+  std::unique_ptr<CoObjTHolder> obj1fff;
+  std::unique_ptr<CoObjTHolder> obj2020;
 
   static void empty_cs_ind(co_nmt_t*, co_unsigned8_t, void*) {}
   static void empty_hb_ind(co_nmt_t*, co_unsigned8_t, co_nmt_ec_state_t,
@@ -1345,6 +1355,13 @@ TEST_GROUP_BASE(CO_Nmt, CO_NmtBase) {
     CreateNmt();
     CHECK_EQUAL(0, co_nmt_set_id(nmt, 0xffu));
     CHECK_EQUAL(0, co_nmt_cs_ind(nmt, CO_NMT_CS_RESET_NODE));
+  }
+
+  void AdvanceTimeMs(const uint32_t ms) {
+    timespec ts = {0, 0};
+    can_net_get_time(net, &ts);
+    timespec_add_msec(&ts, ms);
+    can_net_set_time(net, &ts);
   }
 
   void SetNmtCsStIndFunc(const CoNmtCsInd::Seq& csSeq = {},
@@ -2125,9 +2142,7 @@ TEST(CO_Nmt, CoNmtOnSt_Nominal) {
 ///       is not sent
 ///       \Calls set_errnum()
 TEST(CO_Nmt, CoNmtCsReq_Slave) {
-  CreateNmt();
-  CHECK_EQUAL(0, co_nmt_cs_ind(nmt, CO_NMT_CS_RESET_NODE));
-  CanSend::Clear();
+  CreateNmtAndReset();
 
   const auto ret = co_nmt_cs_req(nmt, CO_NMT_CS_START, 0);
 
@@ -2146,10 +2161,8 @@ TEST(CO_Nmt, CoNmtCsReq_Slave) {
 ///       is not sent
 ///       \Calls set_errnum()
 TEST(CO_Nmt, CoNmtCsReq_InvalidCs) {
-  CreateObj1f80NmtStartup(0x01u);
-  CreateNmt();
-  CHECK_EQUAL(0, co_nmt_cs_ind(nmt, CO_NMT_CS_RESET_NODE));
-  CanSend::Clear();
+  SetupMaster();
+  CreateNmtAndReset();
 
   const auto ret = co_nmt_cs_req(nmt, invalidNmtCs, SLAVE_DEV_ID);
 
@@ -2168,10 +2181,8 @@ TEST(CO_Nmt, CoNmtCsReq_InvalidCs) {
 ///       is not sent
 ///       \Calls set_errnum()
 TEST(CO_Nmt, CoNmtCsReq_NodeIdOverMax) {
-  CreateObj1f80NmtStartup(0x01u);
-  CreateNmt();
-  CHECK_EQUAL(0, co_nmt_cs_ind(nmt, CO_NMT_CS_RESET_NODE));
-  CanSend::Clear();
+  SetupMaster();
+  CreateNmtAndReset();
 
   const auto ret = co_nmt_cs_req(nmt, CO_NMT_CS_START, CO_NUM_NODES + 1u);
 
@@ -2191,10 +2202,8 @@ TEST(CO_Nmt, CoNmtCsReq_NodeIdOverMax) {
 ///       \Calls co_dev_get_id()
 ///       \Calls co_nmt_cs_ind()
 TEST(CO_Nmt, CoNmtCsReq_MasterId) {
-  CreateObj1f80NmtStartup(0x01u);
-  CreateNmt();
-  CHECK_EQUAL(0, co_nmt_cs_ind(nmt, CO_NMT_CS_RESET_NODE));
-  CanSend::Clear();
+  SetupMaster();
+  CreateNmtAndReset();
 
   const auto ret = co_nmt_cs_req(nmt, CO_NMT_CS_START, MASTER_DEV_ID);
 
@@ -2216,12 +2225,10 @@ TEST(CO_Nmt, CoNmtCsReq_MasterId) {
 ///       \Calls can_buf_write()
 TEST(CO_Nmt, CoNmtCsReq_FrameBufferOverflow) {
   CreateObj102aNmtInhibitTime(1u);  // 100 usec
-  CreateObj1f80NmtStartup(0x01u);
-  CreateNmt();
+  SetupMaster();
+  CreateNmtAndReset();
 
-  size_t msg_counter = 0;
-  CHECK_EQUAL(0, co_nmt_cs_ind(nmt, CO_NMT_CS_RESET_NODE));
-  ++msg_counter;
+  size_t msg_counter = 1u;  // initial boot-up message
   while (msg_counter < CO_NMT_CAN_BUF_SIZE) {
     CHECK_EQUAL(0, co_nmt_cs_req(nmt, CO_NMT_CS_ENTER_PREOP, SLAVE_DEV_ID));
     ++msg_counter;
@@ -2240,6 +2247,65 @@ TEST(CO_Nmt, CoNmtCsReq_FrameBufferOverflow) {
 ///        NMT master
 ///
 /// \When co_nmt_cs_req() is called with an NMT command specifier and
+///       a Node-ID, but sending the CAN message failed
+///
+/// \Then -1 is returned, the request is not sent; the request is resent on the
+///       next call to co_nmt_cs_req() along with the next request
+TEST(CO_Nmt, CoNmtCsReq_SendFail) {
+  SetupMaster();
+  CreateNmtAndReset();
+  CanSend::ret = -1;
+
+  CHECK_EQUAL(-1, co_nmt_cs_req(nmt, CO_NMT_CS_START, SLAVE_DEV_ID));
+
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
+  CanSend::CheckMsg(CreateNmtMsg(SLAVE_DEV_ID, CO_NMT_CS_START));
+  CanSend::Clear();
+
+  const CanSend::MsgSeq msgs = {
+      CreateNmtMsg(SLAVE_DEV_ID, CO_NMT_CS_START),
+      CreateNmtMsg(SLAVE_DEV_ID, CO_NMT_CS_STOP),
+  };
+  CanSend::SetCheckSeq(msgs);
+
+  CHECK_EQUAL(0, co_nmt_cs_req(nmt, CO_NMT_CS_STOP, SLAVE_DEV_ID));
+  CHECK_EQUAL(2u, CanSend::GetNumCalled());
+}
+
+/// \Given a pointer to a booted NMT service (co_nmt_t) configured as
+///        NMT master, the object dictionary contains the NMT Inhibit Time
+///        object (0x102a) with non-zero value
+///
+/// \When co_nmt_cs_req() is called (at least once) with an NMT command
+///       specifier and a Node-ID
+///
+/// \Then 0 is returned, the request(s) are not sent immediately; each request
+///       is sent after the inhibit time has passed
+TEST(CO_Nmt, CoNmtCsReq_DelayedMessages) {
+  const co_unsigned16_t inhibit_time_ms = 10u;
+  CreateObj102aNmtInhibitTime(inhibit_time_ms * 10u);  // 10 ms
+  SetupMaster();
+  CreateNmtAndReset();
+
+  CHECK_EQUAL(0, co_nmt_cs_req(nmt, CO_NMT_CS_START, SLAVE_DEV_ID));
+  CHECK_EQUAL(0, co_nmt_cs_req(nmt, CO_NMT_CS_STOP, SLAVE_DEV_ID));
+  CHECK_EQUAL(0, CanSend::GetNumCalled());
+
+  AdvanceTimeMs(inhibit_time_ms);
+
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
+  CanSend::CheckMsg(CreateNmtMsg(SLAVE_DEV_ID, CO_NMT_CS_START));
+
+  AdvanceTimeMs(inhibit_time_ms);
+
+  CHECK_EQUAL(2u, CanSend::GetNumCalled());
+  CanSend::CheckMsg(CreateNmtMsg(SLAVE_DEV_ID, CO_NMT_CS_STOP));
+}
+
+/// \Given a pointer to a booted NMT service (co_nmt_t) configured as
+///        NMT master
+///
+/// \When co_nmt_cs_req() is called with an NMT command specifier and
 ///       a Node-ID
 ///
 /// \Then 0 is returned, the request is sent
@@ -2252,18 +2318,102 @@ TEST(CO_Nmt, CoNmtCsReq_FrameBufferOverflow) {
 ///       \Calls can_buf_read()
 ///       \Calls can_net_get_time()
 ///       \Calls timespec_add_usec()
-TEST(CO_Nmt, CoNmtCsReq_Nominal) {
-  CreateObj1f80NmtStartup(0x01u);
-  CreateNmt();
-  CHECK_EQUAL(0, co_nmt_cs_ind(nmt, CO_NMT_CS_RESET_NODE));
-  CanSend::Clear();
+TEST(CO_Nmt, CoNmtCsReq_SingleNode) {
+  SetupMaster();
+  CreateNmtAndReset();
 
   const auto ret = co_nmt_cs_req(nmt, CO_NMT_CS_START, SLAVE_DEV_ID);
 
   CHECK_EQUAL(0, ret);
   CHECK_EQUAL(1u, CanSend::GetNumCalled());
-  const uint_least8_t data[NMT_CS_MSG_SIZE] = {CO_NMT_CS_START, SLAVE_DEV_ID};
-  CanSend::CheckMsg(CO_NMT_CS_CANID, 0, NMT_CS_MSG_SIZE, data);
+  CanSend::CheckMsg(CreateNmtMsg(SLAVE_DEV_ID, CO_NMT_CS_START));
+}
+
+/// \Given a pointer to a booted NMT service (co_nmt_t) configured as
+///        NMT master with a slave node that has booted
+///
+/// \When co_nmt_cs_req() is called with an NMT command specifier and
+///       a Node-ID
+///
+/// \Then 0 is returned, the request is sent
+///       \Calls co_dev_get_id()
+///       \Calls can_buf_write()
+///       \Calls co_dev_get_val_u16()
+///       \Calls can_timer_stop()
+///       \Calls can_buf_peek()
+///       \Calls can_net_send()
+///       \Calls can_buf_read()
+///       \Calls can_net_get_time()
+///       \Calls timespec_add_usec()
+TEST(CO_Nmt, CoNmtCsReq_SingleNode_Booted) {
+  SetupMasterWithSlave();
+  CreateNmtAndReset();
+
+  const can_msg bootup = CreateNmtEcMsg(SLAVE_DEV_ID, CO_NMT_ST_BOOTUP);
+  CHECK_EQUAL(1, can_net_recv(net, &bootup, 0));
+
+  const auto ret = co_nmt_cs_req(nmt, CO_NMT_CS_START, SLAVE_DEV_ID);
+
+  CHECK_EQUAL(0, ret);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
+  CanSend::CheckMsg(CreateNmtMsg(SLAVE_DEV_ID, CO_NMT_CS_START));
+}
+
+/// \Given a pointer to a booted NMT service (co_nmt_t) configured as
+///        NMT master
+///
+/// \When co_nmt_cs_req() is called with an NMT command specifier and
+///       a Node-ID equal to `0` (all nodes)
+///
+/// \Then 0 is returned, the request is sent
+///       \Calls co_dev_get_id()
+///       \Calls can_buf_write()
+///       \Calls co_dev_get_val_u16()
+///       \Calls can_timer_stop()
+///       \Calls can_buf_peek()
+///       \Calls can_net_send()
+///       \Calls can_buf_read()
+///       \Calls can_net_get_time()
+///       \Calls timespec_add_usec()
+TEST(CO_Nmt, CoNmtCsReq_AllNodes) {
+  SetupMaster();
+  CreateNmtAndReset();
+
+  const auto ret = co_nmt_cs_req(nmt, CO_NMT_CS_START, 0);
+
+  CHECK_EQUAL(0, ret);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
+  CanSend::CheckMsg(CreateNmtMsg(0, CO_NMT_CS_START));
+}
+
+/// \Given a pointer to a booted NMT service (co_nmt_t) configured as
+///        NMT master with at least one node that has booted
+///
+/// \When co_nmt_cs_req() is called with an NMT command specifier and
+///       a Node-ID equal to `0` (all nodes)
+///
+/// \Then 0 is returned, the request is sent
+///       \Calls co_dev_get_id()
+///       \Calls can_buf_write()
+///       \Calls co_dev_get_val_u16()
+///       \Calls can_timer_stop()
+///       \Calls can_buf_peek()
+///       \Calls can_net_send()
+///       \Calls can_buf_read()
+///       \Calls can_net_get_time()
+///       \Calls timespec_add_usec()
+TEST(CO_Nmt, CoNmtCsReq_AllNodes_Booted) {
+  SetupMasterWithSlave();
+  CreateNmtAndReset();
+
+  const can_msg bootup = CreateNmtEcMsg(SLAVE_DEV_ID, CO_NMT_ST_BOOTUP);
+  CHECK_EQUAL(1, can_net_recv(net, &bootup, 0));
+
+  const auto ret = co_nmt_cs_req(nmt, CO_NMT_CS_START, 0);
+
+  CHECK_EQUAL(0, ret);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
+  CanSend::CheckMsg(CreateNmtMsg(0, CO_NMT_CS_START));
 }
 
 ///@}
@@ -2571,6 +2721,142 @@ TEST(CO_Nmt, CoNmtCsInd_Init_ResetNode) {
   CHECK_EQUAL(stSeq.size(), CoNmtStInd::GetNumCalled());
   CHECK_EQUAL(CO_NMT_ST_START, co_nmt_get_st(nmt));
 }
+
+/// \Given a pointer to a started NMT service (co_nmt_t), the object dictionary
+///        contains objects in the application parameters area (0x2000-0x9fff)
+///
+/// \When co_nmt_cs_ind() is called with the NMT 'reset node' command specifier
+///
+/// \Then 0 is returned, the service is restarted, the application parameters
+///       are restored from the concise DCF backup
+///       \Calls diag()
+///       \IfCalls{!LELY_NO_CO_MASTER, can_recv_stop()}
+///       \IfCalls{!LELY_NO_CO_MASTER && !LELY_NO_CO_NG, can_timer_stop()}
+///       \IfCalls{!LELY_NO_CO_MASTER && !LELY_NO_CO_NMT_BOOT &&
+///           !LELY_NO_MALLOC, co_nmt_boot_destroy()}
+///       \IfCalls{!LELY_NO_CO_MASTER && !LELY_NO_CO_NMT_CFG &&
+///           !LELY_NO_MALLOC, co_nmt_cfg_destroy()}
+///       \Calls co_nmt_srv_set()
+///       \IfCalls{LELY_NO_MALLOC, co_nmt_hb_set_1016()}
+///       \IfCalls{!LELY_NO_MALLOC, co_nmt_hb_destroy()}
+///       \IfCalls{!LELY_NO_MALLOC, free()}
+///       \IfCalls{!LELY_NO_CO_NG, can_recv_stop()}
+///       \Calls can_timer_stop()
+///       \Calls can_recv_stop()
+///       \IfCalls{!LELY_NO_CO_DCF_RESTORE, co_dev_read_dcf()}
+///       \IfCalls{!LELY_NO_CO_DCF_RESTORE, get_errc()}
+///       \IfCalls{!LELY_NO_CO_DCF_RESTORE, diag()}
+///       \Calls co_dev_get_id()
+///       \Calls co_dev_read_dcf()
+///       \Calls get_errc()
+///       \Calls co_dev_get_val_u32()
+///       \Calls co_nmt_is_master()
+///       \Calls can_recv_start()
+///       \IfCalls{!LELY_NO_CO_MASTER && !LELY_NO_CO_LSS, co_nmt_get_lss()}
+///       \IfCalls{!LELY_NO_CO_NG, co_dev_get_val_u16()}
+///       \IfCalls{!LELY_NO_CO_NG, co_dev_get_val_u8()}
+///       \Calls co_dev_find_obj()
+///       \Calls co_obj_get_val_u8()
+///       \IfCalls{LELY_NO_MALLOC, set_errnum()}
+///       \IfCalls{!LELY_NO_MALLOC, calloc()}
+///       \IfCalls{!LELY_NO_MALLOC, co_nmt_hb_create()}
+///       \Calls co_obj_get_val_u32()
+///       \Calls co_nmt_hb_set_1016()
+///       \Calls can_net_send()
+TEST(CO_Nmt, CoNmtCsInd_ResetNode_RestoreAppDcf) {
+  const CoNmtCsInd::Seq csSeq = {CO_NMT_CS_RESET_NODE, CO_NMT_CS_RESET_COMM,
+                                 CO_NMT_CS_ENTER_PREOP, CO_NMT_CS_START};
+  const CoNmtStInd::Seq stSeq = {CO_NMT_ST_BOOTUP, CO_NMT_ST_BOOTUP,
+                                 CO_NMT_ST_PREOP, CO_NMT_ST_START};
+
+  dev_holder->CreateAndInsertObj(obj2020, 0x2020u);
+  obj2020->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED16,
+                           co_unsigned16_t{0x1234u});
+  CreateNmtAndReset();
+  SetNmtCsStIndFunc(csSeq, stSeq);
+
+  CHECK_EQUAL(sizeof(co_unsigned16_t),
+              co_dev_set_val_u16(dev, 0x2020u, 0x00u, 0));
+
+  const auto ret = co_nmt_cs_ind(nmt, CO_NMT_CS_RESET_NODE);
+
+  CHECK_EQUAL(0, ret);
+  CHECK_EQUAL(csSeq.size(), CoNmtCsInd::GetNumCalled());
+  CHECK_EQUAL(stSeq.size(), CoNmtStInd::GetNumCalled());
+  CHECK_EQUAL(CO_NMT_ST_START, co_nmt_get_st(nmt));
+  CHECK_EQUAL(0x1234u, co_dev_get_val_u16(dev, 0x2020u, 0x00u));
+}
+
+#if HAVE_LELY_OVERRIDE
+/// \Given a pointer to a started NMT service (co_nmt_t), the object dictionary
+///        contains objects in the application parameters area (0x2000-0x9fff)
+///
+/// \When co_nmt_cs_ind() is called with the NMT 'reset node' command specifier,
+///       but the service fails to restore the application parameters from the
+///       concise DCF backup
+///
+/// \Then 0 is returned, the service is restarted, the application parameters
+///       are not restored
+///       \Calls diag()
+///       \IfCalls{!LELY_NO_CO_MASTER, can_recv_stop()}
+///       \IfCalls{!LELY_NO_CO_MASTER && !LELY_NO_CO_NG, can_timer_stop()}
+///       \IfCalls{!LELY_NO_CO_MASTER && !LELY_NO_CO_NMT_BOOT &&
+///           !LELY_NO_MALLOC, co_nmt_boot_destroy()}
+///       \IfCalls{!LELY_NO_CO_MASTER && !LELY_NO_CO_NMT_CFG &&
+///           !LELY_NO_MALLOC, co_nmt_cfg_destroy()}
+///       \Calls co_nmt_srv_set()
+///       \IfCalls{LELY_NO_MALLOC, co_nmt_hb_set_1016()}
+///       \IfCalls{!LELY_NO_MALLOC, co_nmt_hb_destroy()}
+///       \IfCalls{!LELY_NO_MALLOC, free()}
+///       \IfCalls{!LELY_NO_CO_NG, can_recv_stop()}
+///       \Calls can_timer_stop()
+///       \Calls can_recv_stop()
+///       \IfCalls{!LELY_NO_CO_DCF_RESTORE, co_dev_read_dcf()}
+///       \IfCalls{!LELY_NO_CO_DCF_RESTORE, get_errc()}
+///       \IfCalls{!LELY_NO_CO_DCF_RESTORE, diag()}
+///       \Calls co_dev_get_id()
+///       \Calls co_dev_read_dcf()
+///       \Calls get_errc()
+///       \Calls co_dev_get_val_u32()
+///       \Calls co_nmt_is_master()
+///       \Calls can_recv_start()
+///       \IfCalls{!LELY_NO_CO_MASTER && !LELY_NO_CO_LSS, co_nmt_get_lss()}
+///       \IfCalls{!LELY_NO_CO_NG, co_dev_get_val_u16()}
+///       \IfCalls{!LELY_NO_CO_NG, co_dev_get_val_u8()}
+///       \Calls co_dev_find_obj()
+///       \Calls co_obj_get_val_u8()
+///       \IfCalls{LELY_NO_MALLOC, set_errnum()}
+///       \IfCalls{!LELY_NO_MALLOC, calloc()}
+///       \IfCalls{!LELY_NO_MALLOC, co_nmt_hb_create()}
+///       \Calls co_obj_get_val_u32()
+///       \Calls co_nmt_hb_set_1016()
+///       \Calls can_net_send()
+TEST(CO_Nmt, CoNmtCsInd_ResetNode_FailedToRestoreAppDcf) {
+  const CoNmtCsInd::Seq csSeq = {CO_NMT_CS_RESET_NODE, CO_NMT_CS_RESET_COMM,
+                                 CO_NMT_CS_ENTER_PREOP, CO_NMT_CS_START};
+  const CoNmtStInd::Seq stSeq = {CO_NMT_ST_BOOTUP, CO_NMT_ST_BOOTUP,
+                                 CO_NMT_ST_PREOP, CO_NMT_ST_START};
+
+  dev_holder->CreateAndInsertObj(obj2020, 0x2020u);
+  obj2020->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED16,
+                           co_unsigned16_t{0x1234u});
+  CreateNmtAndReset();
+  SetNmtCsStIndFunc(csSeq, stSeq);
+
+  CHECK_EQUAL(sizeof(co_unsigned16_t),
+              co_dev_set_val_u16(dev, 0x2020u, 0x00u, 0));
+
+  LelyOverride::co_val_read(Override::NoneCallsValid);
+  const auto ret = co_nmt_cs_ind(nmt, CO_NMT_CS_RESET_NODE);
+  LelyOverride::co_val_read(Override::AllCallsValid);
+
+  CHECK_EQUAL(0, ret);
+  CHECK_EQUAL(csSeq.size(), CoNmtCsInd::GetNumCalled());
+  CHECK_EQUAL(stSeq.size(), CoNmtStInd::GetNumCalled());
+  CHECK_EQUAL(CO_NMT_ST_START, co_nmt_get_st(nmt));
+  CHECK_EQUAL(0, co_dev_get_val_u16(dev, 0x2020u, 0x00u));
+}
+#endif
 
 /// \Given a pointer to an initialized NMT service (co_nmt_t) with
 ///        an unconfigured Node-ID
@@ -3059,13 +3345,16 @@ TEST(CO_Nmt, CoNmtCsInd_Start_ResetNode) {
   CHECK_EQUAL(CO_NMT_ST_START, co_nmt_get_st(nmt));
 }
 
-/// \Given a pointer to a started NMT service (co_nmt_t)
+/// \Given a pointer to a started NMT service (co_nmt_t), the object dictionary
+///        contains objects in the communication parameters area
+///        (0x1000-0x1fff)
 ///
 /// \When co_nmt_cs_ind() is called with the NMT 'reset communication' command
 ///       specifier
 ///
 /// \Then 0 is returned, the service resets the communication and transitions
-///       back to the NMT 'start' state
+///       back to the NMT 'start' state; the communication parameters are
+///       restored from the concise DCF backup
 ///       \Calls diag()
 ///       \IfCalls{!LELY_NO_CO_MASTER, can_recv_stop()}
 ///       \IfCalls{!LELY_NO_CO_MASTER && !LELY_NO_CO_NG, can_timer_stop()}
@@ -3105,16 +3394,248 @@ TEST(CO_Nmt, CoNmtCsInd_Start_ResetComm) {
   const CoNmtStInd::Seq stSeq = {CO_NMT_ST_BOOTUP, CO_NMT_ST_PREOP,
                                  CO_NMT_ST_START};
 
+  dev_holder->CreateAndInsertObj(obj1fff, 0x1fffu);
+  obj1fff->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED16,
+                           co_unsigned16_t{0x1234u});
   CreateNmtAndReset();
   SetNmtCsStIndFunc(csSeq, stSeq);
+
+  CHECK_EQUAL(sizeof(co_unsigned16_t),
+              co_dev_set_val_u16(dev, 0x1fffu, 0x00u, 0));
 
   const auto ret = co_nmt_cs_ind(nmt, CO_NMT_CS_RESET_COMM);
 
   CHECK_EQUAL(0, ret);
+  CHECK_EQUAL(CO_NMT_ST_START, co_nmt_get_st(nmt));
   CHECK_EQUAL(csSeq.size(), CoNmtCsInd::GetNumCalled());
   CHECK_EQUAL(stSeq.size(), CoNmtStInd::GetNumCalled());
-  CHECK_EQUAL(CO_NMT_ST_START, co_nmt_get_st(nmt));
+  CHECK_EQUAL(0x1234u, co_dev_get_val_u16(dev, 0x1fffu, 0x00u));
 }
+
+#if HAVE_LELY_OVERRIDE
+/// \Given a pointer to a started NMT service (co_nmt_t), the object dictionary
+///        contains objects in the communication parameters area
+///        (0x1000-0x1fff)
+///
+/// \When co_nmt_cs_ind() is called with the NMT 'reset communication' command
+///       specifier, but the service fails to restore the communication
+///       parameters from the concise DCF backup
+///
+/// \Then 0 is returned, the service resets the communication and transitions
+///       back to the NMT 'start' state; the communication parameters are
+///       not restored
+///       \Calls diag()
+///       \IfCalls{!LELY_NO_CO_MASTER, can_recv_stop()}
+///       \IfCalls{!LELY_NO_CO_MASTER && !LELY_NO_CO_NG, can_timer_stop()}
+///       \IfCalls{!LELY_NO_CO_MASTER && !LELY_NO_CO_NMT_BOOT &&
+///           !LELY_NO_MALLOC, co_nmt_boot_destroy()}
+///       \IfCalls{!LELY_NO_CO_MASTER && !LELY_NO_CO_NMT_CFG &&
+///           !LELY_NO_MALLOC, co_nmt_cfg_destroy()}
+///       \Calls co_nmt_srv_set()
+///       \IfCalls{LELY_NO_MALLOC, co_nmt_hb_set_1016()}
+///       \IfCalls{!LELY_NO_MALLOC, co_nmt_hb_destroy()}
+///       \IfCalls{!LELY_NO_MALLOC, free()}
+///       \IfCalls{!LELY_NO_CO_NG, can_recv_stop()}
+///       \Calls can_timer_stop()
+///       \Calls can_recv_stop()
+///       \Calls co_dev_get_id()
+///       \Calls co_dev_read_dcf()
+///       \Calls get_errc()
+///       \Calls co_dev_set_id()
+///       \Calls co_dev_write_dcf()
+///       \Calls co_dev_get_val_u32()
+///       \Calls co_nmt_is_master()
+///       \Calls can_recv_start()
+///       \IfCalls{!LELY_NO_CO_MASTER && !LELY_NO_CO_LSS, co_nmt_get_lss()}
+///       \IfCalls{!LELY_NO_CO_NG, co_dev_get_val_u16()}
+///       \IfCalls{!LELY_NO_CO_NG, co_dev_get_val_u8()}
+///       \Calls co_dev_find_obj()
+///       \Calls co_obj_get_val_u8()
+///       \IfCalls{LELY_NO_MALLOC, set_errnum()}
+///       \IfCalls{!LELY_NO_MALLOC, calloc()}
+///       \IfCalls{!LELY_NO_MALLOC, co_nmt_hb_create()}
+///       \Calls co_obj_get_val_u32()
+///       \Calls co_nmt_hb_set_1016()
+///       \Calls can_net_send()
+TEST(CO_Nmt, CoNmtCsInd_ResetComm_FailedToRestoreCommDcf) {
+  dev_holder->CreateAndInsertObj(obj1fff, 0x1fffu);
+  obj1fff->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED16,
+                           co_unsigned16_t{0x1234u});
+  CreateNmtAndReset();
+
+  CHECK_EQUAL(sizeof(co_unsigned16_t),
+              co_dev_set_val_u16(dev, 0x1fffu, 0x00u, 0));
+
+  LelyOverride::co_val_read(Override::NoneCallsValid);
+  const auto ret = co_nmt_cs_ind(nmt, CO_NMT_CS_RESET_COMM);
+  LelyOverride::co_val_read(Override::AllCallsValid);
+
+  CHECK_EQUAL(0, ret);
+  CHECK_EQUAL(CO_NMT_ST_START, co_nmt_get_st(nmt));
+  CHECK_EQUAL(0, co_dev_get_val_u16(dev, 0x1fffu, 0x00u));
+}
+#endif
+
+/// \Given a pointer to a started NMT service (co_nmt_t), the object dictionary
+///        contains objects with the `CO_OBJ_FLAGS_VAL_NODEID` flag set in the
+///        communication parameters area (0x1000-0x1fff) and there is a new
+///        pending Node-ID set
+///
+/// \When co_nmt_cs_ind() is called with the NMT 'reset communication' command
+///       specifier
+///
+/// \Then 0 is returned, the service resets the communication and transitions
+///       back to the NMT 'start' state; objects with the
+///       `CO_OBJ_FLAGS_VAL_NODEID` flag set are updated and new values are
+///       stored in the concise DCF backup
+///       \Calls diag()
+///       \IfCalls{!LELY_NO_CO_MASTER, can_recv_stop()}
+///       \IfCalls{!LELY_NO_CO_MASTER && !LELY_NO_CO_NG, can_timer_stop()}
+///       \IfCalls{!LELY_NO_CO_MASTER && !LELY_NO_CO_NMT_BOOT &&
+///           !LELY_NO_MALLOC, co_nmt_boot_destroy()}
+///       \IfCalls{!LELY_NO_CO_MASTER && !LELY_NO_CO_NMT_CFG &&
+///           !LELY_NO_MALLOC, co_nmt_cfg_destroy()}
+///       \Calls co_nmt_srv_set()
+///       \IfCalls{LELY_NO_MALLOC, co_nmt_hb_set_1016()}
+///       \IfCalls{!LELY_NO_MALLOC, co_nmt_hb_destroy()}
+///       \IfCalls{!LELY_NO_MALLOC, free()}
+///       \IfCalls{!LELY_NO_CO_NG, can_recv_stop()}
+///       \Calls can_timer_stop()
+///       \Calls can_recv_stop()
+///       \Calls co_dev_get_id()
+///       \Calls co_dev_read_dcf()
+///       \Calls get_errc()
+///       \Calls co_dev_set_id()
+///       \Calls co_dev_write_dcf()
+///       \Calls co_dev_get_val_u32()
+///       \Calls co_nmt_is_master()
+///       \Calls can_recv_start()
+///       \IfCalls{!LELY_NO_CO_MASTER && !LELY_NO_CO_LSS, co_nmt_get_lss()}
+///       \IfCalls{!LELY_NO_CO_NG, co_dev_get_val_u16()}
+///       \IfCalls{!LELY_NO_CO_NG, co_dev_get_val_u8()}
+///       \Calls co_dev_find_obj()
+///       \Calls co_obj_get_val_u8()
+///       \IfCalls{LELY_NO_MALLOC, set_errnum()}
+///       \IfCalls{!LELY_NO_MALLOC, calloc()}
+///       \IfCalls{!LELY_NO_MALLOC, co_nmt_hb_create()}
+///       \Calls co_obj_get_val_u32()
+///       \Calls co_nmt_hb_set_1016()
+///       \Calls can_net_send()
+TEST(CO_Nmt, CoNmtCsInd_ResetComm_NewNodeId) {
+  const co_unsigned16_t val = 0x1200u;
+  dev_holder->CreateAndInsertObj(obj1fff, 0x1fffu);
+  obj1fff->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED16,
+                           co_unsigned16_t{val + DEV_ID});
+  co_sub_set_flags(obj1fff->GetLastSub(), CO_OBJ_FLAGS_VAL_NODEID);
+  CreateNmtAndReset();
+
+  // new pending Node-ID
+  const co_unsigned8_t new_id = 0x42u;
+  co_nmt_set_id(nmt, new_id);
+
+  // modify the value with the CO_OBJ_FLAGS_VAL_NODEID flag
+  CHECK_EQUAL(sizeof(co_unsigned16_t),
+              co_dev_set_val_u16(dev, 0x1fffu, 0x00u, 0));
+
+  CHECK_EQUAL(0, co_nmt_cs_ind(nmt, CO_NMT_CS_RESET_COMM));
+  CHECK_EQUAL(CO_NMT_ST_START, co_nmt_get_st(nmt));
+
+  // the value is restored and the new Node-ID is applied to it
+  CHECK_EQUAL(val + new_id, co_dev_get_val_u16(dev, 0x1fffu, 0x00u));
+
+  // modify the value once more
+  CHECK_EQUAL(sizeof(co_unsigned16_t),
+              co_dev_set_val_u16(dev, 0x1fffu, 0x00u, 0));
+
+  CHECK_EQUAL(0, co_nmt_cs_ind(nmt, CO_NMT_CS_RESET_COMM));
+  CHECK_EQUAL(CO_NMT_ST_START, co_nmt_get_st(nmt));
+
+  // the value with the new Node-ID is restored
+  CHECK_EQUAL(val + new_id, co_dev_get_val_u16(dev, 0x1fffu, 0x00u));
+}
+
+#if HAVE_LELY_OVERRIDE
+/// \Given a pointer to a started NMT service (co_nmt_t), the object dictionary
+///        contains objects with the `CO_OBJ_FLAGS_VAL_NODEID` flag set in the
+///        communication parameters area (0x1000-0x1fff) and there is a new
+///        pending Node-ID set
+///
+/// \When co_nmt_cs_ind() is called with the NMT 'reset communication' command
+///       specifier, but the service fails to store new values in the concise
+///       DCF backup
+///
+/// \Then 0 is returned, the service resets the communication and transitions
+///       back to the NMT 'start' state; objects with the
+///       `CO_OBJ_FLAGS_VAL_NODEID` flag set are updated, but new values are
+///       not stored in the concise DCF backup
+///       \Calls diag()
+///       \IfCalls{!LELY_NO_CO_MASTER, can_recv_stop()}
+///       \IfCalls{!LELY_NO_CO_MASTER && !LELY_NO_CO_NG, can_timer_stop()}
+///       \IfCalls{!LELY_NO_CO_MASTER && !LELY_NO_CO_NMT_BOOT &&
+///           !LELY_NO_MALLOC, co_nmt_boot_destroy()}
+///       \IfCalls{!LELY_NO_CO_MASTER && !LELY_NO_CO_NMT_CFG &&
+///           !LELY_NO_MALLOC, co_nmt_cfg_destroy()}
+///       \Calls co_nmt_srv_set()
+///       \IfCalls{LELY_NO_MALLOC, co_nmt_hb_set_1016()}
+///       \IfCalls{!LELY_NO_MALLOC, co_nmt_hb_destroy()}
+///       \IfCalls{!LELY_NO_MALLOC, free()}
+///       \IfCalls{!LELY_NO_CO_NG, can_recv_stop()}
+///       \Calls can_timer_stop()
+///       \Calls can_recv_stop()
+///       \Calls co_dev_get_id()
+///       \Calls co_dev_read_dcf()
+///       \Calls get_errc()
+///       \Calls co_dev_set_id()
+///       \Calls co_dev_write_dcf()
+///       \Calls co_dev_get_val_u32()
+///       \Calls co_nmt_is_master()
+///       \Calls can_recv_start()
+///       \IfCalls{!LELY_NO_CO_MASTER && !LELY_NO_CO_LSS, co_nmt_get_lss()}
+///       \IfCalls{!LELY_NO_CO_NG, co_dev_get_val_u16()}
+///       \IfCalls{!LELY_NO_CO_NG, co_dev_get_val_u8()}
+///       \Calls co_dev_find_obj()
+///       \Calls co_obj_get_val_u8()
+///       \IfCalls{LELY_NO_MALLOC, set_errnum()}
+///       \IfCalls{!LELY_NO_MALLOC, calloc()}
+///       \IfCalls{!LELY_NO_MALLOC, co_nmt_hb_create()}
+///       \Calls co_obj_get_val_u32()
+///       \Calls co_nmt_hb_set_1016()
+///       \Calls can_net_send()
+TEST(CO_Nmt, CoNmtCsInd_ResetComm_NewNodeId_FailedToStoreAppDcf) {
+  const co_unsigned16_t val = 0x1200u;
+  dev_holder->CreateAndInsertObj(obj1fff, 0x1fffu);
+  obj1fff->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED16,
+                           co_unsigned16_t{val + DEV_ID});
+  co_sub_set_flags(obj1fff->GetLastSub(), CO_OBJ_FLAGS_VAL_NODEID);
+  CreateNmtAndReset();
+
+  // new pending Node-ID
+  const co_unsigned8_t new_id = 0x42u;
+  co_nmt_set_id(nmt, new_id);
+
+  // modify the value with the CO_OBJ_FLAGS_VAL_NODEID flag
+  CHECK_EQUAL(sizeof(co_unsigned16_t),
+              co_dev_set_val_u16(dev, 0x1fffu, 0x00u, 0));
+
+  LelyOverride::co_val_write(Override::NoneCallsValid);
+  CHECK_EQUAL(0, co_nmt_cs_ind(nmt, CO_NMT_CS_RESET_COMM));
+  LelyOverride::co_val_write(Override::AllCallsValid);
+
+  // the value is restored and the new Node-ID is applied
+  CHECK_EQUAL(CO_NMT_ST_START, co_nmt_get_st(nmt));
+  CHECK_EQUAL(val + new_id, co_dev_get_val_u16(dev, 0x1fffu, 0x00u));
+
+  // modify the value once more
+  CHECK_EQUAL(sizeof(co_unsigned16_t),
+              co_dev_set_val_u16(dev, 0x1fffu, 0x00u, 0));
+
+  CHECK_EQUAL(0, co_nmt_cs_ind(nmt, CO_NMT_CS_RESET_COMM));
+  CHECK_EQUAL(CO_NMT_ST_START, co_nmt_get_st(nmt));
+
+  // the value is restored, but with an old Node-ID
+  CHECK_EQUAL(val + DEV_ID, co_dev_get_val_u16(dev, 0x1fffu, 0x00u));
+}
+#endif
 
 /// \Given a pointer to a started NMT service (co_nmt_t)
 ///
@@ -3927,6 +4448,104 @@ TEST(CO_Nmt, CoDevCfgHb_ClearNonExistingId) {
 
 ///@}
 
+/// @name co_nmt_on_err()
+///@{
+
+/// \Given a pointer to a started NMT service (co_nmt_t)
+///
+/// \When co_nmt_on_err() is called with an emergency error code equal to zero,
+///       any error register value and any manufacturer-specific error code
+///
+/// \Then nothing is changed
+TEST(CO_Nmt, CoNmtOnErr_EecZero) {
+  dev_holder->CreateObjValue<Obj1001ErrorRegister>(obj1001, 0);
+  CreateNmtAndReset();
+
+  const co_unsigned8_t er = 0x01u;
+
+  co_nmt_on_err(nmt, 0, er, nullptr);
+
+  CHECK_EQUAL(CO_NMT_ST_START, co_nmt_get_st(nmt));
+  CHECK_EQUAL(0, CoNmtStInd::GetNumCalled());
+  CHECK_EQUAL(0, obj1001->GetSub<Obj1001ErrorRegister>());
+}
+
+/// \Given a pointer to a started NMT service (co_nmt_t), the EMCY service is
+///        not initialized
+///
+/// \When co_nmt_on_err() is called with a non-zero emergency error code, any
+///       error register value and any manufacturer-specific error code
+///
+/// \Then nothing is changed
+TEST(CO_Nmt, CoNmtOnErr_NoEmcy) {
+  CreateNmtAndReset();
+  POINTERS_EQUAL(nullptr, co_nmt_get_emcy(nmt));
+
+  const co_unsigned16_t eec = 0x1000u;
+  const co_unsigned8_t er = 0x01u;
+
+  co_nmt_on_err(nmt, eec, er, nullptr);
+
+  CHECK_EQUAL(0, co_dev_get_val_u8(dev, 0x1001u, 0x00u));
+  CHECK_EQUAL(0, co_dev_get_val_u8(dev, 0x1003u, 0x00u));
+}
+
+/// \Given a pointer to a started NMT service (co_nmt_t), the EMCY service is
+///        initialized and running, the object dictionary contains the Error
+///        Register object (0x1001) and the Pre-defined Error Field object
+///        (0x1003) with no errors recorded
+///
+/// \When co_nmt_on_err() is called with a non-zero emergency error code, any
+///       error register value and any manufacturer-specific error code
+///
+/// \Then the error register value is set in the Error Register object and the
+///       emergency error code is added to the Pre-defined Error Field object
+///       \Calls co_emcy_push()
+TEST(CO_Nmt, CoNmtOnErr_EmcyPush) {
+  dev_holder->CreateObjValue<Obj1001ErrorRegister>(obj1001);
+  dev_holder->CreateObj<Obj1003PredefinedErrorField>(obj1003);
+  obj1003->EmplaceSub<Obj1003PredefinedErrorField::Sub00NumberOfErrors>(0);
+  obj1003->EmplaceSub<Obj1003PredefinedErrorField::SubNStandardErrorField>(0);
+  CreateNmtAndReset();
+
+  const co_unsigned16_t eec = 0x1000u;
+  const co_unsigned8_t er = 0x01u;
+
+  co_nmt_on_err(nmt, eec, er, nullptr);
+
+  CHECK_EQUAL(er, obj1001->GetSub<Obj1001ErrorRegister>());
+  CHECK_EQUAL(
+      0x01u,
+      obj1003->GetSub<Obj1003PredefinedErrorField::Sub00NumberOfErrors>());
+  CHECK_EQUAL(
+      eec,
+      obj1003->GetSub<Obj1003PredefinedErrorField::SubNStandardErrorField>());
+}
+
+/// \Given a pointer to a started NMT service (co_nmt_t), the object dictionary
+///        contains the Error Behavior object (0x1029)
+///
+/// \When co_nmt_on_err() is called with a communication error (`0x81xx`)
+///       emergency error code, any error register value and any
+///       manufacturer-specific error code
+///
+/// \Then the behaviour specified by the Error Behavior object is invoked
+///       \Calls co_nmt_comm_err_ind()
+TEST(CO_Nmt, CoNmtOnErr_ErrInd) {
+  CreateObj1029ErrorBehavior(Obj1029ErrorBehavior::CHANGE_TO_STOP);
+  CreateNmtAndReset();
+
+  const co_unsigned16_t eec = 0x8100u;
+
+  co_nmt_on_err(nmt, eec, 0, nullptr);
+
+  CHECK_EQUAL(CO_NMT_ST_STOP, co_nmt_get_st(nmt));
+  CHECK_EQUAL(1u, CoNmtStInd::GetNumCalled());
+  CoNmtStInd::Check(nmt, DEV_ID, CO_NMT_ST_STOP, nullptr);
+}
+
+///@}
+
 /// @name NMT service: received NMT message processing
 ///@{
 
@@ -4089,5 +4708,47 @@ TEST(CO_Nmt, CoNmtRecv700_HbMsg) {
 }
 
 #endif  // !LELY_NO_CO_MASTER
+
+///@}
+
+/// @name NMT service: NMT error control timer
+///@{
+
+/// \Given a started NMT service (co_nmt_t) with the heartbeat producer service
+///        set up
+///
+/// \When the producer heartbeat time passes
+///
+/// \Then the heartbeat message with the current state of the NMT service is
+///       sent
+TEST(CO_Nmt, CoNmtEcTimer_ProduceHb) {
+  CreateObj1017ProducerHeartbeatTime(HB_TIMEOUT_MS);
+  CreateNmtAndReset();
+
+  AdvanceTimeMs(HB_TIMEOUT_MS);
+
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
+  CanSend::CheckMsg(CreateNmtEcMsg(DEV_ID, CO_NMT_ST_START));
+}
+
+/// \Given a started NMT service (co_nmt_t) with the heartbeat producer service
+///        set up, but the producer heartbeat time is zeroed after start
+///
+/// \When the producer heartbeat time passes
+///
+/// \Then no heartbeat message is sent
+TEST(CO_Nmt, CoNmtEcTimer_ZeroedMs) {
+  CreateObj1017ProducerHeartbeatTime(HB_TIMEOUT_MS);
+  CreateNmtAndReset();
+
+  const co_unsigned16_t ms = 0;
+  CHECK_EQUAL(0, co_dev_dn_val_req(dev, 0x1017u, 0x00u, CO_DEFTYPE_UNSIGNED16,
+                                   &ms, nullptr, CoCsdoDnCon::Func, nullptr));
+  CoCsdoDnCon::Check(nullptr, 0x1017u, 0x00, 0, nullptr);
+
+  AdvanceTimeMs(HB_TIMEOUT_MS);
+
+  CHECK_EQUAL(0, CanSend::GetNumCalled());
+}
 
 ///@}
