@@ -96,16 +96,14 @@ docker-gcc:
   extends: .docker-gcc
   parallel:
     matrix:
-      - __GNUC__: [4, 5, 6, 7, 8, 9, 10, 11]
+      - __GNUC__: [4, 5, 6, 7, 8, 9, 10]
 
 build:gcc:
   extends: .build
   image: $REGISTRY/gcc:$__GNUC__
   parallel:
     matrix:
-      - __GNUC__: [4, 5, 6, 7, 8, 9, 10, 11]
-  variables:
-    CONFIGURE_OPTIONS: --disable-python2
+      - __GNUC__: [4, 5, 6, 7, 8, 9, 10]
 
 test:gcc:4:
   extends: .test
@@ -141,11 +139,6 @@ test:gcc:10:
   extends: .test
   image: $REGISTRY/gcc:10
   needs: ["build:gcc: [10]"]
-
-test:gcc:11:
-  extends: .test
-  image: $REGISTRY/gcc:11
-  needs: ["build:gcc: [11]"]
 
 build:configure:
   extends: .build
