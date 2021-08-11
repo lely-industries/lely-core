@@ -27,7 +27,7 @@
 
 #include <lely/co/dev.h>
 
-// 0x1f81: NMT Slave assignment
+/// 0x1f81: NMT Slave assignment
 struct Obj1f81NmtSlaveAssignment : ObjInitT<0x1f81u> {
   struct Sub00HighestSubidxSupported : SubT<0x00u, CO_DEFTYPE_UNSIGNED8> {};
   struct SubNthSlaveEntry : SubT<0x01u, CO_DEFTYPE_UNSIGNED32, 0, 0x01> {};

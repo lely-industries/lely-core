@@ -289,8 +289,8 @@ typedef int get_errc_handler_t(void *data);
  * The default implementation uses `SetLastError()` on Windows and `errno`
  * on other platforms.
  *
- * @param errc the most recent error code to be set.
- * @param data the extra argument specified to set_errnum_set_handler().
+ * @param errc   the most recent error code to be set.
+ * @param handle the extra argument specified to set_errnum_set_handler().
  */
 typedef void set_errc_handler_t(int errc, void *handle);
 

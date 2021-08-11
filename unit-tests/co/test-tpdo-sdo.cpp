@@ -570,6 +570,7 @@ TEST_GROUP_BASE(CO_SdoTpdo1a00, CO_SdoTpdoBase) {
 };
 
 /// @name TPDO service: object 0x1a00 modification using SDO
+/// @{
 
 /// \Given a pointer to a device (co_dev_t), the object dictionary
 ///        contains the TPDO Mapping Parameter object (0x1a00)

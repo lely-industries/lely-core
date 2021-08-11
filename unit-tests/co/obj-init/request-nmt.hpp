@@ -27,7 +27,7 @@
 
 #include <lely/co/dev.h>
 
-// 0x1f82: Request NMT
+/// 0x1f82: Request NMT
 struct Obj1f82RequestNmt : ObjInitT<0x1f82u> {
   struct Sub00SupportedNumberOfSlaves : SubT<0x00u, CO_DEFTYPE_UNSIGNED8> {};
   struct SubNthRequestNmtService : SubT<0x01u, CO_DEFTYPE_UNSIGNED8, 0, 0x01> {

@@ -53,7 +53,8 @@ can_msg BlkDnEnd(co_unsigned16_t idx, co_unsigned8_t subidx,
                  co_unsigned8_t cs_flags = 0);
 // download initiate request
 can_msg DnIniReq(co_unsigned16_t idx, co_unsigned8_t subidx,
-                 uint_least32_t recipient_id, const uint_least8_t buf[],
+                 uint_least32_t recipient_id,
+                 const uint_least8_t buf[CO_SDO_INI_DATA_SIZE],
                  uint_least8_t cs_flags = 0);
 // download segment request
 can_msg DnSegReq(co_unsigned16_t idx, co_unsigned8_t subidx,

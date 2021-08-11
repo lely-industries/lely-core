@@ -429,6 +429,7 @@ TEST(Util_Pheap, PheapFirst_MultipleInserted) {
 ///@}
 
 /// @name pnode_foreach()
+///@{
 
 /// \Given an empty pairing heap (pheap)
 ///
