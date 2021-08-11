@@ -31,6 +31,7 @@
 
 #include <lely/co/nmt.h>
 #include <lely/util/time.h>
+
 #include <lib/co/nmt_hb.h>
 
 #include <libtest/allocators/default.hpp>

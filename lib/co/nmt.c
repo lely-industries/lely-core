@@ -466,7 +466,7 @@ static int co_nmt_cs_timer(const struct timespec *tp, void *data);
  * The indication function for state change events.
  *
  * @param nmt a pointer to an NMT master/slave service.
- * @param id  the node-ID (in the range [1..127]).
+ * @param id  the node-ID (in the range [1..127, 255]).
  * @param st  the state of the node.
  */
 static void co_nmt_st_ind(co_nmt_t *nmt, co_unsigned8_t id, co_unsigned8_t st);
@@ -2877,18 +2877,21 @@ co_nmt_ec_timer(const struct timespec *tp, void *data)
 	co_nmt_t *nmt = data;
 	assert(nmt);
 
+#if LELY_NO_CO_NG
+	// Send the state of the NMT service (excluding the toggle bit).
+	assert(nmt->ms > 0);
+	co_nmt_ec_send_res(nmt, nmt->st & ~CO_NMT_ST_TOGGLE);
+#else
 	if (nmt->ms) {
-		// Send the state of the NMT service (excluding the toggle bit).
 		co_nmt_ec_send_res(nmt, nmt->st & ~CO_NMT_ST_TOGGLE);
-#if !LELY_NO_CO_NG
 	} else if (nmt->gt && nmt->ltf) {
 		assert(nmt->lg_ind);
 		// Notify the user of the occurrence of a life guarding error.
 		diag(DIAG_INFO, 0, "NMT: life guarding event occurred");
 		nmt->lg_state = CO_NMT_EC_OCCURRED;
 		nmt->lg_ind(nmt, nmt->lg_state, nmt->lg_data);
-#endif
 	}
+#endif
 
 	return 0;
 }
@@ -2956,8 +2959,9 @@ co_nmt_st_ind(co_nmt_t *nmt, co_unsigned8_t id, co_unsigned8_t st)
 {
 	assert(nmt);
 	assert(nmt->st_ind);
+	assert((id != 0 && id <= CO_NUM_NODES) || id == 0xff);
 
-	if (!id || id > CO_NUM_NODES)
+	if (id == 0xff) // unconfigured Node-ID
 		return;
 
 #if !LELY_NO_CO_MASTER
@@ -3692,8 +3696,10 @@ co_nmt_rdn_update(co_nmt_t *nmt)
 
 		if (nmt->rdn_enabled && (ttoggle == 0))
 			co_nmt_rdn_fini(nmt);
-		else if (!nmt->rdn_enabled && (ttoggle != 0))
+		else if (!nmt->rdn_enabled) {
+			assert(ttoggle != 0);
 			co_nmt_rdn_init(nmt);
+		}
 	}
 }
 

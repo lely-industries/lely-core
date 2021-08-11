@@ -438,6 +438,7 @@ TEST(CO_NmtSrv, CoNmtSrvInit_ServerSdo_Init) {
   CHECK_EQUAL(SSDO_NUM, co_ssdo_get_num(ssdo));
 #endif
 
+  POINTERS_EQUAL(nullptr, co_nmt_get_ssdo(nmt, 0u));
   POINTERS_EQUAL(nullptr, co_nmt_get_ssdo(nmt, SSDO_NUM + 1u));
 }
 
@@ -456,6 +457,7 @@ TEST(CO_NmtSrv, CoNmtSrvInit_ServerSdo_Started) {
   CHECK_FALSE(co_ssdo_is_stopped(ssdo));
   CHECK_EQUAL(SSDO_NUM, co_ssdo_get_num(ssdo));
 
+  POINTERS_EQUAL(nullptr, co_nmt_get_ssdo(nmt, 0u));
   POINTERS_EQUAL(nullptr, co_nmt_get_ssdo(nmt, SSDO_NUM + 1u));
 }
 
@@ -1065,6 +1067,43 @@ TEST(CO_NmtSrv, CoNmtOnTpdoEvent_SinglePDO_Wait) {
   CHECK_EQUAL(1u, CanSend::GetNumCalled());
   CanSend::CheckMsg(
       DEV_ID + TPDO_NUM, 0,
+      static_cast<uint_least8_t>(co_type_sizeof(PDO_MAPPED_DEFTYPE)), nullptr);
+}
+
+/// \Given a pointer to a started NMT service (co_nmt_t) with the last
+///        Transmit-PDO (event driven) configured (the TPDO number is equal to
+///        CO_NUM_PDOS)
+///
+/// \When co_nmt_on_tpdo_event() is called with the TPDO number, but
+///       co_nmt_on_tpdo_event_lock() was called before
+///
+/// \Then nothing is changed; after co_nmt_on_tpdo_event_unlock() is called
+///       the postponed PDO message is transmitted for the configured last
+///       Transmit-PDO; the error number is not changed
+TEST(CO_NmtSrv, CoNmtOnTpdoEvent_SingleLastPDO_Wait) {
+  CreateObj2020PdoMapped();
+  CreateObj1800Defaults(TPDO_NUM, DEV_ID + TPDO_NUM, 0xfeu);
+  CreateObj1a00Defaults(TPDO_NUM);
+  CreateObj1800Defaults(CO_NUM_PDOS, DEV_ID + CO_NUM_PDOS, 0xfeu);
+  CreateObj1a00Defaults(CO_NUM_PDOS);
+  CreateNmtAndReset();
+
+  co_nmt_on_tpdo_event_lock(nmt);
+
+  const errnum_t error_num = ERRNUM_FAULT;
+  set_errnum(error_num);
+
+  co_nmt_on_tpdo_event(nmt, CO_NUM_PDOS);
+
+  CHECK_EQUAL(error_num, get_errnum());
+  CHECK_EQUAL(0, CanSend::GetNumCalled());
+
+  co_nmt_on_tpdo_event_unlock(nmt);
+
+  CHECK_EQUAL(error_num, get_errnum());
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
+  CanSend::CheckMsg(
+      DEV_ID + CO_NUM_PDOS, 0,
       static_cast<uint_least8_t>(co_type_sizeof(PDO_MAPPED_DEFTYPE)), nullptr);
 }
 
