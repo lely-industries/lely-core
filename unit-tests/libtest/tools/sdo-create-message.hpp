@@ -56,10 +56,15 @@ can_msg DnIniReq(co_unsigned16_t idx, co_unsigned8_t subidx,
                  uint_least32_t recipient_id,
                  const uint_least8_t buf[CO_SDO_INI_DATA_SIZE],
                  uint_least8_t cs_flags = 0);
+// download initiate response
+can_msg DnIniRes(co_unsigned16_t idx, co_unsigned8_t subidx,
+                 uint_least32_t recipient_id);
 // download segment request
 can_msg DnSegReq(co_unsigned16_t idx, co_unsigned8_t subidx,
                  uint_least32_t recipient_id, const uint_least8_t buf[],
                  uint8_t size, uint_least8_t cs_flags = 0);
+// download segment response
+can_msg DnSegRes(uint_least32_t recipient_id, co_unsigned8_t cs_flags = 0);
 // upload initiate request
 can_msg UpIniReq(co_unsigned16_t idx, co_unsigned8_t subidx,
                  uint_least32_t recipient_id);
