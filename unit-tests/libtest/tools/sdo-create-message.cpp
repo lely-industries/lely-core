@@ -128,6 +128,15 @@ SdoCreateMsg::DnIniReq(const co_unsigned16_t idx, const co_unsigned8_t subidx,
 }
 
 can_msg
+SdoCreateMsg::DnIniRes(const co_unsigned16_t idx, const co_unsigned8_t subidx,
+                       const uint_least32_t recipient_id) {
+  can_msg msg = SdoCreateMsg::Default(idx, subidx, recipient_id);
+  msg.data[0] = CO_SDO_SCS_DN_INI_RES;
+
+  return msg;
+}
+
+can_msg
 SdoCreateMsg::DnSegReq(const co_unsigned16_t idx, const co_unsigned8_t subidx,
                        const uint_least32_t recipient_id,
                        const uint_least8_t buf[], const uint8_t size,
@@ -137,6 +146,15 @@ SdoCreateMsg::DnSegReq(const co_unsigned16_t idx, const co_unsigned8_t subidx,
   can_msg msg = SdoCreateMsg::Default(idx, subidx, recipient_id);
   msg.data[0] = CO_SDO_CCS_DN_SEG_REQ | CO_SDO_SEG_SIZE_SET(size) | cs_flags;
   memcpy(msg.data + 1u, buf, size);
+
+  return msg;
+}
+
+can_msg
+SdoCreateMsg::DnSegRes(const uint_least32_t recipient_id,
+                       const co_unsigned8_t cs_flags) {
+  can_msg msg = SdoCreateMsg::Default(0u, 0u, recipient_id);
+  msg.data[0] = CO_SDO_SCS_DN_SEG_RES | cs_flags;
 
   return msg;
 }

@@ -4816,22 +4816,6 @@ TEST(CO_Csdo, CoCsdoBlkDnEndOnTime_Nominal) {
 
 ///@}
 
-/// @name CSDO send 'download segment' request
-///@{
-
-/// TODO(N7S): test cases for co_csdo_send_dn_seg_req()
-
-///@}
-
-/// @name CSDO download segment
-///@{
-
-/// TODO(N7S): test cases for co_csdo_dn_seg_on_enter()
-/// TODO(N7S): test cases for co_csdo_dn_seg_on_recv()
-/// TODO(N7S): test cases for co_csdo_dn_seg_on_abort()
-
-///@}
-
 /// @name CSDO send block upload sub-block response
 ///@{
 
@@ -5328,6 +5312,349 @@ TEST(CO_CsdoUpload, SegOnRecv_SizeZero) {
 
   CHECK_EQUAL(0u, CoCsdoInd::GetNumCalled());
   CheckDoneTransfer(0u, {});
+}
+
+///@}
+
+TEST_GROUP_BASE(CO_CsdoDownload, CO_CsdoBase) {
+  static const co_unsigned16_t IDX = 0x2020u;
+  static const co_unsigned8_t SUBIDX = 0x00u;
+
+  const std::vector<co_unsigned8_t> buffer = {0x01u, 0x23u, 0x45u, 0x67u,
+                                              0x89u, 0xabu, 0xcdu, 0xefu};
+  std::vector<co_unsigned8_t> first_segment;
+  std::vector<co_unsigned8_t> last_segment;
+
+  void SendDownloadRequest(const std::vector<co_unsigned8_t>& buf) const {
+    CHECK_EQUAL(0, co_csdo_dn_req(csdo, IDX, SUBIDX, buf.data(), buf.size(),
+                                  &CoCsdoDnCon::Func, nullptr));
+
+    CoCsdoDnCon::Clear();
+    CoCsdoInd::Clear();
+    CanSend::Clear();
+  }
+
+  void CheckSdoAbortSent(const co_unsigned32_t ac) const {
+    CHECK_EQUAL(1u, CanSend::GetNumCalled());
+    const auto expected_abort =
+        SdoInitExpectedData::U32(CO_SDO_CS_ABORT, IDX, SUBIDX, ac);
+    CanSend::CheckMsg(DEFAULT_COBID_REQ, 0, CO_SDO_MSG_SIZE,
+                      expected_abort.data());
+    CHECK(co_csdo_is_idle(csdo));
+  }
+
+  void CheckTransferAbortedLocally(const co_unsigned32_t ac) const {
+    CHECK_EQUAL(0u, CanSend::GetNumCalled());
+    CoCsdoDnCon::Check(csdo, IDX, SUBIDX, ac, nullptr);
+    CHECK(co_csdo_is_idle(csdo));
+  }
+
+  void ReceiveSegmentedDnIni() const {
+    const can_msg msg = SdoCreateMsg::DnIniRes(IDX, SUBIDX, DEFAULT_COBID_RES);
+    CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
+  }
+
+  void CheckSentSegReq(const std::vector<co_unsigned8_t>& seg_data,
+                       const co_unsigned8_t cs_flags = 0) const {
+    CHECK_EQUAL(1u, CanSend::GetNumCalled());
+    co_unsigned8_t cs = CO_SDO_CCS_DN_SEG_REQ;
+    cs |= CO_SDO_SEG_SIZE_SET(static_cast<co_unsigned8_t>(seg_data.size()));
+    cs |= cs_flags;
+    const auto expected = SdoInitExpectedData::Segment(cs, seg_data);
+    CanSend::CheckMsg(DEFAULT_COBID_REQ, 0, CO_SDO_MSG_SIZE, expected.data());
+  }
+
+  void AdvanceToDnSegState() const {
+    SendDownloadRequest(buffer);
+    ReceiveSegmentedDnIni();
+    CoCsdoDnCon::Clear();
+    CoCsdoInd::Clear();
+    CanSend::Clear();
+  }
+
+  void CheckDoneTransfer() const {
+    CHECK_EQUAL(0u, CanSend::GetNumCalled());
+    CoCsdoDnCon::Check(csdo, IDX, SUBIDX, 0u, nullptr);
+    CHECK(co_csdo_is_idle(csdo));
+  }
+
+  TEST_SETUP() override {
+    TEST_BASE_SETUP();
+
+    first_segment.assign(buffer.data(), buffer.data() + 7u);
+    last_segment.assign(buffer.data() + 7u, buffer.data() + 8u);
+
+    CHECK_EQUAL(0, co_csdo_start(csdo));
+  }
+};
+
+/// @name CSDO initiate segmented download
+///@{
+
+/// TODO(N7S): GWT
+TEST(CO_CsdoDownload, IniOnRecv_NoCs) {
+  SendDownloadRequest(buffer);
+
+  can_msg msg = SdoCreateMsg::DnIniRes(IDX, SUBIDX, DEFAULT_COBID_RES);
+  msg.len = 0u;
+  CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
+
+  CheckSdoAbortSent(CO_SDO_AC_NO_CS);
+}
+
+/// TODO(N7S): GWT
+TEST(CO_CsdoDownload, IniOnRecv_CsAbort_IncompleteAc) {
+  SendDownloadRequest(buffer);
+
+  can_msg msg =
+      SdoCreateMsg::Abort(IDX, SUBIDX, DEFAULT_COBID_RES, CO_SDO_AC_HARDWARE);
+  msg.len = 7u;
+  CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
+
+  CheckTransferAbortedLocally(CO_SDO_AC_ERROR);
+}
+
+/// TODO(N7S): GWT
+TEST(CO_CsdoDownload, IniOnRecv_CsAbort) {
+  SendDownloadRequest(buffer);
+
+  const co_unsigned32_t ac = CO_SDO_AC_HARDWARE;
+
+  const can_msg msg = SdoCreateMsg::Abort(IDX, SUBIDX, DEFAULT_COBID_RES, ac);
+  CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
+
+  CheckTransferAbortedLocally(ac);
+}
+
+/// TODO(N7S): GWT
+TEST(CO_CsdoDownload, IniOnRecv_InvalidCs) {
+  SendDownloadRequest(buffer);
+
+  can_msg msg = SdoCreateMsg::DnIniRes(IDX, SUBIDX, DEFAULT_COBID_RES);
+  msg.data[0] = 0xffu;
+  CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
+
+  CheckSdoAbortSent(CO_SDO_AC_NO_CS);
+}
+
+/// TODO(N7S): GWT
+TEST(CO_CsdoDownload, IniOnRecv_IncompleteMultiplexer) {
+  SendDownloadRequest(buffer);
+
+  can_msg msg = SdoCreateMsg::DnIniRes(IDX, SUBIDX, DEFAULT_COBID_RES);
+  msg.len = 3u;
+  CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
+
+  CheckSdoAbortSent(CO_SDO_AC_ERROR);
+}
+
+/// TODO(N7S): GWT
+TEST(CO_CsdoDownload, IniOnRecv_IncorrectIdx) {
+  SendDownloadRequest(buffer);
+
+  const can_msg msg =
+      SdoCreateMsg::DnIniRes(IDX + 1u, SUBIDX, DEFAULT_COBID_RES);
+  CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
+
+  CheckSdoAbortSent(CO_SDO_AC_ERROR);
+}
+
+/// TODO(N7S): GWT
+TEST(CO_CsdoDownload, IniOnRecv_IncorrectSubidx) {
+  SendDownloadRequest(buffer);
+
+  const can_msg msg =
+      SdoCreateMsg::DnIniRes(IDX, SUBIDX + 1u, DEFAULT_COBID_RES);
+  CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
+
+  CheckSdoAbortSent(CO_SDO_AC_ERROR);
+}
+
+/// TODO(N7S): GWT
+TEST(CO_CsdoDownload, IniOnRecv_Nominal) {
+  SendDownloadRequest(buffer);
+
+  ReceiveSegmentedDnIni();
+
+  CheckSentSegReq(first_segment);
+  CHECK_FALSE(co_csdo_is_idle(csdo));
+}
+
+/// TODO(N7S): GWT
+TEST(CO_CsdoDownload, IniOnRecv_SizeZero) {
+  co_csdo_set_dn_ind(csdo, &CoCsdoInd::Func, nullptr);
+  SendDownloadRequest({});
+
+  ReceiveSegmentedDnIni();
+
+  CheckSentSegReq({}, CO_SDO_SEG_LAST);
+  CHECK_EQUAL(0u, CoCsdoInd::GetNumCalled());
+  CHECK_FALSE(co_csdo_is_idle(csdo));
+}
+
+///@}
+
+/// @name CSDO download segment request and response handling
+///@{
+
+/// TODO(N7S): GWT
+TEST(CO_CsdoDownload, SegOnAbort_Nominal) {
+  AdvanceToDnSegState();
+
+  const co_unsigned32_t ac = CO_SDO_AC_HARDWARE;
+
+  co_csdo_abort_req(csdo, ac);
+
+  CheckSdoAbortSent(ac);
+}
+
+/// TODO(N7S): GWT
+TEST(CO_CsdoDownload, SegOnTime_Nominal) {
+  co_csdo_set_timeout(csdo, 999);
+  AdvanceToDnSegState();
+
+  CoCsdoUpDnReq::SetOneSecOnNet(net);
+
+  CheckSdoAbortSent(CO_SDO_AC_TIMEOUT);
+}
+
+/// TODO(N7S): GWT
+TEST(CO_CsdoDownload, SegOnRecv_NoCs) {
+  AdvanceToDnSegState();
+
+  can_msg msg = SdoCreateMsg::DnSegRes(DEFAULT_COBID_RES);
+  msg.len = 0u;
+  CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
+
+  CheckSdoAbortSent(CO_SDO_AC_NO_CS);
+}
+
+/// TODO(N7S): GWT
+TEST(CO_CsdoDownload, SegOnRecv_CsAbort_IncompleteAc) {
+  AdvanceToDnSegState();
+
+  can_msg msg =
+      SdoCreateMsg::Abort(IDX, SUBIDX, DEFAULT_COBID_RES, CO_SDO_AC_HARDWARE);
+  msg.len = 7u;
+  CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
+
+  CheckTransferAbortedLocally(CO_SDO_AC_ERROR);
+}
+
+/// TODO(N7S): GWT
+TEST(CO_CsdoDownload, SegOnRecv_CsAbort) {
+  AdvanceToDnSegState();
+
+  const co_unsigned32_t ac = CO_SDO_AC_HARDWARE;
+
+  const can_msg msg = SdoCreateMsg::Abort(IDX, SUBIDX, DEFAULT_COBID_RES, ac);
+  CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
+
+  CheckTransferAbortedLocally(ac);
+}
+
+/// TODO(N7S): GWT
+TEST(CO_CsdoDownload, SegOnRecv_InvalidCs) {
+  AdvanceToDnSegState();
+
+  can_msg msg = SdoCreateMsg::DnSegRes(DEFAULT_COBID_RES);
+  msg.data[0] = 0xffu;
+  CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
+
+  CheckSdoAbortSent(CO_SDO_AC_NO_CS);
+}
+
+/// TODO(N7S): GWT
+TEST(CO_CsdoDownload, SegOnRecv_UnexpectedToggleBit) {
+  AdvanceToDnSegState();
+
+  const can_msg msg =
+      SdoCreateMsg::DnSegRes(DEFAULT_COBID_RES, CO_SDO_SEG_TOGGLE);
+  CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
+
+  CheckSdoAbortSent(CO_SDO_AC_TOGGLE);
+}
+
+/// TODO(N7S): GWT
+TEST(CO_CsdoDownload, SegOnRecv_LastSegment_NoInd) {
+  co_csdo_set_dn_ind(csdo, nullptr, nullptr);
+  AdvanceToDnSegState();
+
+  const can_msg msg = SdoCreateMsg::DnSegRes(DEFAULT_COBID_RES);
+  CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
+
+  CheckSentSegReq(last_segment, CO_SDO_SEG_TOGGLE | CO_SDO_SEG_LAST);
+  CHECK_EQUAL(0u, CoCsdoInd::GetNumCalled());
+  CHECK_FALSE(co_csdo_is_idle(csdo));
+}
+
+/// TODO(N7S): GWT
+TEST(CO_CsdoDownload, SegOnRecv_LastSegment) {
+  co_csdo_set_dn_ind(csdo, &CoCsdoInd::Func, nullptr);
+  AdvanceToDnSegState();
+
+  const can_msg msg = SdoCreateMsg::DnSegRes(DEFAULT_COBID_RES);
+  CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
+
+  CheckSentSegReq(last_segment, CO_SDO_SEG_TOGGLE | CO_SDO_SEG_LAST);
+  CoCsdoInd::Check(csdo, IDX, SUBIDX, buffer.size(), buffer.size(), nullptr);
+  CHECK_FALSE(co_csdo_is_idle(csdo));
+}
+
+/// TODO(N7S): GWT
+TEST(CO_CsdoDownload, SegOnRecv_LastSegmentConfirmed) {
+  AdvanceToDnSegState();
+
+  const can_msg first_res = SdoCreateMsg::DnSegRes(DEFAULT_COBID_RES);
+  CHECK_EQUAL(1, can_net_recv(net, &first_res, 0));
+  CanSend::Clear();
+
+  const can_msg second_res =
+      SdoCreateMsg::DnSegRes(DEFAULT_COBID_RES, CO_SDO_SEG_TOGGLE);
+  CHECK_EQUAL(1, can_net_recv(net, &second_res, 0));
+
+  CheckDoneTransfer();
+}
+
+/// TODO(N7S): GWT
+TEST(CO_CsdoDownload, SegOnRecv_SizeZeroConfirmed) {
+  SendDownloadRequest({});
+  ReceiveSegmentedDnIni();
+  CanSend::Clear();
+
+  const can_msg msg = SdoCreateMsg::DnSegRes(DEFAULT_COBID_RES);
+  CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
+
+  CheckDoneTransfer();
+}
+
+/// TODO(N7S): GWT
+TEST(CO_CsdoDownload, SegOnRecv_LargeDataSet_PeriodicInd) {
+  co_csdo_set_dn_ind(csdo, &CoCsdoInd::Func, nullptr);
+
+  const std::size_t segments = 2u * CO_SDO_MAX_SEQNO + 1u;
+  const std::size_t size = segments * CO_SDO_SEG_MAX_DATA_SIZE;
+  const std::vector<co_unsigned8_t> large_buffer(size, 0xffu);
+  const std::vector<co_unsigned8_t> expected_segment(CO_SDO_SEG_MAX_DATA_SIZE,
+                                                     0xffu);
+
+  SendDownloadRequest(large_buffer);
+  ReceiveSegmentedDnIni();
+
+  for (std::size_t i = 0; i < segments; ++i) {
+    const co_unsigned8_t toggle = (i % 2 == 1) ? CO_SDO_SEG_TOGGLE : 0u;
+    const co_unsigned8_t last = (i == segments - 1) ? CO_SDO_SEG_LAST : 0u;
+
+    CheckSentSegReq(expected_segment, toggle | last);
+    CanSend::Clear();
+
+    const can_msg msg = SdoCreateMsg::DnSegRes(DEFAULT_COBID_RES, toggle);
+    CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
+  }
+
+  CHECK_EQUAL(3u, CoCsdoInd::GetNumCalled());
+  CoCsdoInd::Check(csdo, IDX, SUBIDX, size, size, nullptr);
+  CheckDoneTransfer();
 }
 
 ///@}
