@@ -1114,8 +1114,8 @@ TEST_GROUP_BASE(CO_Csdo, CO_CsdoBase) {
 
   using sub_type64 = co_unsigned64_t;
 
-  static membuf ind_mbuf;
-  static size_t num_called;
+  membuf ind_mbuf;
+  size_t num_called;
   static const co_unsigned16_t SUB_TYPE = CO_DEFTYPE_UNSIGNED16;
   static const co_unsigned16_t SUB_TYPE64 = CO_DEFTYPE_UNSIGNED64;
   static const co_unsigned16_t IDX = 0x2020u;
@@ -1235,16 +1235,11 @@ TEST_GROUP_BASE(CO_Csdo, CO_CsdoBase) {
   }
 
   TEST_TEARDOWN() {
-    ind_mbuf = MEMBUF_INIT;
-    num_called = 0;
-
     arrays.Clear();
 
     TEST_BASE_TEARDOWN();
   }
 };
-membuf TEST_GROUP_CppUTestGroupCO_Csdo::ind_mbuf = MEMBUF_INIT;
-size_t TEST_GROUP_CppUTestGroupCO_Csdo::num_called = 0;
 
 /// @name co_csdo_is_valid()
 ///@{
@@ -2281,8 +2276,8 @@ TEST(CO_Csdo, CoDevUpReq_NotAbleToComplete) {
 TEST(CO_Csdo, CoDevUpReq_ExternalBufferTooSmall) {
   co_sub_up_ind_t* const req_up_ind =
       [](const co_sub_t* const sub, co_sdo_req* const req, co_unsigned32_t ac,
-         void*) -> co_unsigned32_t {
-    req->membuf = &ind_mbuf;
+         void* const data) -> co_unsigned32_t {
+    req->membuf = static_cast<membuf*>(data);
 
     co_sub_on_up(sub, req, &ac);
 
@@ -2290,7 +2285,7 @@ TEST(CO_Csdo, CoDevUpReq_ExternalBufferTooSmall) {
   };
 
   co_dev_set_val_u16(dev, IDX, SUBIDX, 0x1234u);
-  co_obj_set_up_ind(obj2020->Get(), req_up_ind, nullptr);
+  co_obj_set_up_ind(obj2020->Get(), req_up_ind, &ind_mbuf);
 
   MembufInitSubType(&ind_mbuf);
   membuf ext_mbuf = MEMBUF_INIT;
@@ -2344,20 +2339,21 @@ TEST(CO_Csdo, CoDevUpReq_ExternalBufferTooSmall) {
 TEST(CO_Csdo, CoDevUpReq_ExternalBuffer_NoDataOnFirstCall) {
   co_sub_up_ind_t* const req_up_ind =
       [](const co_sub_t* const sub, co_sdo_req* const req, co_unsigned32_t ac,
-         void*) -> co_unsigned32_t {
-    req->membuf = &ind_mbuf;
+         void* const data) -> co_unsigned32_t {
+    const auto test_group = static_cast<TEST_GROUP_CppUTestGroupCO_Csdo*>(data);
+    req->membuf = &test_group->ind_mbuf;
 
     co_sub_on_up(sub, req, &ac);
-    if (num_called == 0) {
+    if (test_group->num_called == 0) {
       req->nbyte = 0;
     }
-    num_called++;
+    test_group->num_called++;
 
     return 0;
   };
 
   co_dev_set_val_u16(dev, IDX, SUBIDX, 0x1234u);
-  co_obj_set_up_ind(obj2020->Get(), req_up_ind, nullptr);
+  co_obj_set_up_ind(obj2020->Get(), req_up_ind, this);
 
   MembufInitSubType(&ind_mbuf);
   membuf ext_mbuf = MEMBUF_INIT;
@@ -2410,8 +2406,8 @@ TEST(CO_Csdo, CoDevUpReq_ExternalBuffer_NoDataOnFirstCall) {
 TEST(CO_Csdo, CoDevUpReq_ExternalBuffer) {
   co_sub_up_ind_t* const req_up_ind =
       [](const co_sub_t* const sub, co_sdo_req* const req, co_unsigned32_t ac,
-         void*) -> co_unsigned32_t {
-    req->membuf = &ind_mbuf;
+         void* const data) -> co_unsigned32_t {
+    req->membuf = static_cast<membuf*>(data);
 
     co_sub_on_up(sub, req, &ac);
 
@@ -2419,7 +2415,7 @@ TEST(CO_Csdo, CoDevUpReq_ExternalBuffer) {
   };
 
   co_dev_set_val_u16(dev, IDX, SUBIDX, 0x1234u);
-  co_obj_set_up_ind(obj2020->Get(), req_up_ind, nullptr);
+  co_obj_set_up_ind(obj2020->Get(), req_up_ind, &ind_mbuf);
 
   MembufInitSubType(&ind_mbuf);
   membuf ext_mbuf = MEMBUF_INIT;

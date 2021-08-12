@@ -112,7 +112,7 @@ TEST_BASE(CO_SyncBase) {
 
   const co_unsigned8_t DEV_ID = 0x01u;
 
-  static co_dev_t* dev;
+  co_dev_t* dev;
   can_net_t* net = nullptr;
   std::unique_ptr<CoDevTHolder> dev_holder;
   std::unique_ptr<CoObjTHolder> obj1005;
@@ -138,7 +138,6 @@ TEST_BASE(CO_SyncBase) {
     dev_holder.reset();
   }
 };
-co_dev_t* CO_SyncBase::dev = nullptr;
 
 TEST_GROUP_BASE(CO_SyncCreate, CO_SyncBase){};
 
@@ -218,7 +217,7 @@ TEST(CO_SyncCreate, CoSyncDestroy_Nominal) {
 ///@}
 
 TEST_GROUP_BASE(CO_Sync, CO_SyncBase) {
-  static co_sync_t* sync;
+  co_sync_t* sync;
   std::unique_ptr<CoObjTHolder> obj1006;
   std::unique_ptr<CoObjTHolder> obj1019;
 
@@ -246,7 +245,7 @@ TEST_GROUP_BASE(CO_Sync, CO_SyncBase) {
     POINTERS_EQUAL(nullptr, data);
   }
 
-  static void CheckSubDnIndIsSet(const co_unsigned16_t idx) {
+  void CheckSubDnIndIsSet(const co_unsigned16_t idx) const {
     const co_sub_t* const sub = co_dev_find_sub(dev, idx, 0x00u);
     CHECK(sub != nullptr);
     co_sub_dn_ind_t* ind = nullptr;
@@ -291,7 +290,6 @@ TEST_GROUP_BASE(CO_Sync, CO_SyncBase) {
     TEST_BASE_TEARDOWN();
   }
 };
-co_sync_t* TEST_GROUP_CppUTestGroupCO_Sync::sync = nullptr;
 
 /// @name co_sync_get_ind()
 ///@{
