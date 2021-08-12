@@ -31,6 +31,7 @@
 #include <lely/co/type.h>
 #include <lely/util/endian.h>
 
+/// #can_send_func_t mock.
 class CanSend {
  public:
   using CheckFunc = std::function<can_send_func_t>;

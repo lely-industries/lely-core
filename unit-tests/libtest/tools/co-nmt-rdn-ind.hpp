@@ -27,6 +27,7 @@
 
 #include <lely/co/nmt.h>
 
+/// #co_nmt_ecss_rdn_ind_t mock.
 class CoNmtRdnInd {
  public:
   static void Func(co_nmt_t* nmt, co_unsigned8_t bus_id,

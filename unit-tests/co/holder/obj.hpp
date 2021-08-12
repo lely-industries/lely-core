@@ -41,6 +41,9 @@
 #include "sub.hpp"
 #include "obj-init/obj-init.hpp"
 
+/// Wrapper for #co_obj_t that separates unit-tests from memory allocation.
+/// Allows for the same unit tests to run with dynamic allocation disabled or
+/// enabled.
 class CoObjTHolder : public Holder<co_obj_t> {
 #if LELY_NO_MALLOC
 

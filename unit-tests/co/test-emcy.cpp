@@ -54,6 +54,7 @@
 
 using msef_array = std::array<co_unsigned8_t, 5u>;
 
+/// #co_emcy_ind_t spy.
 struct EmcyInd {
   static bool called;
   static co_emcy_t* last_emcy;
@@ -635,6 +636,7 @@ TEST(CO_EmcyMinimal, CoEmcyIsStopped_AfterStop) {
 
 ///@}
 
+/// #can_send_func_t mock dedicated for EMCY tests.
 struct EmcySend : CanSend {
   static void
   CheckMsg(const co_unsigned32_t msg_id, const co_unsigned16_t eec,

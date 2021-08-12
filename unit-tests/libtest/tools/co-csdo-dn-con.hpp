@@ -25,6 +25,7 @@
 
 #include <lely/co/type.h>
 
+/// #co_csdo_dn_con_t mock.
 class CoCsdoDnCon {
  public:
   static co_csdo_t* sdo;

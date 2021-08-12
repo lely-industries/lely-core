@@ -28,6 +28,7 @@
 
 #include <lely/co/nmt.h>
 
+/// #co_nmt_st_ind_t mock.
 class CoNmtStInd {
  public:
   using Seq = std::vector<co_unsigned8_t>;

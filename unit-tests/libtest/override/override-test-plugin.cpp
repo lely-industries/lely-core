@@ -34,6 +34,7 @@ OverridePlugin::OverridePlugin() : TestPlugin(PLUGIN_NAME) {}
 
 OverridePlugin::~OverridePlugin() {}
 
+/// RAII-based cleanup executor.
 class OverridePlugin::CleanUp {
  public:
   explicit CleanUp(int32_t& vc) : vc_(vc), org_value_(vc) {}

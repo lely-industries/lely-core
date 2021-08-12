@@ -41,6 +41,7 @@
 #include "holder/dev.hpp"
 #include "holder/obj.hpp"
 
+/// #co_sync_ind_t spy.
 struct SyncInd {
   static bool called;
   static co_sync_t* sync;
@@ -71,6 +72,7 @@ co_sync_t* SyncInd::sync = nullptr;
 co_unsigned8_t SyncInd::cnt = 0;
 void* SyncInd::data = nullptr;
 
+/// #co_sync_err_t spy.
 struct SyncErr {
   static co_sync_t* sync;
   static co_unsigned16_t eec;

@@ -28,6 +28,7 @@
 
 #include <lely/co/nmt.h>
 
+/// Spy for #co_nmt_cs_ind_t indication function.
 class CoNmtCsInd {
  public:
   using Seq = std::vector<co_unsigned8_t>;

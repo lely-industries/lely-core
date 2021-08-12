@@ -55,6 +55,7 @@
 #include "holder/obj.hpp"
 #include "holder/array-init.hpp"
 
+/// Concise DCF buffer builder.
 class ConciseDcf {
  private:
   explicit ConciseDcf(std::initializer_list<size_t> type_sizes) {
@@ -929,6 +930,7 @@ TEST(CoCsdoSetGet, CoCsdoSetTimeout_UpdateTimeout) {
 
 ///@}
 
+/// #co_csdo_ind_t mock.
 class CoCsdoInd {
  public:
   static void
@@ -999,6 +1001,7 @@ size_t CoCsdoInd::nbyte_ = 0;
 void* CoCsdoInd::data_ = nullptr;
 size_t CoCsdoInd::num_called = 0;
 
+/// Unsigned 64-bit sample value wrapper.
 class SampleValueU64 {
   using sub_type64 = co_unsigned64_t;
   using segment_data_t = std::vector<uint_least8_t>;
@@ -1046,6 +1049,7 @@ class SampleValueU64 {
   std::array<uint_least8_t, sizeof(sub_type64)> buf;
 };
 
+/// Unsigned 16-bit sample value wrapper.
 class SampleValueU16 {
   using sub_type = co_unsigned16_t;
   using segment_data_t = std::vector<uint_least8_t>;
@@ -1092,6 +1096,7 @@ class SampleValueU16 {
   std::array<uint_least8_t, sizeof(sub_type)> buf;
 };
 
+/// OCTET STRING sample value wrapper.
 class SampleValueOctetString {
  public:
   const void*

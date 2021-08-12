@@ -25,6 +25,9 @@
 
 #include <cassert>
 
+/// Generic wrapper for C types that separates unit-tests from memory
+/// allocation. Allows for the same unit tests to run with dynamic
+/// allocation disabled or enabled.
 template <typename Item>
 class Holder {
 #if LELY_NO_MALLOC

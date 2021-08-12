@@ -2520,6 +2520,7 @@ TEST(CoSsdoDnSegOnRecv, Nominal) {
 
 ///@}
 
+/// Spy for #co_sub_up_ind_t indication function.
 struct AcTrackingUpInd {
   static co_unsigned32_t last_ac;
 
@@ -2920,6 +2921,7 @@ TEST(CoSsdoUpSegOnRecv, IndReqSizeLonger) {
 
 ///@}
 
+/// Spy for #co_sub_dn_ind_t indication function.
 struct AcTrackingDnInd {
   static co_unsigned32_t last_ac;
 
@@ -3675,6 +3677,7 @@ TEST(CoSsdoBlkDn, EndRecv_FailingDnInd) {
 
 ///@}
 
+/// #co_sub_up_ind_t mock with streaming support.
 struct StreamingUpInd {
   static co_unsigned8_t valid_calls;
   static co_unsigned8_t num_called;

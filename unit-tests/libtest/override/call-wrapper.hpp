@@ -34,6 +34,8 @@
 
 namespace Override {
 
+/// Generic wrapper of call to a function. Allows to limit successful calls to
+/// wrapped method. Supports dynamic libraries calls and linker wraps (__wrap).
 template <typename F>
 class CallWrapper {
  public:
