@@ -39,7 +39,9 @@
 #include <libtest/override/lelyco-val.hpp>
 #include <libtest/tools/can-send.hpp>
 #include <libtest/tools/co-nmt-cs-ind.hpp>
+#include <libtest/tools/co-nmt-hb-ind.hpp>
 #include <libtest/tools/co-nmt-st-ind.hpp>
+#include <libtest/tools/co-nmt-sync-ind.hpp>
 #include <libtest/tools/co-csdo-dn-con.hpp>
 #include <libtest/tools/lely-cpputest-ext.hpp>
 #include <libtest/tools/lely-unit-test.hpp>
@@ -56,6 +58,7 @@
 #include "obj-init/nmt-hb-producer.hpp"
 #include "obj-init/nmt-slave-assignment.hpp"
 #include "obj-init/nmt-startup.hpp"
+#include "obj-init/request-nmt.hpp"
 
 #include <lib/co/nmt_hb.h>
 #if !LELY_NO_CO_NMT_BOOT
@@ -134,28 +137,25 @@ TEST_BASE(CO_NmtBase) {
 
   void CreateObj1f81SlaveAssignmentN(const co_unsigned8_t num) {
     assert(num > 0 && num <= CO_NUM_NODES);
-    // object 0x1f81 - Slave assignment object
-    dev_holder->CreateAndInsertObj(obj1f81, 0x1f81u);
 
-    // 0x00 - Highest sub-index supported
-    obj1f81->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, num);
-    // 0x01-0x7f - Slave with the given Node-ID
-    for (co_unsigned8_t i = 0; i < num; ++i) {
-      obj1f81->InsertAndSetSub(i + 1u, CO_DEFTYPE_UNSIGNED32,
-                               co_unsigned32_t{0x01u});
+    dev_holder->CreateObj<Obj1f81NmtSlaveAssignment>(obj1f81);
+    obj1f81->EmplaceSub<Obj1f81NmtSlaveAssignment::Sub00HighestSubidxSupported>(
+        num);
+
+    for (co_unsigned8_t i = 1u; i <= num; ++i) {
+      obj1f81->EmplaceSub<Obj1f81NmtSlaveAssignment::SubNthSlaveEntry>(
+          i, Obj1f81NmtSlaveAssignment::ASSIGNMENT_BIT);
     }
   }
 
   void CreateObj1f82RequestNmt(const co_unsigned8_t num) {
     assert(num > 0 && num <= CO_NUM_NODES);
-    // object 0x1f82 - Request NMT object
-    dev_holder->CreateAndInsertObj(obj1f82, 0x1f82u);
 
-    // 0x00 - Highest sub-index supported
-    obj1f82->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, num);
-    // 0x01-0x7f - Request NMT-Service for slave with the given Node-ID
-    for (co_unsigned8_t i = 0; i < num; ++i) {
-      obj1f82->InsertAndSetSub(i + 1u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t{0});
+    dev_holder->CreateObj<Obj1f82RequestNmt>(obj1f82);
+    obj1f82->EmplaceSub<Obj1f82RequestNmt::Sub00SupportedNumberOfSlaves>(num);
+
+    for (co_unsigned8_t i = 1u; i <= num; ++i) {
+      obj1f82->EmplaceSub<Obj1f82RequestNmt::SubNthRequestNmtService>(i);
     }
   }
 
@@ -1309,6 +1309,8 @@ TEST_GROUP_BASE(CO_Nmt, CO_NmtBase) {
   static constexpr co_unsigned8_t NMT_EC_MSG_SIZE = 1u;
   static constexpr co_unsigned8_t NMT_CS_MSG_SIZE = 2u;
 
+  const co_unsigned8_t NMT_INVALID_CS = co_unsigned8_t{0xffu};
+
   co_nmt_t* nmt = nullptr;
 
   std::unique_ptr<CoObjTHolder> obj1001;
@@ -1317,16 +1319,9 @@ TEST_GROUP_BASE(CO_Nmt, CO_NmtBase) {
   std::unique_ptr<CoObjTHolder> obj1fff;
   std::unique_ptr<CoObjTHolder> obj2020;
 
-  static void empty_cs_ind(co_nmt_t*, co_unsigned8_t, void*) {}
-  static void empty_hb_ind(co_nmt_t*, co_unsigned8_t, co_nmt_ec_state_t,
-                           co_nmt_ec_reason_t, void*) {}
-  static void empty_st_ind(co_nmt_t*, co_unsigned8_t, co_unsigned8_t, void*) {}
   static void empty_sdo_ind(co_nmt_t*, co_unsigned8_t, co_unsigned16_t,
                             co_unsigned8_t, size_t, size_t, void*) {}
-  static void empty_sync_ind(co_nmt_t*, co_unsigned8_t, void*) {}
   int32_t data = 0;
-
-  const co_unsigned8_t invalidNmtCs = co_unsigned8_t{0xffu};
 
   void CreateNmt() {
     nmt = co_nmt_create(net, dev);
@@ -1423,7 +1418,6 @@ TEST_GROUP_BASE(CO_Nmt, CO_NmtBase) {
 
   TEST_SETUP() {
     TEST_BASE_SETUP();
-
     can_net_set_send_func(net, CanSend::Func, nullptr);
   }
 
@@ -1510,7 +1504,7 @@ TEST(CO_Nmt, CoNmtGetCsInd_Null) {
 TEST(CO_Nmt, CoNmtGetCsInd_Nominal) {
   CreateNmt();
 
-  co_nmt_cs_ind_t* ind = &empty_cs_ind;
+  co_nmt_cs_ind_t* ind = CoNmtCsInd::Func;
   void* cs_data = &data;
 
   co_nmt_get_cs_ind(nmt, &ind, &cs_data);
@@ -1534,12 +1528,12 @@ TEST(CO_Nmt, CoNmtGetCsInd_Nominal) {
 TEST(CO_Nmt, CoNmtSetCsInd_Nominal) {
   CreateNmt();
 
-  co_nmt_set_cs_ind(nmt, &empty_cs_ind, &data);
+  co_nmt_set_cs_ind(nmt, CoNmtCsInd::Func, &data);
 
   co_nmt_cs_ind_t* ind = nullptr;
   void* cs_data = nullptr;
   co_nmt_get_cs_ind(nmt, &ind, &cs_data);
-  FUNCTIONPOINTERS_EQUAL(&empty_cs_ind, ind);
+  FUNCTIONPOINTERS_EQUAL(CoNmtCsInd::Func, ind);
   POINTERS_EQUAL(&data, cs_data);
 }
 
@@ -1594,12 +1588,12 @@ TEST(CO_Nmt, CoNmtGetHbInd_Nominal) {
 TEST(CO_Nmt, CoNmtSetHbInd_Nominal) {
   CreateNmt();
 
-  co_nmt_set_hb_ind(nmt, &empty_hb_ind, &data);
+  co_nmt_set_hb_ind(nmt, CoNmtHbInd::Func, &data);
 
   co_nmt_hb_ind_t* ind = nullptr;
   void* hb_data = nullptr;
   co_nmt_get_hb_ind(nmt, &ind, &hb_data);
-  FUNCTIONPOINTERS_EQUAL(&empty_hb_ind, ind);
+  FUNCTIONPOINTERS_EQUAL(CoNmtHbInd::Func, ind);
   POINTERS_EQUAL(&data, hb_data);
 }
 
@@ -1612,7 +1606,7 @@ TEST(CO_Nmt, CoNmtSetHbInd_Nominal) {
 ///       the user-specified data pointer is set to a null pointer
 TEST(CO_Nmt, CoNmtSetHbInd_Null) {
   CreateNmt();
-  co_nmt_set_hb_ind(nmt, &empty_hb_ind, &data);
+  co_nmt_set_hb_ind(nmt, CoNmtHbInd::Func, &data);
 
   co_nmt_set_hb_ind(nmt, nullptr, nullptr);
 
@@ -1620,7 +1614,7 @@ TEST(CO_Nmt, CoNmtSetHbInd_Null) {
   void* hb_data = nullptr;
   co_nmt_get_hb_ind(nmt, &ind, &hb_data);
   CHECK(ind != nullptr);
-  CHECK(ind != &empty_hb_ind);
+  CHECK(ind != CoNmtHbInd::Func);
   POINTERS_EQUAL(nullptr, hb_data);
 }
 
@@ -1675,12 +1669,12 @@ TEST(CO_Nmt, CoNmtGetStInd_Nominal) {
 TEST(CO_Nmt, CoNmtSetStInd_Nominal) {
   CreateNmt();
 
-  co_nmt_set_st_ind(nmt, &empty_st_ind, &data);
+  co_nmt_set_st_ind(nmt, CoNmtStInd::Func, &data);
 
   co_nmt_st_ind_t* ind = nullptr;
   void* st_data = nullptr;
   co_nmt_get_st_ind(nmt, &ind, &st_data);
-  FUNCTIONPOINTERS_EQUAL(&empty_st_ind, ind);
+  FUNCTIONPOINTERS_EQUAL(CoNmtStInd::Func, ind);
   POINTERS_EQUAL(&data, st_data);
 }
 
@@ -1693,7 +1687,7 @@ TEST(CO_Nmt, CoNmtSetStInd_Nominal) {
 ///       the user-specified data pointer is set to a null pointer
 TEST(CO_Nmt, CoNmtSetStInd_Null) {
   CreateNmt();
-  co_nmt_set_st_ind(nmt, &empty_st_ind, &data);
+  co_nmt_set_st_ind(nmt, CoNmtStInd::Func, &data);
 
   co_nmt_set_st_ind(nmt, nullptr, nullptr);
 
@@ -1853,7 +1847,7 @@ TEST(CO_Nmt, CoNmtGetSyncInd_Null) {
 TEST(CO_Nmt, CoNmtGetSyncInd_Nominal) {
   CreateNmt();
 
-  co_nmt_sync_ind_t* ind = &empty_sync_ind;
+  co_nmt_sync_ind_t* ind = CoNmtSyncInd::Func;
   void* sync_data = &data;
 
   co_nmt_get_sync_ind(nmt, &ind, &sync_data);
@@ -1877,12 +1871,12 @@ TEST(CO_Nmt, CoNmtGetSyncInd_Nominal) {
 TEST(CO_Nmt, CoNmtSetSyncInd_Nominal) {
   CreateNmt();
 
-  co_nmt_set_sync_ind(nmt, &empty_sync_ind, &data);
+  co_nmt_set_sync_ind(nmt, CoNmtSyncInd::Func, &data);
 
   co_nmt_sync_ind_t* ind = nullptr;
   void* sync_data = nullptr;
   co_nmt_get_sync_ind(nmt, &ind, &sync_data);
-  FUNCTIONPOINTERS_EQUAL(&empty_sync_ind, ind);
+  FUNCTIONPOINTERS_EQUAL(CoNmtSyncInd::Func, ind);
   POINTERS_EQUAL(&data, sync_data);
 }
 
@@ -2164,7 +2158,7 @@ TEST(CO_Nmt, CoNmtCsReq_InvalidCs) {
   SetupMaster();
   CreateNmtAndReset();
 
-  const auto ret = co_nmt_cs_req(nmt, invalidNmtCs, SLAVE_DEV_ID);
+  const auto ret = co_nmt_cs_req(nmt, NMT_INVALID_CS, SLAVE_DEV_ID);
 
   CHECK_EQUAL(-1, ret);
   CHECK_EQUAL(ERRNUM_INVAL, get_errnum());
@@ -2485,8 +2479,9 @@ TEST(CO_Nmt, CoNmtChkBootup_MasterId_Booted) {
 /// \Then 0 is returned
 ///       \Calls co_dev_get_id()
 TEST(CO_Nmt, CoNmtChkBootup_MasterId_BeforeBoot) {
-  co_nmt_st_ind_t* const st_ind = [](co_nmt_t* nmt, co_unsigned8_t id,
-                                     co_unsigned8_t st, void*) {
+  co_nmt_st_ind_t* const st_ind = [](co_nmt_t* const nmt,
+                                     const co_unsigned8_t id,
+                                     const co_unsigned8_t st, void* const) {
     static size_t bootup_cnt = 0;
 
     CHECK_EQUAL(MASTER_DEV_ID, id);
@@ -2640,7 +2635,7 @@ TEST(CO_Nmt, CoNmtCsInd_InvalidCs) {
   CreateNmt();
   SetNmtCsStIndFunc();
 
-  const auto ret = co_nmt_cs_ind(nmt, invalidNmtCs);
+  const auto ret = co_nmt_cs_ind(nmt, NMT_INVALID_CS);
 
   CHECK_EQUAL(-1, ret);
   CHECK_EQUAL(ERRNUM_INVAL, get_errnum());
@@ -3909,6 +3904,9 @@ TEST(CO_Nmt, CoNmtCsInd_WithoutCsInd) {
 /// \When co_nmt_comm_err_ind() is called
 ///
 /// \Then the node transitions to the NMT 'pre-operational' state
+///       \Calls co_dev_get_val_u8()
+///       \Calls co_nmt_get_st()
+///       \Calls co_nmt_cs_ind()
 TEST(CO_Nmt, CoNmtCommErrInd_Obj1029_Value00_Operational) {
   CreateObj1f80NmtStartup(Obj1f80NmtStartup::AUTOSTART_BIT);
   CreateObj1029ErrorBehavior(Obj1029ErrorBehavior::CHANGE_TO_PREOP);
@@ -3934,6 +3932,9 @@ TEST(CO_Nmt, CoNmtCommErrInd_Obj1029_Value00_Operational) {
 /// \When co_nmt_comm_err_ind() is called
 ///
 /// \Then nothing is changed
+///       \Calls co_dev_get_val_u8()
+///       \Calls co_nmt_get_st()
+///       \Calls co_nmt_cs_ind()
 TEST(CO_Nmt, CoNmtCommErrInd_Obj1029_Value00_NotOperational) {
   CreateObj1029ErrorBehavior(Obj1029ErrorBehavior::CHANGE_TO_PREOP);
   CreateNmtAndReset();
@@ -3955,6 +3956,7 @@ TEST(CO_Nmt, CoNmtCommErrInd_Obj1029_Value00_NotOperational) {
 /// \When co_nmt_comm_err_ind() is called
 ///
 /// \Then nothing is changed
+///       \Calls co_dev_get_val_u8()
 TEST(CO_Nmt, CoNmtCommErrInd_Obj1029_Value01) {
   CreateObj1029ErrorBehavior(Obj1029ErrorBehavior::NO_CHANGE);
   CreateNmtAndReset();
@@ -3973,6 +3975,8 @@ TEST(CO_Nmt, CoNmtCommErrInd_Obj1029_Value01) {
 /// \When co_nmt_comm_err_ind() is called
 ///
 /// \Then the node transitions to the NMT 'stop' state
+///       \Calls co_dev_get_val_u8()
+///       \Calls co_nmt_cs_ind()
 TEST(CO_Nmt, CoNmtCommErrInd_Obj1029_Value02) {
   CreateObj1029ErrorBehavior(Obj1029ErrorBehavior::CHANGE_TO_STOP);
   CreateNmtAndReset();
@@ -3998,6 +4002,7 @@ TEST(CO_Nmt, CoNmtCommErrInd_Obj1029_Value02) {
 /// \When co_nmt_node_err_ind() is called with any Node-ID
 ///
 /// \Then -1 is returned and the error number is set to ERRNUM_PERM
+///       \Calls set_errnum()
 TEST(CO_Nmt, CoNmtNodeErrInd_NotMaster) {
   CreateNmtAndReset();
 
@@ -4015,6 +4020,7 @@ TEST(CO_Nmt, CoNmtNodeErrInd_NotMaster) {
 /// \When co_nmt_node_err_ind() is called with a Node-ID equal to 0
 ///
 /// \Then -1 is returned and the error number is set to ERRNUM_INVAL
+///       \Calls set_errnum()
 TEST(CO_Nmt, CoNmtNodeErrInd_ZeroNodeId) {
   SetupMaster();
   CreateNmtAndReset();
@@ -4034,6 +4040,7 @@ TEST(CO_Nmt, CoNmtNodeErrInd_ZeroNodeId) {
 ///       CO_NUM_NODES
 ///
 /// \Then -1 is returned and the error number is set to ERRNUM_INVAL
+///       \Calls set_errnum()
 TEST(CO_Nmt, CoNmtNodeErrInd_NodeIdOverMax) {
   SetupMaster();
   CreateNmtAndReset();
@@ -4052,6 +4059,7 @@ TEST(CO_Nmt, CoNmtNodeErrInd_NodeIdOverMax) {
 /// \When co_nmt_node_err_ind() is called with a Node-ID of an unknown slave
 ///
 /// \Then 0 is returned, nothing is changed
+///       \Calls co_dev_get_val_u32()
 TEST(CO_Nmt, CoNmtNodeErrInd_UnknownSlave) {
   SetupMaster();
   CreateNmtAndReset();
@@ -4074,6 +4082,9 @@ TEST(CO_Nmt, CoNmtNodeErrInd_UnknownSlave) {
 ///
 /// \Then 0 is returned, the NMT 'stop' command is sent to all nodes
 ///       (`Node-ID = 0`) and the master transitions to the NMT 'stop' state
+///       \Calls co_dev_get_val_u32()
+///       \Calls co_nmt_cs_req()
+///       \Calls co_nmt_cs_ind()
 TEST(CO_Nmt, CoNmtNodeErrInd_MandatorySlave_StopAllNodes) {
   SetupMasterWithSlave(Obj1f80NmtStartup::MASTER_BIT |
                        Obj1f80NmtStartup::STOP_NODES_ON_ERR);
@@ -4105,6 +4116,9 @@ TEST(CO_Nmt, CoNmtNodeErrInd_MandatorySlave_StopAllNodes) {
 ///
 /// \Then 0 is returned, the NMT 'reset node' command is sent to all nodes
 ///       (`Node-ID = 0`) and the master resets itself
+///       \Calls co_dev_get_val_u32()
+///       \Calls co_nmt_cs_req()
+///       \Calls co_nmt_cs_ind()
 TEST(CO_Nmt, CoNmtNodeErrInd_MandatorySlave_ResetAllNodes) {
   SetupMasterWithSlave(Obj1f80NmtStartup::MASTER_BIT |
                        Obj1f80NmtStartup::RESET_NODES_ON_ERR);
@@ -4153,6 +4167,8 @@ TEST(CO_Nmt, CoNmtNodeErrInd_MandatorySlave_ResetAllNodes) {
 /// \When co_nmt_node_err_ind() is called with a Node-ID of a mandatory slave
 ///
 /// \Then 0 is returned, the NMT 'reset node' command is sent to the slave
+///       \Calls co_dev_get_val_u32()
+///       \Calls co_nmt_cs_req()
 TEST(CO_Nmt, CoNmtNodeErrInd_MandatorySlave_NoBits) {
   SetupMasterWithSlave();
   CreateNmtAndReset();
@@ -4174,6 +4190,8 @@ TEST(CO_Nmt, CoNmtNodeErrInd_MandatorySlave_NoBits) {
 ///       slave
 ///
 /// \Then 0 is returned, the NMT 'reset node' command is sent to the slave
+///       \Calls co_dev_get_val_u32()
+///       \Calls co_nmt_cs_req()
 TEST(CO_Nmt, CoNmtNodeErrInd_NonMandatorySlave) {
   SetupMasterWithSlave();
   obj1f81->SetSub<Obj1f81NmtSlaveAssignment::SubNthSlaveEntry>(
@@ -4603,6 +4621,7 @@ TEST(CO_Nmt, CoNmtRecv000_ZeroId) {
 /// \When an NMT message with other node's Node-ID is received
 ///
 /// \Then nothing is changed
+///       \Calls co_dev_get_id()
 TEST(CO_Nmt, CoNmtRecv000_OtherNode) {
   CreateNmtAndReset();
 
@@ -4618,6 +4637,7 @@ TEST(CO_Nmt, CoNmtRecv000_OtherNode) {
 /// \When an NMT message with the node's Node-ID is received
 ///
 /// \Then the command is processed, the node transitions to the requested state
+///       \Calls co_dev_get_id()
 TEST(CO_Nmt, CoNmtRecv000_Nominal) {
   CreateNmtAndReset();
 
@@ -4677,6 +4697,7 @@ TEST(CO_Nmt, CoNmtRecv700_IncorrectMsgLength) {
 /// \Then the NMT state change indication function is invoked with the slave's
 ///       Node-ID, CO_NMT_ST_BOOTUP state and a null user-specified data
 ///       pointer, the receipt of a boot-up message from the slave is denoted
+///       \Calls co_nmt_st_ind()
 TEST(CO_Nmt, CoNmtRecv700_BootUpMsg) {
   SetupMasterWithSlave();
   CreateNmtAndReset();
@@ -4691,7 +4712,7 @@ TEST(CO_Nmt, CoNmtRecv700_BootUpMsg) {
 }
 
 /// \Given a started NMT service (co_nmt_t) configured as NMT master with
-///        a configured slave node
+///        a slave node
 ///
 /// \When an NMT hearbeat message from the slave node is received
 ///
@@ -4721,6 +4742,7 @@ TEST(CO_Nmt, CoNmtRecv700_HbMsg) {
 ///
 /// \Then the heartbeat message with the current state of the NMT service is
 ///       sent
+///       \Calls can_net_send()
 TEST(CO_Nmt, CoNmtEcTimer_ProduceHb) {
   CreateObj1017ProducerHeartbeatTime(HB_TIMEOUT_MS);
   CreateNmtAndReset();
@@ -4737,6 +4759,7 @@ TEST(CO_Nmt, CoNmtEcTimer_ProduceHb) {
 /// \When the producer heartbeat time passes
 ///
 /// \Then no heartbeat message is sent
+///       \IfCalls{!LELY_NO_CO_NG, diag()}
 TEST(CO_Nmt, CoNmtEcTimer_ZeroedMs) {
   CreateObj1017ProducerHeartbeatTime(HB_TIMEOUT_MS);
   CreateNmtAndReset();

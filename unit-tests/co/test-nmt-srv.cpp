@@ -995,6 +995,8 @@ TEST(CO_NmtSrv, CoNmtOnSync_Nominal) {
 /// \When co_nmt_on_tpdo_event() is called with any PDO number
 ///
 /// \Then nothing is changed
+///       \Calls get_errc()
+///       \Calls set_errc()
 TEST(CO_NmtSrv, CoNmtOnTpdoEvent_NoPDOs) {
   CreateNmtAndReset();
 
@@ -1014,6 +1016,10 @@ TEST(CO_NmtSrv, CoNmtOnTpdoEvent_NoPDOs) {
 ///
 /// \Then the PDO message is transmitted for the configured Transmit-PDO; the
 ///       error number is not changed
+///       \Calls get_errc()
+///       \Calls co_nmt_get_tpdo()
+///       \Calls co_tpdo_event()
+///       \Calls set_errc()
 TEST(CO_NmtSrv, CoNmtOnTpdoEvent_SinglePDO_Transmit) {
   CreateObj2020PdoMapped();
   CreateObj1800Defaults(TPDO_NUM, DEV_ID + TPDO_NUM, 0xfeu);
@@ -1043,6 +1049,9 @@ TEST(CO_NmtSrv, CoNmtOnTpdoEvent_SinglePDO_Transmit) {
 /// \Then nothing is changed; after co_nmt_on_tpdo_event_unlock() is called
 ///       the postponed PDO message is transmitted for the configured
 ///       Transmit-PDO; the error number is not changed
+///       \Calls get_errc()
+///       \Calls co_nmt_get_tpdo()
+///       \Calls set_errc()
 TEST(CO_NmtSrv, CoNmtOnTpdoEvent_SinglePDO_Wait) {
   CreateObj2020PdoMapped();
   CreateObj1800Defaults(TPDO_NUM, DEV_ID + TPDO_NUM, 0xfeu);
@@ -1080,6 +1089,9 @@ TEST(CO_NmtSrv, CoNmtOnTpdoEvent_SinglePDO_Wait) {
 /// \Then nothing is changed; after co_nmt_on_tpdo_event_unlock() is called
 ///       the postponed PDO message is transmitted for the configured last
 ///       Transmit-PDO; the error number is not changed
+///       \Calls get_errc()
+///       \Calls co_nmt_get_tpdo()
+///       \Calls set_errc()
 TEST(CO_NmtSrv, CoNmtOnTpdoEvent_SingleLastPDO_Wait) {
   CreateObj2020PdoMapped();
   CreateObj1800Defaults(TPDO_NUM, DEV_ID + TPDO_NUM, 0xfeu);
@@ -1115,6 +1127,10 @@ TEST(CO_NmtSrv, CoNmtOnTpdoEvent_SingleLastPDO_Wait) {
 ///
 /// \Then the PDO messages are transmitted for each configured Transmit-PDO,
 ///       the error number is not changed
+///       \Calls get_errc()
+///       \Calls co_nmt_get_tpdo()
+///       \Calls co_tpdo_event()
+///       \Calls set_errc()
 TEST(CO_NmtSrv, CoNmtOnTpdoEvent_AllPDOs) {
   CreateObj2020PdoMapped();
   CreateObj1800Defaults(TPDO_NUM, DEV_ID + TPDO_NUM, 0xfeu);
@@ -1150,6 +1166,9 @@ TEST(CO_NmtSrv, CoNmtOnTpdoEvent_AllPDOs) {
 /// \Then nothing is changed; after co_nmt_on_tpdo_event_unlock() is called
 ///       the postponed PDO messages are transmitted for each configured
 ///       Transmit-PDO; the error number is not changed
+///       \Calls get_errc()
+///       \Calls co_nmt_get_tpdo()
+///       \Calls set_errc()
 TEST(CO_NmtSrv, CoNmtOnTpdoEvent_AllPDOs_Wait) {
   CreateObj2020PdoMapped();
   CreateObj1800Defaults(TPDO_NUM, DEV_ID + TPDO_NUM, 0xfeu);
@@ -1190,6 +1209,8 @@ TEST(CO_NmtSrv, CoNmtOnTpdoEvent_AllPDOs_Wait) {
 ///
 /// \Then nothing is changed; after co_nmt_on_tpdo_event_unlock() is called
 ///       no PDO message is transmitted; the error number is not changed
+///       \Calls get_errc()
+///       \Calls set_errc()
 TEST(CO_NmtSrv, CoNmtOnTpdoEvent_NoWaitingPDOs_Unlock) {
   CreateObj2020PdoMapped();
   CreateObj1800Defaults(TPDO_NUM, DEV_ID, 0xfeu);
@@ -1248,6 +1269,10 @@ TEST(CO_NmtSrv, CoNmtOnTpdoEvent_DoubleLock_Unlock) {
 ///
 /// \Then nothing is changed, no PDO message is transmitted; the error number
 ///       is not changed
+///       \Calls get_errc()
+///       \Calls co_nmt_get_tpdo()
+///       \Calls co_tpdo_event()
+///       \Calls set_errc()
 TEST(CO_NmtSrv, CoNmtOnTpdoEvent_Stop) {
   CreateObj2020PdoMapped();
   CreateObj1800Defaults(TPDO_NUM, DEV_ID + TPDO_NUM, 0xfeu);
@@ -1273,6 +1298,10 @@ TEST(CO_NmtSrv, CoNmtOnTpdoEvent_Stop) {
 /// \Then nothing is changed; after the service is stopped and
 ///       co_nmt_on_tpdo_event_unlock() is called no PDO message is
 ///       transmitted; the error number is not changed
+///       \Calls get_errc()
+///       \Calls co_nmt_get_tpdo()
+///       \Calls co_tpdo_event()
+///       \Calls set_errc()
 TEST(CO_NmtSrv, CoNmtOnTpdoEvent_Stop_Unlock) {
   CreateObj2020PdoMapped();
   CreateObj1800Defaults(TPDO_NUM, DEV_ID + TPDO_NUM, 0xfeu);
@@ -1303,6 +1332,10 @@ TEST(CO_NmtSrv, CoNmtOnTpdoEvent_Stop_Unlock) {
 /// \Then nothing is changed; after the service is stopped, started and then
 ///       co_nmt_on_tpdo_event_unlock() is called no PDO message is
 ///       transmitted; the error number is not changed
+///       \Calls get_errc()
+///       \Calls co_nmt_get_tpdo()
+///       \Calls co_tpdo_event()
+///       \Calls set_errc()
 TEST(CO_NmtSrv, CoNmtOnTpdoEvent_StopStart_Unlock) {
   CreateObj2020PdoMapped();
   CreateObj1800Defaults(TPDO_NUM, DEV_ID + TPDO_NUM, 0xfeu);
@@ -1337,6 +1370,7 @@ TEST(CO_NmtSrv, CoNmtOnTpdoEvent_StopStart_Unlock) {
 ///       Transmit-PDO
 ///
 /// \Then the PDO message is transmitted for the configured Transmit-PDO
+///       \Calls co_nmt_on_tpdo_event()
 TEST(CO_NmtSrv, CoNmtTpdoEventInd_Nominal) {
   CreateObj2020PdoMapped();
   CreateObj1800Defaults(TPDO_NUM, DEV_ID + TPDO_NUM, 0xfeu);

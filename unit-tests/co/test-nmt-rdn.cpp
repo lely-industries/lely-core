@@ -24,7 +24,6 @@
 #include <config.h>
 #endif
 
-#include <functional>
 #include <memory>
 
 #include <CppUTest/TestHarness.h>
