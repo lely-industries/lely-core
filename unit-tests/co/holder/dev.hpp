@@ -37,6 +37,9 @@
 #include "obj.hpp"
 #include "obj-init/obj-init.hpp"
 
+/// Wrapper for #co_dev_t that separates unit-tests from memory allocation.
+/// Allows for the same unit tests to run with dynamic allocation disabled or
+/// enabled.
 class CoDevTHolder : public Holder<co_dev_t> {
  public:
 #if LELY_NO_MALLOC

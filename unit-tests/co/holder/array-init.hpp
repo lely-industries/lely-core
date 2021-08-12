@@ -28,6 +28,9 @@
 
 #include <lely/co/val.h>
 
+/// Wrapper for #co_array that separates unit-tests from memory allocation.
+/// Allows for the same unit tests to run with dynamic allocation disabled or
+/// enabled.
 class CoArrays {
  public:
   template <typename T>

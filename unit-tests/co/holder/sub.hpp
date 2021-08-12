@@ -31,6 +31,9 @@
 
 #include "holder.hpp"
 
+/// Wrapper for #co_sub_t that separates unit-tests from memory allocation.
+/// Allows for the same unit tests to run with dynamic allocation disabled or
+/// enabled.
 class CoSubTHolder : public Holder<co_sub_t> {
 #if LELY_NO_MALLOC
 

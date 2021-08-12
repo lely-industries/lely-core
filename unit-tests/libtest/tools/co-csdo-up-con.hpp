@@ -25,6 +25,7 @@
 
 #include <lely/co/type.h>
 
+/// #co_csdo_up_con_t mock.
 struct CoCsdoUpCon {
   static co_csdo_t* sdo;
   static co_unsigned16_t idx;

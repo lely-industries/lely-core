@@ -25,6 +25,7 @@
 
 #include <lely/co/nmt.h>
 
+/// #co_nmt_sync_ind_t mock.
 class CoNmtSyncInd {
  public:
   static void Func(co_nmt_t* nmt, co_unsigned8_t cnt, void* data);

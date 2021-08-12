@@ -33,6 +33,8 @@
 
 namespace Allocators {
 
+/// Memory allocator that allows control over available memory left.
+/// See #alloc_t.
 class Limited {
  public:
   explicit Limited() : alloc(&vtbl) {

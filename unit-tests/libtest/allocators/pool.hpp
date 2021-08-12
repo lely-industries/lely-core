@@ -29,6 +29,7 @@
 
 namespace Allocators {
 
+/// Memory pool based allocator (see #alloc_t).
 template <size_t PoolSize>
 class PoolAllocator {
  public:

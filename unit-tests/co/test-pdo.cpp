@@ -1330,21 +1330,18 @@ TEST(CO_Pdo, CoPdoUnmap) {
 TEST_GROUP_BASE(CoPdo_CoPdoDn, CO_PdoBase) {
   co_pdo_map_par par = CO_PDO_MAP_PAR_INIT;
 
-  static bool co_sub_dn_ind_called;
-
   static co_unsigned32_t co_sub_dn_ind_error(co_sub_t*, struct co_sdo_req*,
                                              const co_unsigned32_t ac, void*) {
     if (ac != 0) return ac;
     return CO_SDO_AC_PARAM_VAL;
   }
-  static co_unsigned32_t co_sub_dn_ind_ok(co_sub_t*, co_sdo_req*,
-                                          const co_unsigned32_t ac, void*) {
+  static co_unsigned32_t co_sub_dn_ind_ok(
+      co_sub_t*, co_sdo_req*, const co_unsigned32_t ac, void* const data) {
     if (ac != 0) return ac;
-    co_sub_dn_ind_called = true;
+    *static_cast<bool*>(data) = true;
     return 0u;
   }
 };
-bool TEST_GROUP_CppUTestGroupCoPdo_CoPdoDn::co_sub_dn_ind_called = false;
 
 /// @name co_pdo_dn()
 ///@{
@@ -1444,7 +1441,8 @@ TEST(CoPdo_CoPdoDn, Nominal) {
   co_sub_t* const sub0000_0 = obj0000.GetLastSub();
   CHECK_EQUAL(0, co_sub_set_access(sub0000_0, CO_ACCESS_RW));
   co_sub_set_pdo_mapping(sub0000_0, true);
-  co_sub_set_dn_ind(sub0000_0, &co_sub_dn_ind_ok, nullptr);
+  bool co_sub_dn_ind_called = false;
+  co_sub_set_dn_ind(sub0000_0, &co_sub_dn_ind_ok, &co_sub_dn_ind_called);
   CHECK_EQUAL(0, co_dev_insert_obj(dev, obj0000.Take()));
 
   const auto ret = co_pdo_dn(&par, dev, &req, buf, n);
@@ -1458,8 +1456,6 @@ TEST(CoPdo_CoPdoDn, Nominal) {
 TEST_GROUP_BASE(CoPdo_CoPdoUp, CO_PdoBase) {
   co_pdo_map_par par = CO_PDO_MAP_PAR_INIT;
   co_unsigned8_t buf[12] = {0x00u};
-  static bool sub_up_ind_called;
-  static co_unsigned8_t reqbuf[];
 
   static co_unsigned32_t sub_ind_not_req_first(
       const co_sub_t*, co_sdo_req* const req, const co_unsigned32_t ac, void*) {
@@ -1489,17 +1485,17 @@ TEST_GROUP_BASE(CoPdo_CoPdoUp, CO_PdoBase) {
     return CO_SDO_AC_ERROR;
   }
   static co_unsigned32_t sub_up_ind(const co_sub_t*, co_sdo_req* const req,
-                                    const co_unsigned32_t ac, void*) {
+                                    const co_unsigned32_t ac,
+                                    void* const data) {
     if (ac != 0) return ac;
-    sub_up_ind_called = true;
+    *static_cast<bool*>(data) = true;
+    static co_unsigned8_t reqbuf[12] = {0xffu, 0xffu, 0xffu, 0xffu,
+                                        0xffu, 0xffu, 0xffu, 0xffu,
+                                        0xffu, 0xffu, 0xffu, 0xffu};
     req->buf = reqbuf;
     return 0u;
   }
 };
-bool TEST_GROUP_CppUTestGroupCoPdo_CoPdoUp::sub_up_ind_called = false;
-co_unsigned8_t TEST_GROUP_CppUTestGroupCoPdo_CoPdoUp::reqbuf[12] = {
-    0xffu, 0xffu, 0xffu, 0xffu, 0xffu, 0xffu,
-    0xffu, 0xffu, 0xffu, 0xffu, 0xffu, 0xffu};
 
 /// @name co_pdo_up()
 ///@{
@@ -1685,7 +1681,8 @@ TEST(CoPdo_CoPdoUp, Nominal) {
   obj0000.InsertAndSetSub(0x01u, CO_DEFTYPE_UNSIGNED16,
                           co_unsigned16_t{0xbbddu});
   CHECK_EQUAL(0, co_dev_insert_obj(dev, obj0000.Take()));
-  co_sub_set_up_ind(sub, &sub_up_ind, nullptr);
+  bool sub_up_ind_called = false;
+  co_sub_set_up_ind(sub, &sub_up_ind, &sub_up_ind_called);
 
   const auto ret = co_pdo_up(&par, dev, &req, buf, &n);
 

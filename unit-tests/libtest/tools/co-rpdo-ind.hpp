@@ -25,6 +25,7 @@
 
 #include <lely/co/rpdo.h>
 
+/// #co_rpdo_ind_t mock.
 class CoRpdoInd {
  public:
   static void Func(co_rpdo_t* pdo, co_unsigned32_t ac, const void* ptr,

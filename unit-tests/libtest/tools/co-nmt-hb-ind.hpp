@@ -25,6 +25,7 @@
 
 #include <lely/co/nmt.h>
 
+/// #co_nmt_hb_ind_t spy.
 class CoNmtHbInd {
  public:
   static void Func(co_nmt_t* nmt, co_unsigned8_t id, co_nmt_ec_state_t state,
@@ -51,6 +52,7 @@ class CoNmtHbInd {
   static bool skipCallToDefaultInd;
 };
 
+/// #co_nmt_hb_ind_t mock that allows multiple calls.
 class CoNmtHbIndMock {
  public:
   co_nmt_hb_ind_t* GetFunc();
