@@ -35,7 +35,7 @@
 #define CAN_MASK_EID UINT32_C(0x1fffffff)
 
 /// The flags of a CAN or CAN FD format frame.
-enum {
+enum can_flag {
 	/**
 	 * The Identifier Extension (IDE) flag. If this flag is set, the CAN
 	 * Extended Format (with a 29-bit identifier) is used, otherwise the
@@ -88,10 +88,7 @@ enum {
 struct can_msg {
 	/// The identifier (11 or 29 bits, depending on the #CAN_FLAG_IDE flag).
 	uint_least32_t id;
-	/**
-	 * The flags (any combination of #CAN_FLAG_IDE, #CAN_FLAG_RTR,
-	 * #CAN_FLAG_FDF, #CAN_FLAG_BRS and #CAN_FLAG_ESI).
-	 */
+	/// The flags (any combination of #can_flag items).
 	uint_least8_t flags;
 	/**
 	 * The number of bytes in #data (or the requested number of bytes in
