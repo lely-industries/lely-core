@@ -25,7 +25,7 @@
 
 #include "obj-init/obj-init.hpp"
 
-// 0x1029: Error behavior object
+/// 0x1029: Error behavior object
 struct Obj1029ErrorBehavior : ObjInitT<0x1029u> {
   static const co_unsigned8_t CHANGE_TO_PREOP = 0x00u;
   static const co_unsigned8_t NO_CHANGE = 0x01u;

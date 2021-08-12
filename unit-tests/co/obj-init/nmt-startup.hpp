@@ -25,7 +25,7 @@
 
 #include "obj-init/obj-init.hpp"
 
-// 0x1f80: NMT Start-up
+/// 0x1f80: NMT Start-up
 struct Obj1f80NmtStartup : ObjValueInitT<0x1f80u, CO_DEFTYPE_UNSIGNED32> {
   static const sub_type MASTER_BIT = 0x01u;
   static const sub_type AUTOSTART_BIT = 0x04u;

@@ -100,6 +100,7 @@ TEST(Util_MemPool, MemPool_Capacity) {
 ///@}
 
 /// @name mem_alloc()
+///@{
 
 /// \Given a pointer to an allocator (alloc_t) based on memory pool, with no
 ///        prior allocations
@@ -202,6 +203,7 @@ TEST(Util_MemPool, MemPool_Alloc_SizeZero) {
 ///@}
 
 /// @name mem_free()
+///@{
 
 /// \Given pointers to an allocator (alloc_t) based on memory pool and some
 ///        allocated memory

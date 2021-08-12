@@ -62,7 +62,11 @@ extern "C" {
  * The CANopen NMT redundancy indication function, invoked when a redundancy
  * event occurs.
  *
- * @param nmt a pointer to an NMT master/slave service.
+ * @param nmt    a pointer to an NMT master/slave service.
+ * @param bus_id a CAN bus identifier on which the event occurred.
+ * @param reason indicates whether the event occurred because of a bus
+                 switch (#CO_NMT_ECSS_RDN_BUS_SWITCH) or a no-master
+                 operation (#CO_NMT_ECSS_RDN_NO_MASTER).
  */
 void co_nmt_ecss_rdn_ind(co_nmt_t *nmt, uint_least8_t bus_id,
 		co_nmt_ecss_rdn_reason_t reason);

@@ -364,7 +364,7 @@ TEST(CO_CsdoInit, CoCsdoCreate_RecvCreateFail) {
 ///       \Calls can_timer_create()
 ///       \Calls co_csdo_get_alloc()
 ///       \Calls get_errc()
-///       \Calle can_recv_destroy()
+///       \Calls can_recv_destroy()
 ///       \Calls set_errc()
 ///       \Calls mem_free()
 ///       \Calls co_csdo_get_alloc()

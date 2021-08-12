@@ -315,7 +315,7 @@ doc:
   needs: []
   script:
     - autoreconf -i
-    - ./configure
+    - ./configure $LELY_CORE_ANALYSIS_CONFIGURE_OPTIONS
     - make html
   artifacts:
     when: always

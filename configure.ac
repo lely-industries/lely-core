@@ -611,6 +611,7 @@ AC_REQUIRE_AUX_FILE([tap-driver.sh])
 AC_CONFIG_HEADERS(config.h)
 AC_CONFIG_FILES([
 	doc/Doxyfile
+	doc/Doxyfile.ecss
 	doc/Makefile
 	include/Makefile
 	lib/can/Makefile

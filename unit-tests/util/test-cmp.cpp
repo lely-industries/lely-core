@@ -271,7 +271,7 @@ TEST(Util_Cmp, StrCaseCmp_StrLessNull) {
 
 /// \Given N/A
 ///
-/// \When <typename>_cmp() (e.g. uint32_cmp()) is called with pointers to
+/// \When {typename}_cmp() (e.g. uint32_cmp()) is called with pointers to
 ///       variables with same value
 ///
 /// \Then 0 is returned
@@ -293,7 +293,7 @@ TEST(Util_Cmp, TypeCmp_Equal) {
 
 /// \Given N/A
 ///
-/// \When <typename>_cmp() (e.g. uint32_cmp()) is called with two pointers
+/// \When {typename}_cmp() (e.g. uint32_cmp()) is called with two pointers
 ///       where the first pointer points to the greater variable
 ///
 /// \Then 1 is returned
@@ -315,7 +315,7 @@ TEST(Util_Cmp, TypeCmp_FirstGreater) {
 
 /// \Given N/A
 ///
-/// \When <typename>_cmp() (e.g. uint32_cmp()) is called with two pointers where
+/// \When {typename}_cmp() (e.g. uint32_cmp()) is called with two pointers where
 ///       the second pointer points to the greater variable
 ///
 /// \Then -1 is returned
@@ -337,7 +337,7 @@ TEST(Util_Cmp, TypeCmp_SecondGreater) {
 
 /// \Given N/A
 ///
-/// \When <typename>_cmp() (e.g. uint32_cmp()) is called with two pointers to
+/// \When {typename}_cmp() (e.g. uint32_cmp()) is called with two pointers to
 ///       same variable
 ///
 /// \Then 0 is returned
@@ -358,7 +358,7 @@ TEST(Util_Cmp, TypeCmp_PtrEqual) {
 
 /// \Given N/A
 ///
-/// \When <typename>_cmp() (e.g. uint32_cmp()) is called with a null pointer as
+/// \When {typename}_cmp() (e.g. uint32_cmp()) is called with a null pointer as
 ///       first argument and a non-null pointer as second argument
 ///
 /// \Then -1 is returned
@@ -379,7 +379,7 @@ TEST(Util_Cmp, TypeCmp_FirstPtrNull) {
 
 /// \Given N/A
 ///
-/// \When <typename>_cmp() (e.g. uint32_cmp()) is called with a non-null pointer
+/// \When {typename}_cmp() (e.g. uint32_cmp()) is called with a non-null pointer
 ///       as first argument and a null pointer as second argument
 ///
 /// \Then 1 is returned
@@ -400,7 +400,7 @@ TEST(Util_Cmp, TypeCmp_SecondPtrNull) {
 
 /// \Given N/A
 ///
-/// \When <typename>_cmp() (e.g. uint32_cmp()) is called with two null pointers
+/// \When {typename}_cmp() (e.g. uint32_cmp()) is called with two null pointers
 ///
 /// \Then 0 is returned
 TEST(Util_Cmp, TypeCmp_BothPtrNull) {

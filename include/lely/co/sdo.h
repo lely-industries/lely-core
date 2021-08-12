@@ -270,7 +270,7 @@ void co_sdo_req_fini(struct co_sdo_req *req);
 void co_sdo_req_clear(struct co_sdo_req *req);
 
 /**
- * Returns <b>true</> if the specified request includes the first
+ * Returns <b>true</b> if the specified request includes the first
  * segment, and <b>false</b> otherwise.
  */
 LELY_CO_SDO_INLINE bool co_sdo_req_first(const struct co_sdo_req *req);

@@ -77,6 +77,7 @@
 /// The CAN identifier used for both node guarding and heartbeat monitoring.
 #define CO_NMT_EC_CANID(id) (0x700 + ((id)&0x7f))
 
+/// The NMT error control event state.
 typedef enum co_nmt_ec_state {
 	/// An NMT error control event occurred.
 	CO_NMT_EC_OCCURRED,
@@ -84,6 +85,7 @@ typedef enum co_nmt_ec_state {
 	CO_NMT_EC_RESOLVED
 } co_nmt_ec_state_t;
 
+/// The NMT error control event reason.
 typedef enum co_nmt_ec_reason {
 	/// An NMT error control timeout event.
 	CO_NMT_EC_TIMEOUT,
@@ -91,6 +93,7 @@ typedef enum co_nmt_ec_reason {
 	CO_NMT_EC_STATE
 } co_nmt_ec_reason_t;
 
+/// The NMT ECSS redundancy event reason.
 typedef enum co_nmt_ecss_rdn_reason {
 	/// An NMT ECSS redundancy manager bus switch.
 	CO_NMT_ECSS_RDN_BUS_SWITCH,

@@ -711,7 +711,7 @@ TEST(CO_NmtCreate, CoNmtDestroy_Null) { co_nmt_destroy(nullptr); }
 ///       \IfCalls{!LELY_NO_CO_MASTER, can_recv_destroy()}
 ///       \IfCalls{!LELY_NO_CO_MASTER, can_timer_destroy()}
 ///       \IfCalls{!LELY_NO_CO_MASTER, can_buf_fini()}
-///       \IfCalls {LELY_NO_MALLOC, co_nmt_hb_destroy()}
+///       \IfCalls{LELY_NO_MALLOC, co_nmt_hb_destroy()}
 ///       \Calls can_timer_stop()
 ///       \Calls can_timer_destroy()
 ///       \Calls can_recv_destroy()
@@ -748,7 +748,7 @@ TEST(CO_NmtCreate, CoNmtDestroy_Nominal) {
 ///       \IfCalls{!LELY_NO_CO_MASTER, can_recv_destroy()}
 ///       \IfCalls{!LELY_NO_CO_MASTER, can_timer_destroy()}
 ///       \IfCalls{!LELY_NO_CO_MASTER, can_buf_fini()}
-///       \IfCalls {LELY_NO_MALLOC, co_nmt_hb_destroy()}
+///       \IfCalls{LELY_NO_MALLOC, co_nmt_hb_destroy()}
 ///       \Calls can_timer_stop()
 ///       \Calls can_timer_destroy()
 ///       \Calls can_recv_destroy()
@@ -4301,7 +4301,7 @@ TEST(CO_Nmt, CoDevCfgHb_NodeIdOverMax) {
 ///        Consumer Heartbeat Time sub-objects, one containing an incorrect
 ///        Node-ID (zero)
 ///
-/// \Wen co_dev_cfg_hb() is called with a pointer to the device, a selected
+/// \When co_dev_cfg_hb() is called with a pointer to the device, a selected
 ///       Node-ID and a heartbeat time
 ///
 /// \Then 0 is returned and the requested value is assigned to the sub-object

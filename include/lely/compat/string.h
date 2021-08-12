@@ -115,7 +115,7 @@ int lely_compat_memcmp(const void *s1, const void *s2, size_t n);
 int lely_compat_strcmp(const char *s1, const char *s2);
 
 /**
- * Compares not more than <b>n</n> bytes (bytes that follow a null character are
+ * Compares not more than <b>n</b> bytes (bytes that follow a null character are
  * not compared) from the array pointed to by <b>s1</b> to the array pointed to
  * by <b>s2</b>.
  *

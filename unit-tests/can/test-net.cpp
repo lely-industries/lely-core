@@ -134,6 +134,8 @@ TEST_GROUP(CAN_Net) {
   TEST_TEARDOWN() { can_net_destroy(net); }
 };
 
+///@}
+
 /// @name can_net_destroy()
 ///@{
 

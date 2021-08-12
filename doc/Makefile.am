@@ -1,7 +1,12 @@
 if HAVE_DOXYGEN
 
+if ECSS_COMPLIANCE
+html-local: Doxyfile Doxyfile.ecss
+	$(DOXYGEN) Doxyfile.ecss
+else
 html-local: Doxyfile
 	$(DOXYGEN)
+endif
 
 install-data-local: install-html-local
 

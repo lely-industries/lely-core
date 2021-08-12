@@ -46,7 +46,7 @@
 #include "holder/obj.hpp"
 #include "holder/sub.hpp"
 
-// TPDO indication function
+/// TPDO indication function spy
 struct CoTpdoInd {
   static bool called;
 
@@ -87,7 +87,7 @@ const void* CoTpdoInd::ptr = nullptr;
 size_t CoTpdoInd::n = 0;
 void* CoTpdoInd::data = nullptr;
 
-// TPDO sample indication function
+/// TPDO sample indication function spy
 struct CoTpdoSampleInd {
   static bool called;
   static int ret;
