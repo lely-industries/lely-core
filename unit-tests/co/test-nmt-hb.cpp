@@ -24,7 +24,6 @@
 #include <config.h>
 #endif
 
-#include <functional>
 #include <memory>
 
 #include <CppUTest/TestHarness.h>
@@ -461,6 +460,11 @@ TEST_GROUP_BASE(CO_NmtHb, CO_NmtHbBase) {
 /// \When the node is reset with the NMT service RESET NODE
 ///
 /// \Then none heartbeat consumers are initialized
+///       \Calls co_dev_find_obj()
+///       \Calls co_obj_get_val_u8()
+///       \IfCalls{LELY_NO_MALLOC, set_errnum()}
+///       \Calls diag()
+///       \Calls get_errc()
 TEST(CO_NmtHb, CoNmtHbInit_HbOverMax) {
   CreateObj1016ConsumerHbTimeN(CO_NMT_MAX_NHB + 1u);
   CreateNmt();
@@ -480,6 +484,11 @@ TEST(CO_NmtHb, CoNmtHbInit_HbOverMax) {
 /// \When the node is reset with the NMT service RESET NODE
 ///
 /// \Then all configured heartbeat consumers are initialized
+///       \Calls co_dev_find_obj()
+///       \Calls co_obj_get_val_u8()
+///       \Calls co_nmt_hb_create()
+///       \Calls co_obj_get_val_u32()
+///       \Calls co_nmt_hb_set_1016()
 TEST(CO_NmtHb, CoNmtHbInit_Nominal) {
 #if LELY_NO_MALLOC
   CreateObj1016ConsumerHbTimeN(CO_NMT_MAX_NHB);
@@ -576,6 +585,7 @@ TEST(CO_NmtHb, CoNmtHbInd_Nominal_ReasonTimeout) {
 /// \Then the NMT heartbeat indication function is called with the passed
 ///       Node-ID, the state and the reason; the NMT state change indication
 ///       function is called with the Node-ID and the state of the node
+///       \Calls co_nmt_st_ind()
 TEST(CO_NmtHb, CoNmtHbInd_Nominal_ReasonStateChange) {
   CreateNmt();
   const auto state = CO_NMT_EC_OCCURRED;
@@ -604,7 +614,7 @@ TEST(CO_NmtHb, CoNmtHbInd_Nominal_ReasonStateChange) {
 ///
 /// \Then nothing is changed
 TEST(CO_NmtHb, CoNmtOnHb_ZeroNodeId) {
-  CreateObj1029ErrorBehaviour(2);
+  CreateObj1029ErrorBehaviour(Obj1029ErrorBehavior::CHANGE_TO_STOP);
   CreateNmtAndReset();
 
   co_nmt_on_hb(nmt, 0, CO_NMT_EC_OCCURRED, CO_NMT_EC_STATE);
@@ -620,7 +630,7 @@ TEST(CO_NmtHb, CoNmtOnHb_ZeroNodeId) {
 ///
 /// \Then nothing is changed
 TEST(CO_NmtHb, CoNmtOnHb_NodeIdOverMax) {
-  CreateObj1029ErrorBehaviour(2);
+  CreateObj1029ErrorBehaviour(Obj1029ErrorBehavior::CHANGE_TO_STOP);
   CreateNmtAndReset();
 
   co_nmt_on_hb(nmt, CO_NUM_NODES + 1u, CO_NMT_EC_OCCURRED, CO_NMT_EC_STATE);
@@ -635,8 +645,9 @@ TEST(CO_NmtHb, CoNmtOnHb_NodeIdOverMax) {
 ///       CO_NMT_EC_STATE reason
 ///
 /// \Then nothing is changed
+///       \IfCalls{!LELY_NO_CO_ECSS_REDUNDANCY, co_nmt_rdn_get_master_id()}
 TEST(CO_NmtHb, CoNmtOnHb_StateOccured) {
-  CreateObj1029ErrorBehaviour(2);
+  CreateObj1029ErrorBehaviour(Obj1029ErrorBehavior::CHANGE_TO_STOP);
   CreateNmtAndReset();
 
   co_nmt_on_hb(nmt, PRODUCER_DEV_ID, CO_NMT_EC_OCCURRED, CO_NMT_EC_STATE);
@@ -651,8 +662,9 @@ TEST(CO_NmtHb, CoNmtOnHb_StateOccured) {
 ///       CO_NMT_EC_TIMEOUT reason
 ///
 /// \Then nothing is changed
+///       \IfCalls{!LELY_NO_CO_ECSS_REDUNDANCY, co_nmt_rdn_get_master_id()}
 TEST(CO_NmtHb, CoNmtOnHb_TimeoutResolved) {
-  CreateObj1029ErrorBehaviour(2);
+  CreateObj1029ErrorBehaviour(Obj1029ErrorBehavior::CHANGE_TO_STOP);
   CreateNmtAndReset();
 
   co_nmt_on_hb(nmt, PRODUCER_DEV_ID, CO_NMT_EC_RESOLVED, CO_NMT_EC_TIMEOUT);
@@ -668,8 +680,11 @@ TEST(CO_NmtHb, CoNmtOnHb_TimeoutResolved) {
 ///
 /// \Then the configured error behaviour is invoked, the node transitions to
 ///       the NMT 'stop' state
+///       \IfCalls{!LELY_NO_CO_ECSS_REDUNDANCY, co_nmt_rdn_get_master_id()}
+///       \Calls co_nmt_is_master()
+///       \Calls co_nmt_on_err()
 TEST(CO_NmtHb, CoNmtOnHb_TimeoutOccured) {
-  CreateObj1029ErrorBehaviour(2);
+  CreateObj1029ErrorBehaviour(Obj1029ErrorBehavior::CHANGE_TO_STOP);
   CreateNmtAndReset();
 
   co_nmt_on_hb(nmt, PRODUCER_DEV_ID, CO_NMT_EC_OCCURRED, CO_NMT_EC_TIMEOUT);
@@ -688,8 +703,11 @@ TEST(CO_NmtHb, CoNmtOnHb_TimeoutOccured) {
 ///
 /// \Then the NMT error indication is invoked, the master submits an NMT 'reset
 ///       node' request for the node with the passed Node-ID
+///       \IfCalls{!LELY_NO_CO_ECSS_REDUNDANCY, co_nmt_rdn_get_master_id()}
+///       \Calls co_nmt_is_master()
+///       \Calls co_nmt_node_err_ind()
 TEST(CO_NmtHb, CoNmtOnHb_TimeoutOccured_Master) {
-  CreateObj1029ErrorBehaviour(2);
+  CreateObj1029ErrorBehaviour(Obj1029ErrorBehavior::CHANGE_TO_STOP);
   SetupMasterWithSlave();
   CreateNmtAndReset();
 
@@ -717,6 +735,7 @@ TEST(CO_NmtHb, CoNmtOnHb_TimeoutOccured_Master) {
 ///       Node-ID, CO_NMT_EC_OCCURRED event and CO_NMT_EC_STATE reason; the
 ///       state change indication function is called with the Node-ID and the
 ///       new state of the node
+///       \Calls co_nmt_on_hb()
 TEST(CO_NmtHb, CoNmtHbInd_Default) {
   CreateObj1016ConsumerHbTimeN();
   CreateNmtAndReset();
@@ -742,6 +761,8 @@ TEST(CO_NmtHb, CoNmtHbInd_Default) {
 ///
 /// \Then the NMT heartbeat indication function is called with the node's
 ///       Node-ID, CO_NMT_EC_OCCURRED state and CO_NMT_EC_TIMEOUT reason
+///       \Calls diag()
+///       \Calls co_nmt_hb_ind()
 TEST(CO_NmtHb, CoNmtHbTimer_Timeout) {
   CreateHb();
   co_nmt_hb_set_1016(hb, PRODUCER_DEV_ID, HB_TIMEOUT_MS);
@@ -766,6 +787,8 @@ TEST(CO_NmtHb, CoNmtHbTimer_Timeout) {
 ///
 /// \Then the NMT heartbeat receiver is not started, the NMT heartbeat
 ///       indication function is not called
+///       \Calls can_recv_stop()
+///       \Calls can_timer_stop()
 TEST(CO_NmtHb, CoNmtHbSet1016_ZeroNodeId) {
   CreateHb();
 
@@ -783,7 +806,9 @@ TEST(CO_NmtHb, CoNmtHbSet1016_ZeroNodeId) {
 ///
 /// \Then the NMT heartbeat receiver is not started, the NMT heartbeat
 ///       indication function is not called
-TEST(CO_NmtHb, CoNmtHbSet1016_NodeIdTooLarge) {
+///       \Calls can_recv_stop()
+///       \Calls can_timer_stop()
+TEST(CO_NmtHb, CoNmtHbSet1016_NodeIdOverMax) {
   CreateHb();
 
   co_nmt_hb_set_1016(hb, CO_NUM_NODES + 1u, HB_TIMEOUT_MS);
@@ -800,6 +825,8 @@ TEST(CO_NmtHb, CoNmtHbSet1016_NodeIdTooLarge) {
 ///
 /// \Then the NMT heartbeat receiver is not started, the NMT heartbeat
 ///       indication function is not called
+///       \Calls can_recv_stop()
+///       \Calls can_timer_stop()
 TEST(CO_NmtHb, CoNmtHbSet1016_ZeroTimeout) {
   CreateHb();
 
@@ -819,6 +846,9 @@ TEST(CO_NmtHb, CoNmtHbSet1016_ZeroTimeout) {
 ///       message with a new state from the node the NMT heartbeat indication
 ///       function is called with the node's Node-ID, CO_NMT_EC_OCCURRED state,
 ///       CO_NMT_EC_STATE reason and a pointer to user-specified data
+///       \Calls can_recv_stop()
+///       \Calls can_timer_stop()
+///       \Calls can_recv_start()
 TEST(CO_NmtHb, CoNmtHbSet1016_Nominal) {
   CreateHb();
 
@@ -865,7 +895,7 @@ TEST(CO_NmtHb, CoNmtHbSetSt_ZeroNodeId) {
 /// \Then the NMT heartbeat consumer timer is not started, the NMT heartbeat
 ///       indication function is not called after the heartbeat consumer time
 ///       has passed
-TEST(CO_NmtHb, CoNmtHbSetSt_NodeIdTooLarge) {
+TEST(CO_NmtHb, CoNmtHbSetSt_NodeIdOverMax) {
   CreateHb();
   co_nmt_hb_set_1016(hb, CO_NUM_NODES + 1u, HB_TIMEOUT_MS);
 
@@ -902,6 +932,7 @@ TEST(CO_NmtHb, CoNmtHbSetSt_ZeroTimeout) {
 ///       heartbeat consumer time have passed the NMT heartbeat indication
 ///       function is called with the node's Node-ID, CO_NMT_EC_OCCURRED state,
 ///       CO_NMT_EC_TIMEOUT reason and a pointer to user-specified data
+///       \Calls can_timer_timeout()
 TEST(CO_NmtHb, CoNmtHbSetSt_Nominal) {
   CreateHb();
   co_nmt_hb_set_1016(hb, PRODUCER_DEV_ID, HB_TIMEOUT_MS);
@@ -918,53 +949,6 @@ TEST(CO_NmtHb, CoNmtHbSetSt_Nominal) {
 
 /// @name NMT service: the NMT heartbeat message reception
 ///@{
-
-/// \Given a pointer to NMT service (co_nmt_t) with the NMT heartbeat consumer
-///        service configured for a node
-///
-/// \When a heartbeat message with the node's changed state is received from the
-///       node
-///
-/// \Then the NMT heartbeat indication function is called with the node's
-///       Node-ID, CO_NMT_EC_OCCURRED event and CO_NMT_EC_STATE reason; the
-///       state change indication function is called with the Node-ID and the
-///       new state of the node
-TEST(CO_NmtHb, CoNmtHbRecv_NodeStateChange) {
-  CreateHb();
-  co_nmt_hb_set_1016(hb, PRODUCER_DEV_ID, HB_TIMEOUT_MS);
-  co_nmt_hb_set_st(hb, CO_NMT_ST_START);
-  const uint_least8_t newSt = CO_NMT_ST_STOP;
-
-  const auto msg = CreateHbMsg(PRODUCER_DEV_ID, newSt);
-  CHECK_EQUAL(1u, can_net_recv(net, &msg, 0u));
-
-  CHECK_EQUAL(1u, CoNmtHbInd::GetNumCalled());
-  CoNmtHbInd::Check(nmt, PRODUCER_DEV_ID, CO_NMT_EC_OCCURRED, CO_NMT_EC_STATE,
-                    &hbIndData);
-  CHECK_EQUAL(1u, CoNmtStInd::GetNumCalled());
-  CoNmtStInd::Check(nmt, PRODUCER_DEV_ID, newSt, &stIndData);
-}
-
-/// \Given a pointer to NMT service (co_nmt_t) with the NMT heartbeat consumer
-///        service configured for a node
-///
-/// \When a heartbeat message with the node's current state is received from the
-///       node
-///
-/// \Then the NMT heartbeat indication function is not called; the state change
-///       indication function is not called
-TEST(CO_NmtHb, CoNmtHbRecv_NodeStateNotChanged) {
-  CreateHb();
-  const uint_least8_t st = CO_NMT_ST_START;
-  co_nmt_hb_set_1016(hb, PRODUCER_DEV_ID, HB_TIMEOUT_MS);
-  co_nmt_hb_set_st(hb, st);
-
-  const auto msg = CreateHbMsg(PRODUCER_DEV_ID, st);
-  CHECK_EQUAL(1u, can_net_recv(net, &msg, 0u));
-
-  CHECK_EQUAL(0u, CoNmtHbInd::GetNumCalled());
-  CHECK_EQUAL(0u, CoNmtStInd::GetNumCalled());
-}
 
 /// \Given a pointer to NMT service (co_nmt_t) with the NMT heartbeat consumer
 ///        service configured for a node
@@ -996,13 +980,64 @@ TEST(CO_NmtHb, CoNmtHbRecv_MsgTooShort) {
 ///
 /// \Then the NMT heartbeat indication function is not called; the state change
 ///       indication function is not called
-TEST(CO_NmtHb, CoNmtHbRecv_MsgWithToggleBit) {
+TEST(CO_NmtHb, CoNmtHbRecv_MessageWithToggleBit) {
   CreateHb();
   const uint_least8_t st = CO_NMT_ST_START;
   co_nmt_hb_set_1016(hb, PRODUCER_DEV_ID, HB_TIMEOUT_MS);
   co_nmt_hb_set_st(hb, st);
 
   const auto msg = CreateHbMsg(PRODUCER_DEV_ID, st | CO_NMT_ST_TOGGLE);
+  CHECK_EQUAL(1u, can_net_recv(net, &msg, 0u));
+
+  CHECK_EQUAL(0u, CoNmtHbInd::GetNumCalled());
+  CHECK_EQUAL(0u, CoNmtStInd::GetNumCalled());
+}
+
+/// \Given a pointer to NMT service (co_nmt_t) with the NMT heartbeat consumer
+///        service configured for a node
+///
+/// \When a heartbeat message with the node's changed state is received from the
+///       node
+///
+/// \Then the NMT heartbeat indication function is called with the node's
+///       Node-ID, CO_NMT_EC_OCCURRED event and CO_NMT_EC_STATE reason; the
+///       state change indication function is called with the Node-ID and the
+///       new state of the node
+///       \Calls co_nmt_hb_set_st()
+///       \Calls diag()
+///       \Calls co_nmt_hb_ind()
+TEST(CO_NmtHb, CoNmtHbRecv_NodeStateChange) {
+  CreateHb();
+  co_nmt_hb_set_1016(hb, PRODUCER_DEV_ID, HB_TIMEOUT_MS);
+  co_nmt_hb_set_st(hb, CO_NMT_ST_START);
+  const uint_least8_t newSt = CO_NMT_ST_STOP;
+
+  const auto msg = CreateHbMsg(PRODUCER_DEV_ID, newSt);
+  CHECK_EQUAL(1u, can_net_recv(net, &msg, 0u));
+
+  CHECK_EQUAL(1u, CoNmtHbInd::GetNumCalled());
+  CoNmtHbInd::Check(nmt, PRODUCER_DEV_ID, CO_NMT_EC_OCCURRED, CO_NMT_EC_STATE,
+                    &hbIndData);
+  CHECK_EQUAL(1u, CoNmtStInd::GetNumCalled());
+  CoNmtStInd::Check(nmt, PRODUCER_DEV_ID, newSt, &stIndData);
+}
+
+/// \Given a pointer to NMT service (co_nmt_t) with the NMT heartbeat consumer
+///        service configured for a node
+///
+/// \When a heartbeat message with the node's current state is received from the
+///       node
+///
+/// \Then the NMT heartbeat indication function is not called; the state change
+///       indication function is not called
+///       \Calls co_nmt_hb_set_st()
+TEST(CO_NmtHb, CoNmtHbRecv_NodeStateNotChanged) {
+  CreateHb();
+  const uint_least8_t st = CO_NMT_ST_START;
+  co_nmt_hb_set_1016(hb, PRODUCER_DEV_ID, HB_TIMEOUT_MS);
+  co_nmt_hb_set_st(hb, st);
+
+  const auto msg = CreateHbMsg(PRODUCER_DEV_ID, st);
   CHECK_EQUAL(1u, can_net_recv(net, &msg, 0u));
 
   CHECK_EQUAL(0u, CoNmtHbInd::GetNumCalled());
@@ -1019,7 +1054,10 @@ TEST(CO_NmtHb, CoNmtHbRecv_MsgWithToggleBit) {
 /// \Then the NMT heartbeat indication function is called with the node's
 ///       Node-ID, CO_NMT_EC_RESOLVED event and CO_NMT_EC_TIMEOUT reason; the
 ///       state change indication function is not called
-TEST(CO_NmtHb, CoNmtHbRecv_MessageAfterTimeout) {
+///       \Calls co_nmt_hb_set_st()
+///       \Calls diag()
+///       \Calls co_nmt_hb_ind()
+TEST(CO_NmtHb, CoNmtHbRecv_ResolveTimeout) {
   CreateHb();
   const uint_least8_t st = CO_NMT_ST_START;
   co_nmt_hb_set_1016(hb, PRODUCER_DEV_ID, HB_TIMEOUT_MS);
@@ -1048,7 +1086,10 @@ TEST(CO_NmtHb, CoNmtHbRecv_MessageAfterTimeout) {
 /// \Then the NMT heartbeat indication function is called twice and the state
 ///       change indication function is called with the Node-ID and the new
 ///       state of the node
-TEST(CO_NmtHb, CoNmtHbRecv_MessageAfterTimeoutWithNewNodeState) {
+///       \Calls co_nmt_hb_set_st()
+///       \Calls diag()
+///       \Calls co_nmt_hb_ind()
+TEST(CO_NmtHb, CoNmtHbRecv_ResolveTimeoutWithNewNodeState) {
   CreateHb();
   const uint_least8_t newSt = CO_NMT_ST_STOP;
   co_nmt_hb_set_1016(hb, PRODUCER_DEV_ID, HB_TIMEOUT_MS);
