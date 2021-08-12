@@ -1168,6 +1168,8 @@ TEST_GROUP_BASE(CO_Csdo, CO_CsdoBase) {
   void InitiateBlockDownloadRequest(const co_unsigned16_t idx = IDX,
                                     const co_unsigned8_t subidx = SUBIDX,
                                     const sub_type val = 0) {
+    CHECK_TRUE(co_csdo_is_idle(csdo));
+
     CHECK_EQUAL(0, co_csdo_blk_dn_val_req(csdo, idx, subidx, SUB_TYPE, &val,
                                           CoCsdoDnCon::Func, nullptr));
     CanSend::Clear();
@@ -1176,6 +1178,8 @@ TEST_GROUP_BASE(CO_Csdo, CO_CsdoBase) {
   void InitiateBlockUploadRequest(
       const co_unsigned16_t idx = IDX, const co_unsigned8_t subidx = SUBIDX,
       const co_unsigned32_t size = sizeof(sub_type)) {
+    CHECK_TRUE(co_csdo_is_idle(csdo));
+
     CHECK_EQUAL(0, co_csdo_blk_up_req(csdo, idx, subidx, 0, nullptr,
                                       CoCsdoUpCon::func, nullptr));
 
@@ -1185,11 +1189,34 @@ TEST_GROUP_BASE(CO_Csdo, CO_CsdoBase) {
     CanSend::Clear();
   }
 
+  void InitiateBlockUploadRequestWithCrc(
+      const co_unsigned16_t idx = IDX, const co_unsigned8_t subidx = SUBIDX,
+      const co_unsigned32_t size = sizeof(sub_type)) {
+    CHECK_TRUE(co_csdo_is_idle(csdo));
+
+    CHECK_EQUAL(0, co_csdo_blk_up_req(csdo, idx, subidx, 0, nullptr,
+                                      CoCsdoUpCon::func, nullptr));
+
+    can_msg msg_res =
+        SdoCreateMsg::BlkUpIniRes(idx, subidx, DEFAULT_COBID_RES, size);
+    msg_res.data[0] |= CO_SDO_BLK_CRC;
+    CHECK_EQUAL(1, can_net_recv(net, &msg_res, 0));
+    CanSend::Clear();
+  }
+
   void ReceiveBlockDownloadSubInitiateResponse(const co_unsigned16_t idx,
                                                const co_unsigned8_t subidx) {
     const can_msg msg = SdoCreateMsg::BlkDnIniRes(
         idx, subidx, DEFAULT_COBID_RES, CO_SDO_SC_INI_BLK);
     CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
+  }
+
+  void ReceiveBlkUpSegReq() {
+    const uint_least8_t sequence_number = 1u;
+    const auto msg_up_seg =
+        SdoCreateMsg::BlkUpSegReq(DEFAULT_COBID_RES, sequence_number,
+                                  val_u16.GetSegmentData(), CO_SDO_SEQ_LAST);
+    CHECK_EQUAL(1, can_net_recv(net, &msg_up_seg, 0));
   }
 
   void CheckBlockDownloadEndRequestSent() const {
@@ -1215,6 +1242,8 @@ TEST_GROUP_BASE(CO_Csdo, CO_CsdoBase) {
 
   void InitiateOsBlockDownloadValRequest(const co_unsigned16_t idx,
                                          const co_unsigned8_t subidx) {
+    CHECK_TRUE(co_csdo_is_idle(csdo));
+
     CHECK_EQUAL(0, co_csdo_blk_dn_val_req(
                        csdo, idx, subidx, val_os.GetDataType(),
                        val_os.GetValPtr(), CoCsdoDnCon::Func, nullptr));
@@ -1223,9 +1252,19 @@ TEST_GROUP_BASE(CO_Csdo, CO_CsdoBase) {
 
   void AdvanceToBlkDnEndState(const co_unsigned16_t idx,
                               const co_unsigned8_t subidx) {
+    CHECK_TRUE(co_csdo_is_idle(csdo));
+
     InitiateOsBlockDownloadValRequest(idx, subidx);
     ReceiveBlockDownloadSubInitiateResponse(idx, subidx);
     CheckBlockDownloadEndRequestSent();
+  }
+
+  void AdvanceToBlkUpEndState() {
+    CHECK_TRUE(co_csdo_is_idle(csdo));
+
+    InitiateBlockUploadRequest();
+    ReceiveBlkUpSegReq();
+    CanSend::Clear();
   }
 
   TEST_SETUP() {
@@ -3213,7 +3252,6 @@ TEST(CO_Csdo, CoCsdoWaitOnRecv_NoCs) {
   msg.len = 0u;
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
-  CHECK_EQUAL(1u, CanSend::GetNumCalled());
   CheckSdoAbortSent(0u, 0u, CO_SDO_AC_NO_CS);
 }
 
@@ -3818,8 +3856,8 @@ TEST(CO_Csdo, CoCsdoBlkUpSubOnRecv_TimeoutSet) {
   InitiateBlockUploadRequest(IDX, subidx_u64, sizeof(sub_type64));
 
   co_unsigned8_t seqno = 1u;
-  const can_msg msg =
-      SdoCreateMsg::UpSeg(DEFAULT_COBID_RES, seqno, val_u64.GetFirstSegment());
+  const can_msg msg = SdoCreateMsg::BlkUpSegReq(DEFAULT_COBID_RES, seqno,
+                                                val_u64.GetFirstSegment());
   CHECK_EQUAL(1u, can_net_recv(net, &msg, 0));
 
   CHECK_EQUAL(0, CanSend::GetNumCalled());
@@ -3827,8 +3865,8 @@ TEST(CO_Csdo, CoCsdoBlkUpSubOnRecv_TimeoutSet) {
   CoCsdoUpDnReq::SetOneSecOnNet(net);
 
   ++seqno;
-  can_msg last_msg =
-      SdoCreateMsg::UpSeg(DEFAULT_COBID_RES, seqno, val_u64.GetLastSegment());
+  can_msg last_msg = SdoCreateMsg::BlkUpSegReq(DEFAULT_COBID_RES, seqno,
+                                               val_u64.GetLastSegment());
   last_msg.data[0] |= CO_SDO_SEQ_LAST;
   CHECK_EQUAL(1u, can_net_recv(net, &last_msg, 0));
 
@@ -3851,7 +3889,7 @@ TEST(CO_Csdo, CoCsdoBlkUpSubOnRecv_LastSegmentInBlock) {
 
   const co_unsigned8_t seqno = CO_SDO_MAX_SEQNO;
   const can_msg msg =
-      SdoCreateMsg::UpSeg(DEFAULT_COBID_RES, seqno, {0, 0, 0, 0});
+      SdoCreateMsg::BlkUpSegReq(DEFAULT_COBID_RES, seqno, {0, 0, 0, 0});
   CHECK_EQUAL(1u, can_net_recv(net, &msg, 0));
 
   CHECK_EQUAL(1, CanSend::GetNumCalled());
@@ -3876,7 +3914,7 @@ TEST(CO_Csdo, CoCsdoBlkUpSubOnRecv_NotLastButTooManyBytes) {
 
   const co_unsigned8_t seqno = 1u;
   const can_msg msg =
-      SdoCreateMsg::UpSeg(DEFAULT_COBID_RES, seqno, {0, 0, 0, 0});
+      SdoCreateMsg::BlkUpSegReq(DEFAULT_COBID_RES, seqno, {0, 0, 0, 0});
   CHECK_EQUAL(1u, can_net_recv(net, &msg, 0));
 
   CheckSdoAbortSent(IDX, SUBIDX, CO_SDO_AC_TYPE_LEN_HI);
@@ -3898,14 +3936,14 @@ TEST(CO_Csdo, CoCsdoBlkUpSubOnRecv_IncorrectSeqno) {
   InitiateBlockUploadRequest(IDX, subidx_u64, sizeof(sub_type64));
 
   co_unsigned8_t seqno = 1u;
-  const can_msg msg =
-      SdoCreateMsg::UpSeg(DEFAULT_COBID_RES, seqno, val_u64.GetFirstSegment());
+  const can_msg msg = SdoCreateMsg::BlkUpSegReq(DEFAULT_COBID_RES, seqno,
+                                                val_u64.GetFirstSegment());
   CHECK_EQUAL(1u, can_net_recv(net, &msg, 0));
 
   CHECK_EQUAL(0, CanSend::GetNumCalled());
 
   const co_unsigned8_t incorrect_seqno = 126u;
-  const can_msg faulty_msg = SdoCreateMsg::UpSeg(
+  const can_msg faulty_msg = SdoCreateMsg::BlkUpSegReq(
       DEFAULT_COBID_RES, incorrect_seqno,
       std::vector<uint_least8_t>(CO_SDO_SEG_MAX_DATA_SIZE, 0));
   CHECK_EQUAL(1u, can_net_recv(net, &faulty_msg, 0));
@@ -3913,8 +3951,8 @@ TEST(CO_Csdo, CoCsdoBlkUpSubOnRecv_IncorrectSeqno) {
   CHECK_EQUAL(0, CanSend::GetNumCalled());
 
   ++seqno;
-  can_msg last_msg =
-      SdoCreateMsg::UpSeg(DEFAULT_COBID_RES, seqno, val_u64.GetLastSegment());
+  can_msg last_msg = SdoCreateMsg::BlkUpSegReq(DEFAULT_COBID_RES, seqno,
+                                               val_u64.GetLastSegment());
   last_msg.data[0] |= CO_SDO_SEQ_LAST;
   CHECK_EQUAL(1u, can_net_recv(net, &last_msg, 0));
 
@@ -3949,16 +3987,16 @@ TEST(CO_Csdo, CoCsdoBlkUpSubOnRecv_Nominal) {
                            &user_specified_data);
 
   co_unsigned8_t seqno = 1u;
-  const can_msg msg =
-      SdoCreateMsg::UpSeg(DEFAULT_COBID_RES, seqno, val_u64.GetFirstSegment());
+  const can_msg msg = SdoCreateMsg::BlkUpSegReq(DEFAULT_COBID_RES, seqno,
+                                                val_u64.GetFirstSegment());
   CHECK_EQUAL(1u, can_net_recv(net, &msg, 0));
 
   CHECK_EQUAL(0, CanSend::GetNumCalled());
   CHECK_EQUAL(0, CoCsdoInd::GetNumCalled());
 
   ++seqno;
-  can_msg last_msg =
-      SdoCreateMsg::UpSeg(DEFAULT_COBID_RES, seqno, val_u64.GetLastSegment());
+  can_msg last_msg = SdoCreateMsg::BlkUpSegReq(DEFAULT_COBID_RES, seqno,
+                                               val_u64.GetLastSegment());
   last_msg.data[0] |= CO_SDO_SEQ_LAST;
   CHECK_EQUAL(1u, can_net_recv(net, &last_msg, 0));
 
@@ -3980,9 +4018,182 @@ TEST(CO_Csdo, CoCsdoBlkUpSubOnRecv_Nominal) {
 /// @name CSDO block upload end
 ///@{
 
-/// TODO(N7S): test cases for co_csdo_blk_up_end_on_abort()
-/// TODO(N7S): test cases for co_csdo_blk_up_end_on_time()
-/// TODO(N7S): test cases for co_csdo_blk_up_end_on_recv()
+// TODO(N7S): GWT
+TEST(CO_Csdo, CoCsdoBlkUpEndOnTime_TimeoutSet) {
+  co_csdo_set_timeout(csdo, 999);
+  StartCSDO();
+  AdvanceToBlkUpEndState();
+
+  CoCsdoUpDnReq::SetOneSecOnNet(net);
+
+  CheckSdoAbortSent(IDX, SUBIDX, CO_SDO_AC_TIMEOUT);
+}
+
+// TODO(N7S): GWT
+TEST(CO_Csdo, CoCsdoBlkUpEndOnRecv_NoCs) {
+  StartCSDO();
+  AdvanceToBlkUpEndState();
+
+  auto msg = SdoCreateMsg::Default(0xffffu, 0xffu, DEFAULT_COBID_RES);
+  msg.len = 0u;
+  CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
+
+  CheckSdoAbortSent(IDX, SUBIDX, CO_SDO_AC_NO_CS);
+}
+
+// TODO(N7S): GWT
+TEST(CO_Csdo, CoCsdoBlkUpEndOnRecv_CsAbort_ZeroAc) {
+  StartCSDO();
+  AdvanceToBlkUpEndState();
+
+  const auto msg = SdoCreateMsg::Abort(IDX, SUBIDX, DEFAULT_COBID_RES);
+  CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
+
+  CHECK_EQUAL(0u, CanSend::GetNumCalled());
+}
+
+// TODO(N7S): GWT
+TEST(CO_Csdo, CoCsdoBlkUpEndOnRecv_CsAbort_AcNonZero) {
+  StartCSDO();
+  AdvanceToBlkUpEndState();
+
+  const auto msg =
+      SdoCreateMsg::Abort(IDX, SUBIDX, DEFAULT_COBID_RES, CO_SDO_AC_HARDWARE);
+  CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
+
+  CHECK_EQUAL(0u, CanSend::GetNumCalled());
+}
+
+// TODO(N7S): GWT
+TEST(CO_Csdo, CoCsdoBlkUpEndOnRecv_CsAbort_IncompleteAc) {
+  StartCSDO();
+  AdvanceToBlkUpEndState();
+
+  auto msg =
+      SdoCreateMsg::Abort(IDX, SUBIDX, DEFAULT_COBID_RES, CO_SDO_AC_HARDWARE);
+  msg.len = 7u;
+  CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
+
+  CHECK_EQUAL(0u, CanSend::GetNumCalled());
+}
+
+// TODO(N7S): GWT
+TEST(CO_Csdo, CoCsdoBlkUpEndOnRecv_IncorrectCs) {
+  StartCSDO();
+  AdvanceToBlkUpEndState();
+
+  auto msg = SdoCreateMsg::BlkUpRes(DEFAULT_COBID_RES);
+  msg.data[0] |= 0xffu;
+  CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
+
+  CheckSdoAbortSent(IDX, SUBIDX, CO_SDO_AC_NO_CS);
+}
+
+// TODO(N7S): GWT
+TEST(CO_Csdo, CoCsdoBlkUpEndOnRecv_IncorrectSc) {
+  StartCSDO();
+  AdvanceToBlkUpEndState();
+
+  auto msg = SdoCreateMsg::BlkUpRes(DEFAULT_COBID_RES);
+  msg.data[0] |= 0x03u;
+  CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
+
+  CheckSdoAbortSent(IDX, SUBIDX, CO_SDO_AC_NO_CS);
+}
+
+// TODO(N7S): GWT
+TEST(CO_Csdo, CoCsdoBlkUpEndOnRecv_CheckCrcIncorrect) {
+  StartCSDO();
+  InitiateBlockUploadRequestWithCrc();
+  ReceiveBlkUpSegReq();
+  CanSend::Clear();
+
+  auto msg = SdoCreateMsg::BlkUpRes(DEFAULT_COBID_RES, sizeof(sub_type),
+                                    CO_SDO_SC_END_BLK);
+  stle_u16(msg.data + 1u, 0xffffu);  // incorrect CRC
+  CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
+
+  CheckSdoAbortSent(IDX, SUBIDX, CO_SDO_AC_BLK_CRC);
+}
+
+// TODO(N7S): GWT
+TEST(CO_Csdo, CoCsdoBlkUpEndOnRecv_CheckCrcCorrect) {
+  StartCSDO();
+  InitiateBlockUploadRequestWithCrc();
+  ReceiveBlkUpSegReq();
+  CanSend::Clear();
+
+  auto msg = SdoCreateMsg::BlkUpRes(DEFAULT_COBID_RES, sizeof(sub_type),
+                                    CO_SDO_SC_END_BLK);
+  stle_u16(msg.data + 1u, 0xfb22u);  // correct CRC for the example value
+  CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
+
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
+  const auto expected_msg =
+      SdoCreateMsg::BlkUpReq(DEFAULT_COBID_REQ, CO_SDO_SC_END_BLK);
+  CanSend::CheckMsg(expected_msg);
+}
+
+// TODO(N7S): GWT
+TEST(CO_Csdo, CoCsdoBlkUpEndOnRecv_EndBlkWithoutSegment) {
+  StartCSDO();
+  InitiateBlockUploadRequest();
+
+  const auto msg = SdoCreateMsg::BlkUpRes(
+      DEFAULT_COBID_RES, sizeof(co_unsigned8_t), CO_SDO_SC_END_BLK);
+  CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
+  CanSend::Clear();
+
+  const auto msg2 = SdoCreateMsg::BlkUpRes(
+      DEFAULT_COBID_RES, sizeof(co_unsigned8_t), CO_SDO_SC_END_BLK);
+  CHECK_EQUAL(1, can_net_recv(net, &msg2, 0));
+
+  CheckSdoAbortSent(IDX, SUBIDX, CO_SDO_AC_TYPE_LEN_LO);
+}
+
+// TODO(N7S): GWT
+TEST(CO_Csdo, CoCsdoBlkUpEndOnRecv_RequestZeroBytes) {
+  StartCSDO();
+  InitiateBlockUploadRequest(IDX, SUBIDX, 0u);
+  ReceiveBlkUpSegReq();
+  CanSend::Clear();
+
+  const auto msg =
+      SdoCreateMsg::BlkUpRes(DEFAULT_COBID_RES, 0, CO_SDO_SC_END_BLK);
+  CHECK_EQUAL(1u, can_net_recv(net, &msg, 0));
+
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
+  const auto expected_msg =
+      SdoCreateMsg::BlkUpReq(DEFAULT_COBID_REQ, CO_SDO_SC_END_BLK);
+  CanSend::CheckMsg(expected_msg);
+}
+
+// TODO(N7S): GWT
+TEST(CO_Csdo, CoCsdoBlkUpEndOnRecv_NoBytesInLastSegment) {
+  StartCSDO();
+  AdvanceToBlkUpEndState();
+
+  const auto msg =
+      SdoCreateMsg::BlkUpRes(DEFAULT_COBID_RES, 0, CO_SDO_SC_END_BLK);
+  CHECK_EQUAL(1u, can_net_recv(net, &msg, 0));
+
+  CheckSdoAbortSent(IDX, SUBIDX, CO_SDO_AC_NO_CS);
+}
+
+// TODO(N7S): GWT
+TEST(CO_Csdo, CoCsdoBlkUpEndOnRecv_Nominal) {
+  StartCSDO();
+  AdvanceToBlkUpEndState();
+
+  const auto msg = SdoCreateMsg::BlkUpRes(DEFAULT_COBID_RES, sizeof(sub_type),
+                                          CO_SDO_SC_END_BLK);
+  CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
+
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
+  const auto expected_msg =
+      SdoCreateMsg::BlkUpReq(DEFAULT_COBID_REQ, CO_SDO_SC_END_BLK);
+  CanSend::CheckMsg(expected_msg);
+}
 
 ///@}
 
@@ -4838,8 +5049,8 @@ TEST(CO_Csdo, CoCsdoSendBlkUpEndRes_Nominal) {
 
   const uint_least8_t sequence_number = 1u;
   const auto msg_up_seg =
-      SdoCreateMsg::UpSeg(DEFAULT_COBID_RES, sequence_number,
-                          val_u16.GetSegmentData(), CO_SDO_SEQ_LAST);
+      SdoCreateMsg::BlkUpSegReq(DEFAULT_COBID_RES, sequence_number,
+                                val_u16.GetSegmentData(), CO_SDO_SEQ_LAST);
   CHECK_EQUAL(1, can_net_recv(net, &msg_up_seg, 0));
   CanSend::Clear();
 

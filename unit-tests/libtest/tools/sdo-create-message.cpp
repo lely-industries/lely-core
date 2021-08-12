@@ -196,10 +196,10 @@ SdoCreateMsg::UpIniResWithSize(const co_unsigned16_t idx,
 }
 
 can_msg
-SdoCreateMsg::UpSeg(const uint_least32_t recipient_id,
-                    const uint_least8_t seqno,
-                    const std::vector<uint_least8_t>& data,
-                    const co_unsigned8_t cs_flags) {
+SdoCreateMsg::BlkUpSegReq(const uint_least32_t recipient_id,
+                          const uint_least8_t seqno,
+                          const std::vector<uint_least8_t>& data,
+                          const co_unsigned8_t cs_flags) {
   assert(data.size() <= CO_SDO_SEG_MAX_DATA_SIZE);
 
   can_msg msg = SdoCreateMsg::Default(0, 0, recipient_id);
