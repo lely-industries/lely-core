@@ -3032,3 +3032,23 @@ TEST(CO_DevTpdoEvent, CoDevTpdoEvent_CallsIndicationFunction_ForMatchedTpdos) {
 ///@}
 
 #endif  // !LELY_NO_CO_TPDO
+
+/// @name CO_ID_INIT
+///@{
+
+/// \Given N/A
+///
+/// \When initializing #co_id using #CO_ID_INIT macro
+///
+/// \Then the initialized structure is filled with the correct default values
+TEST(CO_Dev, CoIdInit) {
+  const co_id item = CO_ID_INIT;
+
+  CHECK_EQUAL(4u, item.n);
+  CHECK_EQUAL(0u, item.vendor_id);
+  CHECK_EQUAL(0u, item.product_code);
+  CHECK_EQUAL(0u, item.revision);
+  CHECK_EQUAL(0u, item.serial_nr);
+}
+
+///@}

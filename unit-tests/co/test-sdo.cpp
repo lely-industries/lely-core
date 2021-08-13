@@ -764,3 +764,22 @@ TEST(CO_Sdo, CoSdoReqUpVal) {
   CHECK_EQUAL(VAL_SIZE, req.nbyte);
   CHECK_EQUAL(0u, req.offset);
 }
+
+/// @name SDO_PAR_INIT
+///@{
+
+/// \Given N/A
+///
+/// \When initializing #co_sdo_par using #CO_SDO_PAR_INIT macro
+///
+/// \Then the initialized structure is filled with the correct default values
+TEST(CO_Sdo, CoSdoParInit) {
+  const co_sdo_par item = CO_SDO_PAR_INIT;
+
+  CHECK_EQUAL(3u, item.n);
+  CHECK_EQUAL(CO_SDO_COBID_VALID, item.cobid_req);
+  CHECK_EQUAL(CO_SDO_COBID_VALID, item.cobid_res);
+  CHECK_EQUAL(0u, item.id);
+}
+
+///@}
