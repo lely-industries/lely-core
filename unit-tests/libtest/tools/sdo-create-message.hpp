@@ -47,10 +47,12 @@ can_msg BlkDnSubReq(uint_least32_t recipient_id, co_unsigned8_t seqno,
 can_msg BlkDnIniRes(co_unsigned16_t idx, co_unsigned8_t subidx,
                     uint_least32_t recipient_id, co_unsigned8_t cs_flags = 0,
                     co_unsigned8_t blksize = 0);
-// block download end
-can_msg BlkDnEnd(co_unsigned16_t idx, co_unsigned8_t subidx,
-                 uint_least32_t recipient_id, co_unsigned16_t crc,
-                 co_unsigned8_t cs_flags = 0);
+// block download end request
+can_msg BlkDnEndReq(co_unsigned16_t idx, co_unsigned8_t subidx,
+                    uint_least32_t recipient_id, co_unsigned16_t crc,
+                    co_unsigned8_t cs_flags = 0);
+// block download end response
+can_msg BlkDnEndRes(uint_least32_t recipient_id, co_unsigned8_t cs_flags = 0);
 // download initiate request
 can_msg DnIniReq(co_unsigned16_t idx, co_unsigned8_t subidx,
                  uint_least32_t recipient_id,
