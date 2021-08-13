@@ -598,6 +598,8 @@ TEST_BASE(CO_CsdoBase) {
 
   using sub_type = co_unsigned16_t;
 
+  static uint_least8_t data;
+
   static const co_unsigned8_t CSDO_NUM = 0x01u;
   static const co_unsigned8_t DEV_ID = 0x01u;
   static const co_unsigned32_t DEFAULT_COBID_REQ = 0x600u + DEV_ID;
@@ -674,6 +676,7 @@ TEST_BASE(CO_CsdoBase) {
     set_errnum(ERRNUM_SUCCESS);
   }
 };
+uint_least8_t CO_CsdoBase::data = 0;
 
 TEST_GROUP_BASE(CoCsdoSetGet, CO_CsdoBase) {
   const int32_t data = 0;  // dummy data to workaround clang-format
@@ -1171,7 +1174,7 @@ TEST_GROUP_BASE(CO_Csdo, CO_CsdoBase) {
     CHECK_TRUE(co_csdo_is_idle(csdo));
 
     CHECK_EQUAL(0, co_csdo_blk_dn_val_req(csdo, idx, subidx, SUB_TYPE, &val,
-                                          CoCsdoDnCon::Func, nullptr));
+                                          CoCsdoDnCon::Func, &data));
     CanSend::Clear();
   }
 
@@ -1181,7 +1184,7 @@ TEST_GROUP_BASE(CO_Csdo, CO_CsdoBase) {
     CHECK_TRUE(co_csdo_is_idle(csdo));
 
     CHECK_EQUAL(0, co_csdo_blk_up_req(csdo, idx, subidx, 0, nullptr,
-                                      CoCsdoUpCon::func, nullptr));
+                                      CoCsdoUpCon::func, &data));
 
     const can_msg msg_res =
         SdoCreateMsg::BlkUpIniRes(idx, subidx, DEFAULT_COBID_RES, size);
@@ -1246,7 +1249,7 @@ TEST_GROUP_BASE(CO_Csdo, CO_CsdoBase) {
 
     CHECK_EQUAL(0, co_csdo_blk_dn_val_req(
                        csdo, idx, subidx, val_os.GetDataType(),
-                       val_os.GetValPtr(), CoCsdoDnCon::Func, nullptr));
+                       val_os.GetValPtr(), CoCsdoDnCon::Func, &data));
     CanSend::Clear();
   }
 
@@ -3443,13 +3446,16 @@ TEST(CO_Csdo, CoCsdoBlkUpIniOnRecv_Nominal_SizeIsZero) {
 ///
 /// \When an abort transfer SDO message with a non-zero abort code is received
 ///
-/// \Then no SDO message is sent
+/// \Then no SDO message is sent, upload confirmation function is called once
+///       with the pointer to the CSDO service, the multiplexer, the received
+///       abort code, a null uploaded bytes pointer, zero and a pointer to the
+///       user-specified data
 ///       \Calls ldle_u32()
 TEST(CO_Csdo, CoCsdoBlkUpIniOnRecv_AcNonZero) {
   StartCSDO();
 
   CHECK_EQUAL(0, co_csdo_blk_up_req(csdo, IDX, SUBIDX, 0, nullptr,
-                                    CoCsdoUpCon::func, nullptr));
+                                    CoCsdoUpCon::func, &data));
 
   CHECK_EQUAL(1u, CanSend::GetNumCalled());
   const auto expected = SdoInitExpectedData::U32(
@@ -3463,6 +3469,7 @@ TEST(CO_Csdo, CoCsdoBlkUpIniOnRecv_AcNonZero) {
   CHECK_EQUAL(1, can_net_recv(net, &msg_res, 0));
 
   CHECK_EQUAL(0, CanSend::GetNumCalled());
+  CoCsdoUpCon::Check(csdo, IDX, SUBIDX, CO_SDO_AC_NO_READ, nullptr, 0, &data);
 }
 
 /// \Given a pointer to the CSDO service (co_csdo_t) which has initiated block
@@ -3471,13 +3478,16 @@ TEST(CO_Csdo, CoCsdoBlkUpIniOnRecv_AcNonZero) {
 /// \When an abort transfer SDO message with abort code equal to zero is
 ///       received
 ///
-/// \Then no SDO message is sent
+/// \Then no SDO message is sent, upload confirmation function is called once
+///       with the pointer to the CSDO service, the multiplexer, CO_SDO_AC_ERROR
+///       abort code, a null uploaded bytes pointer, zero and a pointer to the
+///       user-specified data
 ///       \Calls ldle_u32()
 TEST(CO_Csdo, CoCsdoBlkUpIniOnRecv_AcZero) {
   StartCSDO();
 
   CHECK_EQUAL(0, co_csdo_blk_up_req(csdo, IDX, SUBIDX, 0, nullptr,
-                                    CoCsdoUpCon::func, nullptr));
+                                    CoCsdoUpCon::func, &data));
 
   CHECK_EQUAL(1u, CanSend::GetNumCalled());
   const auto expected = SdoInitExpectedData::U32(
@@ -3491,6 +3501,7 @@ TEST(CO_Csdo, CoCsdoBlkUpIniOnRecv_AcZero) {
   CHECK_EQUAL(1, can_net_recv(net, &msg_res, 0));
 
   CHECK_EQUAL(0, CanSend::GetNumCalled());
+  CoCsdoUpCon::Check(csdo, IDX, SUBIDX, CO_SDO_AC_ERROR, nullptr, 0, &data);
 }
 
 /// \Given a pointer to the CSDO service (co_csdo_t) which has initiated block
@@ -3498,12 +3509,15 @@ TEST(CO_Csdo, CoCsdoBlkUpIniOnRecv_AcZero) {
 ///
 /// \When an abort transfer SDO message with no abort code is received
 ///
-/// \Then no SDO message is sent
+/// \Then no SDO message is sent, upload confirmation function is called once
+///       with the pointer to the CSDO service, the multiplexer, CO_SDO_AC_ERROR
+///       abort code, a null uploaded bytes pointer, zero and a pointer to the
+///       user-specified data
 TEST(CO_Csdo, CoCsdoBlkUpIniOnRecv_AcNone) {
   StartCSDO();
 
   CHECK_EQUAL(0, co_csdo_blk_up_req(csdo, IDX, SUBIDX, 0, nullptr,
-                                    CoCsdoUpCon::func, nullptr));
+                                    CoCsdoUpCon::func, &data));
 
   CHECK_EQUAL(1u, CanSend::GetNumCalled());
   const auto expected = SdoInitExpectedData::U32(
@@ -3517,6 +3531,7 @@ TEST(CO_Csdo, CoCsdoBlkUpIniOnRecv_AcNone) {
   CHECK_EQUAL(1, can_net_recv(net, &msg_res, 0));
 
   CHECK_EQUAL(0, CanSend::GetNumCalled());
+  CoCsdoUpCon::Check(csdo, IDX, SUBIDX, CO_SDO_AC_ERROR, nullptr, 0, &data);
 }
 
 /// \Given a pointer to the CSDO service (co_csdo_t) which has initiated block
@@ -3532,7 +3547,7 @@ TEST(CO_Csdo, CoCsdoBlkUpIniOnRecv_IncorrectCS) {
   StartCSDO();
 
   CHECK_EQUAL(0, co_csdo_blk_up_req(csdo, IDX, SUBIDX, 0, nullptr,
-                                    CoCsdoUpCon::func, nullptr));
+                                    CoCsdoUpCon::func, &data));
 
   CHECK_EQUAL(1u, CanSend::GetNumCalled());
   const auto expected = SdoInitExpectedData::U32(
@@ -3546,6 +3561,7 @@ TEST(CO_Csdo, CoCsdoBlkUpIniOnRecv_IncorrectCS) {
   CHECK_EQUAL(1, can_net_recv(net, &msg_res, 0));
 
   CheckSdoAbortSent(IDX, SUBIDX, CO_SDO_AC_NO_CS);
+  CoCsdoUpCon::Check(csdo, IDX, SUBIDX, CO_SDO_AC_NO_CS, nullptr, 0, &data);
 }
 
 /// \Given a pointer to the CSDO service (co_csdo_t) which has initiated block
@@ -3562,7 +3578,7 @@ TEST(CO_Csdo, CoCsdoBlkUpIniOnRecv_IncorrectSC) {
   StartCSDO();
 
   CHECK_EQUAL(0, co_csdo_blk_up_req(csdo, IDX, SUBIDX, 0, nullptr,
-                                    CoCsdoUpCon::func, nullptr));
+                                    CoCsdoUpCon::func, &data));
 
   CHECK_EQUAL(1u, CanSend::GetNumCalled());
   const auto expected = SdoInitExpectedData::U32(
@@ -3577,6 +3593,7 @@ TEST(CO_Csdo, CoCsdoBlkUpIniOnRecv_IncorrectSC) {
   CHECK_EQUAL(1, can_net_recv(net, &msg_res, 0));
 
   CheckSdoAbortSent(IDX, SUBIDX, CO_SDO_AC_NO_CS);
+  CoCsdoUpCon::Check(csdo, IDX, SUBIDX, CO_SDO_AC_NO_CS, nullptr, 0, &data);
 }
 
 /// \Given a pointer to the CSDO service (co_csdo_t) which has initiated block
@@ -3593,7 +3610,7 @@ TEST(CO_Csdo, CoCsdoBlkUpIniOnRecv_TooShortMsg) {
   StartCSDO();
 
   CHECK_EQUAL(0, co_csdo_blk_up_req(csdo, IDX, SUBIDX, 0, nullptr,
-                                    CoCsdoUpCon::func, nullptr));
+                                    CoCsdoUpCon::func, &data));
 
   CHECK_EQUAL(1u, CanSend::GetNumCalled());
   const auto expected = SdoInitExpectedData::U32(
@@ -3608,6 +3625,7 @@ TEST(CO_Csdo, CoCsdoBlkUpIniOnRecv_TooShortMsg) {
   CHECK_EQUAL(1, can_net_recv(net, &msg_res, 0));
 
   CheckSdoAbortSent(IDX, SUBIDX, CO_SDO_AC_ERROR);
+  CoCsdoUpCon::Check(csdo, IDX, SUBIDX, CO_SDO_AC_ERROR, nullptr, 0, &data);
 }
 
 /// \Given a pointer to the CSDO service (co_csdo_t) which has initiated block
@@ -3793,7 +3811,10 @@ TEST(CO_Csdo, CoCsdoBlkUpSubOnRecv_NoCs) {
 ///
 /// \When an abort transfer SDO message with a non-zero abort code is received
 ///
-/// \Then no SDO message is sent
+/// \Then no SDO message is sent, upload confirmation function is called once
+///       with the pointer to the CSDO service, the multiplexer, the received
+///       abort code, a null uploaded bytes pointer, zero and a pointer to the
+///       user-specified data
 TEST(CO_Csdo, CoCsdoBlkUpSubOnRecv_AbortNonZero) {
   StartCSDO();
   InitiateBlockUploadRequest();
@@ -3803,6 +3824,7 @@ TEST(CO_Csdo, CoCsdoBlkUpSubOnRecv_AbortNonZero) {
   CHECK_EQUAL(1u, can_net_recv(net, &msg, 0));
 
   CHECK_EQUAL(0, CanSend::GetNumCalled());
+  CoCsdoUpCon::Check(csdo, IDX, SUBIDX, CO_SDO_AC_HARDWARE, nullptr, 0, &data);
 }
 
 /// \Given a pointer to the CSDO service (co_csdo_t) which has initiated block
@@ -3811,7 +3833,10 @@ TEST(CO_Csdo, CoCsdoBlkUpSubOnRecv_AbortNonZero) {
 /// \When an abort transfer SDO message with an abort code equal to zero
 ///       is received
 ///
-/// \Then no SDO message is sent
+/// \Then no SDO message is sent, upload confirmation function is called once
+///       with the pointer to the CSDO service, the multiplexer, CO_SDO_AC_ERROR
+///       abort code, a null uploaded bytes pointer, zero and a pointer to the
+///       user-specified data
 TEST(CO_Csdo, CoCsdoBlkUpSubOnRecv_AbortZero) {
   StartCSDO();
   InitiateBlockUploadRequest();
@@ -3820,6 +3845,7 @@ TEST(CO_Csdo, CoCsdoBlkUpSubOnRecv_AbortZero) {
   CHECK_EQUAL(1u, can_net_recv(net, &msg, 0));
 
   CHECK_EQUAL(0, CanSend::GetNumCalled());
+  CoCsdoUpCon::Check(csdo, IDX, SUBIDX, CO_SDO_AC_ERROR, nullptr, 0, &data);
 }
 
 /// \Given a pointer to the CSDO service (co_csdo_t) which has initiated block
@@ -3828,7 +3854,10 @@ TEST(CO_Csdo, CoCsdoBlkUpSubOnRecv_AbortZero) {
 /// \When an SDO abort transfer message is received, but does not contain
 ///       the abort code
 ///
-/// \Then no SDO message is sent
+/// \Then no SDO message is sent, upload confirmation function is called once
+///       with the pointer to the CSDO service, the multiplexer, CO_SDO_AC_ERROR
+///       abort code, a null uploaded bytes pointer, zero and a pointer to the
+///       user-specified data
 TEST(CO_Csdo, CoCsdoBlkUpSubOnRecv_IncompleteAbortCode) {
   StartCSDO();
   InitiateBlockUploadRequest();
@@ -3838,6 +3867,7 @@ TEST(CO_Csdo, CoCsdoBlkUpSubOnRecv_IncompleteAbortCode) {
   CHECK_EQUAL(1u, can_net_recv(net, &msg, 0));
 
   CHECK_EQUAL(0, CanSend::GetNumCalled());
+  CoCsdoUpCon::Check(csdo, IDX, SUBIDX, CO_SDO_AC_ERROR, nullptr, 0, &data);
 }
 
 /// \Given a pointer to the CSDO service (co_csdo_t) which has initiated block
@@ -4366,7 +4396,8 @@ TEST(CO_Csdo, CoCsdoBlkDnValReq_DnEmptyArray) {
 ///       user-specified data pointer, but the internal call to co_val_write()
 ///       fails
 ///
-/// \Then -1 is returned and no SDO message is sent
+/// \Then -1 is returned and no SDO message is sent, download confirmation
+///       function is not called
 ///       \Calls co_val_write()
 ///       \Calls co_val_sizeof()
 TEST(CO_Csdo, CoCsdoBlkDnValReq_CoValWriteFail) {
@@ -4374,10 +4405,11 @@ TEST(CO_Csdo, CoCsdoBlkDnValReq_CoValWriteFail) {
 
   LelyOverride::co_val_write(Override::NoneCallsValid);
   const auto ret = co_csdo_blk_dn_val_req(csdo, IDX, SUBIDX, SUB_TYPE, &VAL,
-                                          CoCsdoDnCon::Func, nullptr);
+                                          CoCsdoDnCon::Func, &data);
 
   CHECK_EQUAL(-1, ret);
   CHECK_EQUAL(0, CanSend::GetNumCalled());
+  CHECK_EQUAL(0, CoCsdoDnCon::GetNumCalled());
 }
 
 /// \Given a pointer to the started CSDO service (co_csdo_t)
@@ -4388,7 +4420,8 @@ TEST(CO_Csdo, CoCsdoBlkDnValReq_CoValWriteFail) {
 ///       user-specified data pointer, but the second internal call to
 ///       co_val_write() fails
 ///
-/// \Then -1 is returned and no SDO message is sent
+/// \Then -1 is returned and no SDO message is sent, download confirmation
+///       function is not called
 ///       \Calls co_val_write()
 ///       \Calls membuf_clear()
 ///       \Calls membuf_reserve()
@@ -4398,10 +4431,11 @@ TEST(CO_Csdo, CoCsdoBlkDnValReq_SecondCoValWriteFail) {
 
   LelyOverride::co_val_write(1u);
   const auto ret = co_csdo_blk_dn_val_req(csdo, IDX, SUBIDX, SUB_TYPE, &VAL,
-                                          CoCsdoDnCon::Func, nullptr);
+                                          CoCsdoDnCon::Func, &data);
 
   CHECK_EQUAL(-1, ret);
   CHECK_EQUAL(0, CanSend::GetNumCalled());
+  CHECK_EQUAL(0, CoCsdoDnCon::GetNumCalled());
 }
 
 /// \Given a pointer to the started CSDO service (co_csdo_t)
@@ -4411,7 +4445,8 @@ TEST(CO_Csdo, CoCsdoBlkDnValReq_SecondCoValWriteFail) {
 ///       the download confirmation function and a null user-specified data
 ///       pointer, but the internal call to membuf_reserve() fails
 ///
-/// \Then -1 is returned and no SDO message is sent
+/// \Then -1 is returned and no SDO message is sent, download confirmation
+///       function is not called
 ///       \Calls co_val_write()
 ///       \Calls membuf_clear()
 ///       \Calls membuf_reserve()
@@ -4424,6 +4459,7 @@ TEST(CO_Csdo, CoCsdoBlkDnValReq_MembufReserveFail) {
 
   CHECK_EQUAL(-1, ret);
   CHECK_EQUAL(0, CanSend::GetNumCalled());
+  CHECK_EQUAL(0, CoCsdoDnCon::GetNumCalled());
 }
 #endif  // HAVE_LELY_OVERRIDE
 
@@ -4451,7 +4487,6 @@ TEST(CO_Csdo, CoCsdoBlkDnValReq_MembufReserveFail) {
 ///       \Calls can_net_send()
 TEST(CO_Csdo, CoCsdoBlkDnIniOnRecv_IncorrectCS) {
   StartCSDO();
-
   const uint_least8_t bytes2dn[sizeof(sub_type)] = {0};
   const auto ret =
       co_csdo_blk_dn_req(csdo, IDX, SUBIDX, bytes2dn, sizeof(sub_type),
@@ -4486,7 +4521,6 @@ TEST(CO_Csdo, CoCsdoBlkDnIniOnRecv_IncorrectCS) {
 ///       \Calls can_net_send()
 TEST(CO_Csdo, CoCsdoBlkDnIniOnRecv_IncorrectSC) {
   StartCSDO();
-
   InitiateBlockDownloadRequest();
 
   can_msg msg = SdoCreateMsg::BlkDnIniRes(IDX, SUBIDX, DEFAULT_COBID_RES, 0,
@@ -4510,7 +4544,6 @@ TEST(CO_Csdo, CoCsdoBlkDnIniOnRecv_IncorrectSC) {
 ///       \Calls can_net_send()
 TEST(CO_Csdo, CoCsdoBlkDnIniOnRecv_IncorrectSubidx) {
   StartCSDO();
-
   InitiateBlockDownloadRequest();
 
   const can_msg msg = SdoCreateMsg::BlkDnIniRes(
@@ -4525,20 +4558,23 @@ TEST(CO_Csdo, CoCsdoBlkDnIniOnRecv_IncorrectSubidx) {
 ///
 /// \When an SDO abort transfer message is received, abort code is zero
 ///
-/// \Then no SDO message is sent
+/// \Then no SDO message is sent, download confirmation function is called once
+///       with the pointer to the CSDO service, the multiplexer, CO_SDO_AC_ERROR
+///       abort code, a null uploaded bytes pointer, zero and a pointer to the
+///       user-specified data
 ///       \Calls ldle_u16()
 ///       \Calls stle_u32()
 ///       \Calls stle_u16()
 ///       \Calls can_net_send()
 TEST(CO_Csdo, CoCsdoBlkDnIniOnRecv_CSAbort_AcZero) {
   StartCSDO();
-
   InitiateBlockDownloadRequest();
 
   const can_msg msg = SdoCreateMsg::Abort(IDX, SUBIDX, DEFAULT_COBID_RES);
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
   CHECK_EQUAL(0u, CanSend::GetNumCalled());
+  CoCsdoDnCon::Check(csdo, IDX, SUBIDX, CO_SDO_AC_ERROR, &data);
 }
 
 /// \Given a pointer to the CSDO service (co_csdo_t) which has initiated block
@@ -4546,14 +4582,16 @@ TEST(CO_Csdo, CoCsdoBlkDnIniOnRecv_CSAbort_AcZero) {
 ///
 /// \When an SDO abort transfer message is received, abort code is not zero
 ///
-/// \Then no SDO message is sent
+/// \Then no SDO message is sent, download confirmation function is called once
+///       with the pointer to the CSDO service, the multiplexer, the received
+///       abort code, a null uploaded bytes pointer, zero and a pointer to the
+///       user-specified data
 ///       \Calls ldle_u16()
 ///       \Calls stle_u32()
 ///       \Calls stle_u16()
 ///       \Calls can_net_send()
 TEST(CO_Csdo, CoCsdoBlkDnIniOnRecv_CSAbort_AcNonzero) {
   StartCSDO();
-
   InitiateBlockDownloadRequest();
 
   const can_msg msg =
@@ -4561,6 +4599,7 @@ TEST(CO_Csdo, CoCsdoBlkDnIniOnRecv_CSAbort_AcNonzero) {
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
   CHECK_EQUAL(0u, CanSend::GetNumCalled());
+  CoCsdoDnCon::Check(csdo, IDX, SUBIDX, CO_SDO_AC_HARDWARE, &data);
 }
 
 /// \Given a pointer to the CSDO service (co_csdo_t) which has initiated block
@@ -4569,14 +4608,16 @@ TEST(CO_Csdo, CoCsdoBlkDnIniOnRecv_CSAbort_AcNonzero) {
 /// \When an SDO abort transfer message is received, but does not contain
 ///       the abort code
 ///
-/// \Then no SDO message is sent
+/// \Then no SDO message is sent, download confirmation function is called once
+///       with the pointer to the CSDO service, the multiplexer, CO_SDO_AC_ERROR
+///       abort code, a null uploaded bytes pointer, zero and a pointer to the
+///       user-specified data
 ///       \Calls ldle_u16()
 ///       \Calls stle_u32()
 ///       \Calls stle_u16()
 ///       \Calls can_net_send()
 TEST(CO_Csdo, CoCsdoBlkDnIniOnRecv_CSAbort_MissingAc) {
   StartCSDO();
-
   InitiateBlockDownloadRequest();
 
   can_msg msg = SdoCreateMsg::Abort(IDX, SUBIDX, DEFAULT_COBID_RES);
@@ -4584,6 +4625,7 @@ TEST(CO_Csdo, CoCsdoBlkDnIniOnRecv_CSAbort_MissingAc) {
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
   CHECK_EQUAL(0u, CanSend::GetNumCalled());
+  CoCsdoDnCon::Check(csdo, IDX, SUBIDX, CO_SDO_AC_ERROR, &data);
 }
 
 /// \Given a pointer to the CSDO service (co_csdo_t) which has initiated block
@@ -4599,7 +4641,6 @@ TEST(CO_Csdo, CoCsdoBlkDnIniOnRecv_CSAbort_MissingAc) {
 ///       \Calls can_net_send()
 TEST(CO_Csdo, CoCsdoBlkDnIniOnRecv_MissingIdx) {
   StartCSDO();
-
   InitiateBlockDownloadRequest();
 
   can_msg msg = SdoCreateMsg::BlkDnIniRes(IDX, SUBIDX, DEFAULT_COBID_RES, 0,
@@ -4623,7 +4664,6 @@ TEST(CO_Csdo, CoCsdoBlkDnIniOnRecv_MissingIdx) {
 ///       \Calls can_net_send()
 TEST(CO_Csdo, CoCsdoBlkDnIniOnRecv_IncorrectIdx) {
   StartCSDO();
-
   InitiateBlockDownloadRequest();
 
   const can_msg msg = SdoCreateMsg::BlkDnIniRes(
@@ -4647,7 +4687,6 @@ TEST(CO_Csdo, CoCsdoBlkDnIniOnRecv_IncorrectIdx) {
 ///       \Calls can_net_send()
 TEST(CO_Csdo, CoCsdoBlkDnIniOnRecv_MissingNumOfSegments) {
   StartCSDO();
-
   InitiateBlockDownloadRequest();
 
   can_msg msg = SdoCreateMsg::BlkDnIniRes(IDX, SUBIDX, DEFAULT_COBID_RES,
@@ -4669,7 +4708,6 @@ TEST(CO_Csdo, CoCsdoBlkDnIniOnRecv_MissingNumOfSegments) {
 ///       \Calls can_net_send()
 TEST(CO_Csdo, CoCsdoBlkDnIniOnRecv_NoCS) {
   StartCSDO();
-
   InitiateBlockDownloadRequest();
 
   can_msg msg = SdoCreateMsg::Default(0xffffu, 0xffu, DEFAULT_COBID_RES);
@@ -4692,7 +4730,6 @@ TEST(CO_Csdo, CoCsdoBlkDnIniOnRecv_NoCS) {
 ///       \Calls can_net_send()
 TEST(CO_Csdo, CoCsdoBlkDnIniOnRecv_Nominal) {
   StartCSDO();
-
   InitiateBlockDownloadRequest(IDX, SUBIDX, val_u16.GetVal());
 
   const can_msg msg = SdoCreateMsg::BlkDnIniRes(
@@ -4902,10 +4939,17 @@ TEST(CO_Csdo, CoCsdoBlkDnSubOnRecv_Nominal) {
 /// @name CSDO block download end
 ///@{
 
-/// TODO(N7S): GWT
+/// \Given a pointer to the started CSDO service (co_csdo_t) in 'block download
+///        end' state
+///
+/// \When an SDO message with length zero is received
+///
+/// \Then an SDO abort transfer message with CO_SDO_AC_NO_CS abort code is sent
+///       \Calls stle_u16()
+///       \Calls stle_u32()
+///       \Calls can_net_send()
 TEST(CO_Csdo, CoCsdoBlkDnEndOnRecv_NoCs) {
   StartCSDO();
-
   const co_unsigned8_t subidx_os = SUBIDX + 1u;
   AdvanceToBlkDnEndState(IDX, subidx_os);
 
@@ -4916,10 +4960,17 @@ TEST(CO_Csdo, CoCsdoBlkDnEndOnRecv_NoCs) {
   CheckSdoAbortSent(IDX, subidx_os, CO_SDO_AC_NO_CS);
 }
 
-/// TODO(N7S): GWT
+/// \Given a pointer to the started CSDO service (co_csdo_t) in 'block download
+///        end' state
+///
+/// \When an SDO abort transfer message with a non-zero abort code
+///
+/// \Then no SDO message is sent, download confirmation function is called
+///       with the pointer to the CSDO service, the requested multiplexer,
+///       the received abort code and a user-specified data pointer
+///       \Calls ldle_u32()
 TEST(CO_Csdo, CoCsdoBlkDnEndOnRecv_CsAbort_NonZeroAc) {
   StartCSDO();
-
   const co_unsigned8_t subidx_os = SUBIDX + 1u;
   AdvanceToBlkDnEndState(IDX, subidx_os);
 
@@ -4928,12 +4979,20 @@ TEST(CO_Csdo, CoCsdoBlkDnEndOnRecv_CsAbort_NonZeroAc) {
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
   CHECK_EQUAL(0u, CanSend::GetNumCalled());
+  CoCsdoDnCon::Check(csdo, IDX, subidx_os, CO_SDO_AC_PARAM, &data);
 }
 
-/// TODO(N7S): GWT
+/// \Given a pointer to the started CSDO service (co_csdo_t) in 'block download
+///        end' state
+///
+/// \When an SDO abort transfer message with an abort code equal to zero
+///
+/// \Then no SDO message is sent, download confirmation function is called
+///       with the pointer to the CSDO service, the requested multiplexer,
+///       CO_SDO_AC_ERROR abort code and a user-specified data pointer
+///       \Calls ldle_u32()
 TEST(CO_Csdo, CoCsdoBlkDnEndOnRecv_CsAbort_AcZero) {
   StartCSDO();
-
   const co_unsigned8_t subidx_os = SUBIDX + 1u;
   AdvanceToBlkDnEndState(IDX, subidx_os);
 
@@ -4941,12 +5000,20 @@ TEST(CO_Csdo, CoCsdoBlkDnEndOnRecv_CsAbort_AcZero) {
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
   CHECK_EQUAL(0u, CanSend::GetNumCalled());
+  CoCsdoDnCon::Check(csdo, IDX, subidx_os, CO_SDO_AC_ERROR, &data);
 }
 
-/// TODO(N7S): GWT
+/// \Given a pointer to the started CSDO service (co_csdo_t) in 'block download
+///        end' state
+///
+/// \When an SDO abort transfer message with an incomplete abort code
+///
+/// \Then no SDO message is sent, download confirmation function is called once
+///       with the pointer to the CSDO service, the multiplexer, CO_SDO_AC_ERROR
+///       abort code, a null uploaded bytes pointer, zero and a pointer to the
+///       user-specified data
 TEST(CO_Csdo, CoCsdoBlkDnEndOnRecv_CsAbort_IncompleteAc) {
   StartCSDO();
-
   const co_unsigned8_t subidx_os = SUBIDX + 1u;
   AdvanceToBlkDnEndState(IDX, subidx_os);
 
@@ -4955,55 +5022,85 @@ TEST(CO_Csdo, CoCsdoBlkDnEndOnRecv_CsAbort_IncompleteAc) {
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
   CHECK_EQUAL(0u, CanSend::GetNumCalled());
+  CoCsdoDnCon::Check(csdo, IDX, subidx_os, CO_SDO_AC_ERROR, &data);
 }
 
-/// TODO(N7S): GWT
+/// \Given a pointer to the started CSDO service (co_csdo_t) in 'block download
+///        end' state
+///
+/// \When an SDO message with an incorrect command specifier is received
+///
+/// \Then an SDO abort transfer message with CO_SDO_AC_NO_CS abort code is sent
+///       \Calls stle_u16()
+///       \Calls stle_u32()
+///       \Calls can_net_send()
 TEST(CO_Csdo, CoCsdoBlkDnEndOnRecv_IncorrectCs) {
   StartCSDO();
-
   const co_unsigned8_t subidx_os = SUBIDX + 1u;
   AdvanceToBlkDnEndState(IDX, subidx_os);
 
   auto msg = SdoCreateMsg::Default(0xffffu, 0xffu, DEFAULT_COBID_RES);
-  msg.data[0] |= 0xffu;
+  msg.data[0] = 0xffu;
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
   CheckSdoAbortSent(IDX, subidx_os, CO_SDO_AC_NO_CS);
 }
 
-/// TODO(N7S): GWT
+/// \Given a pointer to the started CSDO service (co_csdo_t) in 'block download
+///        end' state
+///
+/// \When an SDO message with an incorrect subcommand is received
+///
+/// \Then an SDO abort transfer message with CO_SDO_AC_NO_CS abort code is sent
+///       \Calls stle_u16()
+///       \Calls stle_u32()
+///       \Calls can_net_send()
 TEST(CO_Csdo, CoCsdoBlkDnEndOnRecv_IncorrectSc) {
   StartCSDO();
-
   const co_unsigned8_t subidx_os = SUBIDX + 1u;
   AdvanceToBlkDnEndState(IDX, subidx_os);
 
-  auto msg = SdoCreateMsg::BlkDnIniRes(0xffffu, 0xffu, DEFAULT_COBID_RES);
+  auto msg = SdoCreateMsg::BlkDnEndRes(DEFAULT_COBID_RES);
   msg.data[0] |= 0x03u;  // break the subcommand
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
   CheckSdoAbortSent(IDX, subidx_os, CO_SDO_AC_NO_CS);
 }
 
-/// TODO(N7S): GWT
+/// \Given a pointer to the started CSDO service (co_csdo_t) in 'block download
+///        end' state
+///
+/// \When a correct block download end response is received
+///
+/// \Then no SDO message is sent, download confirmation function is called once
+///       with the pointer to the CSDO service, the multiplexer, no abort code,
+///       a null uploaded bytes pointer, zero and a pointer to the
+///       user-specified data, the CSDO service is idle
 TEST(CO_Csdo, CoCsdoBlkDnEndOnRecv_Nominal) {
   StartCSDO();
-
   const co_unsigned8_t subidx_os = SUBIDX + 1u;
   AdvanceToBlkDnEndState(IDX, subidx_os);
 
-  const auto msg = SdoCreateMsg::BlkDnIniRes(0xffffu, 0xffu, DEFAULT_COBID_RES,
-                                             CO_SDO_SC_END_BLK);
+  const auto msg =
+      SdoCreateMsg::BlkDnEndRes(DEFAULT_COBID_RES, CO_SDO_SC_END_BLK);
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
   CHECK_EQUAL(0u, CanSend::GetNumCalled());
+  CoCsdoDnCon::Check(csdo, IDX, subidx_os, 0, &data);
   CHECK(co_csdo_is_idle(csdo));
 }
 
-/// TODO(N7S): GWT
+/// \Given a pointer to the started CSDO service (co_csdo_t) in 'block download
+///        end' state
+///
+/// \When co_csdo_abort_req() is called with an abort code
+///
+/// \Then an abort transfer SDO message with the specified abort code is sent
+///       \Calls stle_u16()
+///       \Calls stle_u32()
+///       \Calls can_net_send()
 TEST(CO_Csdo, CoCsdoBlkDnEndOnAbort_Nominal) {
   StartCSDO();
-
   const co_unsigned8_t subidx_os = SUBIDX + 1u;
   AdvanceToBlkDnEndState(IDX, subidx_os);
 
@@ -5012,11 +5109,19 @@ TEST(CO_Csdo, CoCsdoBlkDnEndOnAbort_Nominal) {
   CheckSdoAbortSent(IDX, subidx_os, CO_SDO_AC_HARDWARE);
 }
 
-/// TODO(N7S): GWT
+/// \Given a pointer to the started CSDO service (co_csdo_t) in 'block download
+///        end' state; the service has a timeout set
+///
+/// \When the timeout expires before any SDO message is received
+///
+/// \Then an abort transfer SDO message with CO_SDO_AC_TIMEOUT abort code is
+///       sent
+///       \Calls stle_u16()
+///       \Calls stle_u32()
+///       \Calls can_net_send()
 TEST(CO_Csdo, CoCsdoBlkDnEndOnTime_Nominal) {
   co_csdo_set_timeout(csdo, 999u);
   StartCSDO();
-
   const co_unsigned8_t subidx_os = SUBIDX + 1u;
   AdvanceToBlkDnEndState(IDX, subidx_os);
 
@@ -5538,7 +5643,7 @@ TEST_GROUP_BASE(CO_CsdoDownload, CO_CsdoBase) {
 
   void SendDownloadRequest(const std::vector<co_unsigned8_t>& buf) const {
     CHECK_EQUAL(0, co_csdo_dn_req(csdo, IDX, SUBIDX, buf.data(), buf.size(),
-                                  &CoCsdoDnCon::Func, nullptr));
+                                  &CoCsdoDnCon::Func, &data));
 
     CoCsdoDnCon::Clear();
     CoCsdoInd::Clear();
@@ -5556,7 +5661,7 @@ TEST_GROUP_BASE(CO_CsdoDownload, CO_CsdoBase) {
 
   void CheckTransferAbortedLocally(const co_unsigned32_t ac) const {
     CHECK_EQUAL(0u, CanSend::GetNumCalled());
-    CoCsdoDnCon::Check(csdo, IDX, SUBIDX, ac, nullptr);
+    CoCsdoDnCon::Check(csdo, IDX, SUBIDX, ac, &data);
     CHECK(co_csdo_is_idle(csdo));
   }
 
@@ -5585,7 +5690,7 @@ TEST_GROUP_BASE(CO_CsdoDownload, CO_CsdoBase) {
 
   void CheckDoneTransfer() const {
     CHECK_EQUAL(0u, CanSend::GetNumCalled());
-    CoCsdoDnCon::Check(csdo, IDX, SUBIDX, 0u, nullptr);
+    CoCsdoDnCon::Check(csdo, IDX, SUBIDX, 0u, &data);
     CHECK(co_csdo_is_idle(csdo));
   }
 
