@@ -3155,6 +3155,56 @@ TEST(CO_Val, CoValWrite_TIME_SCET) {
   CHECK_EQUAL(val.seconds, ldle_u32(buffer + 3u));
 }
 
+/// \Given the minimal value of the SCET (Spacecraft Elapsed Time) data type, a
+///        memory buffer large enough to store the value
+///
+/// \When co_val_write() is called with the SCET data type, a pointer to the
+///       value, pointers to the beginning and the end of the buffer
+///
+/// \Then the SCET value size is returned, the value is written to the buffer
+///       \Calls co_type_is_array()
+///       \Calls stle_u24()
+///       \Calls stle_u32()
+TEST(CO_Val, CoValWrite_TIME_SCET_Min) {
+  const co_time_scet_t val = CO_TIME_SCET_MIN;
+  const size_t val_size = ValGetReadWriteSize(CO_DEFTYPE_TIME_SCET);
+  uint_least8_t buffer[MAX_VAL_SIZE_SCET] = {0x00};
+
+  CHECK_COMPARE(val_size, <=, MAX_VAL_SIZE_SCET);
+
+  const auto ret = co_val_write(CO_DEFTYPE_TIME_SCET, &val, buffer,
+                                buffer + MAX_VAL_SIZE_SCET);
+
+  CHECK_EQUAL(val_size, ret);
+  CHECK_EQUAL(val.subseconds, ldle_u24(buffer));
+  CHECK_EQUAL(val.seconds, ldle_u32(buffer + 3u));
+}
+
+/// \Given the maximal value of the SCET (Spacecraft Elapsed Time) data type, a
+///        memory buffer large enough to store the value
+///
+/// \When co_val_write() is called with the SCET data type, a pointer to the
+///       value, pointers to the beginning and the end of the buffer
+///
+/// \Then the SCET value size is returned, the value is written to the buffer
+///       \Calls co_type_is_array()
+///       \Calls stle_u24()
+///       \Calls stle_u32()
+TEST(CO_Val, CoValWrite_TIME_SCET_Max) {
+  const co_time_scet_t val = CO_TIME_SCET_MAX;
+  const size_t val_size = ValGetReadWriteSize(CO_DEFTYPE_TIME_SCET);
+  uint_least8_t buffer[MAX_VAL_SIZE_SCET] = {0x00};
+
+  CHECK_COMPARE(val_size, <=, MAX_VAL_SIZE_SCET);
+
+  const auto ret = co_val_write(CO_DEFTYPE_TIME_SCET, &val, buffer,
+                                buffer + MAX_VAL_SIZE_SCET);
+
+  CHECK_EQUAL(val_size, ret);
+  CHECK_EQUAL(val.subseconds, ldle_u24(buffer));
+  CHECK_EQUAL(val.seconds, ldle_u32(buffer + 3u));
+}
+
 /// \Given a value of the SCET (Spacecraft Elapsed Time) data type, a memory
 ///        buffer large enough to store the value
 ///
@@ -3203,6 +3253,58 @@ TEST(CO_Val, CoValWrite_TIME_SUTC) {
   val.usec = 0x5819u;
   val.ms = 0x1b67183eu;
   val.days = 0x1534u;
+
+  CHECK_COMPARE(val_size, <=, MAX_VAL_SIZE_SUTC);
+
+  const auto ret = co_val_write(CO_DEFTYPE_TIME_SUTC, &val, buffer,
+                                buffer + MAX_VAL_SIZE_SUTC);
+
+  CHECK_EQUAL(val_size, ret);
+  CHECK_EQUAL(val.usec, ldle_u16(buffer));
+  CHECK_EQUAL(val.ms, ldle_u32(buffer + 2u));
+  CHECK_EQUAL(val.days, ldle_u16(buffer + 6u));
+}
+
+/// \Given the minimal value of the SUTC (Spacecraft Universal Time Coordinated)
+///        data type, a memory buffer large enough to store the value
+///
+/// \When co_val_write() is called with the SUTC data type, a pointer to the
+///       value, pointers to the beginning and the end of the buffer
+///
+/// \Then the SUTC value size is returned, the value is written to the buffer
+///       \Calls co_type_is_array()
+///       \Calls stle_u16()
+///       \Calls stle_u32()
+TEST(CO_Val, CoValWrite_TIME_SUTC_Min) {
+  const co_time_sutc_t val = CO_TIME_SUTC_MIN;
+  const size_t val_size = ValGetReadWriteSize(CO_DEFTYPE_TIME_SUTC);
+  uint_least8_t buffer[MAX_VAL_SIZE_SUTC] = {0x00};
+
+  CHECK_COMPARE(val_size, <=, MAX_VAL_SIZE_SUTC);
+
+  const auto ret = co_val_write(CO_DEFTYPE_TIME_SUTC, &val, buffer,
+                                buffer + MAX_VAL_SIZE_SUTC);
+
+  CHECK_EQUAL(val_size, ret);
+  CHECK_EQUAL(val.usec, ldle_u16(buffer));
+  CHECK_EQUAL(val.ms, ldle_u32(buffer + 2u));
+  CHECK_EQUAL(val.days, ldle_u16(buffer + 6u));
+}
+
+/// \Given the maximal value of the SUTC (Spacecraft Universal Time Coordinated)
+///        data type, a memory buffer large enough to store the value
+///
+/// \When co_val_write() is called with the SUTC data type, a pointer to the
+///       value, pointers to the beginning and the end of the buffer
+///
+/// \Then the SUTC value size is returned, the value is written to the buffer
+///       \Calls co_type_is_array()
+///       \Calls stle_u16()
+///       \Calls stle_u32()
+TEST(CO_Val, CoValWrite_TIME_SUTC_Max) {
+  const co_time_sutc_t val = CO_TIME_SUTC_MAX;
+  const size_t val_size = ValGetReadWriteSize(CO_DEFTYPE_TIME_SUTC);
+  uint_least8_t buffer[MAX_VAL_SIZE_SUTC] = {0x00};
 
   CHECK_COMPARE(val_size, <=, MAX_VAL_SIZE_SUTC);
 
