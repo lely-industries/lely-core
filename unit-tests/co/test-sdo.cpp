@@ -36,11 +36,11 @@
 
 #include "holder/array-init.hpp"
 
-TEST_GROUP(CO_Sdo) {
 #ifndef CO_SDO_REQ_MEMBUF_SIZE
 #define CO_SDO_REQ_MEMBUF_SIZE 8u
 #endif
 
+TEST_GROUP(CO_Sdo) {
   co_sdo_req req = CO_SDO_REQ_INIT(req);
 
   void CheckArrayIsZeroed(const void* const array, const size_t size) const {
@@ -52,37 +52,72 @@ TEST_GROUP(CO_Sdo) {
   TEST_TEARDOWN() { co_sdo_req_fini(&req); }
 };
 
-// given: SDO request with offset 0
-// when: co_sdo_req_first()
-// then: returns true
-TEST(CO_Sdo, CoSdoReqFirst_IsFirst) { CHECK(co_sdo_req_first(&req)); }
+/// @name co_sdo_req_first()
+///@{
 
-// given: SDO request with offset 1
-// when: co_sdo_req_first()
-// then: returns false
+/// \Given SDO request with offset 0
+///
+/// \When calling co_sdo_req_first() for that request
+///
+/// \Then the call returns true
+TEST(CO_Sdo, CoSdoReqFirst_IsFirst) {
+  req.offset = 0u;
+
+  CHECK(co_sdo_req_first(&req));
+}
+
+/// \Given SDO request with offset 1
+///
+/// \When calling co_sdo_req_first() for that request
+///
+/// \Then the call returns false
 TEST(CO_Sdo, CoSdoReqFirst_IsNotFirst) {
   req.offset = 1u;
 
   CHECK(!co_sdo_req_first(&req));
 }
 
-// given: SDO request with offset + nbyte == size
-// when: co_sdo_req_last()
-// then: returns false
-TEST(CO_Sdo, CoSdoReqLast_IsLast) { CHECK(co_sdo_req_last(&req)); }
+///@}
 
-// given: SDO request with offset + nbyte < size
-// when: co_sdo_req_last()
-// then: returns false
+/// @name co_sdo_req_last()
+///@{
+
+/// \Given SDO request with offset + nbyte == size
+///
+/// \When calling co_sdo_req_last() for that request
+///
+/// \Then the call returns true
+TEST(CO_Sdo, CoSdoReqLast_IsLast) {
+  req.offset = 30u;
+  req.nbyte = 14u;
+  req.size = 44u;
+
+  CHECK(co_sdo_req_last(&req));
+}
+
+/// \Given SDO request with offset + nbyte < size
+///
+/// \When calling co_sdo_req_last() for that request
+///
+/// \Then the call returns false
 TEST(CO_Sdo, CoSdoReqLast_IsNotLast) {
-  req.size = 1u;
+  req.offset = 0u;
+  req.nbyte = 14u;
+  req.size = 44u;
 
   CHECK(!co_sdo_req_last(&req));
 }
 
-// given: SDO abort code (AC)
-// when: co_sdo_ac2str()
-// then: a string describing the AC is returned
+///@}
+
+/// @name co_sdo_ac2str()
+///@{
+
+/// \Given SDO abort code (AC)
+///
+/// \When calling co_sdo_ac2str() for that code
+///
+/// \Then a string describing the AC is returned
 TEST(CO_Sdo, CoSdoAc2Str) {
   STRCMP_EQUAL("Success", co_sdo_ac2str(0));
   STRCMP_EQUAL("Toggle bit not altered", co_sdo_ac2str(CO_SDO_AC_TOGGLE));
@@ -150,9 +185,16 @@ TEST(CO_Sdo, CoSdoAc2Str) {
   STRCMP_EQUAL("Unknown abort code", co_sdo_ac2str(0xFFFFFFFFu));
 }
 
-// given: SDO request and an empty buffer
-// when: co_sdo_req_init()
-// then: SDO request is initialized with expected values and given buffer
+///@}
+
+/// @name co_sdo_req_init()
+///@{
+
+/// \Given SDO request and an empty memory buffer (#membuf)
+///
+/// \When calling co_sdo_req_init() with the request and the buffer
+///
+/// \Then SDO request is initialized with zeroes and given buffer
 TEST(CO_Sdo, CoSdoReqInit) {
   co_sdo_req req_init;
   membuf mbuf = MEMBUF_INIT;
@@ -175,9 +217,11 @@ TEST(CO_Sdo, CoSdoReqInit) {
   co_sdo_req_fini(&req_init);
 }
 
-// given: SDO request
-// when: co_sdo_req_init()
-// then: SDO request is initialized with expected values
+/// \Given SDO request
+///
+/// \When calling co_sdo_req_init() with the request and no buffer (NULL)
+///
+/// \Then SDO request is initialized with expected values
 TEST(CO_Sdo, CoSdoReqInit_BufNull) {
   co_sdo_req req_init;
 
@@ -197,9 +241,11 @@ TEST(CO_Sdo, CoSdoReqInit_BufNull) {
 #endif
 }
 
-// given: SDO request
-// when: CO_SDO_REQ_INIT()
-// then: SDO request is initialized with expected values
+/// \Given SDO request
+///
+/// \When initializing it using CO_SDO_REQ_INIT() macro
+///
+/// \Then SDO request is initialized with expected values
 TEST(CO_Sdo, CoSdoReqInit_Macro) {
   co_sdo_req req_init = CO_SDO_REQ_INIT(req_init);
 
@@ -219,9 +265,17 @@ TEST(CO_Sdo, CoSdoReqInit_Macro) {
   co_sdo_req_fini(&req_init);
 }
 
-// given: SDO request
-// when: co_sdo_req_clear()
-// then: SDO request is cleared and set with expected values
+///@}
+
+/// @name co_sdo_req_clear()
+///@{
+
+/// \Given SDO request with any contents
+///
+/// \When calling co_sdo_req_clear() for that request
+///
+/// \Then SDO request is cleared and reset with default values
+///       \Calls membuf_clear()
 TEST(CO_Sdo, CoSdoReqClear) {
   const size_t VAL_SIZE = 1u;
   char buf[VAL_SIZE] = {'X'};
@@ -247,9 +301,27 @@ TEST(CO_Sdo, CoSdoReqClear) {
 #endif
 }
 
-// given: invalid SDO request
-// when: co_sdo_req_dn()
-// then: error is returned (CO_SDO_AC_ERROR)
+///@}
+
+/// @name co_sdo_req_dn()
+///@{
+
+/// \Given malformed SDO request
+///
+/// \When calling co_sdo_req_dn() for that request with no pointer to store
+///       first byte address, pointer to store number of bytes and pointer to
+///       store abort code
+///
+/// \Then the call returns -1 and abort code is set to #CO_SDO_AC_ERROR
+///       \Calls co_sdo_req_first()
+///       \Calls co_sdo_req_last()
+///       \Calls get_errc()
+///       \Calls set_errc()
+///       \Calls membuf_size()
+///       \Calls membuf_clear()
+///       \Calls membuf_reserve()
+///       \Calls membuf_capacity()
+///       \Calls membuf_seek()
 TEST(CO_Sdo, CoSdoReqDn_Error) {
   size_t nbyte = 0u;
   co_unsigned32_t ac = 0u;
@@ -261,9 +333,22 @@ TEST(CO_Sdo, CoSdoReqDn_Error) {
   CHECK_EQUAL(CO_SDO_AC_ERROR, ac);
 }
 
-// given: invalid SDO request
-// when: co_sdo_req_dn()
-// then: error is returned
+/// \Given malformed SDO request
+///
+/// \When calling co_sdo_req_dn() for that request with no pointer to store
+///       first byte address, pointer to store number of bytes and no pointer to
+///       store abort code
+///
+/// \Then the call returns -1
+///       \Calls co_sdo_req_first()
+///       \Calls co_sdo_req_last()
+///       \Calls get_errc()
+///       \Calls set_errc()
+///       \Calls membuf_size()
+///       \Calls membuf_clear()
+///       \Calls membuf_reserve()
+///       \Calls membuf_capacity()
+///       \Calls membuf_seek()
 TEST(CO_Sdo, CoSdoReqDn_ErrorNoAcPointer) {
   size_t nbyte = 0u;
   req.offset = 1u;
@@ -273,22 +358,49 @@ TEST(CO_Sdo, CoSdoReqDn_ErrorNoAcPointer) {
   CHECK_EQUAL(-1, ret);
 }
 
-// given: empty SDO request
-// when: co_sdo_req_dn()
-// then: success is returned
+/// \Given empty SDO request
+///
+/// \When calling co_sdo_req_dn() for that request with no pointer to store
+///       first byte address, pointer to store number of bytes and pointer to
+///       store abort code
+///
+/// \Then the call returns 0 and abort code is set not modified
+///       \Calls co_sdo_req_first()
+///       \Calls co_sdo_req_last()
+///       \Calls get_errc()
+///       \Calls set_errc()
+///       \Calls membuf_size()
+///       \Calls membuf_clear()
+///       \Calls membuf_reserve()
+///       \Calls membuf_capacity()
+///       \Calls membuf_seek()
 TEST(CO_Sdo, CoSdoReqDn_Empty) {
   size_t nbyte = 0u;
-  co_unsigned32_t ac = 0u;
+  co_unsigned32_t ac = 42u;
 
   const auto ret = co_sdo_req_dn(&req, nullptr, &nbyte, &ac);
 
   CHECK_EQUAL(0, ret);
-  CHECK_EQUAL(0u, ac);
+  CHECK_EQUAL(42u, ac);
 }
 
-// given: SDO request
-// when: co_sdo_req_dn()
-// then: incomplete data code is returned
+/// \Given SDO request with incomplete data
+///
+/// \When calling co_sdo_req_dn() for that request with pointer to store first
+///       byte address, pointer to store number of bytes and pointer to store
+///       abort code
+///
+/// \Then the call returns -1, abort code is set to 0, first byte address is set
+///       to NULL and available data is copied to memory buffer
+///       \Calls co_sdo_req_first()
+///       \Calls co_sdo_req_last()
+///       \Calls get_errc()
+///       \Calls set_errc()
+///       \Calls membuf_size()
+///       \Calls membuf_clear()
+///       \Calls membuf_reserve()
+///       \Calls membuf_capacity()
+///       \Calls membuf_seek()
 TEST(CO_Sdo, CoSdoReqDn_NotAllDataAvailable) {
   size_t nbyte = 0;
   co_unsigned32_t ac = 0u;
@@ -321,9 +433,24 @@ TEST(CO_Sdo, CoSdoReqDn_NotAllDataAvailable) {
   CHECK_EQUAL(0x00, internal_buffer[2]);
 }
 
-// given: SDO request with the whole value available right away
-// when: co_sdo_req_dn()
-// then: success is returned and no data copied to the internal memory buffer
+/// \Given SDO request with complete data
+///
+/// \When calling co_sdo_req_dn() for that request with pointer to store first
+///       byte address, pointer to store number of bytes and pointer to store
+///       abort code
+///
+/// \Then the call returns 0, abort code is set to 0, first byte address is set
+///       to address of the buffer and available data is copied to memory
+///       buffer; number of bytes is set to complete count of bytes
+///       \Calls co_sdo_req_first()
+///       \Calls co_sdo_req_last()
+///       \Calls get_errc()
+///       \Calls set_errc()
+///       \Calls membuf_size()
+///       \Calls membuf_clear()
+///       \Calls membuf_reserve()
+///       \Calls membuf_capacity()
+///       \Calls membuf_seek()
 TEST(CO_Sdo, CoSdoReqDn) {
   size_t nbyte = 0u;
   co_unsigned32_t ac = 0u;
@@ -353,11 +480,66 @@ TEST(CO_Sdo, CoSdoReqDn) {
   CHECK_EQUAL(0x05, buffer[2]);
 }
 
+/// \Given SDO request with complete data
+///
+/// \When calling co_sdo_req_dn() for that request with pointer to store first
+///       byte address, no pointer to store number of bytes and pointer to store
+///       abort code
+///
+/// \Then the call returns 0, abort code is set to 0, first byte address is set
+///       to address of the buffer and available data is copied to memory buffer
+///       \Calls co_sdo_req_first()
+///       \Calls co_sdo_req_last()
+///       \Calls get_errc()
+///       \Calls set_errc()
+///       \Calls membuf_size()
+///       \Calls membuf_clear()
+///       \Calls membuf_reserve()
+///       \Calls membuf_capacity()
+///       \Calls membuf_seek()
+TEST(CO_Sdo, CoSdoReqDn_NoNBytePointer) {
+  co_unsigned32_t ac = 0u;
+  const void* ibuf = nullptr;
+
+  const size_t VAL_SIZE = 3u;
+  const uint8_t buffer[VAL_SIZE] = {0x03u, 0x04u, 0x05u};
+  req.buf = buffer;
+  req.size = VAL_SIZE;
+  req.nbyte = VAL_SIZE;
+  req.offset = 0u;
+#if !LELY_NO_MALLOC
+  membuf mbuf = MEMBUF_INIT;
+  req.membuf = &mbuf;
+#endif
+  uint8_t internal_buffer[VAL_SIZE] = {0u};
+  membuf_init(req.membuf, &internal_buffer, VAL_SIZE);
+
+  const auto ret = co_sdo_req_dn(&req, &ibuf, nullptr, &ac);
+
+  CHECK_EQUAL(0, ret);
+  CHECK_EQUAL(0u, ac);
+  POINTERS_EQUAL(buffer, ibuf);
+  CHECK_EQUAL(0x03, buffer[0]);
+  CHECK_EQUAL(0x04, buffer[1]);
+  CHECK_EQUAL(0x05, buffer[2]);
+}
+
 #if LELY_NO_MALLOC
-// given: invalid SDO request (too small buffer)
-// when: co_sdo_req_dn_buf()
-// then: error is returned (CO_SDO_AC_NO_MEM)
-TEST(CO_Sdo, CoSdoReqDnBuf_NoMem) {
+/// \Given SDO request with request size larger than attached buffer
+///
+/// \When calling co_sdo_req_dn() for that request with no pointer to store
+///       first byte address, pointer to store number of bytes and pointer to
+///       store abort code
+///
+/// \Then call returns -1 and abort code is set to #CO_SDO_AC_NO_MEM
+///       \Calls co_sdo_req_first()
+///       \Calls co_sdo_req_last()
+///       \Calls membuf_size()
+///       \Calls membuf_clear()
+///       \Calls membuf_reserve()
+///       \Calls membuf_capacity()
+///       \Calls membuf_seek()
+TEST(CO_Sdo, CoSdoReqDn_NoMem) {
   size_t nbyte = 0u;
   co_unsigned32_t ac = 0u;
   req.offset = 0u;
@@ -369,28 +551,25 @@ TEST(CO_Sdo, CoSdoReqDnBuf_NoMem) {
   CHECK_EQUAL(-1, ret);
   CHECK_EQUAL(CO_SDO_AC_NO_MEM, ac);
 }
-#else
-// given: SDO request
-// when: co_sdo_req_dn_buf()
-// then: incomplete data code is returned
-TEST(CO_Sdo, CoSdoReqDnBuf_ReallocateBuffer) {
-  size_t nbyte = 0u;
-  co_unsigned32_t ac = 0u;
-  req.offset = 0u;
-  req.size = 5u;
-  req.nbyte = 0u;
-
-  const auto ret = co_sdo_req_dn(&req, nullptr, &nbyte, &ac);
-
-  CHECK_EQUAL(-1, ret);
-  CHECK_EQUAL(0u, ac);
-}
 #endif  // LELY_NO_MALLOC
 
-// given: SDO request with empty buffer
-// when: co_sdo_req_dn_buf()
-// then: success is returned and ibuf is equal begin of the membuf
-TEST(CO_Sdo, CoSdoReqDnBuf_RequestWithNoDataButDataAlreadyTransferred) {
+/// \Given SDO request with no new data in the buffer, but complete data was
+///        already processed
+///
+/// \When calling co_sdo_req_dn() for that request with pointer to store first
+///       byte address, pointer to store number of bytes and pointer to store
+///       abort code
+///
+/// \Then call returns 0, abort code is 0 and pointer to first byte is set to
+///       beginning of the request buffer
+///       \Calls co_sdo_req_first()
+///       \Calls co_sdo_req_last()
+///       \Calls membuf_size()
+///       \Calls membuf_clear()
+///       \Calls membuf_reserve()
+///       \Calls membuf_capacity()
+///       \Calls membuf_seek()
+TEST(CO_Sdo, CoSdoReqDn_RequestWithNoDataButDataAlreadyTransferred) {
   size_t nbyte = 0u;
   co_unsigned32_t ac = 0u;
   const void* ibuf = nullptr;
@@ -408,14 +587,27 @@ TEST(CO_Sdo, CoSdoReqDnBuf_RequestWithNoDataButDataAlreadyTransferred) {
 
   CHECK_EQUAL(0, ret);
   CHECK_EQUAL(0u, ac);
+  CHECK_EQUAL(VAL_SIZE, nbyte);
   POINTERS_EQUAL(membuf_begin(req.membuf), ibuf);
 }
 
-// given: invalid SDO request (data exceeding internal buffer capacity)
-// when: co_sdo_req_dn_buf()
-// then: error is returned (CO_SDO_AC_ERROR) and ibuf is NULL
-TEST(CO_Sdo, CoSdoReqDnBuf_DataExceedsBufferSize) {
-  size_t nbyte = 0u;
+/// \Given SDO request with new data in the buffer, but complete data size
+///        exceeds expected one
+///
+/// \When calling co_sdo_req_dn() for that request with pointer to store first
+///       byte address, no pointer to store number of bytes and pointer to store
+///       abort code
+///
+/// \Then call returns -1, abort code is set to #CO_SDO_AC_ERROR and pointer to
+///       first byte is set to NULL
+///       \Calls co_sdo_req_first()
+///       \Calls co_sdo_req_last()
+///       \Calls membuf_size()
+///       \Calls membuf_clear()
+///       \Calls membuf_reserve()
+///       \Calls membuf_capacity()
+///       \Calls membuf_seek()
+TEST(CO_Sdo, CoSdoReqDn_DataExceedsBufferSize) {
   co_unsigned32_t ac = 0u;
   const void* ibuf = nullptr;
 
@@ -424,26 +616,72 @@ TEST(CO_Sdo, CoSdoReqDnBuf_DataExceedsBufferSize) {
   req.nbyte = 4u;
   membuf_seek(req.membuf, static_cast<ptrdiff_t>(req.offset));
 
-  const auto ret = co_sdo_req_dn(&req, &ibuf, &nbyte, &ac);
+  const auto ret = co_sdo_req_dn(&req, &ibuf, nullptr, &ac);
 
   CHECK_EQUAL(-1, ret);
   CHECK_EQUAL(CO_SDO_AC_ERROR, ac);
   POINTERS_EQUAL(nullptr, ibuf);
 }
 
-// given: SDO request
-// when: co_sdo_req_dn_buf()
-// then: success is returned
-TEST(CO_Sdo, CoSdoReqDnBuf_OffsetEqualToMembufSize) {
+/// \Given SDO request with new data in the buffer, but complete data size
+///        exceeds expected one
+///
+/// \When calling co_sdo_req_dn() for that request with pointer to store first
+///       byte address, pointer to store number of bytes and no pointer to store
+///       abort code
+///
+/// \Then call returns -1 and pointer to first byte is set to NULL
+///       \Calls co_sdo_req_first()
+///       \Calls co_sdo_req_last()
+///       \Calls membuf_size()
+///       \Calls membuf_clear()
+///       \Calls membuf_reserve()
+///       \Calls membuf_capacity()
+///       \Calls membuf_seek()
+TEST(CO_Sdo, CoSdoReqDn_NoAcPointer) {
+  size_t nbyte = 0u;
+  const void* ibuf = nullptr;
+
+  req.offset = 5u;
+  req.size = 6u;
+  req.nbyte = 4u;
+  membuf_seek(req.membuf, static_cast<ptrdiff_t>(req.offset));
+
+  const auto ret = co_sdo_req_dn(&req, &ibuf, &nbyte, nullptr);
+
+  CHECK_EQUAL(-1, ret);
+  POINTERS_EQUAL(nullptr, ibuf);
+}
+
+/// \Given correct "last" SDO request
+///
+/// \When calling co_sdo_req_dn() for that request with pointer to store first
+///       byte address, pointer to store number of bytes and pointer to store
+///       abort code
+///
+/// \Then call returns 0, abort code is 0 and pointer to first byte is set to
+///       request's buffer; data is copied to the buffer and number of available
+///       bytes is set to request size
+///       \Calls co_sdo_req_first()
+///       \Calls co_sdo_req_last()
+///       \Calls membuf_size()
+///       \Calls membuf_clear()
+///       \Calls membuf_reserve()
+///       \Calls membuf_capacity()
+///       \Calls membuf_seek()
+TEST(CO_Sdo, CoSdoReqDn_OffsetEqualToMembufSize) {
   size_t nbyte = 0u;
   co_unsigned32_t ac = 0u;
   const void* ibuf = nullptr;
+  const uint_least8_t data = 0x44u;
 
   req.offset = 1u;
-  req.nbyte = 0u;
-  req.size = 1u;
+  req.nbyte = 1u;
+  req.size = 2u;
+  req.buf = &data;
 #if !LELY_NO_MALLOC
   membuf_reserve(req.membuf, CO_SDO_REQ_MEMBUF_SIZE);
+  memset(membuf_begin(req.membuf), 0, membuf_capacity(req.membuf));
 #endif
   membuf_seek(req.membuf, static_cast<ptrdiff_t>(req.offset));
 
@@ -451,33 +689,55 @@ TEST(CO_Sdo, CoSdoReqDnBuf_OffsetEqualToMembufSize) {
 
   CHECK_EQUAL(0, ret);
   CHECK_EQUAL(0u, ac);
-#if LELY_NO_MALLOC
-  const char* const mbuf = reinterpret_cast<char*>(membuf_begin(req.membuf));
-  CHECK(mbuf != nullptr);
-  CheckArrayIsZeroed(mbuf, membuf_size(req.membuf));
-#endif
+  POINTERS_EQUAL(membuf_begin(req.membuf), ibuf);
+  CHECK_EQUAL(req.size, nbyte);
+  const uint_least8_t expected[] = {0x00u, data};
+  MEMCMP_EQUAL(expected, ibuf, nbyte);
 }
 
-// given: invalid SDO request (source not specified)
-// when: co_sdo_req_dn_buf()
-// then: success is returned
-TEST(CO_Sdo, CoSdoReqDnBuf_EmptyRequest_NoBufferPointerNoNbytePointer) {
+/// \Given empty SDO request (size equal zero, no pointer to data)
+///
+/// \When calling co_sdo_req_dn() for that request with pointer to store first
+///       byte address, pointer to store number of bytes and pointer to store
+///       abort code
+///
+/// \Then call returns 0, abort code is 0 and pointer to first byte is set to
+///       NULL; number of available bytes is set to 0
+///       \Calls co_sdo_req_first()
+///       \Calls co_sdo_req_last()
+///       \Calls membuf_size()
+///       \Calls membuf_clear()
+///       \Calls membuf_reserve()
+///       \Calls membuf_capacity()
+///       \Calls membuf_seek()
+TEST(CO_Sdo, CoSdoReqDn_EmptyRequest) {
+  size_t nbyte = 0u;
   co_unsigned32_t ac = 0u;
+  const void* ibuf = nullptr;
 
-  const auto ret = co_sdo_req_dn(&req, nullptr, nullptr, &ac);
+  const auto ret = co_sdo_req_dn(&req, &ibuf, &nbyte, &ac);
 
   CHECK_EQUAL(0, ret);
   CHECK_EQUAL(0u, ac);
-#if LELY_NO_MALLOC
-  const char* const mbuf = reinterpret_cast<char*>(membuf_begin(req.membuf));
-  CHECK(mbuf != nullptr);
-  CheckArrayIsZeroed(mbuf, membuf_size(req.membuf));
-#endif
+  CHECK_EQUAL(0u, nbyte);
+  POINTERS_EQUAL(nullptr, ibuf);
 }
 
-// given: invalid SDO request and a value to be downloaded
-// when: co_sdo_req_dn_val()
-// then: error is returned (CO_SDO_AC_ERROR)
+///@}
+
+/// @name co_sdo_req_dn_val()
+///@{
+
+/// \Given invalid SDO request
+///
+/// \When calling co_sdo_req_dn_val() for that request with any value type, any
+///       value pointer and pointer to store abort code
+///
+/// \Then call returns -1 and abort code is set to #CO_SDO_AC_ERROR
+///       \Calls co_sdo_req_dn()
+///       \Calls co_val_init()
+///       \Calls co_val_read()
+///       \Calls co_val_fini()
 TEST(CO_Sdo, CoSdoReqDnVal_InvalidRequest) {
   co_unsigned8_t val = 0xFFu;
   const co_unsigned16_t type = CO_DEFTYPE_UNSIGNED8;
@@ -490,9 +750,16 @@ TEST(CO_Sdo, CoSdoReqDnVal_InvalidRequest) {
   CHECK_EQUAL(CO_SDO_AC_ERROR, ac);
 }
 
-// given: SDO request
-// when: co_sdo_req_dn_val()
-// then: success is returned and a variable has a value specified by the buffer
+/// \Given SDO request containing correct value of a selected type
+///
+/// \When calling co_sdo_req_dn_val() for that request with matching value type,
+///       correct value pointer and pointer to store abort code
+///
+/// \Then call returns 0, abort code is zero and correct value is read
+///       \Calls co_sdo_req_dn()
+///       \Calls co_val_init()
+///       \Calls co_val_read()
+///       \Calls co_val_fini()
 TEST(CO_Sdo, CoSdoReqDnVal_BasicDataType) {
   co_unsigned16_t val = 0u;
   const co_unsigned16_t type = CO_DEFTYPE_UNSIGNED16;
@@ -511,10 +778,17 @@ TEST(CO_Sdo, CoSdoReqDnVal_BasicDataType) {
   CHECK_EQUAL(ldle_u16(reinterpret_cast<uint_least8_t*>(buf)), val);
 }
 
-// given: SDO request to download 4-bytes long variable to 2-byte variable
-// when: co_sdo_req_dn_val()
-// then: error is returned (CO_SDO_AC_TYPE_LEN_HI) but part of the variable was
-//       downloaded
+/// \Given SDO request containing too many bytes for the selected value type
+///
+/// \When calling co_sdo_req_dn_val() for that request with the selected value
+///       type, correct value pointer and pointer to store abort code
+///
+/// \Then call returns -1, abort code is set to #CO_SDO_AC_TYPE_LEN_HI and the
+///       value is read
+///       \Calls co_sdo_req_dn()
+///       \Calls co_val_init()
+///       \Calls co_val_read()
+///       \Calls co_val_fini()
 TEST(CO_Sdo, CoSdoReqDnVal_DownloadTooManyBytes) {
   co_unsigned16_t val = 0u;
   const co_unsigned16_t type = CO_DEFTYPE_UNSIGNED16;
@@ -536,9 +810,17 @@ TEST(CO_Sdo, CoSdoReqDnVal_DownloadTooManyBytes) {
   CHECK_EQUAL(ldle_u16(reinterpret_cast<uint_least8_t*>(buf)), val);
 }
 
-// given: SDO request to download 4-bytes long buffer to 8-byte variable
-// when: co_sdo_req_dn_val()
-// then: error is returned (CO_SDO_AC_TYPE_LEN_LO)
+/// \Given SDO request containing too few bytes for the selected value type
+///
+/// \When calling co_sdo_req_dn_val() for that request with the selected value
+///       type, correct value pointer and pointer to store abort code
+///
+/// \Then call returns -1, abort code is set to #CO_SDO_AC_TYPE_LEN_LO and the
+///       value is not read
+///       \Calls co_sdo_req_dn()
+///       \Calls co_val_init()
+///       \Calls co_val_read()
+///       \Calls co_val_fini()
 TEST(CO_Sdo, CoSdoReqDnVal_DownloadTooFewBytes) {
   co_unsigned64_t val = 0u;
   const co_unsigned16_t type = CO_DEFTYPE_UNSIGNED64;
@@ -560,9 +842,16 @@ TEST(CO_Sdo, CoSdoReqDnVal_DownloadTooFewBytes) {
   CHECK_EQUAL(0u, val);
 }
 
-// given: SDO request to download 4-bytes long buffer to 8-byte variable
-// when: co_sdo_req_dn_val()
-// then: incomplete data code is returned
+/// \Given SDO request containing too few bytes for the selected value type
+///
+/// \When calling co_sdo_req_dn_val() for that request with the selected value
+///       type, correct value pointer and no pointer to store abort code
+///
+/// \Then call returns -1 and the value is not read
+///       \Calls co_sdo_req_dn()
+///       \Calls co_val_init()
+///       \Calls co_val_read()
+///       \Calls co_val_fini()
 TEST(CO_Sdo, CoSdoReqDnVal_DownloadTooFewBytesNoAcPointer) {
   co_unsigned64_t val = 0u;
   const co_unsigned16_t type = CO_DEFTYPE_UNSIGNED64;
@@ -583,9 +872,18 @@ TEST(CO_Sdo, CoSdoReqDnVal_DownloadTooFewBytesNoAcPointer) {
 }
 
 #if HAVE_LELY_OVERRIDE
-// given: SDO request
-// when: co_sdo_req_dn_val()
-// then: error is returned (CO_SDO_AC_NO_MEM)
+/// \Given SDO request containing bytes of an array which will cause failure of
+///        co_val_read()
+///
+/// \When calling co_sdo_req_dn_val() for that request with the selected value
+///       type, correct value pointer and no pointer to store abort code
+///
+/// \Then call returns -1, abort code is set to #CO_SDO_AC_NO_MEM and array is
+///       not read
+///       \Calls co_sdo_req_dn()
+///       \Calls co_val_init()
+///       \Calls co_val_read()
+///       \Calls co_val_fini()
 TEST(CO_Sdo, CoSdoReqDnVal_ArrayDataType_ReadValueFailed) {
   const co_unsigned16_t type = CO_DEFTYPE_OCTET_STRING;
   co_unsigned32_t ac = 0u;
@@ -609,7 +907,7 @@ TEST(CO_Sdo, CoSdoReqDnVal_ArrayDataType_ReadValueFailed) {
   CHECK_EQUAL(CO_SDO_AC_NO_MEM, ac);
 #if LELY_NO_MALLOC
   const uint_least8_t EXPECTED[VAL_SIZE] = {0x00u, 0x00u, 0x00u, 0x00u};
-  CHECK_EQUAL(0, memcmp(EXPECTED, str, 4u));
+  MEMCMP_EQUAL(EXPECTED, str, sizeof(EXPECTED));
   CheckArrayIsZeroed(membuf_begin(req.membuf), CO_SDO_REQ_MEMBUF_SIZE);
 #else
   POINTERS_EQUAL(nullptr, str);
@@ -617,9 +915,16 @@ TEST(CO_Sdo, CoSdoReqDnVal_ArrayDataType_ReadValueFailed) {
 }
 #endif  // HAVE_LELY_OVERRIDE
 
-// given: SDO request to download 4 bytes to an array, "FF" unicode string
-// when: co_sdo_req_up_val()
-// then: success is returned
+/// \Given SDO request containing bytes of an array
+///
+/// \When calling co_sdo_req_dn_val() for that request with the selected value
+///       type, correct value pointer and no pointer to store abort code
+///
+/// \Then call returns 0, abort code is 0 and array is read
+///       \Calls co_sdo_req_dn()
+///       \Calls co_val_init()
+///       \Calls co_val_read()
+///       \Calls co_val_fini()
 TEST(CO_Sdo, CoSdoReqDnVal_ArrayDataType) {
   const co_unsigned16_t type = CO_DEFTYPE_OCTET_STRING;
   co_unsigned32_t ac = 0u;
@@ -639,20 +944,27 @@ TEST(CO_Sdo, CoSdoReqDnVal_ArrayDataType) {
   CHECK_EQUAL(VAL_SIZE, req.size);
   CHECK_EQUAL(VAL_SIZE, req.offset + req.nbyte);
   const uint_least8_t EXPECTED[VAL_SIZE] = {0x01u, 0x01u, 0x2Bu, 0x00u};
-  CHECK_EQUAL(0, memcmp(EXPECTED, str, VAL_SIZE));
+  MEMCMP_EQUAL(EXPECTED, str, VAL_SIZE);
 
   co_val_fini(CO_DEFTYPE_OCTET_STRING, &str);
 }
 
-// given: empty SDO request and a buffer with value to be uploaded
-// when: co_sdo_req_up()
-// then: request is initialized with given values
+///@}
+
+/// @name co_sdo_req_up()
+///@{
+
+/// \Given an empty SDO request and a buffer with value to be uploaded
+///
+/// \When calling co_sdo_req_up() for that request and buffer
+///
+/// \Then correct upload request for the given value is prepared
 TEST(CO_Sdo, CoSdoReqUp) {
   co_sdo_req req_up = CO_SDO_REQ_INIT(req_up);
   const size_t VAL_SIZE = 2u;
   const uint8_t src_buf[VAL_SIZE] = {0x34u, 0x56u};
 
-  co_sdo_req_up(&req_up, src_buf, 2u);
+  co_sdo_req_up(&req_up, src_buf, sizeof(src_buf));
 
   POINTERS_EQUAL(src_buf, req_up.buf);
   CHECK_EQUAL(VAL_SIZE, req_up.size);
@@ -660,10 +972,19 @@ TEST(CO_Sdo, CoSdoReqUp) {
   CHECK_EQUAL(0, req_up.offset);
 }
 
+///@}
+
+/// @name co_sdo_req_up_val()
+///@{
+
 #if HAVE_LELY_OVERRIDE
-// given: empty SDO request and a value
-// when: co_sdo_req_up_val()
-// then: success is returned
+/// \Given an empty SDO request and a value that fails to be processed using
+///        co_val_write()
+///
+/// \When calling co_sdo_req_up_val() for that request, matching value type, the
+///       value and pointer to store abort code
+///
+/// \Then the call returns 0, abort code is zero and request remains empty
 TEST(CO_Sdo, CoSdoReqUpVal_NoValueWrite) {
   const co_unsigned16_t val = 0x4B7Du;
   co_unsigned32_t ac = 0u;
@@ -683,9 +1004,12 @@ TEST(CO_Sdo, CoSdoReqUpVal_NoValueWrite) {
 #endif  // HAVE_LELY_OVERRIDE
 
 #if LELY_NO_MALLOC
-// given: empty SDO request and a value
-// when: co_sdo_req_up_val()
-// then: error is returned (CO_SDO_AC_NO_MEM)
+/// \Given an empty SDO request with buffer with no capacity
+///
+/// \When calling co_sdo_req_up_val() for that request, any value type, any
+///       matching value and pointer to store abort code
+///
+/// \Then the call returns -1 and abort code is set to #CO_SDO_AC_NO_MEM
 TEST(CO_Sdo, CoSdoReqUpVal_NoMemory) {
   const co_unsigned16_t val = 0x7A79u;
   co_unsigned32_t ac = 0u;
@@ -700,9 +1024,12 @@ TEST(CO_Sdo, CoSdoReqUpVal_NoMemory) {
 #endif  // LELY_NO_MALLOC
 
 #if LELY_NO_MALLOC
-// given: empty SDO request and a value
-// when: co_sdo_req_up_val()
-// then: error is returned
+/// \Given an empty SDO request with buffer with no capacity
+///
+/// \When calling co_sdo_req_up_val() for that request, any value type, any
+///       matching value and no pointer to store abort code
+///
+/// \Then the call returns -1
 TEST(CO_Sdo, CoSdoReqUpVal_NoMemoryNoAcPointer) {
   const co_unsigned16_t val = 0x797Au;
   membuf_init(req.membuf, nullptr, 0u);
@@ -716,9 +1043,13 @@ TEST(CO_Sdo, CoSdoReqUpVal_NoMemoryNoAcPointer) {
 #endif  // LELY_NO_MALLOC
 
 #if HAVE_LELY_OVERRIDE
-// given: SDO request and a value to upload
-// when: co_sdo_req_up_val()
-// then: error is returned (CO_SDO_AC_ERROR)
+/// \Given an empty SDO request and a value that fails to be serialized using
+///        co_val_write()
+///
+/// \When calling co_sdo_req_up_val() for that request, matching value type, the
+///       value and pointer to store abort code
+///
+/// \Then the call returns -1 and abort code is set to #CO_SDO_AC_ERROR
 TEST(CO_Sdo, CoSdoReqUpVal_SecondCoValWriteFail) {
   const co_unsigned16_t val = 0x7A79u;
   co_unsigned32_t ac = 0u;
@@ -734,9 +1065,13 @@ TEST(CO_Sdo, CoSdoReqUpVal_SecondCoValWriteFail) {
 }
 #endif  // HAVE_LELY_OVERRIDE
 
-// given: SDO request and a value to upload
-// when: co_sdo_req_up_val()
-// then: 0 is returned, buffer contains suitable bytes
+/// \Given an empty SDO request and any value
+///
+/// \When calling co_sdo_req_up_val() for that request, matching value type, the
+///       value and pointer to store abort code
+///
+/// \Then the call returns 0, abort code is 0 and request is properly filled
+///       with the value
 TEST(CO_Sdo, CoSdoReqUpVal) {
   const co_unsigned16_t val = 0x797Au;
   const size_t VAL_SIZE = sizeof(val);
@@ -764,6 +1099,8 @@ TEST(CO_Sdo, CoSdoReqUpVal) {
   CHECK_EQUAL(VAL_SIZE, req.nbyte);
   CHECK_EQUAL(0u, req.offset);
 }
+
+///@}
 
 /// @name SDO_PAR_INIT
 ///@{

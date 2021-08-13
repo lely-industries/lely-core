@@ -39,6 +39,7 @@ namespace Allocators {
 const size_t POOL_SIZE = 128u * 1024u;
 using Default = PoolAllocator<POOL_SIZE>;
 #else
+/// Implementation of default #alloc_t for dynamic allocation
 class Default {
  public:
   alloc_t*

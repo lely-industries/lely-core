@@ -96,7 +96,11 @@ TEST(Util_MemoryDefaultAllocator, MemAlloc_AnyAllocationFails) {
   CHECK_EQUAL(ERRNUM_NOMEM, get_errnum());
 }
 
+#endif  // LELY_NO_MALLOC
+
 ///@}
+
+#ifdef LELY_NO_MALLOC
 
 /// @name mem_size()
 ///@{
