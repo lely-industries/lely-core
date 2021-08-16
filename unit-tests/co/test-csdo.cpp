@@ -598,7 +598,7 @@ TEST_BASE(CO_CsdoBase) {
 
   using sub_type = co_unsigned16_t;
 
-  static uint_least8_t data;
+  uint_least8_t data = 0;
 
   static const co_unsigned8_t CSDO_NUM = 0x01u;
   static const co_unsigned8_t DEV_ID = 0x01u;
@@ -676,10 +676,9 @@ TEST_BASE(CO_CsdoBase) {
     set_errnum(ERRNUM_SUCCESS);
   }
 };
-uint_least8_t CO_CsdoBase::data = 0;
 
 TEST_GROUP_BASE(CoCsdoSetGet, CO_CsdoBase) {
-  const int32_t data = 0;  // dummy data to workaround clang-format
+  const int32_t dummy = 0;  // clang-format workaround
 
   static void co_csdo_ind_func(const co_csdo_t*, co_unsigned16_t,
                                co_unsigned8_t, size_t, size_t, void*) {}
@@ -5940,7 +5939,7 @@ TEST_GROUP_BASE(CO_CsdoDownload, CO_CsdoBase) {
   std::vector<co_unsigned8_t> first_segment;
   std::vector<co_unsigned8_t> last_segment;
 
-  void SendDownloadRequest(const std::vector<co_unsigned8_t>& buf) const {
+  void SendDownloadRequest(const std::vector<co_unsigned8_t>& buf) {
     CHECK_EQUAL(0, co_csdo_dn_req(csdo, IDX, SUBIDX, buf.data(), buf.size(),
                                   &CoCsdoDnCon::Func, &data));
 
@@ -5979,7 +5978,7 @@ TEST_GROUP_BASE(CO_CsdoDownload, CO_CsdoBase) {
     CanSend::CheckMsg(DEFAULT_COBID_REQ, 0, CO_SDO_MSG_SIZE, expected.data());
   }
 
-  void AdvanceToDnSegState() const {
+  void AdvanceToDnSegState() {
     SendDownloadRequest(buffer);
     ReceiveSegmentedDnIni();
     CoCsdoDnCon::Clear();
