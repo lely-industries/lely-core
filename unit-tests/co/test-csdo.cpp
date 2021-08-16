@@ -2895,6 +2895,43 @@ TEST(CO_Csdo, CoCsdoDnValReq_EmptyExternalBuffer) {
 
 ///@}
 
+TEST_GROUP_BASE(CO_CsdoDnDcf, CO_CsdoBase) {
+  static const co_unsigned16_t SUB_TYPE = CO_DEFTYPE_UNSIGNED16;
+  static const co_unsigned16_t IDX = 0x2020u;
+  static const co_unsigned8_t SUBIDX = 0x00u;
+  const sub_type VAL = 0xabcdu;
+
+  std::unique_ptr<CoObjTHolder> obj;
+  ConciseDcf dcf = ConciseDcf::MakeForEntries<sub_type>();
+
+  void RestartCsdo() const {
+    co_csdo_stop(csdo);
+    CHECK_EQUAL(0, co_csdo_start(csdo));
+  }
+
+  void CheckDcfReadFailure(const co_unsigned16_t idx,
+                           const co_unsigned8_t subidx,
+                           const errnum_t error_num) const {
+    CHECK_EQUAL(1u, CoCsdoDnCon::GetNumCalled());
+    CoCsdoDnCon::Check(csdo, idx, subidx, CO_SDO_AC_TYPE_LEN_LO, nullptr);
+    CHECK_EQUAL(error_num, get_errnum());
+    CHECK_EQUAL(0u, CanSend::GetNumCalled());
+  }
+
+  TEST_SETUP() override {
+    TEST_BASE_SETUP();
+
+    dev_holder->CreateAndInsertObj(obj, IDX);
+    obj->InsertAndSetSub(SUBIDX, SUB_TYPE, VAL);
+
+    CHECK_EQUAL(dcf.Size(),
+                co_dev_write_dcf(dev, IDX, IDX, dcf.Begin(), dcf.End()));
+
+    CHECK_EQUAL(0, co_csdo_start(csdo));
+    CanSend::Clear();
+  }
+};
+
 /// @name co_csdo_dn_dcf_req()
 ///@{
 
@@ -2914,18 +2951,9 @@ TEST(CO_Csdo, CoCsdoDnValReq_EmptyExternalBuffer) {
 ///       \Calls co_csdo_is_idle()
 ///       \Calls co_val_read()
 ///       \Calls co_csdo_dn_req()
-TEST(CO_Csdo, CoCsdoDnDcfReq_Nominal) {
-  SetCli01CobidReq(DEFAULT_COBID_REQ);
-  SetCli02CobidRes(DEFAULT_COBID_RES);
-  StartCSDO();
-
+TEST(CO_CsdoDnDcf, CoCsdoDnDcfReq_Nominal) {
   const errnum_t error_num = ERRNUM_FAULT;
   set_errnum(error_num);
-
-  co_sub_set_val_u16(obj2020->GetLastSub(), VAL);
-  auto dcf = ConciseDcf::MakeForEntries<sub_type>();
-  CHECK_EQUAL(dcf.Size(),
-              co_dev_write_dcf(dev, IDX, IDX, dcf.Begin(), dcf.End()));
 
   const auto ret = co_csdo_dn_dcf_req(csdo, dcf.Begin(), dcf.End(),
                                       CoCsdoDnCon::Func, nullptr);
@@ -2938,6 +2966,15 @@ TEST(CO_Csdo, CoCsdoDnDcfReq_Nominal) {
       CO_SDO_CCS_DN_INI_REQ | CO_SDO_INI_SIZE_EXP_SET(sizeof(sub_type)), IDX,
       SUBIDX, VAL);
   CanSend::CheckMsg(DEFAULT_COBID_REQ, 0u, CO_SDO_MSG_SIZE, expected.data());
+
+  // complete started SDO download transfer
+  const can_msg dn_ini_res =
+      SdoCreateMsg::DnIniRes(IDX, SUBIDX, DEFAULT_COBID_RES);
+  const can_msg dn_seg_res = SdoCreateMsg::DnSegRes(DEFAULT_COBID_RES);
+  CHECK_EQUAL(1, can_net_recv(net, &dn_ini_res, 0));
+  CHECK_EQUAL(1, can_net_recv(net, &dn_seg_res, 0));
+  CHECK_EQUAL(1u, CoCsdoDnCon::GetNumCalled());
+  CoCsdoDnCon::Check(csdo, IDX, SUBIDX, 0u, nullptr);
 }
 
 /// \Given a pointer to a CSDO service (co_csdo_t) with an invalid server
@@ -2954,15 +2991,9 @@ TEST(CO_Csdo, CoCsdoDnDcfReq_Nominal) {
 ///       \Calls co_csdo_is_valid()
 ///       \Calls co_csdo_is_idle()
 ///       \Calls set_errnum()
-TEST(CO_Csdo, CoCsdoDnDcfReq_InvalidCobidReq) {
+TEST(CO_CsdoDnDcf, CoCsdoDnDcfReq_InvalidCobidReq) {
   SetCli01CobidReq(DEFAULT_COBID_REQ | CO_SDO_COBID_VALID);
-  SetCli02CobidRes(DEFAULT_COBID_RES);
-  StartCSDO();
-
-  co_sub_set_val_u16(obj2020->GetLastSub(), VAL);
-  auto dcf = ConciseDcf::MakeForEntries<sub_type>();
-  CHECK_EQUAL(dcf.Size(),
-              co_dev_write_dcf(dev, IDX, IDX, dcf.Begin(), dcf.End()));
+  RestartCsdo();
 
   const auto ret = co_csdo_dn_dcf_req(csdo, dcf.Begin(), dcf.End(),
                                       CoCsdoDnCon::Func, nullptr);
@@ -2987,19 +3018,10 @@ TEST(CO_Csdo, CoCsdoDnDcfReq_InvalidCobidReq) {
 ///       \Calls co_csdo_is_valid()
 ///       \Calls co_csdo_is_idle()
 ///       \Calls set_errnum()
-TEST(CO_Csdo, CoCsdoDnDcfReq_IsNotIdle) {
-  SetCli01CobidReq(DEFAULT_COBID_REQ);
-  SetCli02CobidRes(DEFAULT_COBID_RES);
-  StartCSDO();
-
+TEST(CO_CsdoDnDcf, CoCsdoDnDcfReq_IsNotIdle) {
   CHECK_EQUAL(0, co_csdo_blk_up_req(csdo, 0xffffu, 0xffu, 0, nullptr, nullptr,
                                     nullptr));
   CanSend::Clear();
-
-  co_sub_set_val_u16(obj2020->GetLastSub(), VAL);
-  auto dcf = ConciseDcf::MakeForEntries<sub_type>();
-  CHECK_EQUAL(dcf.Size(),
-              co_dev_write_dcf(dev, IDX, IDX, dcf.Begin(), dcf.End()));
 
   const auto ret = co_csdo_dn_dcf_req(csdo, dcf.Begin(), dcf.End(),
                                       CoCsdoDnCon::Func, nullptr);
@@ -3027,31 +3049,164 @@ TEST(CO_Csdo, CoCsdoDnDcfReq_IsNotIdle) {
 ///       \Calls co_csdo_is_valid()
 ///       \Calls co_csdo_is_idle()
 ///       \Calls co_val_read()
-///       \Calls co_csdo_dn_req()
-TEST(CO_Csdo, CoCsdoDnDcfReq_TooShortBuffer) {
-  SetCli01CobidReq(DEFAULT_COBID_REQ);
-  SetCli02CobidRes(DEFAULT_COBID_RES);
-  StartCSDO();
-
+TEST(CO_CsdoDnDcf, CoCsdoDnDcfReq_NumEntriesReadFailure) {
   const errnum_t error_num = ERRNUM_FAULT;
   set_errnum(error_num);
-
-  co_sub_set_val_u16(obj2020->GetLastSub(), VAL);
-  auto dcf = ConciseDcf::MakeForEntries<sub_type>();
-  CHECK_EQUAL(dcf.Size(),
-              co_dev_write_dcf(dev, IDX, IDX, dcf.Begin(), dcf.End()));
 
   const auto ret = co_csdo_dn_dcf_req(
       csdo, dcf.Begin(), dcf.Begin() + sizeof(co_unsigned32_t) - 1u,
       CoCsdoDnCon::Func, nullptr);
 
   CHECK_EQUAL(0, ret);
-  CHECK_EQUAL(1u, CoCsdoDnCon::GetNumCalled());
-  CoCsdoDnCon::Check(csdo, 0x0000u, 0x00u, CO_SDO_AC_TYPE_LEN_LO, nullptr);
+  CheckDcfReadFailure(0x0000u, 0x00u, error_num);
+}
+
+/// \Given a pointer to a CSDO service (co_csdo_t) with a valid server parameter
+///        "COB-ID client -> server (rx)" and "COB-ID server -> client (tx)"
+///        entries
+///
+/// \When co_csdo_dn_dcf_req() is called with the pointer to the CSDO, a pointer
+///       to the beginning of the buffer containing a concise DCF and a pointer
+///       to the incorrect end of the buffer (incomplete total number of
+///       sub-indices), a null confirmation function pointer and a null
+///       user-specified data pointer
+///
+/// \Then 0 is returned, error number is not changed, no SDO message is sent
+///       \Calls co_csdo_is_valid()
+///       \Calls co_csdo_is_idle()
+///       \Calls co_val_read()
+TEST(CO_CsdoDnDcf, CoCsdoDnDcfReq_NumEntriesReadFailure_NoConFunc) {
+  const errnum_t error_num = ERRNUM_FAULT;
+  set_errnum(error_num);
+
+  const auto ret = co_csdo_dn_dcf_req(
+      csdo, dcf.Begin(), dcf.Begin() + sizeof(co_unsigned32_t) - 1u, nullptr,
+      nullptr);
+
+  CHECK_EQUAL(0, ret);
   CHECK_EQUAL(error_num, get_errnum());
   CHECK_EQUAL(0u, CanSend::GetNumCalled());
 }
 
+/// \Given a pointer to a CSDO service (co_csdo_t) with a valid server parameter
+///        "COB-ID client -> server (rx)" and "COB-ID server -> client (tx)"
+///        entries
+///
+/// \When co_csdo_dn_dcf_req() is called with the pointer to the CSDO, a pointer
+///       to the beginning of the buffer containing a concise DCF and a pointer
+///       to the incorrect end of the buffer (incomplete object index), a
+///       pointer to the confirmation function and a null user-specified data
+///       pointer
+///
+/// \Then 0 is returned, confirmation function is called once with a pointer to
+///       the service, an index and a sub-index equal to 0,
+///       CO_SDO_AC_TYPE_LEN_LO as the abort code and a null pointer; error
+///       number is not changed, no SDO message is sent
+///       \Calls co_csdo_is_valid()
+///       \Calls co_csdo_is_idle()
+///       \Calls co_val_read()
+TEST(CO_CsdoDnDcf, CoCsdoDnDcfReq_IndexReadFailure) {
+  const errnum_t error_num = ERRNUM_FAULT;
+  set_errnum(error_num);
+
+  const auto ret = co_csdo_dn_dcf_req(
+      csdo, dcf.Begin(),
+      dcf.Begin() + sizeof(co_unsigned32_t) + sizeof(co_unsigned16_t) - 1u,
+      CoCsdoDnCon::Func, nullptr);
+
+  CHECK_EQUAL(0, ret);
+  CheckDcfReadFailure(0x0000u, 0x00u, error_num);
+}
+
+/// \Given a pointer to a CSDO service (co_csdo_t) with a valid server parameter
+///        "COB-ID client -> server (rx)" and "COB-ID server -> client (tx)"
+///        entries
+///
+/// \When co_csdo_dn_dcf_req() is called with the pointer to the CSDO, a pointer
+///       to the beginning of the buffer containing a concise DCF and a pointer
+///       to the incorrect end of the buffer (incomplete sub-index), a pointer
+///       to the confirmation function and a null user-specified data pointer
+///
+/// \Then 0 is returned, confirmation function is called once with a pointer to
+///       the service, an index and a sub-index equal to 0,
+///       CO_SDO_AC_TYPE_LEN_LO as the abort code and a null pointer; error
+///       number is not changed, no SDO message is sent
+///       \Calls co_csdo_is_valid()
+///       \Calls co_csdo_is_idle()
+///       \Calls co_val_read()
+TEST(CO_CsdoDnDcf, CoCsdoDnDcfReq_SubIndexReadFailure) {
+  const errnum_t error_num = ERRNUM_FAULT;
+  set_errnum(error_num);
+
+  const auto ret = co_csdo_dn_dcf_req(csdo, dcf.Begin(),
+                                      dcf.Begin() + sizeof(co_unsigned32_t) +
+                                          sizeof(co_unsigned16_t) +
+                                          sizeof(co_unsigned8_t) - 1u,
+                                      CoCsdoDnCon::Func, nullptr);
+
+  CHECK_EQUAL(0, ret);
+  CheckDcfReadFailure(IDX, 0x00u, error_num);
+}
+
+/// \Given a pointer to a CSDO service (co_csdo_t) with a valid server parameter
+///        "COB-ID client -> server (rx)" and "COB-ID server -> client (tx)"
+///        entries
+///
+/// \When co_csdo_dn_dcf_req() is called with the pointer to the CSDO, a pointer
+///       to the beginning of the buffer containing a concise DCF and a pointer
+///       to the incorrect end of the buffer (incomplete entry size), a pointer
+///       to the confirmation function and a null user-specified data pointer
+///
+/// \Then 0 is returned, confirmation function is called once with a pointer to
+///       the service, an index and a sub-index equal to 0,
+///       CO_SDO_AC_TYPE_LEN_LO as the abort code and a null pointer; error
+///       number is not changed, no SDO message is sent
+///       \Calls co_csdo_is_valid()
+///       \Calls co_csdo_is_idle()
+///       \Calls co_val_read()
+TEST(CO_CsdoDnDcf, CoCsdoDnDcfReq_SizeReadFailure) {
+  const errnum_t error_num = ERRNUM_FAULT;
+  set_errnum(error_num);
+
+  const auto ret = co_csdo_dn_dcf_req(
+      csdo, dcf.Begin(),
+      dcf.Begin() + sizeof(co_unsigned32_t) + sizeof(co_unsigned16_t) +
+          sizeof(co_unsigned8_t) + sizeof(co_unsigned32_t) - 1u,
+      CoCsdoDnCon::Func, nullptr);
+
+  CHECK_EQUAL(0, ret);
+  CheckDcfReadFailure(IDX, SUBIDX, error_num);
+}
+
+/// \Given a pointer to a CSDO service (co_csdo_t) with a valid server parameter
+///        "COB-ID client -> server (rx)" and "COB-ID server -> client (tx)"
+///        entries
+///
+/// \When co_csdo_dn_dcf_req() is called with the pointer to the CSDO, a pointer
+///       to the beginning of the buffer containing a concise DCF and a pointer
+///       to the incorrect end of the buffer (incomplete entry value), a pointer
+///       to the confirmation function and a null user-specified data pointer
+///
+/// \Then 0 is returned, confirmation function is called once with a pointer to
+///       the service, an index and a sub-index equal to 0,
+///       CO_SDO_AC_TYPE_LEN_LO as the abort code and a null pointer; error
+///       number is not changed, no SDO message is sent
+///       \Calls co_csdo_is_valid()
+///       \Calls co_csdo_is_idle()
+///       \Calls co_val_read()
+TEST(CO_CsdoDnDcf, CoCsdoDnDcfReq_ValueReadFailure) {
+  const errnum_t error_num = ERRNUM_FAULT;
+  set_errnum(error_num);
+
+  const auto ret = co_csdo_dn_dcf_req(
+      csdo, dcf.Begin(),
+      dcf.Begin() + sizeof(co_unsigned32_t) + sizeof(co_unsigned16_t) +
+          sizeof(co_unsigned8_t) + sizeof(co_unsigned32_t) + sizeof(VAL) - 1u,
+      CoCsdoDnCon::Func, nullptr);
+
+  CHECK_EQUAL(0, ret);
+  CheckDcfReadFailure(IDX, SUBIDX, error_num);
+}
 ///@}
 
 /// @name co_csdo_up_req()
