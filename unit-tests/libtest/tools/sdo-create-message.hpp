@@ -44,6 +44,10 @@ can_msg BlkDnSubReq(uint_least32_t recipient_id, co_unsigned8_t seqno,
                     co_unsigned8_t cs_flags = 0,
                     const std::vector<uint_least8_t>& data = {});
 // block download sub-block response
+can_msg BlkDnSubRes(const uint_least8_t ackseq, const uint_least8_t blksize,
+                    const uint_least32_t recipient_id,
+                    const co_unsigned8_t cs_flags = 0);
+// block download initiate response
 can_msg BlkDnIniRes(co_unsigned16_t idx, co_unsigned8_t subidx,
                     uint_least32_t recipient_id, co_unsigned8_t cs_flags = 0,
                     co_unsigned8_t blksize = 0);
@@ -88,7 +92,8 @@ can_msg UpSegRes(uint_least32_t recipient_id,
 // block upload initiate request
 can_msg BlkUpIniReq(co_unsigned16_t idx, co_unsigned8_t subidx,
                     uint_least32_t recipient_id,
-                    co_unsigned8_t blksize = CO_SDO_MAX_SEQNO);
+                    co_unsigned8_t blksize = CO_SDO_MAX_SEQNO,
+                    uint_least8_t pst = 0);
 // block upload request
 can_msg BlkUpReq(uint_least32_t recipient_id, co_unsigned8_t cs_flags = 0);
 // block upload response

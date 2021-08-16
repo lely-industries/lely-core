@@ -1929,6 +1929,8 @@ co_csdo_blk_dn_sub_on_recv(co_csdo_t *sdo, const struct can_msg *msg)
 	if (msg->len < 2)
 		return co_csdo_abort_res(sdo, CO_SDO_AC_BLK_SEQ);
 	co_unsigned8_t ackseq = msg->data[1];
+	if (ackseq > sdo->blksize)
+		return co_csdo_abort_res(sdo, CO_SDO_AC_BLK_SEQ);
 	if (ackseq < sdo->blksize) {
 		// If the sequence number of the last segment that was
 		// successfully received is smaller than the number of segments
