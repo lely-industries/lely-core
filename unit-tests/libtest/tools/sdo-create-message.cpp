@@ -87,6 +87,20 @@ SdoCreateMsg::BlkDnSubReq(const uint_least32_t recipient_id,
 }
 
 can_msg
+SdoCreateMsg::BlkDnSubRes(const uint_least8_t ackseq,
+                          const uint_least8_t blksize,
+                          const uint_least32_t recipient_id,
+                          const co_unsigned8_t cs_flags) {
+  can_msg msg = SdoCreateMsg::Default(0, 0, recipient_id);
+  msg.data[0] = CO_SDO_SCS_BLK_DN_RES;
+  msg.data[0] |= cs_flags;
+  msg.data[1] = ackseq;
+  msg.data[2] = blksize;
+
+  return msg;
+}
+
+can_msg
 SdoCreateMsg::BlkDnIniRes(const co_unsigned16_t idx,
                           const co_unsigned8_t subidx,
                           const uint_least32_t recipient_id,
@@ -239,10 +253,12 @@ can_msg
 SdoCreateMsg::BlkUpIniReq(const co_unsigned16_t idx,
                           const co_unsigned8_t subidx,
                           const uint_least32_t recipient_id,
-                          const co_unsigned8_t blksize) {
+                          const co_unsigned8_t blksize,
+                          const uint_least8_t pst) {
   can_msg msg = Default(idx, subidx, recipient_id);
   msg.data[0] = CO_SDO_CCS_BLK_UP_REQ;
   msg.data[4] = blksize;
+  msg.data[5] = pst;
 
   return msg;
 }

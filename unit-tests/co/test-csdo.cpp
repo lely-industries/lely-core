@@ -1207,19 +1207,27 @@ TEST_GROUP_BASE(CO_Csdo, CO_CsdoBase) {
     CanSend::Clear();
   }
 
-  void ReceiveBlockDownloadSubInitiateResponse(const co_unsigned16_t idx,
-                                               const co_unsigned8_t subidx) {
-    const can_msg msg = SdoCreateMsg::BlkDnIniRes(
-        idx, subidx, DEFAULT_COBID_RES, CO_SDO_SC_INI_BLK);
-    CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
-  }
-
   void ReceiveBlkUpSegReq() {
     const uint_least8_t sequence_number = 1u;
     const auto msg_up_seg =
         SdoCreateMsg::BlkUpSegReq(DEFAULT_COBID_RES, sequence_number,
                                   val_u16.GetSegmentData(), CO_SDO_SEQ_LAST);
     CHECK_EQUAL(1, can_net_recv(net, &msg_up_seg, 0));
+  }
+
+  void ReceiveBlkDnSubRes(const uint_least8_t size,
+                          const uint_least8_t sequence_number) {
+    const can_msg msg =
+        SdoCreateMsg::BlkDnSubRes(sequence_number, CO_SDO_SC_INI_BLK, size);
+    CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
+  }
+
+  void ReceiveBlockDownloadSubInitiateResponse(
+      const co_unsigned16_t idx, const co_unsigned8_t subidx,
+      const uint_least8_t block_size = CO_SDO_MAX_SEQNO) {
+    const can_msg msg = SdoCreateMsg::BlkDnIniRes(
+        idx, subidx, DEFAULT_COBID_RES, CO_SDO_SC_INI_BLK, block_size);
+    CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
   }
 
   void CheckBlockDownloadEndRequestSent() const {
@@ -1241,6 +1249,17 @@ TEST_GROUP_BASE(CO_Csdo, CO_CsdoBase) {
         SdoInitExpectedData::U32(CO_SDO_CS_ABORT, idx, subidx, abort_code);
     CanSend::CheckMsg(recipient_id, 0, CO_SDO_MSG_SIZE,
                       expected_timeout.data());
+    CanSend::Clear();
+  }
+
+  void CheckLastSegmentSent(const uint_least8_t seqno,
+                            const std::vector<uint_least8_t>& data) const {
+    CHECK_EQUAL(1u, CanSend::GetNumCalled());
+    const auto expected_last =
+        SdoInitExpectedData::Segment(CO_SDO_SEQ_LAST | seqno, data);
+    CanSend::CheckMsg(DEFAULT_COBID_REQ, 0, CO_SDO_MSG_SIZE,
+                      expected_last.data());
+    CanSend::Clear();
   }
 
   void InitiateOsBlockDownloadValRequest(const co_unsigned16_t idx,
@@ -1268,6 +1287,14 @@ TEST_GROUP_BASE(CO_Csdo, CO_CsdoBase) {
     InitiateBlockUploadRequest();
     ReceiveBlkUpSegReq();
     CanSend::Clear();
+  }
+
+  void AdvanceToBlkDnSubState(const co_unsigned16_t idx,
+                              const co_unsigned8_t subidx) {
+    InitiateBlockDownloadRequest(idx, subidx, val_u16.GetVal());
+    ReceiveBlockDownloadSubInitiateResponse(idx, subidx, 1u);
+    const uint_least8_t sequence_number = 1u;
+    CheckLastSegmentSent(sequence_number, val_u16.GetSegmentData());
   }
 
   TEST_SETUP() {
@@ -4872,8 +4899,46 @@ TEST(CO_Csdo, CoCsdoBlkDnIniOnRecv_NoCS) {
   CheckSdoAbortSent(IDX, SUBIDX, CO_SDO_AC_NO_CS);
 }
 
-/// \Given a pointer to the CSDO service (co_csdo_t) which has initiated block
-///        download transfer (the correct request was sent by the client)
+// TODO(N7S): GWT
+TEST(CO_Csdo, CoCsdoBlkDnSubOnRecv_NoAckseq) {
+  StartCSDO();
+  AdvanceToBlkDnSubState(IDX, SUBIDX);
+
+  auto msg =
+      SdoCreateMsg::BlkDnSubRes(0u, 1u, DEFAULT_COBID_RES, CO_SDO_SC_BLK_RES);
+  msg.len = 1u;  // no ackseq
+  CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
+
+  CheckSdoAbortSent(IDX, SUBIDX, CO_SDO_AC_BLK_SEQ);
+}
+
+// TODO(N7S): GWT
+TEST(CO_Csdo, CoCsdoBlkDnSubOnRecv_NoBlksize) {
+  StartCSDO();
+  AdvanceToBlkDnSubState(IDX, SUBIDX);
+
+  auto msg =
+      SdoCreateMsg::BlkDnSubRes(0u, 1u, DEFAULT_COBID_RES, CO_SDO_SC_BLK_RES);
+  msg.len = 2u;  // no blksize
+  CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
+
+  CheckSdoAbortSent(IDX, SUBIDX, CO_SDO_AC_BLK_SIZE);
+}
+
+// TODO(N7S): GWT
+TEST(CO_Csdo, CoCsdoBlkDnSubOnRecv_TooBigAckSeq) {
+  StartCSDO();
+  AdvanceToBlkDnSubState(IDX, SUBIDX);
+
+  const auto msg =
+      SdoCreateMsg::BlkDnSubRes(255u, 1u, DEFAULT_COBID_RES, CO_SDO_SC_BLK_RES);
+  CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
+
+  CheckSdoAbortSent(IDX, SUBIDX, CO_SDO_AC_BLK_SEQ);
+}
+
+/// \Given a pointer to the CSDO service (co_csdo_t) in the 'block download
+///        sub-block' state
 ///
 /// \When an SDO block download sub-block response is received
 ///
@@ -5056,7 +5121,91 @@ TEST(CO_Csdo, CoCsdoBlkDnSubOnEnter_TimeoutSet) {
 
 /// TODO(N7S): test cases for co_csdo_blk_dn_sub_on_time()
 
-/// TODO(N7S): test cases for co_csdo_blk_dn_sub_on_recv()
+/// \Given a pointer to the CSDO service (co_csdo_t) in the 'block download
+///        sub-block' state
+///
+/// \When an SDO message with length zero is received
+///
+/// \Then an SDO abort message with CO_SDO_AC_NO_CS abort code is sent
+///       \Calls stle_u16()
+///       \Calls stle_u32()
+///       \Calls can_net_send()
+TEST(CO_Csdo, CoCsdoBlkDnSubOnRecv_NoCs) {
+  StartCSDO();
+  AdvanceToBlkDnSubState(IDX, SUBIDX);
+
+  auto msg = SdoCreateMsg::Default(0, 0, DEFAULT_COBID_RES);
+  msg.len = 0;  // no command specifier
+  CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
+
+  CheckSdoAbortSent(IDX, SUBIDX, CO_SDO_AC_NO_CS);
+  CoCsdoDnCon::Check(csdo, IDX, SUBIDX, CO_SDO_AC_NO_CS, &data);
+}
+
+// TODO(N7S): GWT
+TEST(CO_Csdo, CoCsdoBlkDnSubOnRecv_CsAbort_AcZero) {
+  StartCSDO();
+  AdvanceToBlkDnSubState(IDX, SUBIDX);
+
+  const auto msg = SdoCreateMsg::Abort(0, 0, DEFAULT_COBID_RES);
+  CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
+
+  CHECK_EQUAL(0, CanSend::GetNumCalled());
+  CoCsdoDnCon::Check(csdo, IDX, SUBIDX, CO_SDO_AC_ERROR, &data);
+}
+
+// TODO(N7S): GWT
+TEST(CO_Csdo, CoCsdoBlkDnSubOnRecv_CsAbort_NonZeroAc) {
+  StartCSDO();
+  AdvanceToBlkDnSubState(IDX, SUBIDX);
+
+  const auto msg =
+      SdoCreateMsg::Abort(0, 0, DEFAULT_COBID_RES, CO_SDO_AC_HARDWARE);
+  CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
+
+  CHECK_EQUAL(0, CanSend::GetNumCalled());
+  CoCsdoDnCon::Check(csdo, IDX, SUBIDX, CO_SDO_AC_HARDWARE, &data);
+}
+
+// TODO(N7S): GWT
+TEST(CO_Csdo, CoCsdoBlkDnSubOnRecv_CsAbort_IncompleteAc) {
+  StartCSDO();
+  AdvanceToBlkDnSubState(IDX, SUBIDX);
+
+  auto msg = SdoCreateMsg::Abort(0, 0, DEFAULT_COBID_RES);
+  msg.len = 7u;
+  CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
+
+  CHECK_EQUAL(0, CanSend::GetNumCalled());
+  CoCsdoDnCon::Check(csdo, IDX, SUBIDX, CO_SDO_AC_ERROR, &data);
+}
+
+// TODO(N7S): GWT
+TEST(CO_Csdo, CoCsdoBlkDnSubOnRecv_IncorrectCs) {
+  StartCSDO();
+  AdvanceToBlkDnSubState(IDX, SUBIDX);
+
+  auto msg = SdoCreateMsg::Default(0, 0, DEFAULT_COBID_RES);
+  msg.data[0] = 0xffu;  // break the command specifier
+  CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
+
+  CheckSdoAbortSent(IDX, SUBIDX, CO_SDO_AC_NO_CS);
+  CoCsdoDnCon::Check(csdo, IDX, SUBIDX, CO_SDO_AC_NO_CS, &data);
+}
+
+// TODO(N7S): GWT
+TEST(CO_Csdo, CoCsdoBlkDnSubOnRecv_IncorrectSc) {
+  StartCSDO();
+  AdvanceToBlkDnSubState(IDX, SUBIDX);
+
+  auto msg =
+      SdoCreateMsg::BlkDnSubRes(0u, 1u, DEFAULT_COBID_RES, CO_SDO_SC_BLK_RES);
+  msg.data[0] |= 0x03u;  // break the subcommand
+  CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
+
+  CheckSdoAbortSent(IDX, SUBIDX, CO_SDO_AC_NO_CS);
+  CoCsdoDnCon::Check(csdo, IDX, SUBIDX, CO_SDO_AC_NO_CS, &data);
+}
 
 /// \Given a pointer to the CSDO service (co_csdo_t) which has initiated block
 ///        download transfer (the correct request was sent by the client)
@@ -5067,19 +5216,14 @@ TEST(CO_Csdo, CoCsdoBlkDnSubOnEnter_TimeoutSet) {
 ///       sequence number and segment data is sent
 TEST(CO_Csdo, CoCsdoBlkDnSubOnRecv_Nominal) {
   StartCSDO();
+  AdvanceToBlkDnSubState(IDX, SUBIDX);
 
-  InitiateBlockDownloadRequest(IDX, SUBIDX, val_u16.GetVal());
-
-  const can_msg msg = SdoCreateMsg::BlkDnIniRes(
-      IDX, SUBIDX, DEFAULT_COBID_RES, CO_SDO_SC_INI_BLK, sizeof(sub_type));
+  const auto msg =
+      SdoCreateMsg::BlkDnSubRes(0u, 1u, DEFAULT_COBID_RES, CO_SDO_SC_BLK_RES);
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
   const uint_least8_t sequence_number = 1u;
-  CHECK_EQUAL(1u, CanSend::GetNumCalled());
-  const auto expected_last = SdoInitExpectedData::Segment(
-      CO_SDO_SEQ_LAST | sequence_number, val_u16.GetSegmentData());
-  CanSend::CheckMsg(DEFAULT_COBID_REQ, 0, CO_SDO_MSG_SIZE,
-                    expected_last.data());
+  CheckLastSegmentSent(sequence_number, val_u16.GetSegmentData());
 }
 
 ///@}
@@ -5094,8 +5238,8 @@ TEST(CO_Csdo, CoCsdoBlkDnSubOnRecv_Nominal) {
 /// @name CSDO block download end
 ///@{
 
-/// \Given a pointer to the started CSDO service (co_csdo_t) in 'block download
-///        end' state
+/// \Given a pointer to the started CSDO service (co_csdo_t) in the 'block
+///        download end' state
 ///
 /// \When an SDO message with length zero is received
 ///
@@ -5115,8 +5259,8 @@ TEST(CO_Csdo, CoCsdoBlkDnEndOnRecv_NoCs) {
   CheckSdoAbortSent(IDX, subidx_os, CO_SDO_AC_NO_CS);
 }
 
-/// \Given a pointer to the started CSDO service (co_csdo_t) in 'block download
-///        end' state
+/// \Given a pointer to the started CSDO service (co_csdo_t) in the 'block
+///        download end' state
 ///
 /// \When an SDO abort transfer message with a non-zero abort code
 ///
@@ -5137,8 +5281,8 @@ TEST(CO_Csdo, CoCsdoBlkDnEndOnRecv_CsAbort_NonZeroAc) {
   CoCsdoDnCon::Check(csdo, IDX, subidx_os, CO_SDO_AC_PARAM, &data);
 }
 
-/// \Given a pointer to the started CSDO service (co_csdo_t) in 'block download
-///        end' state
+/// \Given a pointer to the started CSDO service (co_csdo_t) in the 'block
+///        download end' state
 ///
 /// \When an SDO abort transfer message with an abort code equal to zero
 ///
@@ -5158,8 +5302,8 @@ TEST(CO_Csdo, CoCsdoBlkDnEndOnRecv_CsAbort_AcZero) {
   CoCsdoDnCon::Check(csdo, IDX, subidx_os, CO_SDO_AC_ERROR, &data);
 }
 
-/// \Given a pointer to the started CSDO service (co_csdo_t) in 'block download
-///        end' state
+/// \Given a pointer to the started CSDO service (co_csdo_t) in the 'block
+///        download end' state
 ///
 /// \When an SDO abort transfer message with an incomplete abort code
 ///
@@ -5180,8 +5324,8 @@ TEST(CO_Csdo, CoCsdoBlkDnEndOnRecv_CsAbort_IncompleteAc) {
   CoCsdoDnCon::Check(csdo, IDX, subidx_os, CO_SDO_AC_ERROR, &data);
 }
 
-/// \Given a pointer to the started CSDO service (co_csdo_t) in 'block download
-///        end' state
+/// \Given a pointer to the started CSDO service (co_csdo_t) in the 'block
+///        download end' state
 ///
 /// \When an SDO message with an incorrect command specifier is received
 ///
@@ -5201,8 +5345,8 @@ TEST(CO_Csdo, CoCsdoBlkDnEndOnRecv_IncorrectCs) {
   CheckSdoAbortSent(IDX, subidx_os, CO_SDO_AC_NO_CS);
 }
 
-/// \Given a pointer to the started CSDO service (co_csdo_t) in 'block download
-///        end' state
+/// \Given a pointer to the started CSDO service (co_csdo_t) in the 'block
+///        download end' state
 ///
 /// \When an SDO message with an incorrect subcommand is received
 ///
@@ -5222,8 +5366,8 @@ TEST(CO_Csdo, CoCsdoBlkDnEndOnRecv_IncorrectSc) {
   CheckSdoAbortSent(IDX, subidx_os, CO_SDO_AC_NO_CS);
 }
 
-/// \Given a pointer to the started CSDO service (co_csdo_t) in 'block download
-///        end' state
+/// \Given a pointer to the started CSDO service (co_csdo_t) in the 'block
+///        download end' state
 ///
 /// \When a correct block download end response is received
 ///
@@ -5245,8 +5389,8 @@ TEST(CO_Csdo, CoCsdoBlkDnEndOnRecv_Nominal) {
   CHECK(co_csdo_is_idle(csdo));
 }
 
-/// \Given a pointer to the started CSDO service (co_csdo_t) in 'block download
-///        end' state
+/// \Given a pointer to the started CSDO service (co_csdo_t) in the 'block
+///        download end' state
 ///
 /// \When co_csdo_abort_req() is called with an abort code
 ///
@@ -5264,8 +5408,8 @@ TEST(CO_Csdo, CoCsdoBlkDnEndOnAbort_Nominal) {
   CheckSdoAbortSent(IDX, subidx_os, CO_SDO_AC_HARDWARE);
 }
 
-/// \Given a pointer to the started CSDO service (co_csdo_t) in 'block download
-///        end' state; the service has a timeout set
+/// \Given a pointer to the started CSDO service (co_csdo_t) in the 'block
+///        download end' state; the service has a timeout set
 ///
 /// \When the timeout expires before any SDO message is received
 ///

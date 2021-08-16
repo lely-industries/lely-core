@@ -1529,8 +1529,10 @@ co_ssdo_blk_up_sub_on_recv(co_ssdo_t *sdo, const struct can_msg *msg)
 		if (msg->len < 3)
 			return co_ssdo_abort_up_res(sdo, CO_SDO_AC_BLK_SEQ);
 
-		// Flush the successfully sent segments from the buffer.
 		co_unsigned8_t ackseq = msg->data[1];
+		if (ackseq > sdo->blksize)
+			return co_ssdo_abort_up_res(sdo, CO_SDO_AC_BLK_SEQ);
+		// Flush the successfully sent segments from the buffer.
 		membuf_flush(&sdo->buf, ackseq * 7);
 
 		// Read the number of segments in the next block.

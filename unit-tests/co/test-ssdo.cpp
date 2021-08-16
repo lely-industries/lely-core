@@ -43,6 +43,8 @@
 #include <libtest/tools/can-send.hpp>
 #include <libtest/tools/lely-cpputest-ext.hpp>
 #include <libtest/tools/lely-unit-test.hpp>
+#include <libtest/tools/sdo-consts.hpp>
+#include <libtest/tools/sdo-create-message.hpp>
 
 #include "holder/dev.hpp"
 #include "holder/obj.hpp"
@@ -190,7 +192,7 @@ TEST(CO_SsdoInit, CoSsdoCreate_NumTooHigh) {
   POINTERS_EQUAL(nullptr, ssdo);
 }
 
-/// \Given a pointer to the device (co_dev_t) with an object dictionary which
+/// \Given a pointer to the device (co_dev_t) with the object dictionary which
 ///        does not contain the server parameter object
 ///
 /// \When co_ssdo_create() is called with a pointer to the network (can_net_t),
@@ -313,7 +315,7 @@ TEST(CO_SsdoInit, CoSsdoCreate_DefaultSsdo_NoServerParameterObject) {
   co_ssdo_destroy(ssdo);
 }
 
-/// \Given a pointer to the device (co_dev_t) with an object dictionary
+/// \Given a pointer to the device (co_dev_t) with the object dictionary
 ///        containing the default server parameter object
 ///
 /// \When co_ssdo_create() is called with a pointer to the network (can_net_t),
@@ -357,7 +359,7 @@ TEST(CO_SsdoInit, CoSsdoCreate_DefaultSsdo_WithServerParameterObject) {
   co_ssdo_destroy(ssdo);
 }
 
-/// \Given a pointer to the device (co_dev_t) with an object dictionary
+/// \Given a pointer to the device (co_dev_t) with the object dictionary
 ///        containing a server parameter object
 ///
 /// \When co_ssdo_create() is called with a pointer to the network (can_net_t),
@@ -482,7 +484,7 @@ TEST(CO_SsdoInit, CoSsdoStart_AlreadyStarted) {
   co_ssdo_destroy(ssdo);
 }
 
-/// \Given a pointer to the SSDO service (co_ssdo_t) with an object dictionary
+/// \Given a pointer to the SSDO service (co_ssdo_t) with the object dictionary
 ///        containing the default server parameter object
 ///
 /// \When co_ssdo_start() is called
@@ -2187,7 +2189,7 @@ TEST(CoSsdoDnSegOnRecv, AbortCS) {
   CHECK_EQUAL(0, CanSend::GetNumCalled());
 }
 
-/// \Given a pointer to the SSDO service (co_ssdo_t) with an object dictionary
+/// \Given a pointer to the SSDO service (co_ssdo_t) with the object dictionary
 ///        containing an entry which is at least 8 bytes long; segmented
 ///        download transfer is in progress
 ///
@@ -2224,7 +2226,7 @@ TEST(CoSsdoDnSegOnRecv, AbortAfterFirstSegment) {
   CHECK_EQUAL(0u, co_dev_get_val_u64(dev, IDX, SUBIDX));
 }
 
-/// \Given a pointer to the SSDO service (co_ssdo_t) with an object dictionary
+/// \Given a pointer to the SSDO service (co_ssdo_t) with the object dictionary
 ///        containing an entry which is at least 8 bytes long; segmented
 ///        download transfer is in progress
 ///
@@ -2263,7 +2265,7 @@ TEST(CoSsdoDnSegOnRecv, AbortAfterFirstSegment_MsgTooShort) {
   CHECK_EQUAL(0u, co_dev_get_val_u64(dev, IDX, SUBIDX));
 }
 
-/// \Given a pointer to the SSDO service (co_ssdo_t) with an object dictionary
+/// \Given a pointer to the SSDO service (co_ssdo_t) with the object dictionary
 ///        containing an entry which is at least 8 bytes long; segmented
 ///        download transfer is in progress
 ///
@@ -2289,7 +2291,7 @@ TEST(CoSsdoDnSegOnRecv, InvalidCS) {
   CanSend::CheckMsg(DEFAULT_COBID_RES, 0, CO_SDO_MSG_SIZE, expected.data());
 }
 
-/// \Given a pointer to the SSDO service (co_ssdo_t) with an object dictionary
+/// \Given a pointer to the SSDO service (co_ssdo_t) with the object dictionary
 ///        containing an entry which is at least 8 bytes long; segmented
 ///        download transfer is in progress
 ///
@@ -2324,7 +2326,7 @@ TEST(CoSsdoDnSegOnRecv, NoToggle) {
   CHECK_EQUAL(0, CanSend::GetNumCalled());
 }
 
-/// \Given a pointer to the SSDO service (co_ssdo_t) with an object dictionary
+/// \Given a pointer to the SSDO service (co_ssdo_t) with the object dictionary
 ///        containing an entry; segmented download transfer is in progress
 ///
 /// \When an SDO segment is received, but the message contains less bytes than
@@ -2351,7 +2353,7 @@ TEST(CoSsdoDnSegOnRecv, MsgLenLessThanSegmentSize) {
   CanSend::CheckMsg(DEFAULT_COBID_RES, 0, CO_SDO_MSG_SIZE, expected.data());
 }
 
-/// \Given a pointer to the SSDO service (co_ssdo_t) with an object dictionary
+/// \Given a pointer to the SSDO service (co_ssdo_t) with the object dictionary
 ///        containing an entry; segmented download transfer is in progress
 ///
 /// \When an SDO segment with more bytes than expected in this transfer is
@@ -2377,7 +2379,7 @@ TEST(CoSsdoDnSegOnRecv, SegmentTooBig) {
   CanSend::CheckMsg(DEFAULT_COBID_RES, 0, CO_SDO_MSG_SIZE, expected.data());
 }
 
-/// \Given a pointer to the SSDO service (co_ssdo_t) with an object dictionary
+/// \Given a pointer to the SSDO service (co_ssdo_t) with the object dictionary
 ///        containing an entry which is at least 8 bytes long; segmented
 ///        download transfer is in progress
 ///
@@ -2404,7 +2406,7 @@ TEST(CoSsdoDnSegOnRecv, SegmentTooShort) {
   CanSend::CheckMsg(DEFAULT_COBID_RES, 0, CO_SDO_MSG_SIZE, expected.data());
 }
 
-/// \Given a pointer to the SSDO service (co_ssdo_t) with an object dictionary
+/// \Given a pointer to the SSDO service (co_ssdo_t) with the object dictionary
 ///        containing an entry which is at least 8 bytes long; segmented
 ///        download transfer is in progress
 ///
@@ -2433,7 +2435,7 @@ TEST(CoSsdoDnSegOnRecv, FailDnInd) {
   CanSend::CheckMsg(DEFAULT_COBID_RES, 0, CO_SDO_MSG_SIZE, expected.data());
 }
 
-/// \Given a pointer to the SSDO service (co_ssdo_t) with an object dictionary
+/// \Given a pointer to the SSDO service (co_ssdo_t) with the object dictionary
 ///        containing an entry which is at least 8 bytes long; segmented
 ///        download transfer is in progress; an SSDO timeout is set
 ///
@@ -2472,7 +2474,7 @@ TEST(CoSsdoDnSegOnRecv, TimeoutSet) {
                     expected_timeout.data());
 }
 
-/// \Given a pointer to the SSDO service (co_ssdo_t) with an object dictionary
+/// \Given a pointer to the SSDO service (co_ssdo_t) with the object dictionary
 ///        containing an entry which is at least 8 bytes long; segmented
 ///        download transfer is in progress
 ///
@@ -3741,26 +3743,11 @@ TEST_GROUP_BASE(CoSsdoBlkUp, CO_Ssdo) {
     return ac;
   }
 
-  static co_unsigned32_t up_ind_big_reqsiz(const co_sub_t* const sub,
-                                           co_sdo_req* const req,
-                                           co_unsigned32_t ac, void*) {
-    if (ac != 0) return ac;
-
-    co_sub_on_up(sub, req, &ac);
-    req->size = 3u;
-    req->offset = 1u;
-
-    return ac;
-  }
-
-  void InitBlkUp2020Req(const co_unsigned8_t subidx = SUBIDX,
-                        const co_unsigned8_t blksize = CO_SDO_MAX_SEQNO) {
-    can_msg msg = SdoCreateMsg::Default(IDX, SUBIDX, DEFAULT_COBID_REQ);
-    msg.id = DEFAULT_COBID_REQ;
-    msg.data[0] = CO_SDO_CCS_BLK_UP_REQ | CO_SDO_BLK_CRC;
-    stle_u16(msg.data + 1u, IDX);
-    msg.data[3] = subidx;
-    msg.data[4] = blksize;
+  void ReceiveBlkUpIni2020Req(const co_unsigned8_t subidx = SUBIDX,
+                              const co_unsigned8_t blksize = CO_SDO_MAX_SEQNO) {
+    can_msg msg =
+        SdoCreateMsg::BlkUpIniReq(IDX, subidx, DEFAULT_COBID_REQ, blksize);
+    msg.data[0] |= CO_SDO_BLK_CRC;
 
     CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
   }
@@ -3846,7 +3833,7 @@ TEST(CoSsdoBlkUp, Sub_Nominal) {
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE64, val);
   StartSSDO();
 
-  InitBlkUp2020Req(SUBIDX);
+  ReceiveBlkUpIni2020Req(SUBIDX);
   CheckInitBlkUp2020ResData(SUBIDX, sizeof(sub_type64));
   ResetCanSend();
 
@@ -3912,11 +3899,53 @@ TEST(CoSsdoBlkUp, Sub_Nominal) {
   CHECK_EQUAL(0, CanSend::GetNumCalled());
 }
 
+/// \Given a pointer to the SSDO service (co_ssdo_t) with the object dictionary
+///        containing an object taking up at least 8 bytes; there is an
+///        initiated SDO block upload transfer for this value and the server has
+///        received the first SDO block upload sub-block request
+///
+/// \When a client's block upload response with too large 'ackseq' number
+///       (greater than the specified block size) was received
+///
+/// \Then an SDO abort transfer message with CO_SDO_AC_BLK_SEQ abort code is
+///       sent
+///       \Calls stle_u16()
+///       \Calls stle_u32()
+///       \Calls can_net_send()
+///       \Calls co_sdo_req_fini()
+///       \Calls co_sdo_req_init()
+///       \Calls membuf_clear()
+TEST(CoSsdoBlkUp, Sub_AckseqTooLarge) {
+  dev_holder->CreateAndInsertObj(obj2020, IDX);
+  const sub_type64 val = 0x5423456789abcdefu;
+  obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE64, val);
+  StartSSDO();
+
+  ReceiveBlkUpIni2020Req(SUBIDX);
+  CheckInitBlkUp2020ResData(SUBIDX, sizeof(sub_type64));
+  ResetCanSend();
+
+  const can_msg msg =
+      SdoCreateMsg::BlkUpReq(DEFAULT_COBID_REQ, CO_SDO_SC_START_UP);
+  CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
+  ResetCanSend();
+
+  // client's confirmation response
+  can_msg msg_con_res =
+      SdoCreateMsg::BlkUpReq(DEFAULT_COBID_REQ, CO_SDO_SC_BLK_RES);
+  msg_con_res.data[1] = CO_SDO_MAX_SEQNO + 1u;  // ackseq
+  msg_con_res.data[2] = CO_SDO_MAX_SEQNO;       // blksize
+  CHECK_EQUAL(1, can_net_recv(net, &msg_con_res, 0));
+
+  CanSend::CheckMsg(
+      SdoCreateMsg::Abort(IDX, SUBIDX, DEFAULT_COBID_RES, CO_SDO_AC_BLK_SEQ));
+}
+
 /// \Given a pointer to the SSDO service (co_ssdo_t), block upload transfer
 ///        is in progress, first sub-block was already sent
 ///
-/// \When an SDO upload sub-block request was received with the same acknowledge
-///       sequence value as in the previous request
+/// \When an SDO upload sub-block request was received with the same 'ackseq'
+///       value as in the previous request
 ///
 /// \Then the requested SDO upload sub-block is resent
 TEST(CoSsdoBlkUp, Sub_ResendBlock) {
@@ -3925,7 +3954,7 @@ TEST(CoSsdoBlkUp, Sub_ResendBlock) {
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE64, val);
   StartSSDO();
 
-  InitBlkUp2020Req(SUBIDX, 1u);
+  ReceiveBlkUpIni2020Req(SUBIDX, 1u);
   CheckInitBlkUp2020ResData(SUBIDX, sizeof(sub_type64));
   ResetCanSend();
 
@@ -3972,7 +4001,7 @@ TEST(CoSsdoBlkUp, Sub_ResendBlock) {
   // client's confirmation response
   msg = SdoCreateMsg::Default(IDX, SUBIDX, DEFAULT_COBID_REQ);
   msg.data[0] = CO_SDO_CCS_BLK_UP_REQ | CO_SDO_SC_BLK_RES;
-  msg.data[1] = 2u;                // ackseq
+  msg.data[1] = 1u;                // ackseq
   msg.data[2] = CO_SDO_MAX_SEQNO;  // blksize
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
@@ -4006,7 +4035,7 @@ TEST(CoSsdoBlkUp, Sub_BlksizeOne_MsgWithNoLastByte) {
                            sub_type64{0x5423456789abcdefuL});
   StartSSDO();
 
-  InitBlkUp2020Req(SUBIDX, 1u);
+  ReceiveBlkUpIni2020Req(SUBIDX, 1u);
   CheckInitBlkUp2020ResData(SUBIDX, sizeof(sub_type64));
   ResetCanSend();
 
@@ -4060,7 +4089,7 @@ TEST(CoSsdoBlkUp, Sub_IndError) {
 
   StreamingUpInd::valid_calls = 1u;  // fail in sub-block recv, not initiate
 
-  InitBlkUp2020Req(SUBIDX, 1u);
+  ReceiveBlkUpIni2020Req(SUBIDX, 1u);
   CheckInitBlkUp2020ResData(SUBIDX, sizeof(sub_type64));
   ResetCanSend();
 
@@ -4081,7 +4110,7 @@ TEST(CoSsdoBlkUp, Sub_StartButReqNotFirst) {
   co_obj_set_up_ind(obj2020->Get(), up_ind_inc_req_offset, nullptr);
   StartSSDO();
 
-  InitBlkUp2020Req(SUBIDX);
+  ReceiveBlkUpIni2020Req(SUBIDX);
   CheckInitBlkUp2020ResData(SUBIDX, sizeof(sub_type64));
   ResetCanSend();
 
@@ -4103,7 +4132,7 @@ TEST(CoSsdoBlkUp, Sub_RequestIncremented) {
   co_obj_set_up_ind(obj2020->Get(), up_ind_inc_req_offset, nullptr);
   StartSSDO();
 
-  InitBlkUp2020Req(SUBIDX);
+  ReceiveBlkUpIni2020Req(SUBIDX);
   CheckInitBlkUp2020ResData(SUBIDX, sizeof(sub_type64));
   ResetCanSend();
 
@@ -4145,7 +4174,7 @@ TEST(CoSsdoBlkUp, Sub_ArrNominal) {
   co_obj_set_code(co_dev_find_obj(dev, IDX), CO_OBJECT_ARRAY);
   StartSSDO();
 
-  InitBlkUp2020Req(0x01u, 2u);
+  ReceiveBlkUpIni2020Req(0x01u, 2u);
   CheckInitBlkUp2020ResData(0x01u, sizeof(sub_type));
   CHECK_EQUAL(DEFAULT_COBID_RES, CanSend::msg.id);
   CHECK_EQUAL(0, CanSend::msg.flags);
@@ -4197,7 +4226,7 @@ TEST(CoSsdoBlkUp, Sub_ArrNominal) {
   CHECK_EQUAL(0, CanSend::msg.data[7]);
 }
 
-/// \Given a pointer to the SSDO service (co_ssdo_t) with an object dictionary
+/// \Given a pointer to the SSDO service (co_ssdo_t) with the object dictionary
 ///        containing an array; the array has a custom upload indication
 ///        function set; the function claims that the array is empty
 ///
@@ -4231,7 +4260,7 @@ TEST(CoSsdoBlkUp, Sub_EmptyArray) {
   co_obj_set_up_ind(obj, up_ind, nullptr);
   StartSSDO();
 
-  InitBlkUp2020Req(element_subindex);
+  ReceiveBlkUpIni2020Req(element_subindex);
   CheckInitBlkUp2020ResData(element_subindex, 0u);
   CHECK_EQUAL(res_canid, CanSend::msg.id);
   CHECK_EQUAL(0, CanSend::msg.flags);
@@ -4281,43 +4310,72 @@ TEST(CoSsdoBlkUp, Sub_EmptyArray) {
   CHECK_EQUAL(0, CanSend::msg.data[7]);
 }
 
+/// \Given a pointer to the SSDO service (co_ssdo_t) with the object dictionary
+///        containing an array; the array has a custom upload indication
+///        function set; the function claims that the requested data is not yet
+///        available to upload (specified request does not contain the last
+///        segment) but the offset is not zero; a block upload initiate
+///        request of the array was received and the server has sent a correct
+///        response
+///
+/// \When a second SDO block upload request is received
+///
+/// \Then a response is sent and the transfer is not finished - when another
+///       request is received, another response is sent
+///       \Calls co_sdo_req_first()
+///       \Calls membuf_flush()
+///       \Calls membuf_size()
+///       \Calls co_crc()
+///       \Calls membuf_write()
+///       \Calls co_sdo_req_last()
+///       \Calls co_dev_find_obj()
+///       \Calls co_obj_find_sub()
+///       \Calls co_obj_get_code()
+///       \Calls co_obj_get_val_u8()
+///       \Calls co_sub_up_ind()
+///       \Calls membuf_size()
+///       \Calls membuf_begin()
+///       \Calls memcpy()
+///       \Calls can_net_send()
 TEST(CoSsdoBlkUp, Sub_ByteNotLast) {
+  co_sub_up_ind_t* const up_ind = [](const co_sub_t* const sub,
+                                     co_sdo_req* const req, co_unsigned32_t ac,
+                                     void*) -> co_unsigned32_t {
+    if (ac != 0) return ac;
+
+    co_sub_on_up(sub, req, &ac);
+    req->size = 3u;
+    req->offset = 1u;
+
+    return ac;
+  };
+
   dev_holder->CreateAndInsertObj(obj2020, IDX);
   obj2020->InsertAndSetSub(SUBIDX, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t{0});
   co_obj_set_code(co_dev_find_obj(dev, IDX), CO_OBJECT_ARRAY);
-  co_obj_set_up_ind(obj2020->Get(), up_ind_big_reqsiz, nullptr);
+  co_obj_set_up_ind(obj2020->Get(), up_ind, nullptr);
   StartSSDO();
-
-  InitBlkUp2020Req(SUBIDX, 3u);
-
-  CHECK_EQUAL(1u, CanSend::GetNumCalled());
-  const auto expected = SdoInitExpectedData::U32(
-      CO_SDO_SCS_BLK_UP_RES | CO_SDO_BLK_CRC | CO_SDO_SC_BLK_RES, IDX, SUBIDX,
-      3u);
-  CanSend::CheckMsg(DEFAULT_COBID_RES, 0, CO_SDO_MSG_SIZE, expected.data());
-  CHECK_EQUAL(DEFAULT_COBID_RES, CanSend::msg.id);
-  CHECK_EQUAL(0, CanSend::msg.flags);
+  ReceiveBlkUpIni2020Req(SUBIDX);
   ResetCanSend();
 
-  can_msg msg_res = SdoCreateMsg::Default(IDX, SUBIDX, DEFAULT_COBID_REQ);
-  msg_res.data[0] = CO_SDO_CCS_BLK_UP_REQ | CO_SDO_SC_BLK_RES;
-  CHECK_EQUAL(1, can_net_recv(net, &msg_res, 0));
-  CHECK_EQUAL(32u, CanSend::GetNumCalled());
-  for (size_t i = 0; i < 32u; i++) {
-    CHECK_EQUAL(DEFAULT_COBID_RES, CanSend::msg_buf[i].id);
-    CHECK_EQUAL(0, CanSend::msg_buf[i].flags);
-    CHECK_EQUAL(CO_SDO_MSG_SIZE, CanSend::msg_buf[i].len);
-    CHECK_SDO_CAN_MSG_CMD(i + 1u, CanSend::msg_buf[i].data);
-    CHECK_EQUAL(0, CanSend::msg_buf[i].data[1]);
-    CHECK_EQUAL(0, CanSend::msg_buf[i].data[2]);
-    CHECK_EQUAL(0, CanSend::msg_buf[i].data[3]);
-    CHECK_EQUAL(0, CanSend::msg_buf[i].data[4]);
-    CHECK_EQUAL(0, CanSend::msg_buf[i].data[5]);
-    CHECK_EQUAL(0, CanSend::msg_buf[i].data[6]);
-    CHECK_EQUAL(0, CanSend::msg_buf[i].data[7]);
-    CHECK_EQUAL(DEFAULT_COBID_RES, CanSend::msg_buf[i].id);
-    CHECK_EQUAL(0, CanSend::msg_buf[i].flags);
-  }
+  // receive block upload request
+  can_msg msg_req =
+      SdoCreateMsg::BlkUpReq(DEFAULT_COBID_REQ, CO_SDO_SC_BLK_RES);
+  msg_req.data[2] = 1u;  // blksize
+  CHECK_EQUAL(1, can_net_recv(net, &msg_req, 0));
+
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
+  const uint_least8_t sequence_number = 1u;
+  CHECK_SDO_CAN_MSG_CMD(sequence_number, CanSend::msg.data);
+
+  // receive another block upload request
+  can_msg msg_req2 =
+      SdoCreateMsg::BlkUpReq(DEFAULT_COBID_REQ, CO_SDO_SC_BLK_RES);
+  msg_req2.data[2] = 1u;  // blksize
+  CHECK_EQUAL(1, can_net_recv(net, &msg_req2, 0));
+
+  CHECK_EQUAL(2u, CanSend::GetNumCalled());
+  CHECK_SDO_CAN_MSG_CMD(sequence_number, CanSend::msg.data);
 }
 
 TEST(CoSsdoBlkUp, Sub_ArrInvalidMaxSubidx) {
@@ -4328,7 +4386,7 @@ TEST(CoSsdoBlkUp, Sub_ArrInvalidMaxSubidx) {
   co_obj_set_code(co_dev_find_obj(dev, IDX), CO_OBJECT_ARRAY);
   StartSSDO();
 
-  InitBlkUp2020Req(0x02u, 4u);
+  ReceiveBlkUpIni2020Req(0x02u, 4u);
 
   CHECK_EQUAL(1u, CanSend::GetNumCalled());
   const auto expected =
@@ -4342,7 +4400,7 @@ TEST(CoSsdoBlkUp, Sub_TimeoutTriggered) {
   co_ssdo_set_timeout(ssdo, 1u);  // 1 ms
   StartSSDO();
 
-  InitBlkUp2020Req(SUBIDX);
+  ReceiveBlkUpIni2020Req(SUBIDX);
   CheckInitBlkUp2020ResData(SUBIDX, sizeof(sub_type));
   ResetCanSend();
 
@@ -4364,8 +4422,7 @@ TEST(CoSsdoBlkUp, Sub_TimeoutTriggered) {
   const timespec tp = {0L, 1000000L};  // 1 ms
   can_net_set_time(net, &tp);
 
-  // upload end
-  // server's request
+  // SDO abort message - CO_SDO_AC_TIMEOUT abort code
   CHECK_EQUAL(1u, CanSend::GetNumCalled());
   const auto expected =
       SdoInitExpectedData::U32(CO_SDO_CS_ABORT, IDX, SUBIDX, CO_SDO_AC_TIMEOUT);
@@ -4379,7 +4436,7 @@ TEST(CoSsdoBlkUp, InitIniRes_CoSdoCobidFrame) {
   SetSrv02CobidRes(cobid_res);
   StartSSDO();
 
-  InitBlkUp2020Req(SUBIDX);
+  ReceiveBlkUpIni2020Req(SUBIDX);
   CheckInitBlkUp2020ResData(SUBIDX, sizeof(sub_type));
   CHECK_EQUAL(DEFAULT_COBID_RES, CanSend::msg.id);
   CHECK_EQUAL(1u, CanSend::msg.flags);
@@ -4407,7 +4464,7 @@ TEST(CoSsdoBlkUp, Sub_InvalidCS) {
   SetSrv02CobidRes(DEFAULT_COBID_RES);
   StartSSDO();
 
-  InitBlkUp2020Req(SUBIDX);
+  ReceiveBlkUpIni2020Req(SUBIDX);
   CheckInitBlkUp2020ResData(SUBIDX, sizeof(sub_type64));
   CHECK_EQUAL(DEFAULT_COBID_RES, CanSend::msg.id);
   CHECK_EQUAL(0, CanSend::msg.flags);
@@ -4430,7 +4487,7 @@ TEST(CoSsdoBlkUp, Sub_NoCS) {
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE, sub_type{0xabcdu});
   StartSSDO();
 
-  InitBlkUp2020Req(SUBIDX);
+  ReceiveBlkUpIni2020Req(SUBIDX);
   CheckInitBlkUp2020ResData(SUBIDX, sizeof(sub_type));
   ResetCanSend();
 
@@ -4457,7 +4514,7 @@ TEST(CoSsdoBlkUp, Sub_CSAbort_NoAC) {
   co_sub_set_up_ind(obj2020->GetLastSub(), CoSubUpInd::Func, nullptr);
   StartSSDO();
 
-  InitBlkUp2020Req(SUBIDX);
+  ReceiveBlkUpIni2020Req(SUBIDX);
   CheckInitBlkUp2020ResData(SUBIDX, sizeof(sub_type));
   ResetCanSend();
   CoSubUpInd::Clear();
@@ -4487,7 +4544,7 @@ TEST(CoSsdoBlkUp, Sub_CSAbort_AC) {
   co_sub_set_up_ind(obj2020->GetLastSub(), CoSubUpInd::Func, nullptr);
   StartSSDO();
 
-  InitBlkUp2020Req(SUBIDX);
+  ReceiveBlkUpIni2020Req(SUBIDX);
   CheckInitBlkUp2020ResData(SUBIDX, sizeof(sub_type));
   ResetCanSend();
   CoSubUpInd::Clear();
@@ -4509,7 +4566,7 @@ TEST(CoSsdoBlkUp, Sub_InvalidSC) {
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE, sub_type{0xabcdu});
   StartSSDO();
 
-  InitBlkUp2020Req(SUBIDX);
+  ReceiveBlkUpIni2020Req(SUBIDX);
   CheckInitBlkUp2020ResData(SUBIDX, sizeof(sub_type));
   ResetCanSend();
 
@@ -4530,7 +4587,7 @@ TEST(CoSsdoBlkUp, Sub_EmptyRequest) {
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE, sub_type{0xabcdu});
   StartSSDO();
 
-  InitBlkUp2020Req(SUBIDX);
+  ReceiveBlkUpIni2020Req(SUBIDX);
   CheckInitBlkUp2020ResData(SUBIDX, sizeof(sub_type));
   ResetCanSend();
 
@@ -4550,7 +4607,7 @@ TEST(CoSsdoBlkUp, Sub_NoBlkSeqNum) {
                            sub_type64{0x0123456789abcdefuL});
   StartSSDO();
 
-  InitBlkUp2020Req(SUBIDX);
+  ReceiveBlkUpIni2020Req(SUBIDX);
   CheckInitBlkUp2020ResData(SUBIDX, sizeof(sub_type64));
   ResetCanSend();
 
@@ -4588,7 +4645,7 @@ TEST(CoSsdoBlkUp, Sub_TooManySegments) {
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE, sub_type{0xabcdu});
   StartSSDO();
 
-  InitBlkUp2020Req(SUBIDX);
+  ReceiveBlkUpIni2020Req(SUBIDX);
   CheckInitBlkUp2020ResData(SUBIDX, sizeof(sub_type));
   ResetCanSend();
 
@@ -4627,7 +4684,7 @@ TEST(CoSsdoBlkUp, Sub_NoSegments) {
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE, sub_type{0xabcdu});
   StartSSDO();
 
-  InitBlkUp2020Req(SUBIDX);
+  ReceiveBlkUpIni2020Req(SUBIDX);
   CheckInitBlkUp2020ResData(SUBIDX, sizeof(sub_type));
   ResetCanSend();
 
@@ -4666,7 +4723,7 @@ TEST(CoSsdoBlkUp, Sub_StartUp_ButAlreadyStarted) {
   obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE, sub_type{0xabcdu});
   StartSSDO();
 
-  InitBlkUp2020Req(SUBIDX);
+  ReceiveBlkUpIni2020Req(SUBIDX);
   CheckInitBlkUp2020ResData(SUBIDX, sizeof(sub_type));
   ResetCanSend();
 
@@ -4704,7 +4761,7 @@ TEST(CoSsdoBlkUp, End_TimeoutTriggered) {
   co_ssdo_set_timeout(ssdo, 1u);  // 1 ms
   StartSSDO();
 
-  InitBlkUp2020Req(SUBIDX);
+  ReceiveBlkUpIni2020Req(SUBIDX);
   CheckInitBlkUp2020ResData(SUBIDX, sizeof(sub_type64));
   ResetCanSend();
   ChangeStateToEnd();
@@ -4724,7 +4781,7 @@ TEST(CoSsdoBlkUp, EndOnRecv_TooShortMsg) {
                            sub_type64{0x5423456789abcdefuL});
   StartSSDO();
 
-  InitBlkUp2020Req(SUBIDX);
+  ReceiveBlkUpIni2020Req(SUBIDX);
   CheckInitBlkUp2020ResData(SUBIDX, sizeof(sub_type64));
   ResetCanSend();
   ChangeStateToEnd();
@@ -4746,7 +4803,7 @@ TEST(CoSsdoBlkUp, EndOnRecv_InvalidCS) {
                            sub_type64{0x5423456789abcdefuL});
   StartSSDO();
 
-  InitBlkUp2020Req(SUBIDX);
+  ReceiveBlkUpIni2020Req(SUBIDX);
   CheckInitBlkUp2020ResData(SUBIDX, sizeof(sub_type64));
   ResetCanSend();
   ChangeStateToEnd();
@@ -4768,7 +4825,7 @@ TEST(CoSsdoBlkUp, EndOnRecv_InvalidSC) {
                            sub_type64{0x5423456789abcdefuL});
   StartSSDO();
 
-  InitBlkUp2020Req(SUBIDX);
+  ReceiveBlkUpIni2020Req(SUBIDX);
   CheckInitBlkUp2020ResData(SUBIDX, sizeof(sub_type64));
   ResetCanSend();
   ChangeStateToEnd();
@@ -4790,7 +4847,7 @@ TEST(CoSsdoBlkUp, EndOnRecv_CSAbort) {
                            sub_type64{0x5423456789abcdefuL});
   StartSSDO();
 
-  InitBlkUp2020Req(SUBIDX);
+  ReceiveBlkUpIni2020Req(SUBIDX);
   CheckInitBlkUp2020ResData(SUBIDX, sizeof(sub_type64));
   ResetCanSend();
   ChangeStateToEnd();
