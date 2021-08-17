@@ -1489,9 +1489,8 @@ TEST_GROUP_BASE(CoPdo_CoPdoUp, CO_PdoBase) {
                                     void* const data) {
     if (ac != 0) return ac;
     *static_cast<bool*>(data) = true;
-    static co_unsigned8_t reqbuf[12] = {0xffu, 0xffu, 0xffu, 0xffu,
-                                        0xffu, 0xffu, 0xffu, 0xffu,
-                                        0xffu, 0xffu, 0xffu, 0xffu};
+    static co_unsigned8_t reqbuf[12];
+    memset(reqbuf, 0xffu, sizeof(reqbuf));
     req->buf = reqbuf;
     return 0u;
   }
