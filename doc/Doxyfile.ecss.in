@@ -112,7 +112,6 @@ PREDEFINED             += "format_printf__(i, j)="
 
 PREDEFINED             += __WORDSIZE=64
 
-PREDEFINED             += LELY_COMPAT_STRINGS_INLINE=inline
 
 PREDEFINED             += LELY_UTIL_BITS_INLINE=inline
 PREDEFINED             += LELY_UTIL_CMP_INLINE=inline

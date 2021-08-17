@@ -30,102 +30,6 @@
 
 TEST_GROUP(Compat_Strings){};
 
-/// @name ffs
-///@{
-
-/// \Given set of integers with various first (least) significant bit
-///
-/// \When calling ffs() for those integers
-///
-/// \Then first significant bit number is returned for each integer
-TEST(Compat_Strings, Fss) {
-  CHECK_EQUAL(0, ffs(0x00000000));
-
-  CHECK_EQUAL(0x01, ffs(0x00000001));
-  CHECK_EQUAL(0x02, ffs(0x00000002));
-  CHECK_EQUAL(0x03, ffs(0x00000004));
-  CHECK_EQUAL(0x04, ffs(0x00000008));
-
-  CHECK_EQUAL(0x05, ffs(0x00000010));
-  CHECK_EQUAL(0x06, ffs(0x00000020));
-  CHECK_EQUAL(0x07, ffs(0x00000040));
-  CHECK_EQUAL(0x08, ffs(0x00000080));
-
-  CHECK_EQUAL(0x09, ffs(0x00000100));
-  CHECK_EQUAL(0x0A, ffs(0x00000200));
-  CHECK_EQUAL(0x0B, ffs(0x00000400));
-  CHECK_EQUAL(0x0C, ffs(0x00000800));
-
-  CHECK_EQUAL(0x0D, ffs(0x00001000));
-  CHECK_EQUAL(0x0E, ffs(0x00002000));
-  CHECK_EQUAL(0x0F, ffs(0x00004000));
-  CHECK_EQUAL(0x10, ffs(0x00008000));
-
-  CHECK_EQUAL(0x11, ffs(0x00010000));
-  CHECK_EQUAL(0x12, ffs(0x00020000));
-  CHECK_EQUAL(0x13, ffs(0x00040000));
-  CHECK_EQUAL(0x14, ffs(0x00080000));
-
-  CHECK_EQUAL(0x15, ffs(0x00100000));
-  CHECK_EQUAL(0x16, ffs(0x00200000));
-  CHECK_EQUAL(0x17, ffs(0x00400000));
-  CHECK_EQUAL(0x18, ffs(0x00800000));
-
-  CHECK_EQUAL(0x19, ffs(0x01000000));
-  CHECK_EQUAL(0x1A, ffs(0x02000000));
-  CHECK_EQUAL(0x1B, ffs(0x04000000));
-  CHECK_EQUAL(0x1C, ffs(0x08000000));
-
-  CHECK_EQUAL(0x1D, ffs(0x10000000));
-  CHECK_EQUAL(0x1E, ffs(0x20000000));
-  CHECK_EQUAL(0x1F, ffs(0x40000000));
-  CHECK_EQUAL(0x20, ffs(0x80000000));
-
-  CHECK_EQUAL(0x01, ffs(0xFFFFFFFF));
-  CHECK_EQUAL(0x02, ffs(0xFFFFFFFE));
-  CHECK_EQUAL(0x03, ffs(0xFFFFFFFC));
-  CHECK_EQUAL(0x04, ffs(0xFFFFFFF8));
-
-  CHECK_EQUAL(0x05, ffs(0xFFFFFFF0));
-  CHECK_EQUAL(0x06, ffs(0xFFFFFFE0));
-  CHECK_EQUAL(0x07, ffs(0xFFFFFFC0));
-  CHECK_EQUAL(0x08, ffs(0xFFFFFF80));
-
-  CHECK_EQUAL(0x09, ffs(0xFFFFFF00));
-  CHECK_EQUAL(0x0A, ffs(0xFFFFFE00));
-  CHECK_EQUAL(0x0B, ffs(0xFFFFFC00));
-  CHECK_EQUAL(0x0C, ffs(0xFFFFF800));
-
-  CHECK_EQUAL(0x0D, ffs(0xFFFFF000));
-  CHECK_EQUAL(0x0E, ffs(0xFFFFE000));
-  CHECK_EQUAL(0x0F, ffs(0xFFFFC000));
-  CHECK_EQUAL(0x10, ffs(0xFFFF8000));
-
-  CHECK_EQUAL(0x11, ffs(0xFFFF0000));
-  CHECK_EQUAL(0x12, ffs(0xFFFE0000));
-  CHECK_EQUAL(0x13, ffs(0xFFFC0000));
-  CHECK_EQUAL(0x14, ffs(0xFFF80000));
-
-  CHECK_EQUAL(0x15, ffs(0xFFF00000));
-  CHECK_EQUAL(0x16, ffs(0xFFE00000));
-  CHECK_EQUAL(0x17, ffs(0xFFC00000));
-  CHECK_EQUAL(0x18, ffs(0xFF800000));
-
-  CHECK_EQUAL(0x19, ffs(0xFF000000));
-  CHECK_EQUAL(0x1A, ffs(0xFE000000));
-  CHECK_EQUAL(0x1B, ffs(0xFC000000));
-  CHECK_EQUAL(0x1C, ffs(0xF8000000));
-
-  CHECK_EQUAL(0x1D, ffs(0xF0000000));
-  CHECK_EQUAL(0x1E, ffs(0xE0000000));
-  CHECK_EQUAL(0x1F, ffs(0xC0000000));
-  CHECK_EQUAL(0x20, ffs(0x80000000));
-}
-
-///@}
-
-#if LELY_NO_HOSTED
-
 /// @name lely_compat_strcasecmp
 ///@{
 
@@ -323,5 +227,3 @@ TEST(Compat_Strings, LelyCompatStrncasecmp_RightShorter) {
 }
 
 ///@}
-
-#endif

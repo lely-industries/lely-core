@@ -25,7 +25,7 @@
 
 #if !LELY_NO_MALLOC
 
-#include <lely/compat/strings.h>
+#include <lely/util/bits.h>
 #include <lely/util/bitset.h>
 #include <lely/util/error.h>
 
@@ -153,7 +153,7 @@ bitset_ffs(const struct bitset *set)
 	for (int i = 0; i < set->size; i++) {
 		unsigned int x = *bits++;
 		if (x)
-			return offset + ffs(x);
+			return offset + ffs32(x);
 		offset += INT_BIT;
 	}
 	return 0;
@@ -167,7 +167,7 @@ bitset_ffz(const struct bitset *set)
 	for (int i = 0; i < set->size; i++) {
 		unsigned int x = *bits++;
 		if (~x)
-			return offset + ffs(~x);
+			return offset + ffs32(~x);
 		offset += INT_BIT;
 	}
 	return 0;
@@ -193,7 +193,7 @@ bitset_fns(const struct bitset *set, int n)
 			n = 0;
 		}
 		if (x)
-			return offset + ffs(x);
+			return offset + ffs32(x);
 		size--;
 		offset += INT_BIT;
 	}
@@ -220,7 +220,7 @@ bitset_fnz(const struct bitset *set, int n)
 			n = 0;
 		}
 		if (~x)
-			return offset + ffs(~x);
+			return offset + ffs32(~x);
 		size--;
 		offset += INT_BIT;
 	}

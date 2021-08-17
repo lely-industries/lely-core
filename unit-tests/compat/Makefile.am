@@ -32,10 +32,12 @@ unit_test_compat_string_LDADD = $(LELY_UNIT_TEST_COMPAT_COMMON_LIBS)
 unit_test_compat_string_LDFLAGS = $(LELY_UNIT_TEST_COMPAT_LDFLGS)
 endif NO_HOSTED
 
+if NO_HOSTED
 bin += unit-test-compat-strings
 unit_test_compat_strings_SOURCES = $(src_common) test-strings.cpp
 unit_test_compat_strings_LDADD = $(LELY_UNIT_TEST_COMPAT_COMMON_LIBS)
 unit_test_compat_strings_LDFLAGS = $(LELY_UNIT_TEST_COMPAT_LDFLGS)
+endif NO_HOSTED
 
 # Compilation flags
 

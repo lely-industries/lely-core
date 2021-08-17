@@ -36,31 +36,8 @@
 
 #include <stddef.h>
 
-#ifndef LELY_COMPAT_STRINGS_INLINE
-#define LELY_COMPAT_STRINGS_INLINE static inline
-#endif
-
 #ifdef __cplusplus
 extern "C" {
-#endif
-
-/**
- * Finds the index of the first (least significant) bit set in <b>i</b>. Bits
- * are numbered counting from 1.
- *
- * @returns the index of the first bit set, or 0 if <b>i</b> is 0.
- */
-#if !LELY_NO_HOSTED && (defined(__GNUC__) || __has_builtin(__builtin_ffs)) \
-		&& !defined(__BSD_VISIBLE)
-LELY_COMPAT_STRINGS_INLINE int ffs(int i);
-
-inline int
-ffs(int i)
-{
-	return __builtin_ffs(i);
-}
-#else
-int ffs(int i);
 #endif
 
 /**

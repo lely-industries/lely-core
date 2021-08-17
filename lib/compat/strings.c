@@ -21,52 +21,12 @@
  */
 
 #include "compat.h"
-#define LELY_COMPAT_STRINGS_INLINE extern inline
+
 #include <lely/compat/strings.h>
 
 #if !LELY_HAVE_STRINGS_H
 
 #include <ctype.h>
-
-#if !LELY_NO_HOSTED && !(defined(__GNUC__) || __has_builtin(__builtin_ffs))
-
-#include <stdint.h>
-
-// clang-format off
-static const int ffs_tab[] = {
-	0, 1, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4,
-	5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5,
-	6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
-	6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
-	7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
-	7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
-	7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
-	7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
-	8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8,
-	8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8,
-	8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8,
-	8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8,
-	8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8,
-	8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8,
-	8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8,
-	8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8
-};
-// clang-format on
-
-int
-ffs(int i)
-{
-	// cppcheck-suppress oppositeExpression
-	unsigned int x = i & -i;
-	// clang-format off
-	unsigned int n = x > UINT32_C(0x00ffffff)
-			? 24 : (x > UINT16_C(0xffffu)
-			? 16 : (x > UINT8_C(0xff) ? 8 : 0));
-	// clang-format on
-	return n + ffs_tab[(x >> n) & UINT8_C(0xff)];
-}
-
-#endif
 
 int
 lely_compat_strcasecmp(const char *s1, const char *s2)
