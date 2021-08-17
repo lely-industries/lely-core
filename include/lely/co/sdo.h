@@ -213,14 +213,14 @@ struct co_sdo_req {
 	 * new request, but otherwise left untouched.
 	 */
 	struct membuf *membuf;
-	/*
+	/**
 	 * The memory buffer used for storing serialized values in the absence
 	 * of a user-specified buffer.
 	 */
 	struct membuf membuf_;
 #if LELY_NO_MALLOC
-	/*
-	 * The static memory buffer used by #_membuf in the absence of dynamic
+	/**
+	 * The static memory buffer used by #membuf_ in the absence of dynamic
 	 * memory allocation.
 	 */
 	char begin_[CO_SDO_REQ_MEMBUF_SIZE];
