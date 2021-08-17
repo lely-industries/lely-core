@@ -5209,6 +5209,31 @@ TEST(CO_Csdo, CoCsdoBlkDnSubOnRecv_IncorrectSc) {
 /// \Given a pointer to the CSDO service (co_csdo_t) which has initiated block
 ///        download transfer (the correct request was sent by the client)
 ///
+/// \When an SDO block download sub-block response with ackseq equal to blksize
+///       is received
+///
+/// \Then an SDO message with CO_SDO_CCS_BLK_DN_REQ command specifier with
+///       CO_SDO_SC_END_BLK subcommand and the size of the requested data
+///       is sent
+TEST(CO_Csdo, CoCsdoBlkDnSubOnRecv_AckseqEqualToBlksize) {
+  StartCSDO();
+  AdvanceToBlkDnSubState(IDX, SUBIDX);
+
+  const uint_least8_t blksize = 1u;
+  const uint_least8_t ackseq = 1u;
+  const auto msg = SdoCreateMsg::BlkDnSubRes(ackseq, blksize, DEFAULT_COBID_RES,
+                                             CO_SDO_SC_BLK_RES);
+  CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
+
+  const auto expected_req = SdoCreateMsg::BlkDnEndReq(
+      IDX, SUBIDX, DEFAULT_COBID_REQ, 0,
+      CO_SDO_SC_END_BLK | CO_SDO_BLK_SIZE_SET(sizeof(val_u16.GetVal())));
+  CanSend::CheckMsg(expected_req);
+}
+
+/// \Given a pointer to the CSDO service (co_csdo_t) which has initiated block
+///        download transfer (the correct request was sent by the client)
+///
 /// \When an SDO block download sub-block response is received
 ///
 /// \Then an SDO message with CO_SDO_SEQ_LAST command specifier with correct
