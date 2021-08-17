@@ -6297,3 +6297,77 @@ TEST(CO_CsdoDownload, SegOnRecv_LargeDataSet_PeriodicInd) {
 }
 
 ///@}
+
+TEST_GROUP_BASE(CO_CsdoIde, CO_CsdoBase) {
+  static const co_unsigned32_t REQ_EID_CANID = (0x600u + DEV_ID) | (1 << 28u);
+  static const co_unsigned32_t RES_EID_CANID = (0x580u + DEV_ID) | (1 << 28u);
+  static const co_unsigned16_t IDX = 0x2020u;
+  static const co_unsigned8_t SUBIDX = 0x00u;
+
+  const std::vector<co_unsigned8_t> buffer = {0x01u, 0x23u, 0x45u,
+                                              0x67u, 0x89u, 0xabu};
+
+  void SendDnReq() {
+    CHECK_EQUAL(0, co_csdo_dn_req(csdo, IDX, SUBIDX, buffer.data(),
+                                  buffer.size(), &CoCsdoDnCon::Func, &data));
+  }
+
+  TEST_SETUP() override {
+    TEST_BASE_SETUP();
+
+    SetCli01CobidReq(REQ_EID_CANID | CO_SDO_COBID_FRAME);
+    SetCli02CobidRes(RES_EID_CANID | CO_SDO_COBID_FRAME);
+
+    CHECK_EQUAL(0, co_csdo_start(csdo));
+
+    CoCsdoDnCon::Clear();
+    CanSend::Clear();
+  }
+};
+
+/// @name SDO transfer with Extended CAN Identifier
+///@{
+
+/// TODO(N7S): GWT
+TEST(CO_CsdoIde, InitIniReq_ExtendedId) {
+  SendDnReq();
+
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
+  const auto exp_ini_req = SdoInitExpectedData::U32(
+      CO_SDO_CCS_DN_INI_REQ | CO_SDO_INI_SIZE_IND, IDX, SUBIDX,
+      static_cast<co_unsigned32_t>(buffer.size()));
+  CanSend::CheckMsg(REQ_EID_CANID, CAN_FLAG_IDE, CO_SDO_MSG_SIZE,
+                    exp_ini_req.data());
+
+  can_msg abort = SdoCreateMsg::Abort(0u, 0u, RES_EID_CANID);
+  abort.flags = CAN_FLAG_IDE;
+  can_net_recv(net, &abort, 0);
+  CHECK_EQUAL(1u, CoCsdoDnCon::GetNumCalled());
+}
+
+/// TODO(N7S): GWT
+TEST(CO_CsdoIde, InitSegReq_ExtendedId) {
+  SendDnReq();
+  CanSend::Clear();
+
+  can_msg ini_res = SdoCreateMsg::DnIniRes(IDX, SUBIDX, RES_EID_CANID);
+  ini_res.flags = CAN_FLAG_IDE;
+  CHECK_EQUAL(1, can_net_recv(net, &ini_res, 0));
+
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
+  co_unsigned8_t cs = CO_SDO_CCS_DN_SEG_REQ;
+  cs |= CO_SDO_SEG_SIZE_SET(static_cast<co_unsigned8_t>(buffer.size()));
+  cs |= CO_SDO_SEG_LAST;
+  const auto expected = SdoInitExpectedData::Segment(cs, buffer);
+  CanSend::CheckMsg(REQ_EID_CANID, CAN_FLAG_IDE, CO_SDO_MSG_SIZE,
+                    expected.data());
+  CanSend::Clear();
+
+  can_msg seg_res = SdoCreateMsg::DnSegRes(RES_EID_CANID);
+  seg_res.flags = CAN_FLAG_IDE;
+  CHECK_EQUAL(1, can_net_recv(net, &seg_res, 0));
+
+  CHECK_EQUAL(1u, CoCsdoDnCon::GetNumCalled());
+}
+
+///@}
