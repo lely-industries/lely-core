@@ -591,10 +591,10 @@ can_net_set_next(can_net_t *net)
 {
 	assert(net);
 
-	struct pnode *node = pheap_first(&net->timer_heap);
+	const struct pnode *const node = pheap_first(&net->timer_heap);
 	if (!node)
 		return;
-	const can_timer_t *timer = structof(node, can_timer_t, node);
+	const can_timer_t *const timer = structof(node, can_timer_t, node);
 
 	net->next = timer->start;
 	if (net->next_func)
