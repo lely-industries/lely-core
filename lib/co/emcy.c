@@ -215,6 +215,10 @@ static int co_emcy_send(co_emcy_t *emcy, co_unsigned16_t eec, co_unsigned8_t er,
  */
 static void co_emcy_flush(co_emcy_t *emcy);
 
+/// Checks if a new COB-ID is a correct replacement for the old one.
+static bool co_emcy_is_cobid_change_allowed(
+		co_unsigned32_t cobid_new, co_unsigned32_t cobid_old);
+
 size_t
 co_emcy_alignof(void)
 {
@@ -605,7 +609,7 @@ co_1014_dn_ind(co_sub_t *sub, struct co_sdo_req *req, co_unsigned32_t ac,
 	assert(req);
 	(void)data;
 
-	co_unsigned16_t type = co_sub_get_type(sub);
+	const co_unsigned16_t type = co_sub_get_type(sub);
 	assert(!co_type_is_array(type));
 
 	if (ac)
@@ -619,22 +623,12 @@ co_1014_dn_ind(co_sub_t *sub, struct co_sdo_req *req, co_unsigned32_t ac,
 		return CO_SDO_AC_NO_SUB;
 
 	assert(type == CO_DEFTYPE_UNSIGNED32);
-	co_unsigned32_t cobid = val.u32;
-	co_unsigned32_t cobid_old = co_sub_get_val_u32(sub);
+	const co_unsigned32_t cobid = val.u32;
+	const co_unsigned32_t cobid_old = co_sub_get_val_u32(sub);
 	if (cobid == cobid_old)
 		return 0;
 
-	// The CAN-ID cannot be changed when the EMCY is and remains valid.
-	const bool valid = !(cobid & CO_EMCY_COBID_VALID);
-	const bool valid_old = !(cobid_old & CO_EMCY_COBID_VALID);
-	const uint_least32_t canid = cobid & CAN_MASK_EID;
-	const uint_least32_t canid_old = cobid_old & CAN_MASK_EID;
-	if (valid && valid_old && canid != canid_old)
-		return CO_SDO_AC_PARAM_VAL;
-
-	// A 29-bit CAN-ID is only valid if the frame bit is set.
-	if (!(cobid & CO_EMCY_COBID_FRAME)
-			&& (cobid & (CAN_MASK_EID ^ CAN_MASK_BID)))
+	if (!co_emcy_is_cobid_change_allowed(cobid, cobid_old))
 		return CO_SDO_AC_PARAM_VAL;
 
 	co_sub_dn(sub, &val);
@@ -676,7 +670,7 @@ co_1028_dn_ind(co_sub_t *sub, struct co_sdo_req *req, co_unsigned32_t ac,
 	co_emcy_t *emcy = data;
 	assert(emcy);
 
-	co_unsigned16_t type = co_sub_get_type(sub);
+	const co_unsigned16_t type = co_sub_get_type(sub);
 	assert(!co_type_is_array(type));
 
 	if (ac)
@@ -695,22 +689,12 @@ co_1028_dn_ind(co_sub_t *sub, struct co_sdo_req *req, co_unsigned32_t ac,
 		return CO_SDO_AC_NO_SUB;
 
 	assert(type == CO_DEFTYPE_UNSIGNED32);
-	co_unsigned32_t cobid = val.u32;
-	co_unsigned32_t cobid_old = co_sub_get_val_u32(sub);
+	const co_unsigned32_t cobid = val.u32;
+	const co_unsigned32_t cobid_old = co_sub_get_val_u32(sub);
 	if (cobid == cobid_old)
 		return 0;
 
-	// The CAN-ID cannot be changed when the EMCY is and remains valid.
-	const bool valid = !(cobid & CO_EMCY_COBID_VALID);
-	const bool valid_old = !(cobid_old & CO_EMCY_COBID_VALID);
-	const uint_least32_t canid = cobid & CAN_MASK_EID;
-	const uint_least32_t canid_old = cobid_old & CAN_MASK_EID;
-	if (valid && valid_old && canid != canid_old)
-		return CO_SDO_AC_PARAM_VAL;
-
-	// A 29-bit CAN-ID is only valid if the frame bit is set.
-	if (!(cobid & CO_EMCY_COBID_FRAME)
-			&& (cobid & (CAN_MASK_EID ^ CAN_MASK_BID)))
+	if (!co_emcy_is_cobid_change_allowed(cobid, cobid_old))
 		return CO_SDO_AC_PARAM_VAL;
 
 	co_emcy_set_1028(emcy, id, cobid);
@@ -932,4 +916,24 @@ co_emcy_fini(co_emcy_t *emcy)
 #if !LELY_NO_MALLOC
 	free(emcy->msgs);
 #endif
+}
+
+static bool
+co_emcy_is_cobid_change_allowed(
+		co_unsigned32_t cobid_new, co_unsigned32_t cobid_old)
+{
+	// The CAN-ID cannot be changed when the EMCY is and remains valid.
+	const bool valid_new = !(cobid_new & CO_EMCY_COBID_VALID);
+	const bool valid_old = !(cobid_old & CO_EMCY_COBID_VALID);
+	const uint_least32_t canid_new = cobid_new & CAN_MASK_EID;
+	const uint_least32_t canid_old = cobid_old & CAN_MASK_EID;
+	if (valid_new && valid_old && canid_new != canid_old)
+		return false;
+
+	// A 29-bit CAN-ID is only valid if the frame bit is set.
+	if (!(cobid_new & CO_EMCY_COBID_FRAME)
+			&& (cobid_new & (CAN_MASK_EID ^ CAN_MASK_BID)))
+		return false;
+
+	return true;
 }
