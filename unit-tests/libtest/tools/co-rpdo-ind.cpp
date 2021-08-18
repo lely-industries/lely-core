@@ -28,6 +28,8 @@
 
 #include <lely/co/val.h>
 
+#include "lely-cpputest-ext.hpp"
+
 #include "co-rpdo-ind.hpp"
 
 size_t CoRpdoInd::num_called_ = 0;
@@ -69,6 +71,17 @@ CoRpdoInd::Check(const co_rpdo_t* const pdo, const co_unsigned32_t ac,
   POINTERS_EQUAL(pdo, pdo_);
   CHECK_EQUAL(ac, ac_);
   if (ptr != nullptr) POINTERS_EQUAL(ptr, ptr_);
+  CHECK_EQUAL(n, n_);
+  POINTERS_EQUAL(data, data_);
+}
+
+void
+CoRpdoInd::CheckPtrNotNull(const co_rpdo_t* const pdo, const co_unsigned32_t ac,
+                           const size_t n, const void* const data) {
+  CHECK_COMPARE(num_called_, >, 0);
+  POINTERS_EQUAL(pdo, pdo_);
+  CHECK_EQUAL(ac, ac_);
+  POINTER_NOT_NULL(ptr_);
   CHECK_EQUAL(n, n_);
   POINTERS_EQUAL(data, data_);
 }

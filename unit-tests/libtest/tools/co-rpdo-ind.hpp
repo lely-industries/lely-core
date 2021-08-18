@@ -33,6 +33,8 @@ class CoRpdoInd {
   static void Clear();
   static void Check(const co_rpdo_t* pdo, co_unsigned32_t ac, const void* ptr,
                     size_t n, const void* data);
+  static void CheckPtrNotNull(const co_rpdo_t* pdo, co_unsigned32_t ac,
+                              size_t n, const void* data);
   static inline size_t
   GetNumCalled() {
     return num_called_;

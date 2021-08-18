@@ -23,6 +23,8 @@
 #ifndef LELY_UNIT_TESTS_CPPUTEST_EXT_HPP_
 #define LELY_UNIT_TESTS_CPPUTEST_EXT_HPP_
 
+#include <cassert>
+
 /**
  * A group of handy CppUTest-style macros to handle calling base test group's
  * setup() and teardown() functions. To utilize them one should first put

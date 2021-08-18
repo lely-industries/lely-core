@@ -20,23 +20,13 @@
  * limitations under the License.
  */
 
-#ifndef LELY_UNIT_TEST_RPDO_MAP_PAR_HPP_
-#define LELY_UNIT_TEST_RPDO_MAP_PAR_HPP_
+#ifndef LELY_UNIT_TEST_SYNC_WINDOW_LENGTH_HPP_
+#define LELY_UNIT_TEST_SYNC_WINDOW_LENGTH_HPP_
 
 #include "obj-init/obj-init.hpp"
-#include "holder/obj.hpp"
 
-// 0x1600-0x17ff: RPDO mapping parameter
-struct Obj1600RpdoMapPar : ObjInitT<0x1600u, 0x1600u, 0x17ffu> {
-  struct Sub00NumOfMappedObjs : SubT<0x00, CO_DEFTYPE_UNSIGNED8> {};
-  struct SubNthAppObject : SubT<0x01, CO_DEFTYPE_UNSIGNED32, 0, 0x01> {};
-
-  static SubNthAppObject::sub_type
-  MakeMappingParam(const co_unsigned16_t idx, const co_unsigned8_t subidx,
-                   const co_unsigned8_t bits_len) {
-    return (co_unsigned32_t{idx} << 16u) | (co_unsigned32_t{subidx} << 8u) |
-           bits_len;
-  }
+/// 0x1007: Synchronous window length
+struct Obj1007SyncWindowLength : ObjValueInitT<0x1007u, CO_DEFTYPE_UNSIGNED32> {
 };
 
-#endif  // LELY_UNIT_TEST_RPDO_MAP_PAR_HPP_
+#endif  // LELY_UNIT_TEST_SYNC_WINDOW_LENGTH_HPP_
