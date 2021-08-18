@@ -27,7 +27,7 @@ main(void)
 	tap_assert(dev);
 	co_time_t *time = co_time_create(net, dev);
 	tap_assert(time);
-	tap_assert(!co_time_start(time));
+	co_time_start(time);
 
 	co_time_set_ind(time, &time_ind, &test);
 

@@ -26,7 +26,7 @@ main(void)
 	tap_assert(dev);
 	co_sync_t *sync = co_sync_create(net, dev);
 	tap_assert(sync);
-	tap_assert(!co_sync_start(sync));
+	co_sync_start(sync);
 
 	co_sync_set_ind(sync, &sync_ind, &test);
 

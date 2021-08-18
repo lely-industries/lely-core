@@ -423,7 +423,7 @@ TEST(CO_CsdoInit, CoCsdoDestroy_Nominal) {
 ///
 /// \When co_csdo_start() is called
 ///
-/// \Then 0 is returned, the service is not stopped, the service is idle
+/// \Then the service is not stopped, the service is idle
 ///       \Calls co_csdo_is_stopped()
 ///       \Calls co_csdo_abort_req()
 ///       \Calls co_csdo_is_valid()
@@ -432,9 +432,8 @@ TEST(CO_CsdoInit, CoCsdoStart_NoDev) {
   co_csdo_t* const csdo = co_csdo_create(net, nullptr, CSDO_NUM);
   CHECK(csdo != nullptr);
 
-  const auto ret = co_csdo_start(csdo);
+  co_csdo_start(csdo);
 
-  CHECK_EQUAL(0, ret);
   CHECK_FALSE(co_csdo_is_stopped(csdo));
   CHECK(co_csdo_is_idle(csdo));
 
@@ -445,16 +444,15 @@ TEST(CO_CsdoInit, CoCsdoStart_NoDev) {
 ///
 /// \When co_csdo_start() is called
 ///
-/// \Then 0 is returned, the service is not stopped, the service is idle
+/// \Then the service is not stopped, the service is idle
 ///       \Calls co_csdo_is_stopped()
 TEST(CO_CsdoInit, CoCsdoStart_AlreadyStarted) {
   dev_holder->CreateAndInsertObj(obj1280, 0x1280u);
   co_csdo_t* const csdo = co_csdo_create(net, dev, CSDO_NUM);
-  CHECK_EQUAL(0, co_csdo_start(csdo));
+  co_csdo_start(csdo);
 
-  const auto ret = co_csdo_start(csdo);
+  co_csdo_start(csdo);
 
-  CHECK_EQUAL(0, ret);
   CHECK_FALSE(co_csdo_is_stopped(csdo));
   CHECK(co_csdo_is_idle(csdo));
 
@@ -467,7 +465,7 @@ TEST(CO_CsdoInit, CoCsdoStart_AlreadyStarted) {
 ///
 /// \When co_csdo_start() is called
 ///
-/// \Then 0 is returned, the service is not stopped, the service is idle
+/// \Then the service is not stopped, the service is idle
 ///       \Calls co_csdo_is_stopped()
 ///       \Calls co_dev_find_obj()
 ///       \Calls co_obj_sizeof_val()
@@ -485,9 +483,8 @@ TEST(CO_CsdoInit, CoCsdoStart_CobidRes_ExtendedId) {
   obj1280->InsertAndSetSub(0x02u, CO_DEFTYPE_UNSIGNED32, cobid_res);
   co_csdo_t* const csdo = co_csdo_create(net, dev, CSDO_NUM);
 
-  const auto ret = co_csdo_start(csdo);
+  co_csdo_start(csdo);
 
-  CHECK_EQUAL(0, ret);
   CHECK_FALSE(co_csdo_is_stopped(csdo));
   CHECK(co_csdo_is_idle(csdo));
 
@@ -499,7 +496,7 @@ TEST(CO_CsdoInit, CoCsdoStart_CobidRes_ExtendedId) {
 ///
 /// \When co_csdo_start() is called
 ///
-/// \Then 0 is returned, the service is not stopped, the service is idle
+/// \Then the service is not stopped, the service is idle
 ///       \Calls co_csdo_is_stopped()
 ///       \Calls co_dev_find_obj()
 ///       \Calls co_obj_sizeof_val()
@@ -512,9 +509,8 @@ TEST(CO_CsdoInit, CoCsdoStart_DefaultCSDO_WithObj1280) {
   dev_holder->CreateAndInsertObj(obj1280, 0x1280u);
   co_csdo_t* const csdo = co_csdo_create(net, dev, CSDO_NUM);
 
-  const auto ret = co_csdo_start(csdo);
+  co_csdo_start(csdo);
 
-  CHECK_EQUAL(0, ret);
   CHECK_FALSE(co_csdo_is_stopped(csdo));
   CHECK(co_csdo_is_idle(csdo));
 
@@ -561,7 +557,7 @@ TEST(CO_CsdoInit, CoCsdoStop_OnStarted) {
   dev_holder->CreateAndInsertObj(obj1280, 0x1280u);
   co_csdo_t* const csdo = co_csdo_create(net, dev, CSDO_NUM);
   CHECK(csdo != nullptr);
-  CHECK_EQUAL(0, co_csdo_start(csdo));
+  co_csdo_start(csdo);
 
   co_csdo_stop(csdo);
 
@@ -1160,7 +1156,7 @@ TEST_GROUP_BASE(CO_Csdo, CO_CsdoBase) {
 #endif
   }
 
-  void StartCSDO() { CHECK_EQUAL(0, co_csdo_start(csdo)); }
+  void StartCSDO() { co_csdo_start(csdo); }
 
   static co_unsigned32_t co_sub_failing_dn_ind(co_sub_t*, co_sdo_req*,
                                                co_unsigned32_t, void*) {
@@ -1388,7 +1384,7 @@ TEST(CO_Csdo, CoCsdoIsValid_ResInvalid) {
 TEST(CO_Csdo, CoCsdoUpReq_InvalidCobIdReq) {
   SetCli01CobidReq(DEFAULT_COBID_REQ | CO_SDO_COBID_VALID);
   co_csdo_stop(csdo);
-  CHECK_EQUAL(0, co_csdo_start(csdo));
+  co_csdo_start(csdo);
 
   const auto ret =
       co_csdo_up_req(csdo, IDX, SUBIDX, nullptr, &CoCsdoUpCon::func, &data);
@@ -1417,7 +1413,7 @@ TEST(CO_Csdo, CoCsdoUpReq_InvalidCobIdReq) {
 TEST(CO_Csdo, CoCsdoDnReq_InvalidCobIdReq) {
   SetCli01CobidReq(DEFAULT_COBID_REQ | CO_SDO_COBID_VALID);
   co_csdo_stop(csdo);
-  CHECK_EQUAL(0, co_csdo_start(csdo));
+  co_csdo_start(csdo);
 
   const auto ret =
       co_csdo_dn_req(csdo, IDX, SUBIDX, nullptr, 0, &CoCsdoDnCon::Func, &data);
@@ -3000,7 +2996,7 @@ TEST_GROUP_BASE(CO_CsdoDnDcf, CO_CsdoBase) {
 
   void RestartCsdo() const {
     co_csdo_stop(csdo);
-    CHECK_EQUAL(0, co_csdo_start(csdo));
+    co_csdo_start(csdo);
   }
 
   void CheckDcfReadFailure(const co_unsigned16_t idx,
@@ -3021,7 +3017,7 @@ TEST_GROUP_BASE(CO_CsdoDnDcf, CO_CsdoBase) {
     CHECK_EQUAL(dcf.Size(),
                 co_dev_write_dcf(dev, IDX, IDX, dcf.Begin(), dcf.End()));
 
-    CHECK_EQUAL(0, co_csdo_start(csdo));
+    co_csdo_start(csdo);
     CanSend::Clear();
   }
 };
@@ -5657,7 +5653,7 @@ TEST_GROUP_BASE(CO_CsdoUpload, CO_CsdoBase) {
     membuf_init(&buffer, nullptr, 0u);
 #endif
 
-    CHECK_EQUAL(0, co_csdo_start(csdo));
+    co_csdo_start(csdo);
     CHECK_EQUAL(0, co_csdo_up_req(csdo, IDX, SUBIDX, &buffer, CoCsdoUpCon::func,
                                   nullptr));
 
@@ -6101,7 +6097,7 @@ TEST_GROUP_BASE(CO_CsdoDownload, CO_CsdoBase) {
     first_segment.assign(buffer.data(), buffer.data() + 7u);
     last_segment.assign(buffer.data() + 7u, buffer.data() + 8u);
 
-    CHECK_EQUAL(0, co_csdo_start(csdo));
+    co_csdo_start(csdo);
   }
 };
 
@@ -6396,7 +6392,7 @@ TEST_GROUP_BASE(CO_CsdoIde, CO_CsdoBase) {
     SetCli01CobidReq(REQ_EID_CANID | CO_SDO_COBID_FRAME);
     SetCli02CobidRes(RES_EID_CANID | CO_SDO_COBID_FRAME);
 
-    CHECK_EQUAL(0, co_csdo_start(csdo));
+    co_csdo_start(csdo);
 
     CoCsdoDnCon::Clear();
     CanSend::Clear();

@@ -54,14 +54,14 @@ main(void)
 	tap_assert(sdev);
 	co_ssdo_t *ssdo = co_ssdo_create(net, sdev, 1);
 	tap_assert(ssdo);
-	tap_assert(!co_ssdo_start(ssdo));
+	co_ssdo_start(ssdo);
 
 	co_dev_t *cdev = co_dev_create_from_dcf_file(
 			TEST_SRCDIR "/co-sdo-client.dcf");
 	tap_assert(cdev);
 	co_csdo_t *csdo = co_csdo_create(net, cdev, 1);
 	tap_assert(csdo);
-	tap_assert(!co_csdo_start(csdo));
+	co_csdo_start(csdo);
 
 	// clang-format off
 	tap_test(!co_csdo_dn_req(csdo, 0x2000, 0x00, EXP_VALUE,

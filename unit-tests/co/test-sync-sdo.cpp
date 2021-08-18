@@ -62,7 +62,7 @@ TEST_GROUP(CO_SyncSdo) {
 
   void RestartSYNC() {
     co_sync_stop(sync);
-    CHECK_EQUAL(0, co_sync_start(sync));
+    co_sync_start(sync);
   }
 
   TEST_SETUP() {
@@ -93,7 +93,7 @@ TEST_GROUP(CO_SyncSdo) {
 
     CoCsdoDnCon::Clear();
 
-    CHECK_EQUAL(0, co_sync_start(sync));
+    co_sync_start(sync);
   }
 
   TEST_TEARDOWN() {

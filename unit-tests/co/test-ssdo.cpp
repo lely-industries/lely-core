@@ -449,16 +449,15 @@ TEST(CO_SsdoInit, CoSsdoDestroy_Nominal) {
 ///
 /// \When co_ssdo_start() is called
 ///
-/// \Then 0 is returned, the service is not stopped
+/// \Then the service is not stopped
 ///       \Calls co_ssdo_is_stopped()
 ///       \Calls co_dev_find_obj()
 ///       \Calls can_recv_start()
 TEST(CO_SsdoInit, CoSsdoStart_DefaultSsdo_NoObj1200) {
   co_ssdo_t* const ssdo = co_ssdo_create(net, dev, SDO_NUM);
 
-  const auto ret = co_ssdo_start(ssdo);
+  co_ssdo_start(ssdo);
 
-  CHECK_EQUAL(0, ret);
   CHECK_FALSE(co_ssdo_is_stopped(ssdo));
 
   co_ssdo_destroy(ssdo);
@@ -468,17 +467,16 @@ TEST(CO_SsdoInit, CoSsdoStart_DefaultSsdo_NoObj1200) {
 ///
 /// \When co_ssdo_start() is called
 ///
-/// \Then 0 is returned, the service is not stopped
+/// \Then the service is not stopped
 ///       \Calls co_ssdo_is_stopped()
 TEST(CO_SsdoInit, CoSsdoStart_AlreadyStarted) {
   std::unique_ptr<CoObjTHolder> obj1200(new CoObjTHolder(0x1200u));
   co_dev_insert_obj(dev, obj1200->Take());
   co_ssdo_t* const ssdo = co_ssdo_create(net, dev, SDO_NUM);
-  CHECK_EQUAL(0, co_ssdo_start(ssdo));
+  co_ssdo_start(ssdo);
 
-  const auto ret = co_ssdo_start(ssdo);
+  co_ssdo_start(ssdo);
 
-  CHECK_EQUAL(0, ret);
   CHECK_FALSE(co_ssdo_is_stopped(ssdo));
 
   co_ssdo_destroy(ssdo);
@@ -489,7 +487,7 @@ TEST(CO_SsdoInit, CoSsdoStart_AlreadyStarted) {
 ///
 /// \When co_ssdo_start() is called
 ///
-/// \Then 0 is returned, the service is not stopped
+/// \Then the service is not stopped
 ///       \Calls co_ssdo_is_stopped()
 ///       \Calls co_dev_find_obj()
 ///       \Calls co_obj_sizeof_val()
@@ -502,9 +500,8 @@ TEST(CO_SsdoInit, CoSsdoStart_DefaultSsdo_WithServerParameterObject) {
   co_dev_insert_obj(dev, obj1200->Take());
   co_ssdo_t* const ssdo = co_ssdo_create(net, dev, SDO_NUM);
 
-  const auto ret = co_ssdo_start(ssdo);
+  co_ssdo_start(ssdo);
 
-  CHECK_EQUAL(0, ret);
   CHECK_FALSE(co_ssdo_is_stopped(ssdo));
 
   co_ssdo_destroy(ssdo);
@@ -585,7 +582,7 @@ TEST_BASE(CO_Ssdo) {
     return CO_SDO_AC_NO_READ;
   }
 
-  void StartSSDO() { CHECK_EQUAL(0, co_ssdo_start(ssdo)); }
+  void StartSSDO() { co_ssdo_start(ssdo); }
 
   // obj 0x1200, sub 0x00 - highest sub-index supported
   void SetSrv00HighestSubidxSupported(const co_unsigned8_t subidx) {

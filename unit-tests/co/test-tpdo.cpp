@@ -347,8 +347,7 @@ TEST(CO_TpdoCreate, CoTpdoStart_ExtendedFrame) {
   CHECK(tpdo != nullptr);
   CHECK_EQUAL(TPDO_NUM, co_tpdo_get_num(tpdo));
 
-  const auto ret = co_tpdo_start(tpdo);
-  CHECK_EQUAL(0, ret);
+  co_tpdo_start(tpdo);
 
   const auto* const comm = co_tpdo_get_comm_par(tpdo);
   CHECK_EQUAL(0x02u, comm->n);
@@ -373,8 +372,7 @@ TEST(CO_TpdoCreate, CoTpdoStart_InvalidBit) {
   CHECK(tpdo != nullptr);
   CHECK_EQUAL(TPDO_NUM, co_tpdo_get_num(tpdo));
 
-  const auto ret = co_tpdo_start(tpdo);
-  CHECK_EQUAL(0, ret);
+  co_tpdo_start(tpdo);
 
   const auto* const comm = co_tpdo_get_comm_par(tpdo);
   CHECK_EQUAL(0x02u, comm->n);
@@ -404,8 +402,7 @@ TEST(CO_TpdoCreate, CoTpdoStart_FullTPDOCommParamRecord) {
   CHECK_EQUAL(TPDO_NUM, co_tpdo_get_num(tpdo));
 
   CHECK(co_tpdo_is_stopped(tpdo));
-  const auto ret = co_tpdo_start(tpdo);
-  CHECK_EQUAL(0, ret);
+  co_tpdo_start(tpdo);
 
   const auto* const comm = co_tpdo_get_comm_par(tpdo);
   CHECK_EQUAL(0x06u, comm->n);
@@ -432,8 +429,7 @@ TEST(CO_TpdoCreate, CoTpdoStart_FullTPDOMappingParamRecord) {
   CHECK(tpdo != nullptr);
   CHECK_EQUAL(TPDO_NUM, co_tpdo_get_num(tpdo));
 
-  const auto ret = co_tpdo_start(tpdo);
-  CHECK_EQUAL(0, ret);
+  co_tpdo_start(tpdo);
 
   const auto* const map = co_tpdo_get_map_par(tpdo);
   CHECK_EQUAL(CO_PDO_NUM_MAPS, map->n);
@@ -459,8 +455,7 @@ TEST(CO_TpdoCreate, CoTpdoStart_OversizedTPDOCommParamRecord) {
   CHECK(tpdo != nullptr);
   CHECK_EQUAL(TPDO_NUM, co_tpdo_get_num(tpdo));
 
-  const auto ret = co_tpdo_start(tpdo);
-  CHECK_EQUAL(0, ret);
+  co_tpdo_start(tpdo);
 
   const auto* const comm = co_tpdo_get_comm_par(tpdo);
   CHECK_EQUAL(0x07u, comm->n);
@@ -484,8 +479,7 @@ TEST(CO_TpdoCreate, CoTpdoStart_EventDrivenTransmission) {
   CHECK(tpdo != nullptr);
   CHECK_EQUAL(TPDO_NUM, co_tpdo_get_num(tpdo));
 
-  const auto ret = co_tpdo_start(tpdo);
-  CHECK_EQUAL(0, ret);
+  co_tpdo_start(tpdo);
 
   const auto* const comm = co_tpdo_get_comm_par(tpdo);
   CHECK_EQUAL(0x02u, comm->n);
@@ -511,8 +505,7 @@ TEST(CO_TpdoCreate, CoTpdoStart_AlreadyStarted) {
   tpdo = co_tpdo_create(net, dev, TPDO_NUM);
   co_tpdo_start(tpdo);
 
-  const auto ret = co_tpdo_start(tpdo);
-  CHECK_EQUAL(0, ret);
+  co_tpdo_start(tpdo);
 }
 
 TEST(CO_TpdoCreate, CoTpdoStart_TimerSet) {
@@ -532,8 +525,7 @@ TEST(CO_TpdoCreate, CoTpdoStart_TimerSet) {
   CHECK(tpdo != nullptr);
   CHECK_EQUAL(TPDO_NUM, co_tpdo_get_num(tpdo));
 
-  const auto ret = co_tpdo_start(tpdo);
-  CHECK_EQUAL(0, ret);
+  co_tpdo_start(tpdo);
 
   const auto* const comm = co_tpdo_get_comm_par(tpdo);
   CHECK_EQUAL(0x02u, comm->n);
@@ -557,7 +549,7 @@ TEST_GROUP_BASE(CO_Tpdo, CO_TpdoBase) {
   void CreateTpdo() {
     tpdo = co_tpdo_create(net, dev, TPDO_NUM);
     CHECK(tpdo != nullptr);
-    CHECK_EQUAL(0, co_tpdo_start(tpdo));
+    co_tpdo_start(tpdo);
     co_tpdo_set_ind(tpdo, CoTpdoInd::func, &ind_data);
   }
 

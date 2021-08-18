@@ -62,12 +62,9 @@ void co_ssdo_destroy(co_ssdo_t *sdo);
  *
  * @post on success, co_ssdo_is_stopped() returns <b>false</b>.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error code can
- * be obtained with get_errc().
- *
  * @see co_ssdo_stop()
  */
-int co_ssdo_start(co_ssdo_t *sdo);
+void co_ssdo_start(co_ssdo_t *sdo);
 
 /**
  * Stops a Server-SDO service. Any ongoing request is aborted.

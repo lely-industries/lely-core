@@ -371,7 +371,7 @@ TEST_GROUP_BASE(CO_Rpdo, CO_RpdoBase) {
     co_rpdo_set_err(rpdo, CoRpdoErr::Func, &err_data);
 
     CHECK(co_rpdo_is_stopped(rpdo));
-    CHECK_EQUAL(0, co_rpdo_start(rpdo));
+    co_rpdo_start(rpdo);
     CHECK_FALSE(co_rpdo_is_stopped(rpdo));
   }
 
@@ -439,9 +439,8 @@ TEST_GROUP_BASE(CO_Rpdo, CO_RpdoBase) {
 TEST(CO_Rpdo, CoRpdoStart_Nominal) {
   CreateRpdo();
 
-  const auto ret = co_rpdo_start(rpdo);
+  co_rpdo_start(rpdo);
 
-  CHECK_EQUAL(0, ret);
   CHECK_FALSE(co_rpdo_is_stopped(rpdo));
 
   const auto* const comm = co_rpdo_get_comm_par(rpdo);
@@ -485,9 +484,8 @@ TEST(CO_Rpdo, CoRpdoStart_NominalRecv) {
   co_rpdo_set_ind(rpdo, CoRpdoInd::Func, &ind_data);
   co_rpdo_set_err(rpdo, CoRpdoErr::Func, &err_data);
 
-  const auto ret = co_rpdo_start(rpdo);
+  co_rpdo_start(rpdo);
 
-  CHECK_EQUAL(0, ret);
   CHECK_FALSE(co_rpdo_is_stopped(rpdo));
 
   const can_msg msg = CAN_MSG_INIT;
@@ -522,9 +520,8 @@ TEST(CO_Rpdo, CoRpdoStart_ExtendedFrame) {
   co_rpdo_set_ind(rpdo, CoRpdoInd::Func, &ind_data);
   co_rpdo_set_err(rpdo, CoRpdoErr::Func, &err_data);
 
-  const auto ret = co_rpdo_start(rpdo);
+  co_rpdo_start(rpdo);
 
-  CHECK_EQUAL(0, ret);
   CHECK_FALSE(co_rpdo_is_stopped(rpdo));
 
   can_msg msg = CAN_MSG_INIT;
@@ -559,9 +556,8 @@ TEST(CO_Rpdo, CoRpdoStart_InvalidBit) {
   co_rpdo_set_ind(rpdo, CoRpdoInd::Func, &ind_data);
   co_rpdo_set_err(rpdo, CoRpdoErr::Func, &err_data);
 
-  const auto ret = co_rpdo_start(rpdo);
+  co_rpdo_start(rpdo);
 
-  CHECK_EQUAL(0, ret);
   CHECK_FALSE(co_rpdo_is_stopped(rpdo));
   CHECK_EQUAL(0, CoRpdoInd::GetNumCalled());
   CHECK_EQUAL(0, CoRpdoErr::GetNumCalled());
@@ -590,9 +586,8 @@ TEST(CO_Rpdo, CoRpdoStart_FullRPDOCommParamRecord) {
   obj1400->EmplaceSub<Obj1400RpdoCommPar::Sub06SyncStartValue>(0x05u);
   CreateRpdo();
 
-  const auto ret = co_rpdo_start(rpdo);
+  co_rpdo_start(rpdo);
 
-  CHECK_EQUAL(0, ret);
   CHECK_FALSE(co_rpdo_is_stopped(rpdo));
 
   const auto* const comm = co_rpdo_get_comm_par(rpdo);
@@ -624,9 +619,8 @@ TEST(CO_Rpdo, CoRpdoCreate_FullRPDOMappingParamRecord) {
     obj1600->EmplaceSub<Obj1600RpdoMapPar::SubNthAppObject>(i, i - 1u);
   CreateRpdo();
 
-  const auto ret = co_rpdo_start(rpdo);
+  co_rpdo_start(rpdo);
 
-  CHECK_EQUAL(0, ret);
   CHECK_FALSE(co_rpdo_is_stopped(rpdo));
 
   const auto* const map = co_rpdo_get_map_par(rpdo);
@@ -659,9 +653,8 @@ TEST(CO_Rpdo, CoRpdoStart_OversizedRPDOCommParamRecord) {
   obj1400->InsertAndSetSub(0x07u, CO_DEFTYPE_UNSIGNED32, co_unsigned32_t{0});
   CreateRpdo();
 
-  const auto ret = co_rpdo_start(rpdo);
+  co_rpdo_start(rpdo);
 
-  CHECK_EQUAL(0, ret);
   CHECK_FALSE(co_rpdo_is_stopped(rpdo));
 
   const auto* const comm = co_rpdo_get_comm_par(rpdo);
@@ -683,9 +676,8 @@ TEST(CO_Rpdo, CoRpdoStart_AlreadyStarted) {
   CreateRpdo();
   StartRpdo();
 
-  const auto ret = co_rpdo_start(rpdo);
+  co_rpdo_start(rpdo);
 
-  CHECK_EQUAL(0, ret);
   CHECK_FALSE(co_rpdo_is_stopped(rpdo));
 }
 

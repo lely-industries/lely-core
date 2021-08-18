@@ -92,12 +92,9 @@ void co_tpdo_destroy(co_tpdo_t *pdo);
  *
  * @post on success, co_tpdo_is_stopped() returns <b>false</b>.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error code can
- * be obtained with get_errc().
- *
  * @see co_tpdo_stop()
  */
-int co_tpdo_start(co_tpdo_t *pdo);
+void co_tpdo_start(co_tpdo_t *pdo);
 
 /**
  * Stops a Transmit-PDO service.

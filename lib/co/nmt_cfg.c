@@ -395,8 +395,7 @@ co_nmt_cfg_cfg_req(co_nmt_cfg_t *cfg, int_least32_t timeout,
 		return -1;
 	}
 
-	if (co_csdo_start(cfg->sdo) == -1)
-		return -1;
+	co_csdo_start(cfg->sdo);
 
 	co_csdo_set_timeout(cfg->sdo, timeout);
 	co_csdo_set_dn_ind(cfg->sdo, dn_ind, data);

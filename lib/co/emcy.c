@@ -264,13 +264,13 @@ co_emcy_destroy(co_emcy_t *emcy)
 	}
 }
 
-int
+void
 co_emcy_start(co_emcy_t *emcy)
 {
 	assert(emcy);
 
 	if (!emcy->stopped)
-		return 0;
+		return;
 
 	can_net_get_time(emcy->net, &emcy->inhibit);
 
@@ -300,8 +300,6 @@ co_emcy_start(co_emcy_t *emcy)
 	}
 
 	emcy->stopped = false;
-
-	return 0;
 }
 
 void

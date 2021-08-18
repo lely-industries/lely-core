@@ -720,17 +720,15 @@ co_lss_destroy(co_lss_t *lss)
 	}
 }
 
-int
+void
 co_lss_start(co_lss_t *lss)
 {
 	assert(lss);
 
 	if (!co_lss_is_stopped(lss))
-		return 0;
+		return;
 
 	co_lss_enter(lss, co_lss_wait_state);
-
-	return 0;
 }
 
 void

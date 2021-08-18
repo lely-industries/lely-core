@@ -627,13 +627,13 @@ co_ssdo_destroy(co_ssdo_t *ssdo)
 	}
 }
 
-int
+void
 co_ssdo_start(co_ssdo_t *sdo)
 {
 	assert(sdo);
 
 	if (!co_ssdo_is_stopped(sdo))
-		return 0;
+		return;
 
 	co_ssdo_enter(sdo, co_ssdo_wait_state);
 
@@ -649,8 +649,6 @@ co_ssdo_start(co_ssdo_t *sdo)
 	}
 
 	co_ssdo_update(sdo);
-
-	return 0;
 }
 
 void

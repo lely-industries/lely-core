@@ -56,7 +56,7 @@ static int co_nmt_srv_init_pdo(struct co_nmt_srv *srv);
 /// Finalizes all Receive/Transmit-PDO services. @see co_nmt_srv_init_pdo()
 static void co_nmt_srv_fini_pdo(struct co_nmt_srv *srv);
 /// Starts all Receive/Transmit-PDO services. @see co_nmt_srv_stop_pdo()
-static int co_nmt_srv_start_pdo(struct co_nmt_srv *srv);
+static void co_nmt_srv_start_pdo(struct co_nmt_srv *srv);
 /// Stops all Receive/Transmit-PDO services. @see co_nmt_srv_start_pdo()
 static void co_nmt_srv_stop_pdo(struct co_nmt_srv *srv);
 #if !LELY_NO_CO_RPDO
@@ -71,7 +71,7 @@ static int co_nmt_srv_init_sdo(struct co_nmt_srv *srv);
 /// Finalizes all Server/Client-SDO services. @see co_nmt_srv_init_sdo()
 static void co_nmt_srv_fini_sdo(struct co_nmt_srv *srv);
 /// Initializes all Server/Client-SDO services. @see co_nmt_srv_stop_sdo()
-static int co_nmt_srv_start_sdo(struct co_nmt_srv *srv);
+static void co_nmt_srv_start_sdo(struct co_nmt_srv *srv);
 /// Stop all Server/Client-SDO services. @see co_nmt_srv_start_sdo()
 static void co_nmt_srv_stop_sdo(struct co_nmt_srv *srv);
 
@@ -81,7 +81,7 @@ static int co_nmt_srv_init_sync(struct co_nmt_srv *srv);
 /// Finalizes the SYNC producer/consumer service. @see co_nmt_srv_init_sync()
 static void co_nmt_srv_fini_sync(struct co_nmt_srv *srv);
 /// Starts the SYNC producer/consumer service. @see co_nmt_srv_stop_sync()
-static int co_nmt_srv_start_sync(struct co_nmt_srv *srv);
+static void co_nmt_srv_start_sync(struct co_nmt_srv *srv);
 /// Stops the SYNC producer/consumer service. @see co_nmt_srv_start_sync()
 static void co_nmt_srv_stop_sync(struct co_nmt_srv *srv);
 /// Invokes co_nmt_sync() to handle SYNC objects. @see co_sync_ind_t
@@ -98,7 +98,7 @@ static int co_nmt_srv_init_time(struct co_nmt_srv *srv);
 /// Finalizes the TIME producer/consumer service. @see co_nmt_srv_init_time()
 static void co_nmt_srv_fini_time(struct co_nmt_srv *srv);
 /// Starts the TIME producer/consumer service. @see co_nmt_srv_stop_time()
-static int co_nmt_srv_start_time(struct co_nmt_srv *srv);
+static void co_nmt_srv_start_time(struct co_nmt_srv *srv);
 /// Stops the TIME producer/consumer service. @see co_nmt_srv_start_time()
 static void co_nmt_srv_stop_time(struct co_nmt_srv *srv);
 #endif
@@ -109,7 +109,7 @@ static int co_nmt_srv_init_emcy(struct co_nmt_srv *srv);
 /// Finalizes the EMCY producer/consumer service. @see co_nmt_srv_init_emcy()
 static void co_nmt_srv_fini_emcy(struct co_nmt_srv *srv);
 /// Starts the EMCY producer/consumer service. @see co_nmt_srv_stop_emcy()
-static int co_nmt_srv_start_emcy(struct co_nmt_srv *srv);
+static void co_nmt_srv_start_emcy(struct co_nmt_srv *srv);
 /// Stops the EMCY producer/consumer service. @see co_nmt_srv_start_emcy()
 static void co_nmt_srv_stop_emcy(struct co_nmt_srv *srv);
 #endif
@@ -120,7 +120,7 @@ static int co_nmt_srv_init_lss(struct co_nmt_srv *srv);
 /// Finalizes the EMCY master/slave service. @see co_nmt_srv_init_lss()
 static void co_nmt_srv_fini_lss(struct co_nmt_srv *srv);
 /// Starts the LSS master/slave service. @see co_nmt_srv_stop_lss()
-static int co_nmt_srv_start_lss(struct co_nmt_srv *srv);
+static void co_nmt_srv_start_lss(struct co_nmt_srv *srv);
 /// Stops the EMCY master/slave service. @see co_nmt_srv_start_lss()
 static void co_nmt_srv_stop_lss(struct co_nmt_srv *srv);
 #endif
@@ -470,7 +470,7 @@ co_nmt_srv_fini_pdo(struct co_nmt_srv *srv)
 #endif
 }
 
-static int
+static void
 co_nmt_srv_start_pdo(struct co_nmt_srv *srv)
 {
 	assert(srv);
@@ -483,8 +483,7 @@ co_nmt_srv_start_pdo(struct co_nmt_srv *srv)
 	for (size_t i = 0; i < srv->nrpdo; i++) {
 		if (!srv->rpdos[i])
 			continue;
-		if (co_rpdo_start(srv->rpdos[i]) == -1)
-			goto error;
+		co_rpdo_start(srv->rpdos[i]);
 	}
 #endif
 
@@ -493,17 +492,9 @@ co_nmt_srv_start_pdo(struct co_nmt_srv *srv)
 	for (size_t i = 0; i < srv->ntpdo; i++) {
 		if (!srv->tpdos[i])
 			continue;
-		if (co_tpdo_start(srv->tpdos[i]) == -1)
-			goto error;
+		co_tpdo_start(srv->tpdos[i]);
 	}
 #endif
-
-	return 0;
-
-error:
-	diag(DIAG_ERROR, get_errc(), "unable to start PDO services");
-	co_nmt_srv_stop_pdo(srv);
-	return -1;
 }
 
 static void
@@ -653,7 +644,7 @@ co_nmt_srv_fini_sdo(struct co_nmt_srv *srv)
 	srv->nssdo = 0;
 }
 
-static int
+static void
 co_nmt_srv_start_sdo(struct co_nmt_srv *srv)
 {
 	assert(srv);
@@ -665,8 +656,7 @@ co_nmt_srv_start_sdo(struct co_nmt_srv *srv)
 	for (size_t i = 0; i < srv->nssdo; i++) {
 		if (!srv->ssdos[i])
 			continue;
-		if (co_ssdo_start(srv->ssdos[i]) == -1)
-			goto error;
+		co_ssdo_start(srv->ssdos[i]);
 	}
 
 #if !LELY_NO_CO_CSDO
@@ -674,17 +664,9 @@ co_nmt_srv_start_sdo(struct co_nmt_srv *srv)
 	for (size_t i = 0; i < srv->ncsdo; i++) {
 		if (!srv->csdos[i])
 			continue;
-		if (co_csdo_start(srv->csdos[i]) == -1)
-			goto error;
+		co_csdo_start(srv->csdos[i]);
 	}
 #endif
-
-	return 0;
-
-error:
-	diag(DIAG_ERROR, get_errc(), "unable to start SDO services");
-	co_nmt_srv_stop_sdo(srv);
-	return -1;
 }
 
 static void
@@ -752,24 +734,19 @@ co_nmt_srv_fini_sync(struct co_nmt_srv *srv)
 	}
 }
 
-static int
+static void
 co_nmt_srv_start_sync(struct co_nmt_srv *srv)
 {
 	assert(srv);
 
 	if (!srv->sync)
-		return 0;
+		return;
 
 	assert(!(srv->set & CO_NMT_SRV_SYNC));
 
-	if (co_sync_start(srv->sync) == -1) {
-		diag(DIAG_ERROR, get_errc(), "unable to start SYNC service");
-		return -1;
-	}
+	co_sync_start(srv->sync);
 
 	srv->set |= CO_NMT_SRV_SYNC;
-
-	return 0;
 }
 
 static void
@@ -843,24 +820,19 @@ co_nmt_srv_fini_time(struct co_nmt_srv *srv)
 	}
 }
 
-static int
+static void
 co_nmt_srv_start_time(struct co_nmt_srv *srv)
 {
 	assert(srv);
 
 	if (!srv->time)
-		return 0;
+		return;
 
 	assert(!(srv->set & CO_NMT_SRV_TIME));
 
-	if (co_time_start(srv->time) == -1) {
-		diag(DIAG_ERROR, get_errc(), "unable to start TIME service");
-		return -1;
-	}
+	co_time_start(srv->time);
 
 	srv->set |= CO_NMT_SRV_TIME;
-
-	return 0;
 }
 
 static void
@@ -913,24 +885,19 @@ co_nmt_srv_fini_emcy(struct co_nmt_srv *srv)
 	}
 }
 
-static int
+static void
 co_nmt_srv_start_emcy(struct co_nmt_srv *srv)
 {
 	assert(srv);
 
 	if (!srv->emcy)
-		return 0;
+		return;
 
 	assert(!(srv->set & CO_NMT_SRV_EMCY));
 
-	if (co_emcy_start(srv->emcy) == -1) {
-		diag(DIAG_ERROR, get_errc(), "unable to start EMCY service");
-		return -1;
-	}
+	co_emcy_start(srv->emcy);
 
 	srv->set |= CO_NMT_SRV_EMCY;
-
-	return 0;
 }
 
 static void
@@ -981,24 +948,19 @@ co_nmt_srv_fini_lss(struct co_nmt_srv *srv)
 	}
 }
 
-static int
+static void
 co_nmt_srv_start_lss(struct co_nmt_srv *srv)
 {
 	assert(srv);
 
 	if (!srv->lss)
-		return 0;
+		return;
 
 	assert(!(srv->set & CO_NMT_SRV_LSS));
 
-	if (co_lss_start(srv->lss) == -1) {
-		diag(DIAG_ERROR, get_errc(), "unable to start LSS service");
-		return -1;
-	}
+	co_lss_start(srv->lss);
 
 	srv->set |= CO_NMT_SRV_LSS;
-
-	return 0;
 }
 
 static void
