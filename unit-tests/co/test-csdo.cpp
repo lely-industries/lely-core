@@ -1371,6 +1371,64 @@ TEST(CO_Csdo, CoCsdoIsValid_ResInvalid) {
 
 ///@}
 
+/// @name co_csdo_up_req()
+///@{
+
+/// \Given a pointer to the started CSDO service (co_csdo_t) with an invalid
+///        "COB-ID client -> server (rx)" entry
+///
+/// \When co_csdo_up_req() is called with a multiplexer, a null buffer pointer,
+///       a pointer to the confirmation function and a pointer to
+///       a user-specified data
+///
+/// \Then -1 is returned, ERRNUM_INVAL is set as the error number, upload
+///       confirmation function is not called
+///       \Calls co_csdo_is_valid()
+///       \Calls set_errnum()
+TEST(CO_Csdo, CoCsdoUpReq_InvalidCobIdReq) {
+  SetCli01CobidReq(DEFAULT_COBID_REQ | CO_SDO_COBID_VALID);
+  co_csdo_stop(csdo);
+  CHECK_EQUAL(0, co_csdo_start(csdo));
+
+  const auto ret =
+      co_csdo_up_req(csdo, IDX, SUBIDX, nullptr, &CoCsdoUpCon::func, &data);
+
+  CHECK_EQUAL(-1, ret);
+  CHECK_EQUAL(ERRNUM_INVAL, get_errnum());
+  CHECK_EQUAL(0, CoCsdoUpCon::num_called);
+}
+
+///@}
+
+/// @name co_csdo_dn_req()
+///@{
+
+/// \Given a pointer to the started CSDO service (co_csdo_t) with an invalid
+///        "COB-ID client -> server (rx)" entry
+///
+/// \When co_csdo_dn_req() is called with a multiplexer, a null
+///       bytes-to-be-downloaded pointer, zero, a pointer to the confirmation
+///       function and a pointer to a user-specified data
+///
+/// \Then -1 is returned, ERRNUM_INVAL is set as the error number, download
+///       confirmation function is not called
+///       \Calls co_csdo_is_valid()
+///       \Calls set_errnum()
+TEST(CO_Csdo, CoCsdoDnReq_InvalidCobIdReq) {
+  SetCli01CobidReq(DEFAULT_COBID_REQ | CO_SDO_COBID_VALID);
+  co_csdo_stop(csdo);
+  CHECK_EQUAL(0, co_csdo_start(csdo));
+
+  const auto ret =
+      co_csdo_dn_req(csdo, IDX, SUBIDX, nullptr, 0, &CoCsdoDnCon::Func, &data);
+
+  CHECK_EQUAL(-1, ret);
+  CHECK_EQUAL(ERRNUM_INVAL, get_errnum());
+  CHECK_EQUAL(0, CoCsdoDnCon::GetNumCalled());
+}
+
+///@}
+
 /// @name co_dev_dn_req()
 ///@{
 
@@ -4656,13 +4714,6 @@ TEST(CO_Csdo, CoCsdoBlkDnValReq_MembufReserveFail) {
 
 ///@}
 
-/// @name CSDO send 'download initiate' request
-///@{
-
-/// TODO(N7s): test cases for co_csdo_send_dn_ini_req()
-
-///@}
-
 /// @name CSDO block download initiate
 ///@{
 
@@ -5126,10 +5177,6 @@ TEST(CO_Csdo, CoCsdoBlkDnSubOnEnter_TimeoutSet) {
   CheckSdoAbortSent(IDX, SUBIDX, CO_SDO_AC_TIMEOUT);
 }
 
-/// TODO(N7S): test cases for co_csdo_blk_dn_sub_on_abort()
-
-/// TODO(N7S): test cases for co_csdo_blk_dn_sub_on_time()
-
 /// \Given a pointer to the CSDO service (co_csdo_t) in the 'block download
 ///        sub-block' state
 ///
@@ -5500,8 +5547,6 @@ TEST(CO_Csdo, CoCsdoBlkDnEndOnTime_Nominal) {
 /// @name CSDO send block upload sub-block response
 ///@{
 
-/// TODO(N7S): test cases for co_csdo_send_blk_up_sub_res()
-
 /// \Given a pointer to the CSDO service (co_csdo_t) which has initiated block
 ///        download transfer (the correct request was sent by the client) and
 ///        an SDO upload last segment request was received
@@ -5533,15 +5578,6 @@ TEST(CO_Csdo, CoCsdoSendBlkUpEndRes_Nominal) {
       SdoCreateMsg::BlkUpReq(DEFAULT_COBID_REQ, CO_SDO_SC_END_BLK);
   CanSend::CheckMsg(expected_msg);
 }
-
-/// TODO(N7S): test cases for co_csdo_blk_up_end_res()
-
-///@}
-
-/// @name CSDO send start upload request
-///@{
-
-/// TODO(N7S): test cases for co_csdo_send_start_up_req()
 
 ///@}
 
