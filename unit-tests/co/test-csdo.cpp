@@ -1214,28 +1214,37 @@ TEST_GROUP_BASE(CO_Csdo, CO_CsdoBase) {
     CHECK_EQUAL(1, can_net_recv(net, &msg_up_seg, 0));
   }
 
-  void ReceiveBlkDnSubRes(const uint_least8_t size,
-                          const uint_least8_t sequence_number) {
-    const can_msg msg =
-        SdoCreateMsg::BlkDnSubRes(sequence_number, CO_SDO_SC_INI_BLK, size);
-    CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
-  }
-
   void ReceiveBlockDownloadSubInitiateResponse(
       const co_unsigned16_t idx, const co_unsigned8_t subidx,
-      const uint_least8_t block_size = CO_SDO_MAX_SEQNO) {
+      const uint_least8_t block_size = CO_SDO_MAX_SEQNO,
+      const uint_least8_t cs_flags = 0) {
     const can_msg msg = SdoCreateMsg::BlkDnIniRes(
-        idx, subidx, DEFAULT_COBID_RES, CO_SDO_SC_INI_BLK, block_size);
+        idx, subidx, DEFAULT_COBID_RES, cs_flags, block_size);
     CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
   }
 
-  void CheckBlockDownloadEndRequestSent() const {
+  void ReceiveBlockDownloadResponse(const uint_least8_t seqno,
+                                    const uint_least8_t blksize) {
+    const auto blk_dn_seg_res = SdoCreateMsg::BlkDnSubRes(
+        seqno, blksize, DEFAULT_COBID_RES, CO_SDO_SC_BLK_RES);
+    CHECK_EQUAL(1, can_net_recv(net, &blk_dn_seg_res, 0));
+  }
+
+  void CheckBlockDownloadSubRequestSent(
+      const uint_least8_t seqno, const std::vector<uint_least8_t>& data = {})
+      const {
+    const auto last_segment_req = SdoCreateMsg::BlkDnSubReq(
+        DEFAULT_COBID_REQ, seqno, CO_SDO_SEQ_LAST, data);
+    CanSend::CheckMsg(last_segment_req);
+    CanSend::Clear();
+  }
+
+  void CheckBlockDownloadEndRequestSent(const uint_least8_t size,
+                                        const co_unsigned16_t crc = 0) const {
     CHECK_EQUAL(1u, CanSend::GetNumCalled());
-    const co_unsigned8_t cs =
-        CO_SDO_CCS_BLK_DN_REQ | CO_SDO_SC_END_BLK | CO_SDO_BLK_SIZE_SET(0);
-    const auto expected_last = SdoInitExpectedData::U32(cs);
-    CanSend::CheckMsg(DEFAULT_COBID_REQ, 0, CO_SDO_MSG_SIZE,
-                      expected_last.data());
+    const auto expected = SdoCreateMsg::BlkDnEndReq(
+        DEFAULT_COBID_REQ, crc, CO_SDO_SC_END_BLK | CO_SDO_BLK_SIZE_SET(size));
+    CanSend::CheckMsg(expected);
     CanSend::Clear();
   }
 
@@ -1262,12 +1271,13 @@ TEST_GROUP_BASE(CO_Csdo, CO_CsdoBase) {
   }
 
   void InitiateOsBlockDownloadValRequest(const co_unsigned16_t idx,
-                                         const co_unsigned8_t subidx) {
+                                         const co_unsigned8_t subidx,
+                                         const void* const val) {
     CHECK_TRUE(co_csdo_is_idle(csdo));
 
-    CHECK_EQUAL(0, co_csdo_blk_dn_val_req(
-                       csdo, idx, subidx, val_os.GetDataType(),
-                       val_os.GetValPtr(), CoCsdoDnCon::Func, &data));
+    CHECK_EQUAL(
+        0, co_csdo_blk_dn_val_req(csdo, idx, subidx, CO_DEFTYPE_OCTET_STRING,
+                                  val, CoCsdoDnCon::Func, &data));
     CanSend::Clear();
   }
 
@@ -1275,9 +1285,9 @@ TEST_GROUP_BASE(CO_Csdo, CO_CsdoBase) {
                               const co_unsigned8_t subidx) {
     CHECK_TRUE(co_csdo_is_idle(csdo));
 
-    InitiateOsBlockDownloadValRequest(idx, subidx);
+    InitiateOsBlockDownloadValRequest(idx, subidx, val_os.GetValPtr());
     ReceiveBlockDownloadSubInitiateResponse(idx, subidx);
-    CheckBlockDownloadEndRequestSent();
+    CheckBlockDownloadEndRequestSent(0);
   }
 
   void AdvanceToBlkUpEndState() {
@@ -5226,7 +5236,7 @@ TEST(CO_Csdo, CoCsdoBlkDnSubOnRecv_AckseqEqualToBlksize) {
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
   const auto expected_req = SdoCreateMsg::BlkDnEndReq(
-      IDX, SUBIDX, DEFAULT_COBID_REQ, 0,
+      DEFAULT_COBID_REQ, 0,
       CO_SDO_SC_END_BLK | CO_SDO_BLK_SIZE_SET(sizeof(val_u16.GetVal())));
   CanSend::CheckMsg(expected_req);
 }
@@ -5249,13 +5259,6 @@ TEST(CO_Csdo, CoCsdoBlkDnSubOnRecv_Nominal) {
   const uint_least8_t sequence_number = 1u;
   CheckLastSegmentSent(sequence_number, val_u16.GetSegmentData());
 }
-
-///@}
-
-/// @name CSDO send 'block download end' request
-///@{
-
-/// TODO(N7S): test cases for co_csdo_send_blk_dn_end_req()
 
 ///@}
 
@@ -5367,6 +5370,45 @@ TEST(CO_Csdo, CoCsdoBlkDnEndOnRecv_IncorrectCs) {
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
   CheckSdoAbortSent(IDX, subidx_os, CO_SDO_AC_NO_CS);
+}
+
+/// \Given a pointer to the started CSDO service (co_csdo_t) in the 'block
+///        download end' state (end of a non-empty octet string download); the
+///        server supports CRC calculation and the request with a correct
+///        CRC was sent after the block transfer
+///
+/// \When a correct block download end response is received
+///
+/// \Then no SDO message is sent, download confirmation function is called once
+///       with the pointer to the CSDO service, the multiplexer, no abort code,
+///       a null uploaded bytes pointer, zero and a pointer to the
+///       user-specified data, the CSDO service is idle
+TEST(CO_Csdo, CoCsdoBlkDnEndOnRecv_OsWithCrc) {
+  StartCSDO();
+
+  const uint_least8_t n = 1u;
+  const uint_least8_t os[n] = {0xd3u};
+  co_octet_string_t val = arrays.Init<co_octet_string_t>();
+  CHECK_EQUAL(0, co_val_init_os(&val, os, n));
+
+  InitiateOsBlockDownloadValRequest(IDX, SUBIDX, &val);
+  ReceiveBlockDownloadSubInitiateResponse(IDX, SUBIDX, n,
+                                          CO_SDO_SC_INI_BLK | CO_SDO_BLK_CRC);
+  const uint_least8_t sequence_number = 1u;
+  CheckBlockDownloadSubRequestSent(sequence_number, {0xd3u});
+  ReceiveBlockDownloadResponse(sequence_number, n);
+  CheckBlockDownloadEndRequestSent(n, 0xfb1eu);
+  CanSend::Clear();
+
+  const auto msg =
+      SdoCreateMsg::BlkDnEndRes(DEFAULT_COBID_RES, CO_SDO_SC_END_BLK);
+  CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
+
+  CHECK_EQUAL(0u, CanSend::GetNumCalled());
+  CoCsdoDnCon::Check(csdo, IDX, SUBIDX, 0, &data);
+  CHECK(co_csdo_is_idle(csdo));
+
+  co_val_fini(CO_DEFTYPE_OCTET_STRING, &val);
 }
 
 /// \Given a pointer to the started CSDO service (co_csdo_t) in the 'block

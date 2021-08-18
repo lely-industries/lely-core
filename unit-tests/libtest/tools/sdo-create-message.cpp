@@ -115,12 +115,10 @@ SdoCreateMsg::BlkDnIniRes(const co_unsigned16_t idx,
 }
 
 can_msg
-SdoCreateMsg::BlkDnEndReq(const co_unsigned16_t idx,
-                          const co_unsigned8_t subidx,
-                          const uint_least32_t recipient_id,
+SdoCreateMsg::BlkDnEndReq(const uint_least32_t recipient_id,
                           const co_unsigned16_t crc,
                           const co_unsigned8_t cs_flags) {
-  can_msg msg = Default(idx, subidx, recipient_id);
+  can_msg msg = Default(0, 0, recipient_id);
   msg.data[0] = CO_SDO_CCS_BLK_DN_REQ;
   msg.data[0] |= CO_SDO_SC_END_BLK;
   msg.data[0] |= cs_flags;

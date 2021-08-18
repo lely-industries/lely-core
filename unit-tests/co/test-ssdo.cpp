@@ -2979,10 +2979,10 @@ TEST_GROUP_BASE(CoSsdoBlkDn, CO_Ssdo) {
   void EndBlkDn(const co_unsigned16_t crc, const uint8_t size = 0) {
     can_msg msg_end = CAN_MSG_INIT;
     if (size != 0)
-      msg_end = SdoCreateMsg::BlkDnEndReq(IDX, SUBIDX, DEFAULT_COBID_REQ, crc,
+      msg_end = SdoCreateMsg::BlkDnEndReq(DEFAULT_COBID_REQ, crc,
                                           CO_SDO_BLK_SIZE_SET(size));
     else
-      msg_end = SdoCreateMsg::BlkDnEndReq(IDX, SUBIDX, DEFAULT_COBID_REQ, crc);
+      msg_end = SdoCreateMsg::BlkDnEndReq(DEFAULT_COBID_REQ, crc);
 
     CHECK_EQUAL(1, can_net_recv(net, &msg_end, 0));
 
@@ -3337,8 +3337,7 @@ TEST(CoSsdoBlkDn, Sub_CrcError) {
   CHECK_SDO_CAN_MSG_VAL(0, CanSend::msg.data);
   ResetCanSend();
 
-  can_msg msg_end =
-      SdoCreateMsg::BlkDnEndReq(IDX, SUBIDX, DEFAULT_COBID_REQ, 0);
+  can_msg msg_end = SdoCreateMsg::BlkDnEndReq(DEFAULT_COBID_REQ, 0);
   msg_end.data[0] |= CO_SDO_BLK_SIZE_SET(1u);
   CHECK_EQUAL(1, can_net_recv(net, &msg_end, 0));
 
@@ -3666,7 +3665,7 @@ TEST(CoSsdoBlkDn, EndRecv_FailingDnInd) {
   co_sub_t* const sub = co_dev_find_sub(dev, IDX, SUBIDX);
   co_sub_set_dn_ind(sub, sub_dn_failing_ind, nullptr);
   can_msg msg_end = SdoCreateMsg::BlkDnEndReq(
-      IDX, SUBIDX, DEFAULT_COBID_REQ, co_crc(0, val_buf, sizeof(sub_type64)));
+      DEFAULT_COBID_REQ, co_crc(0, val_buf, sizeof(sub_type64)));
   msg_end.data[0] |= CO_SDO_BLK_SIZE_SET(1u);
   CHECK_EQUAL(1, can_net_recv(net, &msg_end, 0));
 
