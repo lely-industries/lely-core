@@ -134,6 +134,10 @@ static co_ssdo_t *co_ssdo_init(co_ssdo_t *sdo, can_net_t *net, co_dev_t *dev,
 /// Finalizes #co_ssdo_t object.
 static void co_ssdo_fini(co_ssdo_t *sdo);
 
+/// Checks if a new COB-ID is a correct replacement for the old one.
+static bool co_ssdo_is_cobid_change_allowed(
+		co_unsigned32_t cobid_new, co_unsigned32_t cobid_old);
+
 /**
  * Updates and (de)activates a Server-SDO service. This function is invoked when
  * one of the SDO server parameters (objects 1200..127F) is updated.
@@ -794,23 +798,12 @@ co_1200_dn_ind(co_sub_t *sub, struct co_sdo_req *req, co_unsigned32_t ac,
 	case 0: return CO_SDO_AC_NO_WRITE;
 	case 1: {
 		assert(type == CO_DEFTYPE_UNSIGNED32);
-		co_unsigned32_t cobid = val.u32;
-		co_unsigned32_t cobid_old = co_sub_get_val_u32(sub);
+		const co_unsigned32_t cobid = val.u32;
+		const co_unsigned32_t cobid_old = co_sub_get_val_u32(sub);
 		if (cobid == cobid_old)
 			return 0;
 
-		// The CAN-ID cannot be changed when the SDO is and remains
-		// valid.
-		const bool valid = !(cobid & CO_SDO_COBID_VALID);
-		const bool valid_old = !(cobid_old & CO_SDO_COBID_VALID);
-		const uint_least32_t canid = cobid & CAN_MASK_EID;
-		const uint_least32_t canid_old = cobid_old & CAN_MASK_EID;
-		if (valid && valid_old && canid != canid_old)
-			return CO_SDO_AC_PARAM_VAL;
-
-		// A 29-bit CAN-ID is only valid if the frame bit is set.
-		if (!(cobid & CO_SDO_COBID_FRAME)
-				&& (cobid & (CAN_MASK_EID ^ CAN_MASK_BID)))
+		if (!co_ssdo_is_cobid_change_allowed(cobid, cobid_old))
 			return CO_SDO_AC_PARAM_VAL;
 
 		sdo->par.cobid_req = cobid;
@@ -818,23 +811,12 @@ co_1200_dn_ind(co_sub_t *sub, struct co_sdo_req *req, co_unsigned32_t ac,
 	}
 	case 2: {
 		assert(type == CO_DEFTYPE_UNSIGNED32);
-		co_unsigned32_t cobid = val.u32;
-		co_unsigned32_t cobid_old = co_sub_get_val_u32(sub);
+		const co_unsigned32_t cobid = val.u32;
+		const co_unsigned32_t cobid_old = co_sub_get_val_u32(sub);
 		if (cobid == cobid_old)
 			return 0;
 
-		// The CAN-ID cannot be changed when the SDO is and remains
-		// valid.
-		const bool valid = !(cobid & CO_SDO_COBID_VALID);
-		const bool valid_old = !(cobid_old & CO_SDO_COBID_VALID);
-		const uint_least32_t canid = cobid & CAN_MASK_EID;
-		const uint_least32_t canid_old = cobid_old & CAN_MASK_EID;
-		if (valid && valid_old && canid != canid_old)
-			return CO_SDO_AC_PARAM_VAL;
-
-		// A 29-bit CAN-ID is only valid if the frame bit is set.
-		if (!(cobid & CO_SDO_COBID_FRAME)
-				&& (cobid & (CAN_MASK_EID ^ CAN_MASK_BID)))
+		if (!co_ssdo_is_cobid_change_allowed(cobid, cobid_old))
 			return CO_SDO_AC_PARAM_VAL;
 
 		sdo->par.cobid_res = cobid;
@@ -842,8 +824,8 @@ co_1200_dn_ind(co_sub_t *sub, struct co_sdo_req *req, co_unsigned32_t ac,
 	}
 	case 3: {
 		assert(type == CO_DEFTYPE_UNSIGNED8);
-		co_unsigned8_t id = val.u8;
-		co_unsigned8_t id_old = co_sub_get_val_u8(sub);
+		const co_unsigned8_t id = val.u8;
+		const co_unsigned8_t id_old = co_sub_get_val_u8(sub);
 		if (id == id_old)
 			return 0;
 
@@ -2091,4 +2073,24 @@ co_ssdo_fini(co_ssdo_t *sdo)
 	can_timer_destroy(sdo->timer);
 
 	can_recv_destroy(sdo->recv);
+}
+
+static bool
+co_ssdo_is_cobid_change_allowed(
+		co_unsigned32_t cobid_new, co_unsigned32_t cobid_old)
+{
+	// The CAN-ID cannot be changed when the SSDO is and remains valid.
+	const bool valid_new = !(cobid_new & CO_SDO_COBID_VALID);
+	const bool valid_old = !(cobid_old & CO_SDO_COBID_VALID);
+	const uint_least32_t canid_new = cobid_new & CAN_MASK_EID;
+	const uint_least32_t canid_old = cobid_old & CAN_MASK_EID;
+	if (valid_new && valid_old && canid_new != canid_old)
+		return false;
+
+	// A 29-bit CAN-ID is only valid if the frame bit is set.
+	if (!(cobid_new & CO_SDO_COBID_FRAME)
+			&& (cobid_new & (CAN_MASK_EID ^ CAN_MASK_BID)))
+		return false;
+
+	return true;
 }
