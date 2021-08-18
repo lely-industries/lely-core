@@ -60,7 +60,7 @@ TEST_GROUP(CO_CsdoDnInd) {
   std::unique_ptr<CoDevTHolder> dev_holder;
   std::unique_ptr<CoObjTHolder> obj1280;
 
-  void StartCSDO() { CHECK_EQUAL(0, co_csdo_start(csdo)); }
+  void StartCSDO() { co_csdo_start(csdo); }
 
   void CreateObj1280Defaults() const {
     obj1280->EmplaceSub<Sub00HighestSubidxSupported>(0x02u);

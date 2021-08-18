@@ -459,13 +459,12 @@ TEST(CO_EmcyMinimal, CoEmcySetInd_Nominal) {
 ///
 /// \When co_emcy_start() is called
 ///
-/// \Then 0 is returned, the EMCY service is started
+/// \Then the EMCY service is started
 ///       \Calls can_net_get_time()
 ///       \Calls co_dev_find_obj()
 TEST(CO_EmcyMinimal, CoEmcyStart_NoObj1003_1014_1028) {
-  const int ret = co_emcy_start(emcy);
+  co_emcy_start(emcy);
 
-  CHECK_EQUAL(0, ret);
   CHECK_FALSE(co_emcy_is_stopped(emcy));
 }
 
@@ -473,13 +472,12 @@ TEST(CO_EmcyMinimal, CoEmcyStart_NoObj1003_1014_1028) {
 ///
 /// \When co_emcy_start() is called
 ///
-/// \Then 0 is returned, nothing is changed
+/// \Then nothing is changed
 TEST(CO_EmcyMinimal, CoEmcyStart_AlreadyStarted) {
   co_emcy_start(emcy);
 
-  const int ret = co_emcy_start(emcy);
+  co_emcy_start(emcy);
 
-  CHECK_EQUAL(0, ret);
   CHECK_FALSE(co_emcy_is_stopped(emcy));
 }
 
@@ -489,8 +487,7 @@ TEST(CO_EmcyMinimal, CoEmcyStart_AlreadyStarted) {
 ///
 /// \When co_emcy_start() is called
 ///
-/// \Then 0 is returned, the EMCY service is started, missing consumer COB-IDs
-///       are ignored
+/// \Then the EMCY service is started, missing consumer COB-IDs are ignored
 ///       \Calls can_net_get_time()
 ///       \Calls co_dev_find_obj()
 ///       \Calls co_obj_set_dn_ind()
@@ -509,9 +506,8 @@ TEST(CO_EmcyCreate, CoEmcyStart_Obj1028_WithMissingSubObject) {
   auto* const emcy = co_emcy_create(net, dev);
   CHECK(emcy != nullptr);
 
-  const int ret = co_emcy_start(emcy);
+  co_emcy_start(emcy);
 
-  CHECK_EQUAL(0, ret);
   CHECK_FALSE(co_emcy_is_stopped(emcy));
 
   co_emcy_destroy(emcy);
@@ -523,8 +519,7 @@ TEST(CO_EmcyCreate, CoEmcyStart_Obj1028_WithMissingSubObject) {
 ///
 /// \When co_emcy_start() is called
 ///
-/// \Then 0 is returned, the EMCY service is started, excess consumer COB-IDs
-///       are ignored
+/// \Then the EMCY service is started, excess consumer COB-IDs are ignored
 ///       \Calls can_net_get_time()
 ///       \Calls co_dev_find_obj()
 ///       \Calls co_obj_set_dn_ind()
@@ -546,9 +541,8 @@ TEST(CO_EmcyCreate, CoEmcyStart_Obj1028_BiggerThanMaxNodes) {
   CHECK(emcy != nullptr);
   co_emcy_set_ind(emcy, &EmcyInd::Func, nullptr);
 
-  const int ret = co_emcy_start(emcy);
+  co_emcy_start(emcy);
 
-  CHECK_EQUAL(0, ret);
   CHECK_FALSE(co_emcy_is_stopped(emcy));
 
   can_msg msg = CAN_MSG_INIT;
@@ -721,8 +715,8 @@ TEST_GROUP_BASE(CO_Emcy, CO_EmcyBase) {
 ///
 /// \When co_emcy_start() is called
 ///
-/// \Then 0 is returned, the EMCY service is started and download indication
-///       functions for the 0x1003, 0x1014 and 0x1028 objects are set
+/// \Then the EMCY service is started and download indication functions for the
+///       0x1003, 0x1014 and 0x1028 objects are set
 ///       \Calls can_net_get_time()
 ///       \Calls co_dev_find_obj()
 ///       \Calls co_obj_set_dn_ind()
@@ -730,9 +724,8 @@ TEST_GROUP_BASE(CO_Emcy, CO_EmcyBase) {
 ///       \Calls co_obj_find_sub()
 ///       \Calls can_recv_start()
 TEST(CO_Emcy, CoEmcyStart_Nominal) {
-  const int ret = co_emcy_start(emcy);
+  co_emcy_start(emcy);
 
-  CHECK_EQUAL(0, ret);
   CHECK_FALSE(co_emcy_is_stopped(emcy));
   LelyUnitTest::CheckSubDnIndIsSet(dev, 0x1003u, emcy);
   LelyUnitTest::CheckSubDnIndIsSet(dev, 0x1014u, emcy);
@@ -785,7 +778,7 @@ TEST_GROUP_BASE(CO_EmcyProducerNoObj1003, CO_EmcyBase) {
     CHECK(emcy != nullptr);
 
     can_net_set_send_func(net, &EmcySend::Func, nullptr);
-    CHECK_EQUAL(0, co_emcy_start(emcy));
+    co_emcy_start(emcy);
 
     EmcySend::Clear();
   }
@@ -824,7 +817,7 @@ TEST_GROUP_BASE(CO_EmcyInhibitTime, CO_EmcyBase) {
     CHECK(emcy != nullptr);
 
     can_net_set_send_func(net, &EmcySend::Func, nullptr);
-    CHECK_EQUAL(0, co_emcy_start(emcy));
+    co_emcy_start(emcy);
 
     EmcySend::Clear();
   }
@@ -864,7 +857,7 @@ TEST_GROUP_BASE(CO_EmcyReceiver, CO_EmcyBase) {
     CHECK(emcy != nullptr);
 
     co_emcy_set_ind(emcy, &EmcyInd::Func, &data);
-    CHECK_EQUAL(0, co_emcy_start(emcy));
+    co_emcy_start(emcy);
   }
 
   TEST_TEARDOWN() {
@@ -1022,7 +1015,7 @@ TEST(CO_Emcy, CoEmcyPush_AtEmcyMessageLimit) {
 ///       \Calls can_net_send()
 TEST(CO_Emcy, CoEmcyPush_SendNullMsef) {
   can_net_set_send_func(net, &EmcySend::Func, nullptr);
-  CHECK_EQUAL(0, co_emcy_start(emcy));
+  co_emcy_start(emcy);
 
   const co_unsigned16_t eec = 0x1000u;
   const co_unsigned8_t er = 0x01u;
@@ -1056,7 +1049,7 @@ TEST(CO_Emcy, CoEmcyPush_SendNullMsef) {
 ///       \Calls can_net_send()
 TEST(CO_Emcy, CoEmcyPush_SendMsef) {
   can_net_set_send_func(net, &EmcySend::Func, nullptr);
-  CHECK_EQUAL(0, co_emcy_start(emcy));
+  co_emcy_start(emcy);
 
   const co_unsigned16_t eec = 0x1000u;
   const co_unsigned8_t er = 0x01u;
@@ -1091,7 +1084,7 @@ TEST(CO_Emcy, CoEmcyPush_SendMsef) {
 ///       \Calls can_net_send()
 TEST(CO_Emcy, CoEmcyPush_SendMultipleAtOnce) {
   can_net_set_send_func(net, &EmcySend::Func, nullptr);
-  CHECK_EQUAL(0, co_emcy_start(emcy));
+  co_emcy_start(emcy);
 
   CHECK_EQUAL(0, co_emcy_push(emcy, 0x1000u, 0x01u, nullptr));
   CHECK_EQUAL(0, co_emcy_push(emcy, 0x2000u, 0x01u, nullptr));
@@ -1117,7 +1110,7 @@ TEST(CO_Emcy, CoEmcyPush_SendInvalidCobidEmcy) {
   co_obj_set_val_u32(obj1014->Get(), 0x00u,
                      PRODUCER_CANID | CO_EMCY_COBID_VALID);
   can_net_set_send_func(net, &EmcySend::Func, nullptr);
-  CHECK_EQUAL(0, co_emcy_start(emcy));
+  co_emcy_start(emcy);
 
   const auto ret = co_emcy_push(emcy, 0x1000u, 0x01u, nullptr);
 
@@ -1151,7 +1144,7 @@ TEST(CO_Emcy, CoEmcyPush_SendExtendedId) {
   const co_unsigned32_t eid = PRODUCER_CANID | (1 << 28u);
   co_obj_set_val_u32(obj1014->Get(), 0x00u, eid | CO_EMCY_COBID_FRAME);
   can_net_set_send_func(net, &EmcySend::Func, nullptr);
-  CHECK_EQUAL(0, co_emcy_start(emcy));
+  co_emcy_start(emcy);
 
   const auto ret = co_emcy_push(emcy, 0x1000u, 0x01u, nullptr);
 
@@ -1188,7 +1181,7 @@ TEST(CO_Emcy, CoEmcyPush_EmptyObj1003_SendAndSetErrorRegister) {
   while (!obj1003->GetSubs().empty()) obj1003->RemoveAndDestroyLastSub();
 
   can_net_set_send_func(net, &EmcySend::Func, nullptr);
-  CHECK_EQUAL(0, co_emcy_start(emcy));
+  co_emcy_start(emcy);
 
   const co_unsigned16_t eec = 0x1000u;
   const co_unsigned8_t er = 0x01u;
@@ -1484,7 +1477,7 @@ TEST(CO_Emcy, CoEmcyClear_MultipleErrors) {
 /// \Then 0 is returned, no EMCY message is sent
 TEST(CO_Emcy, CoEmcyClear_NotSentOnEmptyErrorStack) {
   can_net_set_send_func(net, &EmcySend::Func, nullptr);
-  CHECK_EQUAL(0, co_emcy_start(emcy));
+  co_emcy_start(emcy);
 
   const auto ret = co_emcy_clear(emcy);
 
@@ -1515,7 +1508,7 @@ TEST(CO_Emcy, CoEmcyClear_NotSentOnEmptyErrorStack) {
 ///       \Calls can_net_send()
 TEST(CO_Emcy, CoEmcyClear_SendResetMessage) {
   can_net_set_send_func(net, &EmcySend::Func, nullptr);
-  CHECK_EQUAL(0, co_emcy_start(emcy));
+  co_emcy_start(emcy);
 
   CHECK_EQUAL(0, co_emcy_push(emcy, 0x1000u, 0x01u, nullptr));
   CHECK_EQUAL(0, co_emcy_push(emcy, 0x2000u, 0x02u, nullptr));
@@ -1634,7 +1627,7 @@ TEST(CO_Emcy, CoEmcyPop_MultipleErrors) {
 ///       \Calls co_emcy_peek()
 TEST(CO_Emcy, CoEmcyPop_NotSentOnEmptyErrorStack) {
   can_net_set_send_func(net, &EmcySend::Func, nullptr);
-  CHECK_EQUAL(0, co_emcy_start(emcy));
+  co_emcy_start(emcy);
 
   const auto ret = co_emcy_pop(emcy, nullptr, nullptr);
 
@@ -1672,7 +1665,7 @@ TEST(CO_Emcy, CoEmcyPop_NotSentOnEmptyErrorStack) {
 ///       \Calls can_net_send()
 TEST(CO_Emcy, CoEmcyPop_SendAfterPoppingOne) {
   can_net_set_send_func(net, &EmcySend::Func, nullptr);
-  CHECK_EQUAL(0, co_emcy_start(emcy));
+  co_emcy_start(emcy);
 
   CHECK_EQUAL(0, co_emcy_push(emcy, 0x1000u, 0x01u, nullptr));
   CHECK_EQUAL(0, co_emcy_push(emcy, 0x2000u, 0x02u, nullptr));
@@ -1711,7 +1704,7 @@ TEST(CO_Emcy, CoEmcyPop_SendAfterPoppingOne) {
 ///       \Calls can_net_send()
 TEST(CO_Emcy, CoEmcyPop_SendAfterPoppingLast) {
   can_net_set_send_func(net, &EmcySend::Func, nullptr);
-  CHECK_EQUAL(0, co_emcy_start(emcy));
+  co_emcy_start(emcy);
 
   CHECK_EQUAL(0, co_emcy_push(emcy, 0x1000u, 0x01u, nullptr));
   EmcySend::Clear();

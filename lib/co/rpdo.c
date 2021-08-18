@@ -211,13 +211,13 @@ co_rpdo_destroy(co_rpdo_t *rpdo)
 	}
 }
 
-int
+void
 co_rpdo_start(co_rpdo_t *pdo)
 {
 	assert(pdo);
 
 	if (!pdo->stopped)
-		return 0;
+		return;
 
 	co_obj_t *obj_1400 = co_dev_find_obj(pdo->dev, 0x1400 + pdo->num - 1);
 	assert(obj_1400);
@@ -242,8 +242,6 @@ co_rpdo_start(co_rpdo_t *pdo)
 	co_rpdo_init_recv(pdo);
 
 	pdo->stopped = false;
-
-	return 0;
 }
 
 void

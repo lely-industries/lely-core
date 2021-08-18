@@ -174,13 +174,13 @@ co_sync_destroy(co_sync_t *sync)
 	}
 }
 
-int
+void
 co_sync_start(co_sync_t *sync)
 {
 	assert(sync);
 
 	if (!sync->stopped)
-		return 0;
+		return;
 
 	co_obj_t *obj_1005 = co_dev_find_obj(sync->dev, 0x1005);
 	// Retrieve the COB-ID.
@@ -207,8 +207,6 @@ co_sync_start(co_sync_t *sync)
 	co_sync_update(sync);
 
 	sync->stopped = false;
-
-	return 0;
 }
 
 void

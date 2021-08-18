@@ -455,7 +455,8 @@ Sdo::Impl_::Impl_(can_net_t* net, co_dev_t* dev, uint8_t num)
 #else
     : sdo(co_csdo_create(net, dev, num),
           [=](co_csdo_t* sdo) noexcept { co_csdo_destroy(sdo); }) {
-  if (!sdo || co_csdo_start(sdo.get()) == -1) util::throw_errc("Sdo");
+  if (!sdo) util::throw_errc("Sdo");
+  co_csdo_start(sdo.get());
   sllist_init(&queue);
 #endif
 }

@@ -88,12 +88,9 @@ void co_sync_destroy(co_sync_t *sync);
  *
  * @post on success, co_sync_is_stopped() returns <b>false</b>.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error code can
- * be obtained with get_errc().
- *
  * @see co_sync_stop()
  */
-int co_sync_start(co_sync_t *sync);
+void co_sync_start(co_sync_t *sync);
 
 /**
  * Stops a SYNC service.

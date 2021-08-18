@@ -270,7 +270,7 @@ TEST_GROUP_BASE(CO_Sync, CO_SyncBase) {
     co_sync_set_ind(sync, ind, nullptr);
   }
 
-  void StartSYNC() { CHECK_EQUAL(0, co_sync_start(sync)); }
+  void StartSYNC() { co_sync_start(sync); }
 
   TEST_SETUP() {
     TEST_BASE_SETUP();
@@ -412,8 +412,8 @@ TEST(CO_Sync, CoSyncSetErr) {
 ///
 /// \When co_sync_start() is called
 ///
-/// \Then 0 is returned, the SYNC service is started and download indication
-///       function for the 0x1005 object is set
+/// \Then the SYNC service is started and download indication function for the
+///       0x1005 object is set
 ///       \Calls co_dev_find_obj()
 ///       \Calls co_obj_get_val_u32()
 ///       \Calls co_obj_set_dn_ind()
@@ -422,9 +422,8 @@ TEST(CO_Sync, CoSyncSetErr) {
 TEST(CO_Sync, CoSyncStart_NoObj1006NoObj1019) {
   SetCobid(DEV_ID);
 
-  const auto ret = co_sync_start(sync);
+  co_sync_start(sync);
 
-  CHECK_EQUAL(0, ret);
   CHECK_FALSE(co_sync_is_stopped(sync));
   CheckSubDnIndIsSet(0x1005u);
 }
@@ -434,8 +433,8 @@ TEST(CO_Sync, CoSyncStart_NoObj1006NoObj1019) {
 ///
 /// \When co_sync_start() is called
 ///
-/// \Then 0 is returned, the SYNC service is started and download indication
-///       functions for the 0x1005, 0x1006 and 0x1019 objects are set
+/// \Then the SYNC service is started and download indication functions for the
+///       0x1005, 0x1006 and 0x1019 objects are set
 ///       \Calls co_dev_find_obj()
 ///       \Calls co_obj_get_val_u32()
 ///       \Calls co_obj_get_val_u8()
@@ -447,9 +446,8 @@ TEST(CO_Sync, CoSyncStart_Nominal) {
   CreateObj1006AndSetPeriod(0x01u);
   CreateObj1019AndSetCntOverflow(0x01u);
 
-  const auto ret = co_sync_start(sync);
+  co_sync_start(sync);
 
-  CHECK_EQUAL(0, ret);
   CHECK_FALSE(co_sync_is_stopped(sync));
   CheckSubDnIndIsSet(0x1005u);
   CheckSubDnIndIsSet(0x1006u);
@@ -461,16 +459,16 @@ TEST(CO_Sync, CoSyncStart_Nominal) {
 ///
 /// \When co_sync_start() is called
 ///
-/// \Then 0 is returned, nothing is chnaged
+/// \Then nothing is changed
 TEST(CO_Sync, CoSyncStart_AlreadyStarted) {
   SetCobid(DEV_ID);
   CreateObj1006AndSetPeriod(0x01u);
   CreateObj1019AndSetCntOverflow(0x01u);
+  co_sync_start(sync);
 
   co_sync_start(sync);
-  const auto ret = co_sync_start(sync);
 
-  CHECK_EQUAL(0, ret);
+  CHECK(!co_sync_is_stopped(sync));
 }
 
 ///@}
@@ -507,9 +505,9 @@ TEST(CO_Sync, CoSyncIsStopped_BeforeAfterStart) {
 ///
 /// \When co_sync_start() is called
 ///
-/// \Then 0 is returned, the SYNC service is started, download indication
-///       functions for the 0x1005 and 0x1006 objects are set, SYNC service has
-///       started cycle period timer and disabled network receiver
+/// \Then the SYNC service is started, download indication functions for the
+///       0x1005 and 0x1006 objects are set, SYNC service has started cycle
+///       period timer and disabled network receiver
 ///       \Calls co_dev_find_obj()
 ///       \Calls co_obj_get_val_u32()
 ///       \Calls co_obj_set_dn_ind()
@@ -519,9 +517,8 @@ TEST(CO_Sync, CoSyncStart_IsProducer) {
   SetCobid(DEV_ID | CO_SYNC_COBID_PRODUCER);
   CreateObj1006AndSetPeriod(0x01u);
 
-  const auto ret = co_sync_start(sync);
+  co_sync_start(sync);
 
-  CHECK_EQUAL(0, ret);
   CHECK_FALSE(co_sync_is_stopped(sync));
   CheckSubDnIndIsSet(0x1005u);
   CheckSubDnIndIsSet(0x1006u);
@@ -533,10 +530,9 @@ TEST(CO_Sync, CoSyncStart_IsProducer) {
 ///
 /// \When co_sync_start() is called
 ///
-/// \Then 0 is returned, the SYNC service is started, download indication
-///       functions for the 0x1005 and 0x1006 objects are set, SYNC service has
-///       started receiving SYNC messages using the CAN Extended Format 29-bit
-///       identifier
+/// \Then the SYNC service is started, download indication functions for the
+///       0x1005 and 0x1006 objects are set, SYNC service has started receiving
+///       SYNC messages using the CAN Extended Format 29-bit identifier
 ///       \Calls co_dev_find_obj()
 ///       \Calls co_obj_get_val_u32()
 ///       \Calls co_obj_set_dn_ind()
@@ -546,9 +542,8 @@ TEST(CO_Sync, CoSyncStart_FrameBitSet) {
   SetCobid(DEV_ID | CO_SYNC_COBID_FRAME);
   CreateObj1006AndSetPeriod(0x01u);
 
-  const auto ret = co_sync_start(sync);
+  co_sync_start(sync);
 
-  CHECK_EQUAL(0, ret);
   CHECK_FALSE(co_sync_is_stopped(sync));
   CheckSubDnIndIsSet(0x1005u);
   CheckSubDnIndIsSet(0x1006u);
@@ -560,10 +555,10 @@ TEST(CO_Sync, CoSyncStart_FrameBitSet) {
 ///
 /// \When co_sync_start() is called
 ///
-/// \Then 0 is returned, the SYNC service is started, download indication
-///       functions for the 0x1005 and 0x1006 objects are set, SYNC service has
-///       disabled cycle period timer and disabled network receiver i.e. cannot
-///       produce SYNC messages
+/// \Then the SYNC service is started, download indication functions for the
+///       0x1005 and 0x1006 objects are set, SYNC service has disabled cycle
+///       period timer and disabled network receiver i.e. cannot produce SYNC
+///       messages
 ///       \Calls co_dev_find_obj()
 ///       \Calls co_obj_get_val_u32()
 ///       \Calls co_obj_set_dn_ind()
@@ -574,9 +569,8 @@ TEST(CO_Sync, CoSyncStart_PeriodValueZero) {
   CreateObj1006AndSetPeriod(0x00u);
   SyncSetSendSetInd(CanSend::Func, nullptr);
 
-  const auto ret = co_sync_start(sync);
+  co_sync_start(sync);
 
-  CHECK_EQUAL(0, ret);
   CHECK_FALSE(co_sync_is_stopped(sync));
   CheckSubDnIndIsSet(0x1005u);
   CheckSubDnIndIsSet(0x1006u);

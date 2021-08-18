@@ -108,12 +108,9 @@ void co_time_destroy(co_time_t *time);
  *
  * @post on success, co_time_is_stopped() returns <b>false</b>.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error code can
- * be obtained with get_errc().
- *
  * @see co_time_stop()
  */
-int co_time_start(co_time_t *time);
+void co_time_start(co_time_t *time);
 
 /**
  * Stops a TIME service. This function invokes co_time_stop_prod() to stop the

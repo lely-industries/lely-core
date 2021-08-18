@@ -88,7 +88,7 @@ TEST_GROUP(CO_EmcySdo) {
 
   void RestartEMCY() {
     co_emcy_stop(emcy);
-    CHECK_EQUAL(0, co_emcy_start(emcy));
+    co_emcy_start(emcy);
   }
 
   static void CheckDnConAbortCode(const co_unsigned16_t obj_idx,
@@ -122,7 +122,7 @@ TEST_GROUP(CO_EmcySdo) {
 
     CoCsdoDnCon::Clear();
 
-    CHECK_EQUAL(0, co_emcy_start(emcy));
+    co_emcy_start(emcy);
   }
 
   TEST_TEARDOWN() {

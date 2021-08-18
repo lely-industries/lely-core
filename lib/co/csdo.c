@@ -939,13 +939,13 @@ co_csdo_destroy(co_csdo_t *csdo)
 	}
 }
 
-int
+void
 co_csdo_start(co_csdo_t *sdo)
 {
 	assert(sdo);
 
 	if (!co_csdo_is_stopped(sdo))
-		return 0;
+		return;
 
 	if (sdo->dev) {
 		co_obj_t *obj_1280 = co_dev_find_obj(
@@ -962,8 +962,6 @@ co_csdo_start(co_csdo_t *sdo)
 	co_csdo_enter(sdo, co_csdo_wait_state);
 
 	co_csdo_update(sdo);
-
-	return 0;
 }
 
 void

@@ -89,12 +89,9 @@ void co_rpdo_destroy(co_rpdo_t *pdo);
  *
  * @post on success, co_rpdo_is_stopped() returns <b>false</b>.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error code can
- * be obtained with get_errc().
- *
  * @see co_rpdo_stop()
  */
-int co_rpdo_start(co_rpdo_t *pdo);
+void co_rpdo_start(co_rpdo_t *pdo);
 
 /**
  * Stops a Receive-PDO service.

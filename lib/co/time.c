@@ -202,13 +202,13 @@ co_time_destroy(co_time_t *time)
 	}
 }
 
-int
+void
 co_time_start(co_time_t *time)
 {
 	assert(time);
 
 	if (!time->stopped)
-		return 0;
+		return;
 
 	co_obj_t *obj_1012 = co_dev_find_obj(time->dev, 0x1012);
 	// Retrieve the TIME COB-ID.
@@ -221,8 +221,6 @@ co_time_start(co_time_t *time)
 	co_time_update(time);
 
 	time->stopped = false;
-
-	return 0;
 }
 
 void
