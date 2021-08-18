@@ -34,15 +34,23 @@
 #include <lely/co/rpdo.h>
 #include <lely/co/sdo.h>
 #include <lely/util/error.h>
+#include <lely/util/time.h>
 
 #include <libtest/allocators/default.hpp>
 #include <libtest/allocators/limited.hpp>
 #include <libtest/tools/lely-cpputest-ext.hpp>
 #include <libtest/tools/lely-unit-test.hpp>
+#include <libtest/tools/can-send.hpp>
+#include <libtest/tools/co-rpdo-err.hpp>
+#include <libtest/tools/co-rpdo-ind.hpp>
 
 #include "holder/dev.hpp"
 #include "holder/obj.hpp"
 #include "holder/sub.hpp"
+
+#include "obj-init/rpdo-comm-par.hpp"
+#include "obj-init/rpdo-map-par.hpp"
+#include "obj-init/sync-window-length.hpp"
 
 TEST_BASE(CO_RpdoBase) {
   TEST_BASE_SUPER(CO_RpdoBase);
@@ -51,52 +59,21 @@ TEST_BASE(CO_RpdoBase) {
   const co_unsigned16_t RPDO_NUM = 0x0001u;
 
   can_net_t* net = nullptr;
-
   co_dev_t* dev = nullptr;
+
   std::unique_ptr<CoDevTHolder> dev_holder;
   std::unique_ptr<CoObjTHolder> obj1007;
   std::unique_ptr<CoObjTHolder> obj1400;
   std::unique_ptr<CoObjTHolder> obj1600;
-  std::unique_ptr<CoObjTHolder> obj2000;
+  std::unique_ptr<CoObjTHolder> obj2020;
 
   Allocators::Default allocator;
 
-  // obj 0x1400, sub 0x00 - highest sub-index supported
-  void SetComm00HighestSubidxSupported(const co_unsigned8_t max_subidx) {
-    obj1400->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, max_subidx);
-  }
-
-  // obj 0x1400, sub 0x01 - COB-ID used by RPDO
-  void SetComm01CobId(const co_unsigned32_t cobid) {
-    obj1400->InsertAndSetSub(0x01u, CO_DEFTYPE_UNSIGNED32, cobid);
-  }
-
-  // obj 0x1400, sub 0x02 - transmission type
-  void SetComm02TransmissionType(const co_unsigned8_t type) {
-    obj1400->InsertAndSetSub(0x02u, CO_DEFTYPE_UNSIGNED8, type);
-  }
-
-  void SetComm02SynchronousTransmission() { SetComm02TransmissionType(0x00); }
-  void SetComm02EventDrivenTransmission() { SetComm02TransmissionType(0xfeu); }
-
-  // obj 0x1400, sub 0x03 - inhibit time, in multiples of 100 microseconds
-  void SetComm03InhibitTime(const co_unsigned16_t inhibit_time) {
-    obj1400->InsertAndSetSub(0x03u, CO_DEFTYPE_UNSIGNED16, inhibit_time);
-  }
-
-  // obj 0x1400, sub 0x04 - compatibility entry, reserved and unused
-  void SetComm04CompatibilityEntry(const co_unsigned8_t compat_entry) {
-    obj1400->InsertAndSetSub(0x04u, CO_DEFTYPE_UNSIGNED8, compat_entry);
-  }
-
-  // obj 0x1400, sub 0x05 - event-timer, in milliseconds
-  void SetComm05EventTimer(const co_unsigned16_t timer) {
-    obj1400->InsertAndSetSub(0x05u, CO_DEFTYPE_UNSIGNED16, timer);
-  }
-
-  // obj 0x1400, sub 0x06 - SYNC start value, not used
-  void SetComm06SyncStartValue(const co_unsigned8_t sync_start) {
-    obj1400->InsertAndSetSub(0x06u, CO_DEFTYPE_UNSIGNED8, sync_start);
+  void AdvanceTimeMs(const uint32_t ms) {
+    timespec ts = {0, 0};
+    can_net_get_time(net, &ts);
+    timespec_add_msec(&ts, ms);
+    can_net_set_time(net, &ts);
   }
 
   TEST_SETUP() {
@@ -124,22 +101,23 @@ TEST_GROUP_BASE(CO_RpdoCreate, CO_RpdoBase) {
   }
 };
 
-/// @name co_rpdo_destroy()
-///@{
-
-TEST(CO_RpdoCreate, CoRpdoDestroy_Null) { co_rpdo_destroy(nullptr); }
-
-///@}
-
 /// @name co_rpdo_create()
 ///@{
 
-TEST(CO_RpdoCreate, CoRpdoCreate_MissingObject) {
-  rpdo = co_rpdo_create(net, dev, RPDO_NUM);
-
-  POINTERS_EQUAL(nullptr, rpdo);
-}
-
+/// \Given initialized device (co_dev_t) and network (can_net_t)
+///
+/// \When co_rpdo_create() is called with pointers to the network and the
+///       device, and an RPDO number equal to zero
+///
+/// \Then a null pointer is returned, the error number is set to ERRNUM_INVAL,
+///       the RPDO service is not created
+///       \Calls mem_alloc()
+///       \Calls can_net_get_alloc()
+///       \Calls co_rpdo_alignof()
+///       \Calls co_rpdo_sizeof()
+///       \Calls errnum2c()
+///       \Calls set_errc()
+///       \Calls co_rpdo_free()
 TEST(CO_RpdoCreate, CoRpdoCreate_ZeroNum) {
   rpdo = co_rpdo_create(net, dev, 0);
 
@@ -147,22 +125,69 @@ TEST(CO_RpdoCreate, CoRpdoCreate_ZeroNum) {
   CHECK_EQUAL(ERRNUM_INVAL, get_errnum());
 }
 
-TEST(CO_RpdoCreate, CoRpdoCreate_InvalidNum) {
+/// \Given initialized device (co_dev_t) and network (can_net_t)
+///
+/// \When co_rpdo_create() is called with pointers to the network and the
+///       device, and an RPDO number larger than CO_NUM_PDOS
+///
+/// \Then a null pointer is returned, the error number is set to ERRNUM_INVAL,
+///       the RPDO service is not created
+///       \Calls mem_alloc()
+///       \Calls can_net_get_alloc()
+///       \Calls co_rpdo_alignof()
+///       \Calls co_rpdo_sizeof()
+///       \Calls errnum2c()
+///       \Calls set_errc()
+///       \Calls co_rpdo_free()
+TEST(CO_RpdoCreate, CoRpdoCreate_NumOverMax) {
   rpdo = co_rpdo_create(net, dev, CO_NUM_PDOS + 1u);
 
   POINTERS_EQUAL(nullptr, rpdo);
   CHECK_EQUAL(ERRNUM_INVAL, get_errnum());
 }
 
-TEST(CO_RpdoCreate, CoRpdoCreate_NoRPDOParameters) {
+/// \Given initialized device (co_dev_t) and network (can_net_t), the object
+///        dictionary does not contain required objects
+///
+/// \When co_rpdo_create() is called with pointers to the network and the
+///       device, and an RPDO number
+///
+/// \Then a null pointer is returned, the error number is set to ERRNUM_INVAL,
+///       the RPDO service is not created
+///       \Calls mem_alloc()
+///       \Calls can_net_get_alloc()
+///       \Calls co_rpdo_alignof()
+///       \Calls co_rpdo_sizeof()
+///       \Calls co_dev_find_obj()
+///       \Calls errnum2c()
+///       \Calls set_errc()
+///       \Calls co_rpdo_free()
+TEST(CO_RpdoCreate, CoRpdoCreate_NoRpdoParameters) {
   rpdo = co_rpdo_create(net, dev, RPDO_NUM);
 
   POINTERS_EQUAL(nullptr, rpdo);
   CHECK_EQUAL(ERRNUM_INVAL, get_errnum());
 }
 
-TEST(CO_RpdoCreate, CoRpdoCreate_NoRPDOMappingParamRecord) {
-  dev_holder->CreateAndInsertObj(obj1400, 0x1400u);
+/// \Given initialized device (co_dev_t) and network (can_net_t), the object
+///        dictionary contains only the RPDO communication parameter (0x1400)
+///        object
+///
+/// \When co_rpdo_create() is called with pointers to the network and the
+///       device, and an RPDO number
+///
+/// \Then a null pointer is returned, the error number is set to ERRNUM_INVAL,
+///       the RPDO service is not created
+///       \Calls mem_alloc()
+///       \Calls can_net_get_alloc()
+///       \Calls co_rpdo_alignof()
+///       \Calls co_rpdo_sizeof()
+///       \Calls co_dev_find_obj()
+///       \Calls errnum2c()
+///       \Calls set_errc()
+///       \Calls co_rpdo_free()
+TEST(CO_RpdoCreate, CoRpdoCreate_NoRpdoMappingParam) {
+  dev_holder->CreateObj<Obj1400RpdoCommPar>(obj1400);
 
   rpdo = co_rpdo_create(net, dev, RPDO_NUM);
 
@@ -170,8 +195,24 @@ TEST(CO_RpdoCreate, CoRpdoCreate_NoRPDOMappingParamRecord) {
   CHECK_EQUAL(ERRNUM_INVAL, get_errnum());
 }
 
-TEST(CO_RpdoCreate, CoRpdoCreate_NoRPDOCommParamRecord) {
-  dev_holder->CreateAndInsertObj(obj1600, 0x1600u);
+/// \Given initialized device (co_dev_t) and network (can_net_t), the object
+///        dictionary contains only the RPDO mapping parameter (0x1600) object
+///
+/// \When co_rpdo_create() is called with pointers to the network and the
+///       device, and an RPDO number
+///
+/// \Then a null pointer is returned, the error number is set to ERRNUM_INVAL,
+///       the RPDO service is not created
+///       \Calls mem_alloc()
+///       \Calls can_net_get_alloc()
+///       \Calls co_rpdo_alignof()
+///       \Calls co_rpdo_sizeof()
+///       \Calls co_dev_find_obj()
+///       \Calls errnum2c()
+///       \Calls set_errc()
+///       \Calls co_rpdo_free()
+TEST(CO_RpdoCreate, CoRpdoCreate_NoRpdoCommParam) {
+  dev_holder->CreateObj<Obj1600RpdoMapPar>(obj1600);
 
   rpdo = co_rpdo_create(net, dev, RPDO_NUM);
 
@@ -179,9 +220,30 @@ TEST(CO_RpdoCreate, CoRpdoCreate_NoRPDOCommParamRecord) {
   CHECK_EQUAL(ERRNUM_INVAL, get_errnum());
 }
 
+/// \Given initialized device (co_dev_t) and network (can_net_t), the object
+///        dictionary contains the RPDO communication parameter (0x1400) and
+///        the RPDO mapping parameter (0x1600) objects
+///
+/// \When co_rpdo_create() is called with pointers to the network and the
+///       device, and an RPDO number
+///
+/// \Then a pointer to the created RPDO service is returned, the service is
+///       stopped and configured with the default values
+///       \Calls mem_alloc()
+///       \Calls can_net_get_alloc()
+///       \Calls co_rpdo_alignof()
+///       \Calls co_rpdo_sizeof()
+///       \Calls co_dev_find_obj()
+///       \Calls memset()
+///       \Calls can_recv_create()
+///       \Calls co_rpdo_get_alloc()
+///       \Calls can_recv_set_func()
+///       \Calls can_timer_create()
+///       \Calls can_timer_set_func()
+///       \Calls co_sdo_req_init()
 TEST(CO_RpdoCreate, CoRpdoCreate_MinimalRPDO) {
-  dev_holder->CreateAndInsertObj(obj1400, 0x1400u);
-  dev_holder->CreateAndInsertObj(obj1600, 0x1600u);
+  dev_holder->CreateObj<Obj1400RpdoCommPar>(obj1400);
+  dev_holder->CreateObj<Obj1600RpdoMapPar>(obj1600);
 
   rpdo = co_rpdo_create(net, dev, RPDO_NUM);
 
@@ -189,6 +251,7 @@ TEST(CO_RpdoCreate, CoRpdoCreate_MinimalRPDO) {
   POINTERS_EQUAL(net, co_rpdo_get_net(rpdo));
   POINTERS_EQUAL(dev, co_rpdo_get_dev(rpdo));
   CHECK_EQUAL(RPDO_NUM, co_rpdo_get_num(rpdo));
+  CHECK_TRUE(co_rpdo_is_stopped(rpdo));
 
   const auto* const comm = co_rpdo_get_comm_par(rpdo);
   CHECK_EQUAL(0, comm->n);
@@ -199,9 +262,200 @@ TEST(CO_RpdoCreate, CoRpdoCreate_MinimalRPDO) {
   CHECK_EQUAL(0, comm->event);
   CHECK_EQUAL(0, comm->sync);
 
-  const auto* const map = co_rpdo_get_map_par(rpdo);
-  CHECK_EQUAL(0, map->n);
-  for (size_t i = 0; i < CO_PDO_NUM_MAPS; ++i) CHECK_EQUAL(0, map->map[i]);
+  const auto* const map_par = co_rpdo_get_map_par(rpdo);
+  CHECK_EQUAL(0, map_par->n);
+  for (size_t i = 0; i < CO_PDO_NUM_MAPS; ++i) CHECK_EQUAL(0, map_par->map[i]);
+}
+
+/// \Given initialized device (co_dev_t) and network (can_net_t), the object
+///        dictionary contains the RPDO communication parameter (0x15ff) and
+///        the RPDO mapping parameter (0x17ff) objects
+///
+/// \When co_rpdo_create() is called with pointers to the network and the
+///       device, and the maximum RPDO number
+///
+/// \Then a pointer to the created RPDO service is returned, the service is
+///       stopped and configured with the default values
+///       \Calls mem_alloc()
+///       \Calls can_net_get_alloc()
+///       \Calls co_rpdo_alignof()
+///       \Calls co_rpdo_sizeof()
+///       \Calls co_dev_find_obj()
+///       \Calls memset()
+///       \Calls can_recv_create()
+///       \Calls co_rpdo_get_alloc()
+///       \Calls can_recv_set_func()
+///       \Calls can_timer_create()
+///       \Calls can_timer_set_func()
+///       \Calls co_sdo_req_init()
+TEST(CO_RpdoCreate, CoRpdoCreate_MinimalRPDO_MaxNum) {
+  const co_unsigned16_t MAX_RPDO_NUM = 0x0200u;
+
+  dev_holder->CreateObj<Obj1400RpdoCommPar>(obj1400, 0x15ffu);
+  dev_holder->CreateObj<Obj1600RpdoMapPar>(obj1600, 0x17ffu);
+
+  rpdo = co_rpdo_create(net, dev, MAX_RPDO_NUM);
+
+  CHECK(rpdo != nullptr);
+  POINTERS_EQUAL(net, co_rpdo_get_net(rpdo));
+  POINTERS_EQUAL(dev, co_rpdo_get_dev(rpdo));
+  CHECK_EQUAL(MAX_RPDO_NUM, co_rpdo_get_num(rpdo));
+  CHECK_TRUE(co_rpdo_is_stopped(rpdo));
+
+  const auto* const comm = co_rpdo_get_comm_par(rpdo);
+  CHECK_EQUAL(0, comm->n);
+  CHECK_EQUAL(0, comm->cobid);
+  CHECK_EQUAL(0, comm->trans);
+  CHECK_EQUAL(0, comm->inhibit);
+  CHECK_EQUAL(0, comm->reserved);
+  CHECK_EQUAL(0, comm->event);
+  CHECK_EQUAL(0, comm->sync);
+
+  const auto* const map_par = co_rpdo_get_map_par(rpdo);
+  CHECK_EQUAL(0, map_par->n);
+  for (size_t i = 0; i < CO_PDO_NUM_MAPS; ++i) CHECK_EQUAL(0, map_par->map[i]);
+}
+
+///@}
+
+/// @name co_rpdo_destroy()
+///@{
+
+/// \Given N/A
+///
+/// \When co_rpdo_destroy() is called with a null RPDO service pointer
+///
+/// \Then nothing is changed
+TEST(CO_RpdoCreate, CoRpdoDestroy_Null) { co_rpdo_destroy(nullptr); }
+
+/// \Given a pointer to an initialized RPDO service (co_rpdo_t)
+///
+/// \When co_rpdo_destroy() is called with a pointer to the service
+///
+/// \Then the service is finalized and freed
+///       \Calls co_rpdo_stop()
+///       \Calls co_sdo_req_fini()
+///       \Calls can_timer_destroy()
+///       \Calls can_recv_destroy()
+///       \Calls mem_free()
+///       \Calls co_rpdo_get_alloc()
+TEST(CO_RpdoCreate, CoRpdoDestroy_Nominal) {
+  dev_holder->CreateObj<Obj1400RpdoCommPar>(obj1400);
+  dev_holder->CreateObj<Obj1600RpdoMapPar>(obj1600);
+  rpdo = co_rpdo_create(net, dev, RPDO_NUM);
+  CHECK(rpdo != nullptr);
+
+  co_rpdo_destroy(rpdo);
+  rpdo = nullptr;
+}
+
+///@}
+
+TEST_GROUP_BASE(CO_Rpdo, CO_RpdoBase) {
+  static const co_unsigned16_t PDO_MAPPED_IDX = 0x2020u;
+  static const co_unsigned8_t PDO_MAPPED_SUBIDX = 0x00u;
+
+  co_rpdo_t* rpdo = nullptr;
+
+  int32_t ind_data = 0;
+  int32_t err_data = 0;
+
+  void CreateRpdo() {
+    rpdo = co_rpdo_create(net, dev, RPDO_NUM);
+    CHECK(rpdo != nullptr);
+    CHECK(co_rpdo_is_stopped(rpdo));
+  }
+
+  void StartRpdo() {
+    co_rpdo_set_ind(rpdo, CoRpdoInd::Func, &ind_data);
+    co_rpdo_set_err(rpdo, CoRpdoErr::Func, &err_data);
+
+    CHECK(co_rpdo_is_stopped(rpdo));
+    CHECK_EQUAL(0, co_rpdo_start(rpdo));
+    CHECK_FALSE(co_rpdo_is_stopped(rpdo));
+  }
+
+  void SetupRpdo(const co_unsigned32_t cobid,
+                 const co_unsigned8_t transmission =
+                     Obj1400RpdoCommPar::SYNCHRONOUS_TRANSMISSION) {
+    obj1400->EmplaceSub<Obj1400RpdoCommPar::Sub00HighestSubidxSupported>();
+    obj1400->EmplaceSub<Obj1400RpdoCommPar::Sub01CobId>(cobid);
+    obj1400->EmplaceSub<Obj1400RpdoCommPar::Sub02TransmissionType>(
+        transmission);
+
+    obj1600->EmplaceSub<Obj1600RpdoMapPar::Sub00NumOfMappedObjs>(0x01u);
+    obj1600->EmplaceSub<Obj1600RpdoMapPar::SubNthAppObject>(
+        0x01u, Obj1600RpdoMapPar::MakeMappingParam(PDO_MAPPED_IDX,
+                                                   PDO_MAPPED_SUBIDX, 0x40u));
+
+    dev_holder->CreateAndInsertObj(obj2020, PDO_MAPPED_IDX);
+    obj2020->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED64, co_unsigned64_t{0});
+    co_sub_set_pdo_mapping(obj2020->GetLastSub(), true);
+  }
+
+  can_msg CreatePdoMsg_U64(const co_unsigned64_t val) const {
+    assert(CAN_MSG_MAX_LEN >= sizeof(val));
+
+    can_msg msg = CAN_MSG_INIT;
+    msg.id = DEV_ID;
+    msg.len = sizeof(val);
+    memcpy(msg.data, &val, msg.len);
+
+    return msg;
+  }
+
+  TEST_SETUP() {
+    TEST_BASE_SETUP();
+
+    dev_holder->CreateObj<Obj1400RpdoCommPar>(obj1400);
+    dev_holder->CreateObj<Obj1600RpdoMapPar>(obj1600);
+
+    can_net_set_send_func(net, CanSend::Func, nullptr);
+  }
+
+  TEST_TEARDOWN() {
+    CanSend::Clear();
+    CoRpdoInd::Clear();
+    CoRpdoErr::Clear();
+
+    co_rpdo_destroy(rpdo);
+    TEST_BASE_TEARDOWN();
+  }
+};
+
+/// @name co_rpdo_start()
+///@{
+
+/// \Given a pointer to an initialized RPDO service (co_rpdo_t)
+///
+/// \When co_rpdo_start() is called
+///
+/// \Then the service is started and configured with the default values
+///       \Calls co_dev_find_obj()
+///       \Calls co_obj_addressof_val()
+///       \Calls co_obj_sizeof_val()
+///       \Calls co_obj_set_dn_ind()
+///       \Calls can_recv_start()
+TEST(CO_Rpdo, CoRpdoStart_Nominal) {
+  CreateRpdo();
+
+  const auto ret = co_rpdo_start(rpdo);
+
+  CHECK_EQUAL(0, ret);
+  CHECK_FALSE(co_rpdo_is_stopped(rpdo));
+
+  const auto* const comm = co_rpdo_get_comm_par(rpdo);
+  CHECK_EQUAL(0, comm->n);
+  CHECK_EQUAL(0, comm->cobid);
+  CHECK_EQUAL(0, comm->trans);
+  CHECK_EQUAL(0, comm->inhibit);
+  CHECK_EQUAL(0, comm->reserved);
+  CHECK_EQUAL(0, comm->event);
+  CHECK_EQUAL(0, comm->sync);
+
+  const auto* const map_par = co_rpdo_get_map_par(rpdo);
+  CHECK_EQUAL(0, map_par->n);
+  for (size_t i = 0; i < CO_PDO_NUM_MAPS; ++i) CHECK_EQUAL(0, map_par->map[i]);
 
   co_rpdo_ind_t* pind = nullptr;
   void* pdata = nullptr;
@@ -216,109 +470,130 @@ TEST(CO_RpdoCreate, CoRpdoCreate_MinimalRPDO) {
   FUNCTIONPOINTERS_EQUAL(nullptr, perrdata);
 }
 
-TEST(CO_RpdoCreate, CoRpdoCreate_MinimalRPDOMaxNum) {
-  const co_unsigned16_t MAX_RPDO_NUM = 0x0200u;
-
-  CoObjTHolder obj15ff_holder(0x15ffu);
-  CHECK(obj15ff_holder.Get() != nullptr);
-  CHECK_EQUAL(0, co_dev_insert_obj(dev, obj15ff_holder.Take()));
-
-  CoObjTHolder obj17ff_holder(0x17ffu);
-  CHECK(obj17ff_holder.Get() != nullptr);
-  CHECK_EQUAL(0, co_dev_insert_obj(dev, obj17ff_holder.Take()));
-
-  rpdo = co_rpdo_create(net, dev, MAX_RPDO_NUM);
-
-  CHECK(rpdo != nullptr);
-  POINTERS_EQUAL(net, co_rpdo_get_net(rpdo));
-  POINTERS_EQUAL(dev, co_rpdo_get_dev(rpdo));
-  CHECK_EQUAL(MAX_RPDO_NUM, co_rpdo_get_num(rpdo));
-
-  co_rpdo_destroy(rpdo);  // explicit destroyed before object holders
-  rpdo = nullptr;
-}
-
-TEST(CO_RpdoCreate, CoRpdoStart_ExtendedFrame) {
-  dev_holder->CreateAndInsertObj(obj1400, 0x1400u);
-  SetComm00HighestSubidxSupported(0x02u);
-  SetComm01CobId(CO_PDO_COBID_FRAME | DEV_ID);
-  SetComm02SynchronousTransmission();
-
-  dev_holder->CreateAndInsertObj(obj1600, 0x1600u);
-
-  rpdo = co_rpdo_create(net, dev, RPDO_NUM);
-  CHECK(rpdo != nullptr);
-  CHECK_EQUAL(RPDO_NUM, co_rpdo_get_num(rpdo));
-
-  const auto ret = co_rpdo_start(rpdo);
-  CHECK_EQUAL(0, ret);
-
-  const auto* const comm = co_rpdo_get_comm_par(rpdo);
-  CHECK_EQUAL(0x02u, comm->n);
-  CHECK_EQUAL(CO_PDO_COBID_FRAME | DEV_ID, comm->cobid);
-  CHECK_EQUAL(0, comm->trans);
-  CHECK_EQUAL(0, comm->inhibit);
-  CHECK_EQUAL(0, comm->reserved);
-  CHECK_EQUAL(0, comm->event);
-  CHECK_EQUAL(0, comm->sync);
-}
-
-TEST(CO_RpdoCreate, CoRpdoStart_AlreadyStarted) {
-  dev_holder->CreateAndInsertObj(obj1400, 0x1400u);
-  dev_holder->CreateAndInsertObj(obj1600, 0x1600u);
-
-  rpdo = co_rpdo_create(net, dev, RPDO_NUM);
-  co_rpdo_start(rpdo);
+/// \Given a pointer to an initialized RPDO service (co_rpdo_t)
+///
+/// \When co_rpdo_start() is called
+///
+/// \Then the service is started and the default receiver is started
+///       \Calls co_dev_find_obj()
+///       \Calls co_obj_addressof_val()
+///       \Calls co_obj_sizeof_val()
+///       \Calls co_obj_set_dn_ind()
+///       \Calls can_recv_start()
+TEST(CO_Rpdo, CoRpdoStart_NominalRecv) {
+  CreateRpdo();
+  co_rpdo_set_ind(rpdo, CoRpdoInd::Func, &ind_data);
+  co_rpdo_set_err(rpdo, CoRpdoErr::Func, &err_data);
 
   const auto ret = co_rpdo_start(rpdo);
 
   CHECK_EQUAL(0, ret);
   CHECK_FALSE(co_rpdo_is_stopped(rpdo));
+
+  const can_msg msg = CAN_MSG_INIT;
+  CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
+  CHECK_EQUAL(0, co_rpdo_sync(rpdo, 0));
+
+  CHECK_EQUAL(1u, CoRpdoInd::GetNumCalled());
+  CoRpdoInd::CheckPtrNotNull(rpdo, 0, msg.len, &ind_data);
+  CHECK_EQUAL(0, CoRpdoErr::GetNumCalled());
 }
 
-TEST(CO_RpdoCreate, CoRpdoStart_InvalidBit) {
-  dev_holder->CreateAndInsertObj(obj1400, 0x1400u);
-  SetComm00HighestSubidxSupported(0x02u);
-  SetComm01CobId(CO_PDO_COBID_VALID | DEV_ID);
-  SetComm02SynchronousTransmission();
-
-  dev_holder->CreateAndInsertObj(obj1600, 0x1600u);
-
-  rpdo = co_rpdo_create(net, dev, RPDO_NUM);
-  CHECK(rpdo != nullptr);
-  CHECK_EQUAL(RPDO_NUM, co_rpdo_get_num(rpdo));
+/// \Given a pointer to an initialized RPDO service (co_rpdo_t), the object
+///        dictionary contains the RPDO communication parameter (0x1400) object
+///        with the "COB-ID" entry the CO_PDO_COBID_FRAME bit set
+///
+/// \When co_rpdo_start() is called
+///
+/// \Then the service is started and the receiver for messages with the
+///       29-bit CAN-ID (CAN extended frame) is started
+///       \Calls co_dev_find_obj()
+///       \Calls co_obj_addressof_val()
+///       \Calls co_obj_sizeof_val()
+///       \Calls co_obj_set_dn_ind()
+///       \Calls can_recv_start()
+TEST(CO_Rpdo, CoRpdoStart_ExtendedFrame) {
+  obj1400->EmplaceSub<Obj1400RpdoCommPar::Sub00HighestSubidxSupported>();
+  obj1400->EmplaceSub<Obj1400RpdoCommPar::Sub01CobId>(CO_PDO_COBID_FRAME |
+                                                      DEV_ID);
+  obj1400->EmplaceSub<Obj1400RpdoCommPar::Sub02TransmissionType>(
+      Obj1400RpdoCommPar::EVENT_DRIVEN_TRANSMISSION);
+  CreateRpdo();
+  co_rpdo_set_ind(rpdo, CoRpdoInd::Func, &ind_data);
+  co_rpdo_set_err(rpdo, CoRpdoErr::Func, &err_data);
 
   const auto ret = co_rpdo_start(rpdo);
-  CHECK_EQUAL(0, ret);
 
-  const auto* const comm = co_rpdo_get_comm_par(rpdo);
-  CHECK_EQUAL(0x02u, comm->n);
-  CHECK_EQUAL(CO_PDO_COBID_VALID | DEV_ID, comm->cobid);
-  CHECK_EQUAL(0, comm->trans);
-  CHECK_EQUAL(0, comm->inhibit);
-  CHECK_EQUAL(0, comm->reserved);
-  CHECK_EQUAL(0, comm->event);
-  CHECK_EQUAL(0, comm->sync);
+  CHECK_EQUAL(0, ret);
+  CHECK_FALSE(co_rpdo_is_stopped(rpdo));
+
+  can_msg msg = CAN_MSG_INIT;
+  msg.id = DEV_ID;
+  msg.flags = CAN_FLAG_IDE;
+
+  CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
+
+  CHECK_EQUAL(1u, CoRpdoInd::GetNumCalled());
+  CoRpdoInd::CheckPtrNotNull(rpdo, 0, msg.len, &ind_data);
+  CHECK_EQUAL(0, CoRpdoErr::GetNumCalled());
 }
 
-TEST(CO_RpdoCreate, CoRpdoCreate_FullRPDOCommParamRecord) {
-  dev_holder->CreateAndInsertObj(obj1400, 0x1400u);
-  SetComm00HighestSubidxSupported(0x06u);
-  SetComm01CobId(DEV_ID);
-  SetComm02TransmissionType(0x01u);
-  SetComm03InhibitTime(0x0002u);
-  SetComm04CompatibilityEntry(0x03u);
-  SetComm05EventTimer(0x0004u);
-  SetComm06SyncStartValue(0x05u);
-
-  dev_holder->CreateAndInsertObj(obj1600, 0x1600u);
-
-  rpdo = co_rpdo_create(net, dev, RPDO_NUM);
-  CHECK(rpdo != nullptr);
-  CHECK_EQUAL(RPDO_NUM, co_rpdo_get_num(rpdo));
+/// \Given a pointer to an initialized RPDO service (co_rpdo_t), the object
+///        dictionary contains the RPDO communication parameter (0x1400) object
+///        with the "COB-ID" entry the CO_PDO_COBID_VALID bit set
+///
+/// \When co_rpdo_start() is called
+///
+/// \Then the service is started, but the receiver not started
+///       \Calls co_dev_find_obj()
+///       \Calls co_obj_addressof_val()
+///       \Calls co_obj_sizeof_val()
+///       \Calls co_obj_set_dn_ind()
+///       \Calls can_recv_stop()
+TEST(CO_Rpdo, CoRpdoStart_InvalidBit) {
+  obj1400->EmplaceSub<Obj1400RpdoCommPar::Sub00HighestSubidxSupported>();
+  obj1400->EmplaceSub<Obj1400RpdoCommPar::Sub01CobId>(CO_PDO_COBID_VALID |
+                                                      DEV_ID);
+  obj1400->EmplaceSub<Obj1400RpdoCommPar::Sub02TransmissionType>();
+  CreateRpdo();
+  co_rpdo_set_ind(rpdo, CoRpdoInd::Func, &ind_data);
+  co_rpdo_set_err(rpdo, CoRpdoErr::Func, &err_data);
 
   const auto ret = co_rpdo_start(rpdo);
+
   CHECK_EQUAL(0, ret);
+  CHECK_FALSE(co_rpdo_is_stopped(rpdo));
+  CHECK_EQUAL(0, CoRpdoInd::GetNumCalled());
+  CHECK_EQUAL(0, CoRpdoErr::GetNumCalled());
+}
+
+/// \Given a pointer to an initialized RPDO service (co_rpdo_t), the object
+///        dictionary contains the RPDO communication parameter (0x1400) object
+///        with all entires defined
+///
+/// \When co_rpdo_start() is called
+///
+/// \Then the service is started and configured with all values from the 0x1400
+///       object
+///       \Calls co_dev_find_obj()
+///       \Calls co_obj_addressof_val()
+///       \Calls co_obj_sizeof_val()
+///       \Calls co_obj_set_dn_ind()
+///       \Calls can_recv_start()
+TEST(CO_Rpdo, CoRpdoStart_FullRPDOCommParamRecord) {
+  obj1400->EmplaceSub<Obj1400RpdoCommPar::Sub00HighestSubidxSupported>(0x06u);
+  obj1400->EmplaceSub<Obj1400RpdoCommPar::Sub01CobId>(DEV_ID);
+  obj1400->EmplaceSub<Obj1400RpdoCommPar::Sub02TransmissionType>(0x01u);
+  obj1400->EmplaceSub<Obj1400RpdoCommPar::Sub03InhibitTime>(0x0002u);
+  obj1400->EmplaceSub<Obj1400RpdoCommPar::Sub04Reserved>(0x03u);
+  obj1400->EmplaceSub<Obj1400RpdoCommPar::Sub05EventTimer>(0x0004u);
+  obj1400->EmplaceSub<Obj1400RpdoCommPar::Sub06SyncStartValue>(0x05u);
+  CreateRpdo();
+
+  const auto ret = co_rpdo_start(rpdo);
+
+  CHECK_EQUAL(0, ret);
+  CHECK_FALSE(co_rpdo_is_stopped(rpdo));
 
   const auto* const comm = co_rpdo_get_comm_par(rpdo);
   CHECK_EQUAL(0x06u, comm->n);
@@ -330,52 +605,64 @@ TEST(CO_RpdoCreate, CoRpdoCreate_FullRPDOCommParamRecord) {
   CHECK_EQUAL(0x05u, comm->sync);
 }
 
-TEST(CO_RpdoCreate, CoRpdoCreate_FullRPDOMappingParamRecord) {
-  dev_holder->CreateAndInsertObj(obj1400, 0x1400u);
-
-  dev_holder->CreateAndInsertObj(obj1600, 0x1600u);
-  // 0x00 - number of mapped application objects in PDO
-  obj1600->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8,
-                           co_unsigned8_t{CO_PDO_NUM_MAPS});
-  // 0x01-0x40 - application objects
-  for (co_unsigned8_t i = 0x01u; i <= CO_PDO_NUM_MAPS; ++i) {
-    obj1600->InsertAndSetSub(i, CO_DEFTYPE_UNSIGNED32, co_unsigned32_t{i - 1u});
-  }
-
-  rpdo = co_rpdo_create(net, dev, RPDO_NUM);
-  CHECK(rpdo != nullptr);
-  CHECK_EQUAL(RPDO_NUM, co_rpdo_get_num(rpdo));
+/// \Given a pointer to an initialized RPDO service (co_rpdo_t), the object
+///        dictionary contains the RPDO mapping parameter (0x1600) object
+///        with all possible mapping entries defined
+///
+/// \When co_rpdo_start() is called
+///
+/// \Then the service is started and configured with all values from the 0x1600
+///       object
+///       \Calls co_dev_find_obj()
+///       \Calls co_obj_addressof_val()
+///       \Calls co_obj_sizeof_val()
+///       \Calls co_obj_set_dn_ind()
+///       \Calls can_recv_start()
+TEST(CO_Rpdo, CoRpdoCreate_FullRPDOMappingParamRecord) {
+  obj1600->EmplaceSub<Obj1600RpdoMapPar::Sub00NumOfMappedObjs>(CO_PDO_NUM_MAPS);
+  for (co_unsigned8_t i = 0x01u; i <= CO_PDO_NUM_MAPS; ++i)
+    obj1600->EmplaceSub<Obj1600RpdoMapPar::SubNthAppObject>(i, i - 1u);
+  CreateRpdo();
 
   const auto ret = co_rpdo_start(rpdo);
+
   CHECK_EQUAL(0, ret);
+  CHECK_FALSE(co_rpdo_is_stopped(rpdo));
 
   const auto* const map = co_rpdo_get_map_par(rpdo);
   CHECK_EQUAL(CO_PDO_NUM_MAPS, map->n);
   for (size_t i = 0; i < CO_PDO_NUM_MAPS; ++i) CHECK_EQUAL(i, map->map[i]);
 }
 
-TEST(CO_RpdoCreate, CoRpdoCreate_OversizedRPDOCommParamRecord) {
-  dev_holder->CreateAndInsertObj(obj1400, 0x1400u);
-
-  SetComm00HighestSubidxSupported(0x07u);
-  SetComm01CobId(DEV_ID);
-  SetComm02TransmissionType(0x01u);
-  SetComm03InhibitTime(0x0002u);
-  SetComm04CompatibilityEntry(0x03u);
-  SetComm05EventTimer(0x0004u);
-  SetComm06SyncStartValue(0x05u);
-
-  // 0x07 - illegal sub-object
+/// \Given a pointer to an initialized RPDO service (co_rpdo_t), the object
+///        dictionary contains the RPDO communication parameter (0x1400) object
+///        with all entires defined and one additional entry (illegal)
+///
+/// \When co_rpdo_start() is called
+///
+/// \Then the service is started and configured with all values from the 0x1400
+///       object, the illegal entry is omitted
+///       \Calls co_dev_find_obj()
+///       \Calls co_obj_addressof_val()
+///       \Calls co_obj_sizeof_val()
+///       \Calls co_obj_set_dn_ind()
+///       \Calls can_recv_start()
+TEST(CO_Rpdo, CoRpdoStart_OversizedRPDOCommParamRecord) {
+  obj1400->EmplaceSub<Obj1400RpdoCommPar::Sub00HighestSubidxSupported>(0x07u);
+  obj1400->EmplaceSub<Obj1400RpdoCommPar::Sub01CobId>(DEV_ID);
+  obj1400->EmplaceSub<Obj1400RpdoCommPar::Sub02TransmissionType>(0x01u);
+  obj1400->EmplaceSub<Obj1400RpdoCommPar::Sub03InhibitTime>(0x0002u);
+  obj1400->EmplaceSub<Obj1400RpdoCommPar::Sub04Reserved>(0x03u);
+  obj1400->EmplaceSub<Obj1400RpdoCommPar::Sub05EventTimer>(0x0004u);
+  obj1400->EmplaceSub<Obj1400RpdoCommPar::Sub06SyncStartValue>(0x05u);
+  // illegal sub-object
   obj1400->InsertAndSetSub(0x07u, CO_DEFTYPE_UNSIGNED32, co_unsigned32_t{0});
-
-  dev_holder->CreateAndInsertObj(obj1600, 0x1600u);
-
-  rpdo = co_rpdo_create(net, dev, RPDO_NUM);
-  CHECK(rpdo != nullptr);
-  CHECK_EQUAL(RPDO_NUM, co_rpdo_get_num(rpdo));
+  CreateRpdo();
 
   const auto ret = co_rpdo_start(rpdo);
+
   CHECK_EQUAL(0, ret);
+  CHECK_FALSE(co_rpdo_is_stopped(rpdo));
 
   const auto* const comm = co_rpdo_get_comm_par(rpdo);
   CHECK_EQUAL(0x07u, comm->n);
@@ -387,163 +674,75 @@ TEST(CO_RpdoCreate, CoRpdoCreate_OversizedRPDOCommParamRecord) {
   CHECK_EQUAL(0x05u, comm->sync);
 }
 
-TEST(CO_RpdoCreate, CoRpdoCreate_EventDrivenTransmission) {
-  dev_holder->CreateAndInsertObj(obj1400, 0x1400u);
-  SetComm00HighestSubidxSupported(0x02u);
-  SetComm01CobId(DEV_ID);
-  SetComm02EventDrivenTransmission();
-
-  dev_holder->CreateAndInsertObj(obj1600, 0x1600u);
-
-  rpdo = co_rpdo_create(net, dev, RPDO_NUM);
-  CHECK(rpdo != nullptr);
-  CHECK_EQUAL(RPDO_NUM, co_rpdo_get_num(rpdo));
+/// \Given a pointer to a started RPDO service (co_rpdo_t)
+///
+/// \When co_rpdo_start() is called
+///
+/// \Then nothing is changed
+TEST(CO_Rpdo, CoRpdoStart_AlreadyStarted) {
+  CreateRpdo();
+  StartRpdo();
 
   const auto ret = co_rpdo_start(rpdo);
+
   CHECK_EQUAL(0, ret);
-
-  const auto* const comm = co_rpdo_get_comm_par(rpdo);
-  CHECK_EQUAL(0x02u, comm->n);
-  CHECK_EQUAL(DEV_ID, comm->cobid);
-  CHECK_EQUAL(0xfeu, comm->trans);
-  CHECK_EQUAL(0, comm->inhibit);
-  CHECK_EQUAL(0, comm->reserved);
-  CHECK_EQUAL(0, comm->event);
-  CHECK_EQUAL(0, comm->sync);
-}
-
-TEST(CO_RpdoCreate, CoRpdoCreate_TimerSet) {
-  dev_holder->CreateAndInsertObj(obj1400, 0x1400u);
-  SetComm00HighestSubidxSupported(0x02u);
-  SetComm01CobId(DEV_ID);
-  SetComm02SynchronousTransmission();
-
-  dev_holder->CreateAndInsertObj(obj1600, 0x1600u);
-
-  dev_holder->CreateAndInsertObj(obj1007, 0x1007u);
-  // 0x00 - synchronous window length
-  obj1007->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED32,
-                           co_unsigned32_t{0x00000001u});
-
-  rpdo = co_rpdo_create(net, dev, RPDO_NUM);
-  CHECK(rpdo != nullptr);
-  CHECK_EQUAL(RPDO_NUM, co_rpdo_get_num(rpdo));
-
-  const auto ret = co_rpdo_start(rpdo);
-  CHECK_EQUAL(0, ret);
-
-  const auto* const comm = co_rpdo_get_comm_par(rpdo);
-  CHECK_EQUAL(0x02u, comm->n);
-  CHECK_EQUAL(DEV_ID, comm->cobid);
-  CHECK_EQUAL(0, comm->trans);
-  CHECK_EQUAL(0, comm->inhibit);
-  CHECK_EQUAL(0, comm->reserved);
-  CHECK_EQUAL(0, comm->event);
-  CHECK_EQUAL(0, comm->sync);
+  CHECK_FALSE(co_rpdo_is_stopped(rpdo));
 }
 
 ///@}
 
-namespace CO_RpdoStatic {
-static bool rpdo_ind_func_called = false;
-static struct {
-  co_rpdo_t* rpdo = nullptr;
-  co_unsigned32_t ac = 0;
-  const void* ptr = nullptr;
-  size_t n = 0;
-  void* data = nullptr;
-} rpdo_ind_args;
+/// @name co_rpdo_stop()
+///@{
 
-static bool rpdo_err_func_called = false;
-static struct {
-  co_rpdo_t* rpdo = nullptr;
-  co_unsigned16_t eec = 0;
-  co_unsigned8_t er = 0;
-  void* data = nullptr;
-} rpdo_err_args;
+/// \Given a pointer to a started RPDO service (co_rpdo_t)
+///
+/// \When co_rpdo_stop() is called with a pointer to the service
+///
+/// \Then the service is stopped
+///       \Calls can_timer_stop()
+///       \Calls can_timer_start()
+///       \Calls co_dev_find_obj()
+///       \Calls co_obj_set_dn_ind()
+TEST(CO_Rpdo, CoRpdoStop_Nominal) {
+  CreateRpdo();
+  StartRpdo();
 
-static bool can_send_func_called = false;
+  co_rpdo_stop(rpdo);
 
-static can_msg sent_msg = CAN_MSG_INIT;
+  CHECK(co_rpdo_is_stopped(rpdo));
+}
 
-}  // namespace CO_RpdoStatic
-
-TEST_GROUP_BASE(CO_Rpdo, CO_RpdoBase) {
-  co_rpdo_t* rpdo = nullptr;
-
-  static void rpdo_ind_func(co_rpdo_t* const pdo, const co_unsigned32_t ac,
-                            const void* const ptr, const size_t n,
-                            void* const data) {
-    CO_RpdoStatic::rpdo_ind_func_called = true;
-    CO_RpdoStatic::rpdo_ind_args.rpdo = pdo;
-    CO_RpdoStatic::rpdo_ind_args.ac = ac;
-    CO_RpdoStatic::rpdo_ind_args.ptr = ptr;
-    CO_RpdoStatic::rpdo_ind_args.n = n;
-    CO_RpdoStatic::rpdo_ind_args.data = data;
-  }
-  static void rpdo_err_func(co_rpdo_t* const pdo, const co_unsigned16_t eec,
-                            const co_unsigned8_t er, void* const data) {
-    CO_RpdoStatic::rpdo_err_func_called = true;
-    CO_RpdoStatic::rpdo_err_args.rpdo = pdo;
-    CO_RpdoStatic::rpdo_err_args.eec = eec;
-    CO_RpdoStatic::rpdo_err_args.er = er;
-    CO_RpdoStatic::rpdo_err_args.data = data;
-  }
-
-  static int can_send_func(const struct can_msg* const msg, uint_least8_t,
-                           void*) {
-    CO_RpdoStatic::can_send_func_called = true;
-    CO_RpdoStatic::sent_msg = *msg;
-    return 0;
-  }
-
-  void CreateRpdo() {
-    rpdo = co_rpdo_create(net, dev, RPDO_NUM);
-    CHECK(rpdo != nullptr);
-  }
-
-  void StartRpdo() {
-    CHECK(co_rpdo_is_stopped(rpdo));
-    CHECK_EQUAL(0, co_rpdo_start(rpdo));
-    CHECK_FALSE(co_rpdo_is_stopped(rpdo));
-  }
-
-  TEST_SETUP() {
-    TEST_BASE_SETUP();
-
-    dev_holder->CreateAndInsertObj(obj1400, 0x1400u);
-    dev_holder->CreateAndInsertObj(obj1600, 0x1600u);
-
-    CO_RpdoStatic::rpdo_ind_func_called = false;
-    CO_RpdoStatic::rpdo_ind_args.rpdo = nullptr;
-    CO_RpdoStatic::rpdo_ind_args.ac = 0;
-    CO_RpdoStatic::rpdo_ind_args.ptr = nullptr;
-    CO_RpdoStatic::rpdo_ind_args.n = 0;
-    CO_RpdoStatic::rpdo_ind_args.data = nullptr;
-
-    CO_RpdoStatic::rpdo_err_func_called = false;
-    CO_RpdoStatic::rpdo_err_args.rpdo = nullptr;
-    CO_RpdoStatic::rpdo_err_args.eec = 0;
-    CO_RpdoStatic::rpdo_err_args.er = 0;
-    CO_RpdoStatic::rpdo_err_args.data = nullptr;
-
-    CO_RpdoStatic::can_send_func_called = false;
-    CO_RpdoStatic::sent_msg = CAN_MSG_INIT;
-  }
-
-  TEST_TEARDOWN() {
-    co_rpdo_destroy(rpdo);
-    TEST_BASE_TEARDOWN();
-  }
-};
+///@}
 
 /// @name co_rpdo_get_ind()
 ///@{
 
+/// \Given a pointer to an initialized RPDO service (co_rpdo_t)
+///
+/// \When co_rpdo_get_ind() is called with no addresses to store the indication
+///       function and user-specified data pointers at
+///
+/// \Then nothing is changed
 TEST(CO_Rpdo, CoRpdoGetInd_Null) {
   CreateRpdo();
 
   co_rpdo_get_ind(rpdo, nullptr, nullptr);
+}
+
+/// \Given a pointer to an initialized RPDO service (co_rpdo_t)
+///
+/// \When co_rpdo_get_ind() is called with an address to store the indication
+///       function pointer and an address to store user-specified data pointer
+///
+/// \Then both pointers are set to a null pointer (default values)
+TEST(CO_Rpdo, CoRpdoGetInd_Nominal) {
+  CreateRpdo();
+
+  co_rpdo_ind_t* pind = nullptr;
+  void* pdata = nullptr;
+  co_rpdo_get_ind(rpdo, &pind, &pdata);
+  FUNCTIONPOINTERS_EQUAL(nullptr, pind);
+  POINTERS_EQUAL(nullptr, pdata);
 }
 
 ///@}
@@ -551,16 +750,23 @@ TEST(CO_Rpdo, CoRpdoGetInd_Null) {
 /// @name co_rpdo_set_ind()
 ///@{
 
-TEST(CO_Rpdo, CoRpdoSetInd) {
+/// \Given a pointer to an initialized RPDO service (co_rpdo_t)
+///
+/// \When co_rpdo_set_ind() is called with a pointer to an indication
+///       function and a pointer to user-specified data
+///
+/// \Then the indication function and the user-specified data pointers are set
+///       in the RPDO service
+TEST(CO_Rpdo, CoRpdoSetInd_Nominal) {
   int32_t data = 0;
   CreateRpdo();
 
-  co_rpdo_set_ind(rpdo, rpdo_ind_func, &data);
+  co_rpdo_set_ind(rpdo, CoRpdoInd::Func, &data);
 
   co_rpdo_ind_t* pind = nullptr;
   void* pdata = nullptr;
   co_rpdo_get_ind(rpdo, &pind, &pdata);
-  FUNCTIONPOINTERS_EQUAL(rpdo_ind_func, pind);
+  FUNCTIONPOINTERS_EQUAL(CoRpdoInd::Func, pind);
   POINTERS_EQUAL(&data, pdata);
 }
 
@@ -569,10 +775,33 @@ TEST(CO_Rpdo, CoRpdoSetInd) {
 /// @name co_rpdo_get_err()
 ///@{
 
+/// \Given a pointer to an initialized RPDO service (co_rpdo_t)
+///
+/// \When co_rpdo_get_err() is called with no addresses to store the error
+///       handling function and user-specified data pointers at
+///
+/// \Then nothing is changed
 TEST(CO_Rpdo, CoRpdoGetErr_Null) {
   CreateRpdo();
 
   co_rpdo_get_err(rpdo, nullptr, nullptr);
+}
+
+/// \Given a pointer to an initialized RPDO service (co_rpdo_t)
+///
+/// \When co_rpdo_get_err() is called with an address to store the error
+///       handling function pointer and an address to store user-specified data
+///       pointer
+///
+/// \Then both pointers are set to a null pointer (default values)
+TEST(CO_Rpdo, CoRpdoGetErr_Nominal) {
+  CreateRpdo();
+
+  co_rpdo_err_t* perr = nullptr;
+  void* pdata = nullptr;
+  co_rpdo_get_err(rpdo, &perr, &pdata);
+  FUNCTIONPOINTERS_EQUAL(nullptr, perr);
+  POINTERS_EQUAL(nullptr, pdata);
 }
 
 ///@}
@@ -580,16 +809,23 @@ TEST(CO_Rpdo, CoRpdoGetErr_Null) {
 /// @name co_rpdo_set_err()
 ///@{
 
-TEST(CO_Rpdo, CoRpdoSetErr) {
+/// \Given a pointer to an initialized RPDO service (co_rpdo_t)
+///
+/// \When co_rpdo_set_err() is called with a pointer to an error handling
+///       function and a pointer to user-specified data
+///
+/// \Then the error handling function and the user-specified data pointers are
+///       set in the RPDO service
+TEST(CO_Rpdo, CoRpdoSetErr_Nominal) {
   int32_t data = 0;
   CreateRpdo();
 
-  co_rpdo_set_err(rpdo, rpdo_err_func, &data);
+  co_rpdo_set_err(rpdo, CoRpdoErr::Func, &data);
 
   co_rpdo_err_t* perr = nullptr;
   void* pdata = nullptr;
   co_rpdo_get_err(rpdo, &perr, &pdata);
-  FUNCTIONPOINTERS_EQUAL(rpdo_err_func, perr);
+  FUNCTIONPOINTERS_EQUAL(CoRpdoErr::Func, perr);
   POINTERS_EQUAL(&data, pdata);
 }
 
@@ -598,54 +834,64 @@ TEST(CO_Rpdo, CoRpdoSetErr) {
 /// @name co_rpdo_rtr()
 ///@{
 
-TEST(CO_Rpdo, CoRpdoRtr_RPDONotValid) {
-  SetComm00HighestSubidxSupported(0x02u);
-  SetComm01CobId(CO_PDO_COBID_VALID | DEV_ID);
-  SetComm02SynchronousTransmission();
-
+/// \Given a pointer to a started RPDO service (co_rpdo_t) configured with the
+///        CO_PDO_COBID_VALID bit set in the COB-ID
+///
+/// \When co_rpdo_rtr() is called
+///
+/// \Then a PDO RTR message is not transmitted
+TEST(CO_Rpdo, CoRpdoRtr_RpdoInvalid) {
+  SetupRpdo(CO_PDO_COBID_VALID | DEV_ID);
   CreateRpdo();
   StartRpdo();
 
   const auto ret = co_rpdo_rtr(rpdo);
 
   CHECK_EQUAL(0, ret);
+  CHECK_EQUAL(0, CanSend::GetNumCalled());
 }
 
-TEST(CO_Rpdo, CoRpdoRtr) {
-  can_net_set_send_func(net, can_send_func, nullptr);
-
-  SetComm00HighestSubidxSupported(0x02u);
-  SetComm01CobId(CAN_MASK_EID);  // all bits set
-  SetComm02SynchronousTransmission();
-
+/// \Given a pointer to a started RPDO service (co_rpdo_t) configured with all
+///        29-bits set in the COB-ID
+///
+/// \When co_rpdo_rtr() is called
+///
+/// \Then a PDO RTR message with the correct 11-bit CAN-ID and the RTR flag is
+///       transmitted
+///       \Calls can_net_send()
+TEST(CO_Rpdo, CoRpdoRtr_Nominal) {
+  SetupRpdo(CAN_MASK_EID);  // all 29-bits bits set
   CreateRpdo();
   StartRpdo();
 
   const auto ret = co_rpdo_rtr(rpdo);
 
   CHECK_EQUAL(0, ret);
-  CHECK(CO_RpdoStatic::can_send_func_called);
-  BITS_EQUAL(CAN_MASK_BID, CO_RpdoStatic::sent_msg.id, CAN_MASK_BID);
-  BITS_EQUAL(CAN_FLAG_RTR, CO_RpdoStatic::sent_msg.flags, CAN_FLAG_RTR);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
+  BITS_EQUAL(CAN_MASK_BID, CanSend::msg.id, CAN_MASK_BID);  // only 11 bits set
+  BITS_EQUAL(CAN_FLAG_RTR, CanSend::msg.flags, CAN_FLAG_RTR);
 }
 
+/// \Given a pointer to a started RPDO service (co_rpdo_t) configured with the
+///       CO_PDO_COBID_FRAME bit set in the COB-ID
+///
+/// \When co_rpdo_rtr() is called
+///
+/// \Then a PDO RTR message with the correct 29-bit CAN-ID, the IDE and the RTR
+///       flags is transmitted
+///       \Calls can_net_send()
 TEST(CO_Rpdo, CoRpdoRtr_ExtendedFrame) {
-  can_net_set_send_func(net, can_send_func, nullptr);
-
-  SetComm00HighestSubidxSupported(0x02u);
-  SetComm01CobId(CAN_MASK_EID | CO_PDO_COBID_FRAME);
-  SetComm02SynchronousTransmission();
-
+  SetupRpdo(CAN_MASK_EID | CO_PDO_COBID_FRAME);
   CreateRpdo();
   StartRpdo();
 
   const auto ret = co_rpdo_rtr(rpdo);
 
   CHECK_EQUAL(0, ret);
-  CHECK(CO_RpdoStatic::can_send_func_called);
-  BITS_EQUAL(CAN_MASK_EID, CO_RpdoStatic::sent_msg.id, CAN_MASK_EID);
-  BITS_EQUAL(CAN_FLAG_RTR, CO_RpdoStatic::sent_msg.flags, CAN_FLAG_RTR);
-  BITS_EQUAL(CAN_FLAG_IDE, CO_RpdoStatic::sent_msg.flags, CAN_FLAG_IDE);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
+  BITS_EQUAL(CAN_MASK_EID, CanSend::msg.id, CAN_MASK_EID);
+  BITS_EQUAL(CAN_FLAG_RTR, CanSend::msg.flags, CAN_FLAG_RTR);
+  BITS_EQUAL(CAN_FLAG_IDE, CanSend::msg.flags, CAN_FLAG_IDE);
 }
 
 ///@}
@@ -653,398 +899,434 @@ TEST(CO_Rpdo, CoRpdoRtr_ExtendedFrame) {
 /// @name co_rpdo_sync()
 ///@{
 
+/// \Given a pointer to a started RPDO service (co_rpdo_t); there is a CAN
+///        frame waiting for a SYNC object
+///
+/// \When co_rpdo_sync() is called with an invalid counter value
+///
+/// \Then -1 is returned, the error number is set to ERRNUM_INVAL
+///       \Calls set_errnum()
 TEST(CO_Rpdo, CoRpdoSync_CounterOverLimit) {
+  SetupRpdo(DEV_ID, Obj1400RpdoCommPar::SYNCHRONOUS_TRANSMISSION);
   CreateRpdo();
+  StartRpdo();
+
+  const co_unsigned64_t val = 0x1234567890abcdefu;
+  const can_msg msg = CreatePdoMsg_U64(val);
+  CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
   const auto ret = co_rpdo_sync(rpdo, 0xffu);
 
   CHECK_EQUAL(-1, ret);
+  CHECK_EQUAL(ERRNUM_INVAL, get_errnum());
+  CHECK_EQUAL(0, CoRpdoInd::GetNumCalled());
+  CHECK_EQUAL(0, CoRpdoErr::GetNumCalled());
+  CHECK_EQUAL(0, co_dev_get_val_u64(dev, PDO_MAPPED_IDX, PDO_MAPPED_SUBIDX));
 }
 
-TEST(CO_Rpdo, CoRpdoSync_RPDONotValid) {
-  SetComm00HighestSubidxSupported(0x02u);
-  SetComm01CobId(CO_PDO_COBID_VALID | DEV_ID);
-  SetComm02SynchronousTransmission();
-
+/// \Given a pointer to a started RPDO service (co_rpdo_t) configured with the
+///        CO_PDO_COBID_VALID bit set in the COB-ID; there is a CAN frame
+///        waiting for a SYNC object
+///
+/// \When co_rpdo_sync() is called with a counter value
+///
+/// \Then 0 is returned, nothing is changed
+TEST(CO_Rpdo, CoRpdoSync_RpdoNotValid) {
+  SetupRpdo(CO_PDO_COBID_VALID | DEV_ID,
+            Obj1400RpdoCommPar::SYNCHRONOUS_TRANSMISSION);
   CreateRpdo();
   StartRpdo();
 
-  const auto ret = co_rpdo_sync(rpdo, 0x00u);
+  const co_unsigned64_t val = 0x1234567890abcdefu;
+  const can_msg msg = CreatePdoMsg_U64(val);
+  CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
+
+  const auto ret = co_rpdo_sync(rpdo, 0u);
 
   CHECK_EQUAL(0, ret);
+  CHECK_EQUAL(0, CoRpdoInd::GetNumCalled());
+  CHECK_EQUAL(0, CoRpdoErr::GetNumCalled());
+  CHECK_EQUAL(0, co_dev_get_val_u64(dev, PDO_MAPPED_IDX, PDO_MAPPED_SUBIDX));
 }
 
+/// \Given a pointer to a started RPDO service (co_rpdo_t) configured with
+///        a non-synchronous transmission type; there is a CAN frame waiting
+///        for a SYNC object
+///
+/// \When co_rpdo_sync() is called with a counter value
+///
+/// \Then 0 is returned, nothing is changed
 TEST(CO_Rpdo, CoRpdoSync_TransmissionNotSynchronous) {
-  SetComm00HighestSubidxSupported(0x02u);
-  SetComm01CobId(DEV_ID);
-  SetComm02TransmissionType(0xf1u);  // not synchronous
-
+  SetupRpdo(DEV_ID,
+            Obj1400RpdoCommPar::RESERVED_TRANSMISSION);  // not synchronous
   CreateRpdo();
   StartRpdo();
 
-  const auto ret = co_rpdo_sync(rpdo, 0x00u);
+  const co_unsigned64_t val = 0x1234567890abcdefu;
+  const can_msg msg = CreatePdoMsg_U64(val);
+  CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
+
+  const auto ret = co_rpdo_sync(rpdo, 0u);
 
   CHECK_EQUAL(0, ret);
+  CHECK_EQUAL(0, CoRpdoInd::GetNumCalled());
+  CHECK_EQUAL(0, CoRpdoErr::GetNumCalled());
+  CHECK_EQUAL(0, co_dev_get_val_u64(dev, PDO_MAPPED_IDX, PDO_MAPPED_SUBIDX));
 }
 
-TEST(CO_Rpdo, CoRpdoSync_NoFrame) {
-  SetComm00HighestSubidxSupported(0x02u);
-  SetComm01CobId(DEV_ID);
-  SetComm02SynchronousTransmission();
-
-  CreateRpdo();
-
-  const auto ret = co_rpdo_sync(rpdo, 0x00u);
-
-  CHECK_EQUAL(0, ret);
-}
-
-TEST(CO_Rpdo, CoRpdoSync_NoCallbacks) {
-  SetComm00HighestSubidxSupported(0x02u);
-  SetComm01CobId(DEV_ID);
-  SetComm02SynchronousTransmission();
-
+/// \Given a pointer to a started RPDO service (co_rpdo_t), there is no CAN
+///        frame waiting for a SYNC object
+///
+/// \When co_rpdo_sync() is called with a counter value
+///
+/// \Then 0 is returned, nothing is changed
+///       \Calls can_timer_stop()
+///       \Calls co_dev_get_val_u32()
+TEST(CO_Rpdo, CoRpdoSync_NoWaitingFrame) {
+  SetupRpdo(DEV_ID, Obj1400RpdoCommPar::SYNCHRONOUS_TRANSMISSION);
   CreateRpdo();
   StartRpdo();
 
-  can_msg msg = CAN_MSG_INIT;
-  msg.id = DEV_ID;
-  const auto recv = can_net_recv(net, &msg, 0);
-  CHECK_EQUAL(1, recv);
-
-  const auto ret = co_rpdo_sync(rpdo, 0x00u);
+  const auto ret = co_rpdo_sync(rpdo, 0u);
 
   CHECK_EQUAL(0, ret);
+  CHECK_EQUAL(0, CoRpdoInd::GetNumCalled());
+  CHECK_EQUAL(0, CoRpdoErr::GetNumCalled());
+  CHECK_EQUAL(0, co_dev_get_val_u64(dev, PDO_MAPPED_IDX, PDO_MAPPED_SUBIDX));
 }
 
-TEST(CO_Rpdo, CoRpdoSync_WithCallbacks) {
-  SetComm00HighestSubidxSupported(0x02u);
-  SetComm01CobId(DEV_ID);
-  SetComm02SynchronousTransmission();
-
+/// \Given a pointer to a started RPDO service (co_rpdo_t) configured with no
+///        RPDO indication function and no error handling function set; there
+///        is a CAN frame waiting for a SYNC object
+///
+/// \When co_rpdo_sync() is called with a counter value
+///
+/// \Then 0 is returned, the object mapped into the PDO is updated
+///       \Calls can_timer_stop()
+///       \Calls co_dev_get_val_u32()
+///       \Calls co_pdo_dn()
+TEST(CO_Rpdo, CoRpdoSync_Nominal_NoCallbacks) {
+  SetupRpdo(DEV_ID, Obj1400RpdoCommPar::SYNCHRONOUS_TRANSMISSION);
   CreateRpdo();
-  int32_t data = 0;
-  co_rpdo_set_ind(rpdo, rpdo_ind_func, &data);
-  co_rpdo_set_err(rpdo, rpdo_err_func, nullptr);
   StartRpdo();
+  co_rpdo_set_ind(rpdo, nullptr, nullptr);
+  co_rpdo_set_err(rpdo, nullptr, nullptr);
 
-  can_msg msg = CAN_MSG_INIT;
-  msg.id = DEV_ID;
-  const auto recv = can_net_recv(net, &msg, 0);
-  CHECK_EQUAL(1, recv);
+  const co_unsigned64_t val = 0x1234567890abcdefu;
+  const can_msg msg = CreatePdoMsg_U64(val);
+  CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
-  const auto ret = co_rpdo_sync(rpdo, 0x00u);
+  const auto ret = co_rpdo_sync(rpdo, 0u);
 
   CHECK_EQUAL(0, ret);
-
-  CHECK(CO_RpdoStatic::rpdo_ind_func_called);
-  POINTERS_EQUAL(rpdo, CO_RpdoStatic::rpdo_ind_args.rpdo);
-  CHECK_EQUAL(0, CO_RpdoStatic::rpdo_ind_args.ac);
-  CHECK(CO_RpdoStatic::rpdo_ind_args.ptr != nullptr);
-  CHECK_EQUAL(msg.len, CO_RpdoStatic::rpdo_ind_args.n);
-  POINTERS_EQUAL(&data, CO_RpdoStatic::rpdo_ind_args.data);
-
-  CHECK(!CO_RpdoStatic::rpdo_err_func_called);
+  MEMCMP_EQUAL(&val, co_dev_get_val(dev, PDO_MAPPED_IDX, PDO_MAPPED_SUBIDX),
+               sizeof(val));
 }
 
-TEST(CO_Rpdo, CoRpdoSync_BadMapping) {
-  SetComm00HighestSubidxSupported(0x02u);
-  SetComm01CobId(DEV_ID);
-  SetComm02SynchronousTransmission();
-
-  // object 0x1600
-  // 0x00 - number of mapped application objects in PDO
-  obj1600->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t{0x01u});
-
-  // 0x01 - 1st application object (idx:0x2000 subidx:0x00 len:0x00)
-  obj1600->InsertAndSetSub(0x01u, CO_DEFTYPE_UNSIGNED32,
-                           co_unsigned32_t{0x20000000u});
-
+/// \Given a pointer to a started RPDO service (co_rpdo_t), there is a CAN
+///        frame waiting for a SYNC object
+///
+/// \When co_rpdo_sync() is called with a counter value
+///
+/// \Then 0 is returned, the frame is processed and the object mapped into the
+///       PDO is updated; the RPDO indication function is called with zero
+///       abort code, the frame data and the user-specified data pointer, the
+///       error handling function is not called
+///       \Calls can_timer_stop()
+///       \Calls co_dev_get_val_u32()
+///       \Calls co_pdo_dn()
+TEST(CO_Rpdo, CoRpdoSync_Nominal) {
+  SetupRpdo(DEV_ID, Obj1400RpdoCommPar::SYNCHRONOUS_TRANSMISSION);
   CreateRpdo();
-  int32_t data = 0;
-  co_rpdo_set_ind(rpdo, rpdo_ind_func, &data);
-  co_rpdo_set_err(rpdo, rpdo_err_func, nullptr);
   StartRpdo();
 
-  can_msg msg = CAN_MSG_INIT;
-  msg.id = DEV_ID;
-  const auto recv = can_net_recv(net, &msg, 0);
-  CHECK_EQUAL(1, recv);
+  const co_unsigned64_t val = 0x1234567890abcdefu;
+  const can_msg msg = CreatePdoMsg_U64(val);
+  CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
-  const auto ret = co_rpdo_sync(rpdo, 0x00u);
+  const auto ret = co_rpdo_sync(rpdo, 0u);
+
+  CHECK_EQUAL(0, ret);
+  CHECK_EQUAL(1u, CoRpdoInd::GetNumCalled());
+  CoRpdoInd::CheckPtrNotNull(rpdo, 0, msg.len, &ind_data);
+  CHECK_EQUAL(0, CoRpdoErr::GetNumCalled());
+  MEMCMP_EQUAL(&val, co_dev_get_val(dev, PDO_MAPPED_IDX, PDO_MAPPED_SUBIDX),
+               sizeof(val));
+}
+
+/// \Given a pointer to a started RPDO service (co_rpdo_t) configured with
+///        a mapping on a non-existing object; there is a CAN frame waiting for
+///        a SYNC object
+///
+/// \When co_rpdo_sync() is called with a counter value
+///
+/// \Then -1 is returned, the waiting frame is processed, but the object mapped
+///       into the PDO is not updated; the RPDO indication function is invoked
+///       with the CO_SDO_AC_NO_OBJ, the frame data and the user-specified data
+///       pointer, the error handling function is not called
+///       \Calls can_timer_stop()
+///       \Calls co_dev_get_val_u32()
+///       \Calls co_pdo_dn()
+TEST(CO_Rpdo, CoRpdoSync_NonExistingObjectMapping) {
+  obj1400->EmplaceSub<Obj1400RpdoCommPar::Sub00HighestSubidxSupported>();
+  obj1400->EmplaceSub<Obj1400RpdoCommPar::Sub01CobId>(DEV_ID);
+  obj1400->EmplaceSub<Obj1400RpdoCommPar::Sub02TransmissionType>(
+      Obj1400RpdoCommPar::SYNCHRONOUS_TRANSMISSION);
+
+  obj1600->EmplaceSub<Obj1600RpdoMapPar::Sub00NumOfMappedObjs>(0x01u);
+  obj1600->EmplaceSub<Obj1600RpdoMapPar::SubNthAppObject>(
+      0x01u, Obj1600RpdoMapPar::MakeMappingParam(PDO_MAPPED_IDX,
+                                                 PDO_MAPPED_SUBIDX, 0x40u));
+  CreateRpdo();
+  StartRpdo();
+
+  const co_unsigned64_t val = 0x1234567890abcdefu;
+  const can_msg msg = CreatePdoMsg_U64(val);
+  CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
+
+  const auto ret = co_rpdo_sync(rpdo, 0u);
 
   CHECK_EQUAL(-1, ret);
+  CHECK_EQUAL(1u, CoRpdoInd::GetNumCalled());
+  CoRpdoInd::CheckPtrNotNull(rpdo, CO_SDO_AC_NO_OBJ, sizeof(val), &ind_data);
+  CHECK_EQUAL(0, CoRpdoErr::GetNumCalled());
 
-  CHECK(CO_RpdoStatic::rpdo_ind_func_called);
-  POINTERS_EQUAL(rpdo, CO_RpdoStatic::rpdo_ind_args.rpdo);
-  CHECK_EQUAL(CO_SDO_AC_NO_OBJ, CO_RpdoStatic::rpdo_ind_args.ac);
-  CHECK(CO_RpdoStatic::rpdo_ind_args.ptr != nullptr);
-  CHECK_EQUAL(msg.len, CO_RpdoStatic::rpdo_ind_args.n);
-  POINTERS_EQUAL(&data, CO_RpdoStatic::rpdo_ind_args.data);
-
-  CHECK(!CO_RpdoStatic::rpdo_err_func_called);
+  CHECK_EQUAL(0, co_dev_get_val_u64(dev, PDO_MAPPED_IDX, PDO_MAPPED_SUBIDX));
 }
 
-TEST(CO_Rpdo, CoRpdoSync_BadMappingLength) {
-  SetComm00HighestSubidxSupported(0x02u);
-  SetComm01CobId(DEV_ID);
-  SetComm02SynchronousTransmission();
-
-  // object 0x1600
-  // 0x00 - number of mapped application objects in PDO
-  obj1600->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t{0x01u});
-
-  // 0x01 - 1st application object (idx:0x2000 subidx:0x00 len:0x01)
-  obj1600->InsertAndSetSub(0x01u, CO_DEFTYPE_UNSIGNED32,
-                           co_unsigned32_t{0x20000001u});
-
-  // object 0x2000
-  dev_holder->CreateAndInsertObj(obj2000, 0x2000u);
-  // 0x00
-  obj2000->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t{0x00u});
-
+/// \Given a pointer to a started RPDO service (co_rpdo_t), there is a CAN
+///        frame waiting for a SYNC object, but the length of the mapped
+///        object(s) exceeds the PDO length
+///
+/// \When co_rpdo_sync() is called with a counter value
+///
+/// \Then -1 is returned, the waiting frame is processed, but the object mapped
+///       into the PDO is not updated; the RPDO indication function is invoked
+///       with the CO_SDO_AC_PDO_LEN, the frame data and the user-specified
+///       data pointer; the error handling function is invoked with `0x8210`
+///       emergency error code, `0x10` error register and the user-specified
+///       data pointer
+///       \Calls can_timer_stop()
+///       \Calls co_dev_get_val_u32()
+///       \Calls co_pdo_dn()
+TEST(CO_Rpdo, CoRpdoSync_MappedObjectExceedsPdoLength) {
+  SetupRpdo(DEV_ID, Obj1400RpdoCommPar::SYNCHRONOUS_TRANSMISSION);
   CreateRpdo();
-  int32_t ind_data = 0;
-  co_rpdo_set_ind(rpdo, rpdo_ind_func, &ind_data);
-  int32_t err_data = 0;
-  co_rpdo_set_err(rpdo, rpdo_err_func, &err_data);
   StartRpdo();
 
-  can_msg msg = CAN_MSG_INIT;
-  msg.id = DEV_ID;
-  const auto recv = can_net_recv(net, &msg, 0);
-  CHECK_EQUAL(1, recv);
+  const co_unsigned64_t val = 0x1234567890abcdefu;
+  can_msg msg = CreatePdoMsg_U64(val);
+  msg.len -= 1u;
+  CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
-  const auto ret = co_rpdo_sync(rpdo, 0x00u);
+  const auto ret = co_rpdo_sync(rpdo, 0u);
 
   CHECK_EQUAL(-1, ret);
+  CHECK_EQUAL(1u, CoRpdoInd::GetNumCalled());
+  CoRpdoInd::CheckPtrNotNull(rpdo, CO_SDO_AC_PDO_LEN, msg.len, &ind_data);
+  CHECK_EQUAL(1u, CoRpdoErr::GetNumCalled());
+  CoRpdoErr::Check(rpdo, 0x8210u, 0x10u, &err_data);
 
-  CHECK(CO_RpdoStatic::rpdo_ind_func_called);
-  POINTERS_EQUAL(rpdo, CO_RpdoStatic::rpdo_ind_args.rpdo);
-  CHECK_EQUAL(CO_SDO_AC_PDO_LEN, CO_RpdoStatic::rpdo_ind_args.ac);
-  CHECK(CO_RpdoStatic::rpdo_ind_args.ptr != nullptr);
-  CHECK_EQUAL(msg.len, CO_RpdoStatic::rpdo_ind_args.n);
-  POINTERS_EQUAL(&ind_data, CO_RpdoStatic::rpdo_ind_args.data);
-
-  CHECK(CO_RpdoStatic::rpdo_err_func_called);
-  POINTERS_EQUAL(rpdo, CO_RpdoStatic::rpdo_err_args.rpdo);
-  CHECK_EQUAL(0x8210u, CO_RpdoStatic::rpdo_err_args.eec);
-  CHECK_EQUAL(0x10, CO_RpdoStatic::rpdo_err_args.er);
-  POINTERS_EQUAL(&err_data, CO_RpdoStatic::rpdo_err_args.data);
+  CHECK_EQUAL(0, co_dev_get_val_u64(dev, PDO_MAPPED_IDX, PDO_MAPPED_SUBIDX));
 }
 
-TEST(CO_Rpdo, CoRpdoSync_RPDOLengthExceedsMapping) {
-  SetComm00HighestSubidxSupported(0x02u);
-  SetComm01CobId(DEV_ID);
-  SetComm02SynchronousTransmission();
+/// \Given a pointer to a started RPDO service (co_rpdo_t) and there is a CAN
+///        frame waiting for a SYNC object, but the PDO length exceeds the
+///        length of the mapped object(s)
+///
+/// \When co_rpdo_sync() is called with a counter value
+///
+/// \Then -1 is returned, the waiting frame is processed, but the object mapped
+///       into the PDO is not updated; the RPDO indication function is invoked
+///       with the CO_SDO_AC_PDO_LEN, the frame data and the user-specified
+///       data pointer, the error handling function is invoked with `0x8220`
+///       emergency error code, `0x10` error register and the user-specified
+///       data pointer
+///       \Calls can_timer_stop()
+///       \Calls co_dev_get_val_u32()
+///       \Calls co_pdo_dn()
+TEST(CO_Rpdo, CoRpdoSync_PdoLengthExceedsMappedObject) {
+  obj1400->EmplaceSub<Obj1400RpdoCommPar::Sub00HighestSubidxSupported>();
+  obj1400->EmplaceSub<Obj1400RpdoCommPar::Sub01CobId>(DEV_ID);
+  obj1400->EmplaceSub<Obj1400RpdoCommPar::Sub02TransmissionType>(
+      Obj1400RpdoCommPar::SYNCHRONOUS_TRANSMISSION);
 
-  // object 0x1600
-  // 0x00 - number of mapped application objects in PDO
-  obj1600->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t{0x01u});
+  obj1600->EmplaceSub<Obj1600RpdoMapPar::Sub00NumOfMappedObjs>(0x01u);
+  obj1600->EmplaceSub<Obj1600RpdoMapPar::SubNthAppObject>(
+      0x01u, Obj1600RpdoMapPar::MakeMappingParam(PDO_MAPPED_IDX,
+                                                 PDO_MAPPED_SUBIDX, 0x01u));
 
-  // 0x01 - 1st application object (idx:0x2000 subidx:0x00 len:0x01)
-  obj1600->InsertAndSetSub(0x01u, CO_DEFTYPE_UNSIGNED32,
-                           co_unsigned32_t{0x20000001u});
-
-  dev_holder->CreateAndInsertObj(obj2000, 0x2000u);
-  // 0x00
-  obj2000->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t{0x00u});
-  co_sub_set_pdo_mapping(obj2000->GetLastSub(), true);
+  dev_holder->CreateAndInsertObj(obj2020, PDO_MAPPED_IDX);
+  obj2020->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t{0u});
+  co_sub_set_pdo_mapping(obj2020->GetLastSub(), true);
 
   CreateRpdo();
-  int32_t ind_data = 0;
-  co_rpdo_set_ind(rpdo, rpdo_ind_func, &ind_data);
-  int32_t err_data = 0;
-  co_rpdo_set_err(rpdo, rpdo_err_func, &err_data);
   StartRpdo();
 
-  can_msg msg = CAN_MSG_INIT;
-  msg.id = DEV_ID;
-  msg.len = CAN_MAX_LEN;
-  const auto recv = can_net_recv(net, &msg, 0);
-  CHECK_EQUAL(1, recv);
+  const co_unsigned64_t val = 0x1234567890abcdefu;
+  const can_msg msg = CreatePdoMsg_U64(val);
+  CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
-  const auto ret = co_rpdo_sync(rpdo, 0x00u);
+  const auto ret = co_rpdo_sync(rpdo, 0u);
 
   CHECK_EQUAL(0, ret);
+  CHECK_EQUAL(1u, CoRpdoInd::GetNumCalled());
+  CoRpdoInd::CheckPtrNotNull(rpdo, 0, sizeof(val), &ind_data);
+  CHECK_EQUAL(1u, CoRpdoErr::GetNumCalled());
+  CoRpdoErr::Check(rpdo, 0x8220u, 0x10u, &err_data);
 
-  CHECK(CO_RpdoStatic::rpdo_ind_func_called);
-  POINTERS_EQUAL(rpdo, CO_RpdoStatic::rpdo_ind_args.rpdo);
-  CHECK_EQUAL(0, CO_RpdoStatic::rpdo_ind_args.ac);
-  CHECK(CO_RpdoStatic::rpdo_ind_args.ptr != nullptr);
-  CHECK_EQUAL(msg.len, CO_RpdoStatic::rpdo_ind_args.n);
-  POINTERS_EQUAL(&ind_data, CO_RpdoStatic::rpdo_ind_args.data);
-
-  CHECK(CO_RpdoStatic::rpdo_err_func_called);
-  POINTERS_EQUAL(rpdo, CO_RpdoStatic::rpdo_err_args.rpdo);
-  CHECK_EQUAL(0x8220u, CO_RpdoStatic::rpdo_err_args.eec);
-  CHECK_EQUAL(0x10, CO_RpdoStatic::rpdo_err_args.er);
-  POINTERS_EQUAL(&err_data, CO_RpdoStatic::rpdo_err_args.data);
+  CHECK_EQUAL(0, co_dev_get_val_u64(dev, PDO_MAPPED_IDX, PDO_MAPPED_SUBIDX));
 }
 
 ///@}
 
-/// @name RPDO received message processing
+/// @name RPDO service: received message processing
 ///@{
 
-TEST(CO_Rpdo, CoRpdoRecv_ReservedTransmissionRPDO) {
-  SetComm00HighestSubidxSupported(0x02u);
-  SetComm01CobId(DEV_ID);
-  SetComm02TransmissionType(0xf1u);  // reserved
-
+/// \Given a pointer to a started RPDO service (co_rpdo_t) configured with a
+///        reserved transmission type
+///
+/// \When a PDO message is received by the service
+///
+/// \Then the message is ignored
+///       \Calls can_timer_stop()
+TEST(CO_Rpdo, CoRpdoRecv_ReservedTransmission) {
+  SetupRpdo(DEV_ID, Obj1400RpdoCommPar::RESERVED_TRANSMISSION);
   CreateRpdo();
-  co_rpdo_set_ind(rpdo, rpdo_ind_func, nullptr);
-  co_rpdo_set_err(rpdo, rpdo_err_func, nullptr);
   StartRpdo();
 
-  can_msg msg = CAN_MSG_INIT;
-  msg.id = DEV_ID;
+  const co_unsigned64_t val = 0x1234567890abcdefu;
+  const can_msg msg = CreatePdoMsg_U64(val);
+  CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
-  const auto recv = can_net_recv(net, &msg, 0);
-
-  CHECK_EQUAL(1, recv);
-  CHECK(!CO_RpdoStatic::rpdo_ind_func_called);
-  CHECK(!CO_RpdoStatic::rpdo_err_func_called);
+  CHECK_EQUAL(0, CoRpdoInd::GetNumCalled());
+  CHECK_EQUAL(0, CoRpdoErr::GetNumCalled());
+  CHECK_EQUAL(0, co_dev_get_val_u64(dev, PDO_MAPPED_IDX, PDO_MAPPED_SUBIDX));
 }
 
-TEST(CO_Rpdo, CoRpdoRecv_EventDrivenRPDO) {
-  SetComm00HighestSubidxSupported(0x02u);
-  SetComm01CobId(DEV_ID);
-  SetComm02EventDrivenTransmission();
-
+/// \Given a pointer to a started RPDO service (co_rpdo_t) configured with an
+///        event-driven transmission type
+///
+/// \When a PDO message is received by the service
+///
+/// \Then the message is processed and the object mapped into the PDO is
+///       updated; the RPDO indication function is called with zero abort code,
+///       the message data and the user-specified data pointer
+///       \Calls can_timer_stop()
+///       \Calls co_pdo_dn()
+TEST(CO_Rpdo, CoRpdoRecv_EventDrivenTransmission) {
+  SetupRpdo(DEV_ID, Obj1400RpdoCommPar::EVENT_DRIVEN_TRANSMISSION);
   CreateRpdo();
-  int32_t data = 0;
-  co_rpdo_set_ind(rpdo, rpdo_ind_func, &data);
-  co_rpdo_set_err(rpdo, rpdo_err_func, nullptr);
   StartRpdo();
 
-  can_msg msg = CAN_MSG_INIT;
-  msg.id = DEV_ID;
+  const co_unsigned64_t val = 0x1234567890abcdefu;
+  const can_msg msg = CreatePdoMsg_U64(val);
+  CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
-  const auto recv = can_net_recv(net, &msg, 0);
+  CHECK_EQUAL(1u, CoRpdoInd::GetNumCalled());
+  CoRpdoInd::CheckPtrNotNull(rpdo, 0, msg.len, &ind_data);
+  CHECK_EQUAL(0, CoRpdoErr::GetNumCalled());
 
-  CHECK_EQUAL(1, recv);
-
-  CHECK(CO_RpdoStatic::rpdo_ind_func_called);
-  POINTERS_EQUAL(rpdo, CO_RpdoStatic::rpdo_ind_args.rpdo);
-  CHECK_EQUAL(0, CO_RpdoStatic::rpdo_ind_args.ac);
-  CHECK(CO_RpdoStatic::rpdo_ind_args.ptr != nullptr);
-  CHECK_EQUAL(msg.len, CO_RpdoStatic::rpdo_ind_args.n);
-  POINTERS_EQUAL(&data, CO_RpdoStatic::rpdo_ind_args.data);
-
-  CHECK(!CO_RpdoStatic::rpdo_err_func_called);
+  MEMCMP_EQUAL(&val, co_dev_get_val(dev, PDO_MAPPED_IDX, PDO_MAPPED_SUBIDX),
+               sizeof(val));
 }
 
-TEST(CO_Rpdo, CoRpdoRecv_ExpiredSyncWindow) {
-  SetComm00HighestSubidxSupported(0x02u);
-  SetComm01CobId(DEV_ID);
-  SetComm02SynchronousTransmission();
-
-  dev_holder->CreateAndInsertObj(obj1007, 0x1007u);
-  // 0x00 - synchronous window length
-  obj1007->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED32,
-                           co_unsigned32_t{0x00000001u});  // us
-
+/// \Given a pointer to a started RPDO service (co_rpdo_t) configured with a
+///        synchronous transmission type and a synchronous window length; the
+///        SYNC timer has been started
+///
+/// \When the synchronous window time expires before a PDO message is received
+///
+/// \Then the next received message is ignored
+///       \Calls can_timer_stop()
+TEST(CO_Rpdo, CoRpdoRecv_SynchronousTransmission_ExpiredSyncWindow) {
+  SetupRpdo(DEV_ID, Obj1400RpdoCommPar::SYNCHRONOUS_TRANSMISSION);
+  dev_holder->CreateObjValue<Obj1007SyncWindowLength>(obj1007, 1000u);  // 1 ms
   CreateRpdo();
-  co_rpdo_set_ind(rpdo, rpdo_ind_func, nullptr);
-  co_rpdo_set_err(rpdo, rpdo_err_func, nullptr);
   StartRpdo();
 
-  // start sync timer
-  CHECK_EQUAL(0, co_rpdo_sync(rpdo, 0x00u));
+  // start the synchronous window timer
+  CHECK_EQUAL(0, co_rpdo_sync(rpdo, 0u));
 
-  // expire sync window
-  const timespec tp = {0, 1000u};
-  const auto ret = can_net_set_time(net, &tp);
-  CHECK_EQUAL(0, ret);
+  // expire the synchronous window
+  AdvanceTimeMs(1u);
 
-  can_msg msg = CAN_MSG_INIT;
-  msg.id = DEV_ID;
-  const auto recv = can_net_recv(net, &msg, 0);
-  CHECK_EQUAL(1, recv);
+  // the next received PDO message
+  const co_unsigned64_t val = 0x1234567890abcdefu;
+  const can_msg msg = CreatePdoMsg_U64(val);
+  CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
-  CHECK_EQUAL(0, co_rpdo_sync(rpdo, 0x00u));
-
-  // message was ignored as sync window had already expired when it was received
-  CHECK(!CO_RpdoStatic::rpdo_ind_func_called);
-  CHECK(!CO_RpdoStatic::rpdo_err_func_called);
+  // the message is ignored
+  CHECK_EQUAL(0, CoRpdoInd::GetNumCalled());
+  CHECK_EQUAL(0, CoRpdoErr::GetNumCalled());
+  CHECK_EQUAL(0, co_dev_get_val_u64(dev, PDO_MAPPED_IDX, PDO_MAPPED_SUBIDX));
 }
 
-TEST(CO_Rpdo, CoRpdoRecv_NoPDOInSyncWindow_NoErrFunc) {
-  SetComm00HighestSubidxSupported(0x05u);
-  SetComm01CobId(DEV_ID);
-  SetComm02SynchronousTransmission();
-  SetComm03InhibitTime(0x0000u);
-  SetComm04CompatibilityEntry(0x00u);
-  SetComm05EventTimer(0x0001u);
-
-  dev_holder->CreateAndInsertObj(obj1007, 0x1007u);
-  // 0x00 - synchronous window length
-  obj1007->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED32,
-                           co_unsigned32_t{0x00000001u});  // us
-
+/// \Given a pointer to a started RPDO service (co_rpdo_t) configured with a
+///        synchronous transmission type and the event timer
+///
+/// \When a PDO message is received by the service
+///
+/// \Then the event timer is started and after the timer expires the error
+///       handling function is called with `0x8250` emergency error code,
+///       `0x10` error register and the user-specified data pointer
+///       \Calls can_timer_stop()
+///       \Calls can_timer_timeout()
+TEST(CO_Rpdo, CoRpdoRecv_SynchronousTransmission_EventTimer) {
+  SetupRpdo(DEV_ID, Obj1400RpdoCommPar::SYNCHRONOUS_TRANSMISSION);
+  obj1400->SetSub<Obj1400RpdoCommPar::Sub00HighestSubidxSupported>(0x05u);
+  obj1400->EmplaceSub<Obj1400RpdoCommPar::Sub03InhibitTime>(0u);
+  obj1400->EmplaceSub<Obj1400RpdoCommPar::Sub04Reserved>();
+  obj1400->EmplaceSub<Obj1400RpdoCommPar::Sub05EventTimer>(1u);  // 1ms
   CreateRpdo();
-  co_rpdo_set_ind(rpdo, rpdo_ind_func, nullptr);
   StartRpdo();
 
-  const timespec tp = {0, 1000000u};  // 1 ms
-  const auto ret = can_net_set_time(net, &tp);
-  CHECK_EQUAL(0, ret);
+  const co_unsigned64_t val = 0x1234567890abcdefu;
+  const can_msg msg = CreatePdoMsg_U64(val);
+  CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
-  can_msg msg = CAN_MSG_INIT;
-  msg.id = DEV_ID;
+  CHECK_EQUAL(0, CoRpdoInd::GetNumCalled());
+  CHECK_EQUAL(0, CoRpdoErr::GetNumCalled());
 
-  const auto recv = can_net_recv(net, &msg, 0);
+  // expire the event timer
+  AdvanceTimeMs(1u);
 
-  CHECK_EQUAL(1, recv);
-  CHECK(!CO_RpdoStatic::rpdo_ind_func_called);
-
-  const timespec tp2 = {0, 2000000u};  // 2 ms
-  const auto ret2 = can_net_set_time(net, &tp2);
-  CHECK_EQUAL(0, ret2);
+  CHECK_EQUAL(0, CoRpdoInd::GetNumCalled());
+  CHECK_EQUAL(1u, CoRpdoErr::GetNumCalled());
+  CoRpdoErr::Check(rpdo, 0x8250u, 0x10u, &err_data);
+  CHECK_EQUAL(0, co_dev_get_val_u64(dev, PDO_MAPPED_IDX, PDO_MAPPED_SUBIDX));
 }
 
-TEST(CO_Rpdo, CoRpdoRecv_NoPDOInSyncWindow) {
-  SetComm00HighestSubidxSupported(0x05u);
-  SetComm01CobId(DEV_ID);
-  SetComm02SynchronousTransmission();
-  SetComm03InhibitTime(0x0000u);
-  SetComm04CompatibilityEntry(0x00u);
-  SetComm05EventTimer(0x0001u);
-
-  dev_holder->CreateAndInsertObj(obj1007, 0x1007u);
-  // 0x00 - synchronous window length
-  obj1007->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED32,
-                           co_unsigned32_t{0x00000001u});  // us
-
+/// \Given a pointer to a started RPDO service (co_rpdo_t) configured with a
+///        synchronous transmission type and the event timer
+///
+/// \When a PDO message is received by the service
+///
+/// \Then the event timer is started and after the timer expires nothing is
+///       changed
+///       \Calls can_timer_stop()
+///       \Calls can_timer_timeout()
+TEST(CO_Rpdo, CoRpdoRecv_SynchronousTransmission_EventTimer_NoErr) {
+  SetupRpdo(DEV_ID, Obj1400RpdoCommPar::SYNCHRONOUS_TRANSMISSION);
+  obj1400->SetSub<Obj1400RpdoCommPar::Sub00HighestSubidxSupported>(0x05u);
+  obj1400->EmplaceSub<Obj1400RpdoCommPar::Sub03InhibitTime>(0u);
+  obj1400->EmplaceSub<Obj1400RpdoCommPar::Sub04Reserved>();
+  obj1400->EmplaceSub<Obj1400RpdoCommPar::Sub05EventTimer>(1u);  // 1ms
   CreateRpdo();
-  co_rpdo_set_ind(rpdo, rpdo_ind_func, nullptr);
-  int32_t data = 0;
-  co_rpdo_set_err(rpdo, rpdo_err_func, &data);
   StartRpdo();
+  co_rpdo_set_err(rpdo, nullptr, nullptr);
 
-  const timespec tp = {0, 1000000u};  // 1 ms
-  const auto ret = can_net_set_time(net, &tp);
-  CHECK_EQUAL(0, ret);
+  const co_unsigned64_t val = 0x1234567890abcdefu;
+  const can_msg msg = CreatePdoMsg_U64(val);
+  CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
-  can_msg msg = CAN_MSG_INIT;
-  msg.id = DEV_ID;
+  CHECK_EQUAL(0, CoRpdoInd::GetNumCalled());
 
-  const auto recv = can_net_recv(net, &msg, 0);
+  // expire the event timer
+  AdvanceTimeMs(1u);
 
-  CHECK_EQUAL(1, recv);
-  CHECK(!CO_RpdoStatic::rpdo_ind_func_called);
-  CHECK(!CO_RpdoStatic::rpdo_err_func_called);
-
-  const timespec tp2 = {0, 2000000u};  // 2 ms
-  const auto ret2 = can_net_set_time(net, &tp2);
-  CHECK_EQUAL(0, ret2);
-
-  CHECK(CO_RpdoStatic::rpdo_err_func_called);
-  POINTERS_EQUAL(rpdo, CO_RpdoStatic::rpdo_err_args.rpdo);
-  CHECK_EQUAL(0x8250u, CO_RpdoStatic::rpdo_err_args.eec);
-  CHECK_EQUAL(0x10, CO_RpdoStatic::rpdo_err_args.er);
-  POINTERS_EQUAL(&data, CO_RpdoStatic::rpdo_err_args.data);
+  CHECK_EQUAL(0, CoRpdoInd::GetNumCalled());
+  CHECK_EQUAL(0, co_dev_get_val_u64(dev, PDO_MAPPED_IDX, PDO_MAPPED_SUBIDX));
 }
 
 ///@}
@@ -1053,18 +1335,17 @@ TEST_GROUP_BASE(CO_RpdoAllocation, CO_RpdoBase) {
   Allocators::Limited limitedAllocator;
   co_rpdo_t* rpdo = nullptr;
 
-  void BasicConfiguration() {
-    dev_holder->CreateAndInsertObj(obj1400, 0x1400u);
-    dev_holder->CreateAndInsertObj(obj1600, 0x1600u);
-  }
-
   TEST_SETUP() {
-    TEST_BASE_SETUP();
-
-    can_net_destroy(net);
+    LelyUnitTest::DisableDiagnosticMessages();
     net = can_net_create(limitedAllocator.ToAllocT(), 0);
+    CHECK(net != nullptr);
 
-    BasicConfiguration();
+    dev_holder.reset(new CoDevTHolder(DEV_ID));
+    dev = dev_holder->Get();
+    CHECK(dev != nullptr);
+
+    dev_holder->CreateObj<Obj1400RpdoCommPar>(obj1400);
+    dev_holder->CreateObj<Obj1600RpdoMapPar>(obj1600);
   }
 
   TEST_TEARDOWN() {
@@ -1076,62 +1357,155 @@ TEST_GROUP_BASE(CO_RpdoAllocation, CO_RpdoBase) {
 /// @name co_rpdo_create()
 ///@{
 
-TEST(CO_RpdoAllocation, CoRpdoCreate_NoMemoryAvailable) {
+/// \Given initialized device (co_dev_t) and network (can_net_t) with a memory
+///        allocator limited to 0 bytes
+///
+/// \When co_rpdo_create() is called with pointers to the network and the
+///       device, and an RPDO number
+///
+/// \Then a null pointer is returned, the RPDO service is not created and the
+///       error number is set to ERRNUM_NOMEM
+///       \Calls mem_alloc()
+///       \Calls can_net_get_alloc()
+///       \Calls co_rpdo_alignof()
+///       \Calls co_rpdo_sizeof()
+///       \Calls get_errc()
+///       \Calls set_errc()
+TEST(CO_RpdoAllocation, CoRpdoCreate_NoMemory) {
   limitedAllocator.LimitAllocationTo(0u);
 
-  rpdo = co_rpdo_create(net, dev, DEV_ID);
+  rpdo = co_rpdo_create(net, dev, RPDO_NUM);
 
   POINTERS_EQUAL(nullptr, rpdo);
+  CHECK_EQUAL(ERRNUM_NOMEM, get_errnum());
+  CHECK_EQUAL(0, limitedAllocator.GetAllocationLimit());
 }
 
-TEST(CO_RpdoAllocation, CoRpdoCreate_MemoryOnlyForRpdo) {
+/// \Given initialized device (co_dev_t) and network (can_net_t) with a memory
+///        allocator limited to only allocate the RPDO service instance
+///
+/// \When co_rpdo_create() is called with pointers to the network and the
+///       device, and an RPDO number
+///
+/// \Then a null pointer is returned, the RPDO service is not created and the
+///       error number is set to ERRNUM_NOMEM
+///       \Calls mem_alloc()
+///       \Calls can_net_get_alloc()
+///       \Calls co_rpdo_alignof()
+///       \Calls co_rpdo_sizeof()
+///       \Calls co_dev_find_obj()
+///       \Calls memset()
+///       \Calls can_recv_create()
+///       \Calls mem_free()
+///       \Calls co_rpdo_get_alloc()
+///       \Calls get_errc()
+///       \Calls set_errc()
+TEST(CO_RpdoAllocation, CoRpdoCreate_NoMemoryForRecv) {
   limitedAllocator.LimitAllocationTo(co_rpdo_sizeof());
 
-  rpdo = co_rpdo_create(net, dev, DEV_ID);
+  rpdo = co_rpdo_create(net, dev, RPDO_NUM);
 
   POINTERS_EQUAL(nullptr, rpdo);
+  CHECK_EQUAL(ERRNUM_NOMEM, get_errnum());
+  CHECK_EQUAL(0, limitedAllocator.GetAllocationLimit());
 }
 
-TEST(CO_RpdoAllocation, CoRpdoCreate_MemoryOnlyForRpdoAndRecv) {
+/// \Given initialized device (co_dev_t) and network (can_net_t) with a memory
+///        allocator limited to only allocate the RPDO service instance and the
+///        CAN receiver
+///
+/// \When co_rpdo_create() is called with pointers to the network and the
+///       device, and an RPDO number
+///
+/// \Then a null pointer is returned, the RPDO service is not created and the
+///       error number is set to ERRNUM_NOMEM
+///       \Calls mem_alloc()
+///       \Calls can_net_get_alloc()
+///       \Calls co_rpdo_alignof()
+///       \Calls co_rpdo_sizeof()
+///       \Calls co_dev_find_obj()
+///       \Calls memset()
+///       \Calls can_recv_create()
+///       \Calls can_recv_set_func()
+///       \Calls can_timer_create()
+///       \Calls can_recv_destroy()
+///       \Calls mem_free()
+///       \Calls co_rpdo_get_alloc()
+///       \Calls get_errc()
+///       \Calls set_errc()
+TEST(CO_RpdoAllocation, CoRpdoCreate_NoMemoryForTimer) {
   limitedAllocator.LimitAllocationTo(co_rpdo_sizeof() + can_recv_sizeof());
 
-  rpdo = co_rpdo_create(net, dev, DEV_ID);
+  rpdo = co_rpdo_create(net, dev, RPDO_NUM);
 
   POINTERS_EQUAL(nullptr, rpdo);
+  CHECK_EQUAL(ERRNUM_NOMEM, get_errnum());
+  CHECK_EQUAL(0, limitedAllocator.GetAllocationLimit());
 }
 
-TEST(CO_RpdoAllocation, CoRpdoCreate_MemoryOnlyForRpdoAndTimer) {
-  limitedAllocator.LimitAllocationTo(co_rpdo_sizeof() + can_timer_sizeof());
-
-  rpdo = co_rpdo_create(net, dev, DEV_ID);
-
-  POINTERS_EQUAL(nullptr, rpdo);
-}
-
-TEST(CO_RpdoAllocation, CoRpdoCreate_MemoryOnlyForRpdoAndRecvAndSingleTimer) {
+/// \Given initialized device (co_dev_t) and network (can_net_t) with a memory
+///        allocator limited to only allocate the RPDO service instance, the
+///        CAN receiver and one CAN timer
+///
+/// \When co_rpdo_create() is called with pointers to the network and the
+///       device, and an RPDO number
+///
+/// \Then a null pointer is returned, the RPDO service is not created and the
+///       error number is set to ERRNUM_NOMEM
+///       \Calls mem_alloc()
+///       \Calls can_net_get_alloc()
+///       \Calls co_rpdo_alignof()
+///       \Calls co_rpdo_sizeof()
+///       \Calls co_dev_find_obj()
+///       \Calls memset()
+///       \Calls can_recv_create()
+///       \Calls can_recv_set_func()
+///       \Calls can_timer_create()
+///       \Calls can_timer_destroy()
+///       \Calls can_recv_destroy()
+///       \Calls mem_free()
+///       \Calls co_rpdo_get_alloc()
+///       \Calls get_errc()
+///       \Calls set_errc()
+TEST(CO_RpdoAllocation, CoRpdoCreate_NoMemoryForSecondTimer) {
   limitedAllocator.LimitAllocationTo(co_rpdo_sizeof() + can_recv_sizeof() +
                                      can_timer_sizeof());
 
-  rpdo = co_rpdo_create(net, dev, DEV_ID);
+  rpdo = co_rpdo_create(net, dev, RPDO_NUM);
 
   POINTERS_EQUAL(nullptr, rpdo);
+  CHECK_EQUAL(ERRNUM_NOMEM, get_errnum());
+  CHECK_EQUAL(0, limitedAllocator.GetAllocationLimit());
 }
 
-TEST(CO_RpdoAllocation, CoRpdoCreate_MemoryOnlyForRpdoAndTwoTimers) {
-  limitedAllocator.LimitAllocationTo(co_rpdo_sizeof() + 2 * can_timer_sizeof());
-
-  rpdo = co_rpdo_create(net, dev, DEV_ID);
-
-  POINTERS_EQUAL(nullptr, rpdo);
-}
-
-TEST(CO_RpdoAllocation, CoRpdoCreate_AllNecessaryMemoryIsAvailable) {
+/// \Given initialized device (co_dev_t) and network (can_net_t) with a memory
+///        allocator limited to only allocate the RPDO service and all required
+///        objects
+///
+/// \When co_rpdo_create() is called with pointers to the network and the
+///       device, and an RPDO number
+///
+/// \Then a pointer to the created RPDO service is returned
+///       \Calls mem_alloc()
+///       \Calls can_net_get_alloc()
+///       \Calls co_rpdo_alignof()
+///       \Calls co_rpdo_sizeof()
+///       \Calls co_dev_find_obj()
+///       \Calls memset()
+///       \Calls can_recv_create()
+///       \Calls co_rpdo_get_alloc()
+///       \Calls can_recv_set_func()
+///       \Calls can_timer_create()
+///       \Calls can_timer_set_func()
+///       \Calls co_sdo_req_init()
+TEST(CO_RpdoAllocation, CoRpdoCreate_ExactMemory) {
   limitedAllocator.LimitAllocationTo(co_rpdo_sizeof() + can_recv_sizeof() +
-                                     2 * can_timer_sizeof());
+                                     2u * can_timer_sizeof());
 
-  rpdo = co_rpdo_create(net, dev, DEV_ID);
+  rpdo = co_rpdo_create(net, dev, RPDO_NUM);
 
   CHECK(rpdo != nullptr);
+  CHECK_EQUAL(0, limitedAllocator.GetAllocationLimit());
 }
 
 ///@}

@@ -16,6 +16,7 @@ liblely_unit_test_src += co-nmt-hb-ind.cpp
 liblely_unit_test_src += co-nmt-st-ind.cpp
 liblely_unit_test_src += co-nmt-sync-ind.cpp
 liblely_unit_test_src += co-nmt-rdn-ind.cpp
+liblely_unit_test_src += co-rpdo-err.cpp
 liblely_unit_test_src += co-rpdo-ind.cpp
 liblely_unit_test_src += co-sub-dn-ind.cpp
 liblely_unit_test_src += co-sub-up-ind.cpp

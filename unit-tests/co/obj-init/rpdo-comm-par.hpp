@@ -35,7 +35,12 @@ struct Obj1400RpdoCommPar : ObjInitT<0x1400u, 0x1400u, 0x15ffu> {
   struct Sub03InhibitTime : SubT<0x03u, CO_DEFTYPE_UNSIGNED16> {};
   struct Sub04Reserved : SubT<0x04u, CO_DEFTYPE_UNSIGNED8, 0> {};
   struct Sub05EventTimer : SubT<0x05u, CO_DEFTYPE_UNSIGNED16> {};
-  struct Sub06SyncStartValue : SubT<0x04u, CO_DEFTYPE_UNSIGNED8> {};
+  struct Sub06SyncStartValue : SubT<0x06u, CO_DEFTYPE_UNSIGNED8> {};
+
+  static const Sub02TransmissionType::sub_type SYNCHRONOUS_TRANSMISSION = 0x00u;
+  static const Sub02TransmissionType::sub_type EVENT_DRIVEN_TRANSMISSION =
+      0xfeu;
+  static const Sub02TransmissionType::sub_type RESERVED_TRANSMISSION = 0xf1u;
 };
 
 #endif  // LELY_UNIT_TEST_RPDO_COMM_PAR_HPP_
