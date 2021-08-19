@@ -1118,6 +1118,7 @@ TEST_GROUP_BASE(CO_Csdo, CO_CsdoBase) {
   using sub_type64 = co_unsigned64_t;
 
   membuf ind_mbuf;
+  membuf up_ind_mbuf;
   size_t num_called;
   static const co_unsigned16_t SUB_TYPE = CO_DEFTYPE_UNSIGNED16;
   static const co_unsigned16_t SUB_TYPE64 = CO_DEFTYPE_UNSIGNED64;
@@ -1134,6 +1135,7 @@ TEST_GROUP_BASE(CO_Csdo, CO_CsdoBase) {
 #if LELY_NO_MALLOC
   char buffer[sizeof(sub_type)] = {0};
   char ext_buffer[sizeof(sub_type)] = {0};
+  char up_ind_buffer[sizeof(sub_type64)] = {0};
 #endif
 
   static uint_least16_t LoadLE_U16(const membuf* const mbuf) {
@@ -1178,7 +1180,7 @@ TEST_GROUP_BASE(CO_Csdo, CO_CsdoBase) {
       const co_unsigned32_t size = sizeof(sub_type)) {
     CHECK_TRUE(co_csdo_is_idle(csdo));
 
-    CHECK_EQUAL(0, co_csdo_blk_up_req(csdo, idx, subidx, 0, nullptr,
+    CHECK_EQUAL(0, co_csdo_blk_up_req(csdo, idx, subidx, 0, &up_ind_mbuf,
                                       CoCsdoUpCon::func, &data));
 
     const can_msg msg_res =
@@ -1192,8 +1194,8 @@ TEST_GROUP_BASE(CO_Csdo, CO_CsdoBase) {
       const co_unsigned32_t size = sizeof(sub_type)) {
     CHECK_TRUE(co_csdo_is_idle(csdo));
 
-    CHECK_EQUAL(0, co_csdo_blk_up_req(csdo, idx, subidx, 0, nullptr,
-                                      CoCsdoUpCon::func, nullptr));
+    CHECK_EQUAL(0, co_csdo_blk_up_req(csdo, idx, subidx, 0, &up_ind_mbuf,
+                                      CoCsdoUpCon::func, &data));
 
     can_msg msg_res =
         SdoCreateMsg::BlkUpIniRes(idx, subidx, DEFAULT_COBID_RES, size);
@@ -1307,6 +1309,11 @@ TEST_GROUP_BASE(CO_Csdo, CO_CsdoBase) {
 
     dev_holder->CreateAndInsertObj(obj2020, IDX);
     obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE, sub_type{0});
+#if LELY_NO_MALLOC
+    membuf_init(&up_ind_mbuf, up_ind_buffer, sizeof(sub_type64));
+#endif
+    CHECK_COMPARE(membuf_reserve(&up_ind_mbuf, sizeof(sub_type64)), >=,
+                  sizeof(sub_type64));
 
     CoCsdoUpCon::Clear();
     CanSend::Clear();
@@ -1314,6 +1321,7 @@ TEST_GROUP_BASE(CO_Csdo, CO_CsdoBase) {
   }
 
   TEST_TEARDOWN() {
+    membuf_fini(&up_ind_mbuf);
     arrays.Clear();
 
     TEST_BASE_TEARDOWN();
@@ -4123,14 +4131,14 @@ TEST(CO_Csdo, CoCsdoBlkUpSubOnRecv_IncompleteAbortCode) {
 ///
 /// \Then an SDO abort transfer message with CO_SDO_AC_TIMEOUT abort code is
 ///       sent
-TEST(CO_Csdo, CoCsdoBlkUpSubOnRecv_TimeoutSet) {
+TEST(CO_Csdo, CoCsdoBlkUpSubOnTime_TimeoutSet) {
   co_csdo_set_timeout(csdo, 999);
   const co_unsigned8_t subidx_u64 = SUBIDX + 1u;
   obj2020->InsertAndSetSub(subidx_u64, SUB_TYPE64, co_unsigned64_t{0});
   StartCSDO();
   InitiateBlockUploadRequest(IDX, subidx_u64, sizeof(sub_type64));
 
-  co_unsigned8_t seqno = 1u;
+  const co_unsigned8_t seqno = 1u;
   const can_msg msg = SdoCreateMsg::BlkUpSegReq(DEFAULT_COBID_RES, seqno,
                                                 val_u64.GetFirstSegment());
   CHECK_EQUAL(1u, can_net_recv(net, &msg, 0));
@@ -4138,12 +4146,6 @@ TEST(CO_Csdo, CoCsdoBlkUpSubOnRecv_TimeoutSet) {
   CHECK_EQUAL(0, CanSend::GetNumCalled());
 
   CoCsdoUpDnReq::SetOneSecOnNet(net);
-
-  ++seqno;
-  can_msg last_msg = SdoCreateMsg::BlkUpSegReq(DEFAULT_COBID_RES, seqno,
-                                               val_u64.GetLastSegment());
-  last_msg.data[0] |= CO_SDO_SEQ_LAST;
-  CHECK_EQUAL(1u, can_net_recv(net, &last_msg, 0));
 
   CheckSdoAbortSent(IDX, subidx_u64, CO_SDO_AC_TIMEOUT);
 }
@@ -4293,7 +4295,14 @@ TEST(CO_Csdo, CoCsdoBlkUpSubOnRecv_Nominal) {
 /// @name CSDO block upload end
 ///@{
 
-// TODO(N7S): GWT
+/// \Given a pointer to the CSDO service (co_csdo_t) in the 'block upload end'
+///        state, the service has a timeout set
+///
+/// \When the Client-SDO timeout expires before receiving the response from the
+///       server
+///
+/// \Then an SDO abort transfer message with CO_SDO_AC_TIMEOUT abort code
+///       is sent
 TEST(CO_Csdo, CoCsdoBlkUpEndOnTime_TimeoutSet) {
   co_csdo_set_timeout(csdo, 999);
   StartCSDO();
@@ -4304,7 +4313,16 @@ TEST(CO_Csdo, CoCsdoBlkUpEndOnTime_TimeoutSet) {
   CheckSdoAbortSent(IDX, SUBIDX, CO_SDO_AC_TIMEOUT);
 }
 
-// TODO(N7S): GWT
+/// \Given a pointer to the CSDO service (co_csdo_t) in the 'block upload end'
+///        state
+///
+/// \When an SDO message with length zero is received
+///
+/// \Then an SDO abort transfer message with CO_SDO_AC_NO_CS abort code
+///       is sent, download confirmation function is called with the pointer
+///       to the CSDO service, the requested multiplexer, CO_SDO_AC_NO_CS abort
+///       code, null bytes-to-upload pointer, 0 and a user-specified data
+///       pointer
 TEST(CO_Csdo, CoCsdoBlkUpEndOnRecv_NoCs) {
   StartCSDO();
   AdvanceToBlkUpEndState();
@@ -4314,9 +4332,17 @@ TEST(CO_Csdo, CoCsdoBlkUpEndOnRecv_NoCs) {
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
   CheckSdoAbortSent(IDX, SUBIDX, CO_SDO_AC_NO_CS);
+  CoCsdoUpCon::Check(csdo, IDX, SUBIDX, CO_SDO_AC_NO_CS, nullptr, 0, &data);
 }
 
-// TODO(N7S): GWT
+/// \Given a pointer to the CSDO service (co_csdo_t) in the 'block upload end'
+///        state
+///
+/// \When an SDO abort transfer message with an abort code equal to zero
+///
+/// \Then no SDO message is sent, download confirmation function is called
+///       with the pointer to the CSDO service, the requested multiplexer,
+///       the CO_SDO_AC_ERROR abort code and a user-specified data pointer
 TEST(CO_Csdo, CoCsdoBlkUpEndOnRecv_CsAbort_ZeroAc) {
   StartCSDO();
   AdvanceToBlkUpEndState();
@@ -4325,6 +4351,7 @@ TEST(CO_Csdo, CoCsdoBlkUpEndOnRecv_CsAbort_ZeroAc) {
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
   CHECK_EQUAL(0u, CanSend::GetNumCalled());
+  CoCsdoUpCon::Check(csdo, IDX, SUBIDX, CO_SDO_AC_ERROR, nullptr, 0, &data);
 }
 
 // TODO(N7S): GWT
@@ -4337,6 +4364,7 @@ TEST(CO_Csdo, CoCsdoBlkUpEndOnRecv_CsAbort_AcNonZero) {
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
   CHECK_EQUAL(0u, CanSend::GetNumCalled());
+  CoCsdoUpCon::Check(csdo, IDX, SUBIDX, CO_SDO_AC_HARDWARE, nullptr, 0, &data);
 }
 
 // TODO(N7S): GWT
@@ -4344,12 +4372,12 @@ TEST(CO_Csdo, CoCsdoBlkUpEndOnRecv_CsAbort_IncompleteAc) {
   StartCSDO();
   AdvanceToBlkUpEndState();
 
-  auto msg =
-      SdoCreateMsg::Abort(IDX, SUBIDX, DEFAULT_COBID_RES, CO_SDO_AC_HARDWARE);
+  auto msg = SdoCreateMsg::Abort(IDX, SUBIDX, DEFAULT_COBID_RES);
   msg.len = 7u;
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
   CHECK_EQUAL(0u, CanSend::GetNumCalled());
+  CoCsdoUpCon::Check(csdo, IDX, SUBIDX, CO_SDO_AC_ERROR, nullptr, 0, &data);
 }
 
 // TODO(N7S): GWT
@@ -4362,6 +4390,7 @@ TEST(CO_Csdo, CoCsdoBlkUpEndOnRecv_IncorrectCs) {
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
   CheckSdoAbortSent(IDX, SUBIDX, CO_SDO_AC_NO_CS);
+  CoCsdoUpCon::Check(csdo, IDX, SUBIDX, CO_SDO_AC_NO_CS, nullptr, 0, &data);
 }
 
 // TODO(N7S): GWT
@@ -4374,6 +4403,7 @@ TEST(CO_Csdo, CoCsdoBlkUpEndOnRecv_IncorrectSc) {
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
   CheckSdoAbortSent(IDX, SUBIDX, CO_SDO_AC_NO_CS);
+  CoCsdoUpCon::Check(csdo, IDX, SUBIDX, CO_SDO_AC_NO_CS, nullptr, 0, &data);
 }
 
 // TODO(N7S): GWT
@@ -4389,6 +4419,7 @@ TEST(CO_Csdo, CoCsdoBlkUpEndOnRecv_CheckCrcIncorrect) {
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
   CheckSdoAbortSent(IDX, SUBIDX, CO_SDO_AC_BLK_CRC);
+  CoCsdoUpCon::Check(csdo, IDX, SUBIDX, CO_SDO_AC_BLK_CRC, nullptr, 0, &data);
 }
 
 // TODO(N7S): GWT
@@ -4407,6 +4438,8 @@ TEST(CO_Csdo, CoCsdoBlkUpEndOnRecv_CheckCrcCorrect) {
   const auto expected_msg =
       SdoCreateMsg::BlkUpReq(DEFAULT_COBID_REQ, CO_SDO_SC_END_BLK);
   CanSend::CheckMsg(expected_msg);
+  CoCsdoUpCon::Check(csdo, IDX, SUBIDX, 0, membuf_begin(&up_ind_mbuf),
+                     sizeof(val_u16.GetVal()), &data);
 }
 
 // TODO(N7S): GWT
@@ -4424,12 +4457,15 @@ TEST(CO_Csdo, CoCsdoBlkUpEndOnRecv_EndBlkWithoutSegment) {
   CHECK_EQUAL(1, can_net_recv(net, &msg2, 0));
 
   CheckSdoAbortSent(IDX, SUBIDX, CO_SDO_AC_TYPE_LEN_LO);
+  CoCsdoUpCon::Check(csdo, IDX, SUBIDX, CO_SDO_AC_TYPE_LEN_LO, nullptr, 0,
+                     &data);
 }
 
 // TODO(N7S): GWT
 TEST(CO_Csdo, CoCsdoBlkUpEndOnRecv_RequestZeroBytes) {
   StartCSDO();
-  InitiateBlockUploadRequest(IDX, SUBIDX, 0u);
+  const co_unsigned32_t num_bytes_req = 0u;
+  InitiateBlockUploadRequest(IDX, SUBIDX, num_bytes_req);
   ReceiveBlkUpSegReq();
   CanSend::Clear();
 
@@ -4441,6 +4477,8 @@ TEST(CO_Csdo, CoCsdoBlkUpEndOnRecv_RequestZeroBytes) {
   const auto expected_msg =
       SdoCreateMsg::BlkUpReq(DEFAULT_COBID_REQ, CO_SDO_SC_END_BLK);
   CanSend::CheckMsg(expected_msg);
+  CoCsdoUpCon::Check(csdo, IDX, SUBIDX, 0, membuf_begin(&up_ind_mbuf),
+                     num_bytes_req, &data);
 }
 
 // TODO(N7S): GWT
@@ -4453,6 +4491,7 @@ TEST(CO_Csdo, CoCsdoBlkUpEndOnRecv_NoBytesInLastSegment) {
   CHECK_EQUAL(1u, can_net_recv(net, &msg, 0));
 
   CheckSdoAbortSent(IDX, SUBIDX, CO_SDO_AC_NO_CS);
+  CoCsdoUpCon::Check(csdo, IDX, SUBIDX, CO_SDO_AC_NO_CS, nullptr, 0, &data);
 }
 
 // TODO(N7S): GWT
@@ -4468,6 +4507,8 @@ TEST(CO_Csdo, CoCsdoBlkUpEndOnRecv_Nominal) {
   const auto expected_msg =
       SdoCreateMsg::BlkUpReq(DEFAULT_COBID_REQ, CO_SDO_SC_END_BLK);
   CanSend::CheckMsg(expected_msg);
+  CoCsdoUpCon::Check(csdo, IDX, SUBIDX, 0, membuf_begin(&up_ind_mbuf),
+                     sizeof(val_u16.GetVal()), &data);
 }
 
 ///@}
