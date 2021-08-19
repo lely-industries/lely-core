@@ -5194,7 +5194,17 @@ TEST(CO_Csdo, CoCsdoBlkDnSubOnRecv_NoCs) {
   CoCsdoDnCon::Check(csdo, IDX, SUBIDX, CO_SDO_AC_NO_CS, &data);
 }
 
-// TODO(N7S): GWT
+/// \Given a pointer to the CSDO service (co_csdo_t) in the 'block download
+///        sub-block' state
+///
+/// \When an SDO abort transfer message with an abort code equal to zero is
+///       received
+///
+/// \Then no SDO message is sent, download confirmation function is called with
+///       CO_SDO_AC_ERROR abort code and a pointer to the user-specified data
+///       \Calls membuf_size()
+///       \Calls memcpy()
+///       \Calls can_net_send()
 TEST(CO_Csdo, CoCsdoBlkDnSubOnRecv_CsAbort_AcZero) {
   StartCSDO();
   AdvanceToBlkDnSubState(IDX, SUBIDX);
@@ -5206,7 +5216,16 @@ TEST(CO_Csdo, CoCsdoBlkDnSubOnRecv_CsAbort_AcZero) {
   CoCsdoDnCon::Check(csdo, IDX, SUBIDX, CO_SDO_AC_ERROR, &data);
 }
 
-// TODO(N7S): GWT
+/// \Given a pointer to the CSDO service (co_csdo_t) in the 'block download
+///        sub-block' state
+///
+/// \When an SDO abort transfer message with a non-zero abort code is received
+///
+/// \Then no SDO message is sent, download confirmation function is called with
+///       the requested abort code and a pointer to the user-specified data
+///       \Calls membuf_size()
+///       \Calls memcpy()
+///       \Calls can_net_send()
 TEST(CO_Csdo, CoCsdoBlkDnSubOnRecv_CsAbort_NonZeroAc) {
   StartCSDO();
   AdvanceToBlkDnSubState(IDX, SUBIDX);
@@ -5219,7 +5238,17 @@ TEST(CO_Csdo, CoCsdoBlkDnSubOnRecv_CsAbort_NonZeroAc) {
   CoCsdoDnCon::Check(csdo, IDX, SUBIDX, CO_SDO_AC_HARDWARE, &data);
 }
 
-// TODO(N7S): GWT
+/// \Given a pointer to the CSDO service (co_csdo_t) in the 'block download
+///        sub-block' state
+///
+/// \When an SDO abort transfer message with an incomplete abort code is
+///       received
+///
+/// \Then no SDO message is sent, download confirmation function is called with
+///       CO_SDO_AC_ERROR abort code and a pointer to the user-specified data
+///       \Calls membuf_size()
+///       \Calls memcpy()
+///       \Calls can_net_send()
 TEST(CO_Csdo, CoCsdoBlkDnSubOnRecv_CsAbort_IncompleteAc) {
   StartCSDO();
   AdvanceToBlkDnSubState(IDX, SUBIDX);
@@ -5232,7 +5261,17 @@ TEST(CO_Csdo, CoCsdoBlkDnSubOnRecv_CsAbort_IncompleteAc) {
   CoCsdoDnCon::Check(csdo, IDX, SUBIDX, CO_SDO_AC_ERROR, &data);
 }
 
-// TODO(N7S): GWT
+/// \Given a pointer to the CSDO service (co_csdo_t) in the 'block download
+///        sub-block' state
+///
+/// \When an SDO message with an incorrect command specifier is received
+///
+/// \Then an SDO abort transfer message with CO_SDO_AC_NO_CS abort code is sent,
+///       download confirmation function is called with CO_SDO_AC_NO_CS abort
+///       code and a pointer to the user-specified data
+///       \Calls membuf_size()
+///       \Calls memcpy()
+///       \Calls can_net_send()
 TEST(CO_Csdo, CoCsdoBlkDnSubOnRecv_IncorrectCs) {
   StartCSDO();
   AdvanceToBlkDnSubState(IDX, SUBIDX);
@@ -5245,7 +5284,17 @@ TEST(CO_Csdo, CoCsdoBlkDnSubOnRecv_IncorrectCs) {
   CoCsdoDnCon::Check(csdo, IDX, SUBIDX, CO_SDO_AC_NO_CS, &data);
 }
 
-// TODO(N7S): GWT
+/// \Given a pointer to the CSDO service (co_csdo_t) in the 'block download
+///        sub-block' state
+///
+/// \When an SDO message with an incorrect subcommand is received
+///
+/// \Then an SDO abort transfer message with CO_SDO_AC_NO_CS abort code is sent,
+///       download confirmation function is called with CO_SDO_AC_NO_CS abort
+///       code and a pointer to the user-specified data
+///       \Calls membuf_size()
+///       \Calls memcpy()
+///       \Calls can_net_send()
 TEST(CO_Csdo, CoCsdoBlkDnSubOnRecv_IncorrectSc) {
   StartCSDO();
   AdvanceToBlkDnSubState(IDX, SUBIDX);
@@ -5268,6 +5317,9 @@ TEST(CO_Csdo, CoCsdoBlkDnSubOnRecv_IncorrectSc) {
 /// \Then an SDO message with CO_SDO_CCS_BLK_DN_REQ command specifier with
 ///       CO_SDO_SC_END_BLK subcommand and the size of the requested data
 ///       is sent
+///       \Calls membuf_size()
+///       \Calls memcpy()
+///       \Calls can_net_send()
 TEST(CO_Csdo, CoCsdoBlkDnSubOnRecv_AckseqEqualToBlksize) {
   StartCSDO();
   AdvanceToBlkDnSubState(IDX, SUBIDX);
@@ -5291,6 +5343,9 @@ TEST(CO_Csdo, CoCsdoBlkDnSubOnRecv_AckseqEqualToBlksize) {
 ///
 /// \Then an SDO message with CO_SDO_SEQ_LAST command specifier with correct
 ///       sequence number and segment data is sent
+///       \Calls membuf_size()
+///       \Calls memcpy()
+///       \Calls can_net_send()
 TEST(CO_Csdo, CoCsdoBlkDnSubOnRecv_Nominal) {
   StartCSDO();
   AdvanceToBlkDnSubState(IDX, SUBIDX);
@@ -5332,7 +5387,7 @@ TEST(CO_Csdo, CoCsdoBlkDnEndOnRecv_NoCs) {
 /// \Given a pointer to the started CSDO service (co_csdo_t) in the 'block
 ///        download end' state
 ///
-/// \When an SDO abort transfer message with a non-zero abort code
+/// \When an SDO abort transfer message with a non-zero abort code is received
 ///
 /// \Then no SDO message is sent, download confirmation function is called
 ///       with the pointer to the CSDO service, the requested multiplexer,
@@ -5354,7 +5409,8 @@ TEST(CO_Csdo, CoCsdoBlkDnEndOnRecv_CsAbort_NonZeroAc) {
 /// \Given a pointer to the started CSDO service (co_csdo_t) in the 'block
 ///        download end' state
 ///
-/// \When an SDO abort transfer message with an abort code equal to zero
+/// \When an SDO abort transfer message with an abort code equal to zero is
+///       received
 ///
 /// \Then no SDO message is sent, download confirmation function is called
 ///       with the pointer to the CSDO service, the requested multiplexer,
@@ -5375,7 +5431,8 @@ TEST(CO_Csdo, CoCsdoBlkDnEndOnRecv_CsAbort_AcZero) {
 /// \Given a pointer to the started CSDO service (co_csdo_t) in the 'block
 ///        download end' state
 ///
-/// \When an SDO abort transfer message with an incomplete abort code
+/// \When an SDO abort transfer message with an incomplete abort code is
+///       received
 ///
 /// \Then no SDO message is sent, download confirmation function is called once
 ///       with the pointer to the CSDO service, the multiplexer, CO_SDO_AC_ERROR
