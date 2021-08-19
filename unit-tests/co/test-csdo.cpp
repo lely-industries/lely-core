@@ -283,7 +283,7 @@ TEST(CO_CsdoInit, CoCsdoCreate_WithObj1280) {
   POINTERS_EQUAL(net, co_csdo_get_net(csdo));
   CHECK_EQUAL(CSDO_NUM, co_csdo_get_num(csdo));
   POINTERS_EQUAL(can_net_get_alloc(net), co_csdo_get_alloc(csdo));
-  const co_sdo_par* par = co_csdo_get_par(csdo);
+  const co_sdo_par* const par = co_csdo_get_par(csdo);
   CHECK_EQUAL(3u, par->n);
   CHECK_EQUAL(DEV_ID, par->id);
   CHECK_EQUAL(0x580u + CSDO_NUM, par->cobid_res);
@@ -2300,9 +2300,9 @@ TEST(CO_Csdo, CoDevUpReq_ArrayObject) {
 ///       \Calls membuf_fini()
 ///       \Calls set_errc()
 TEST(CO_Csdo, CoDevUpReq_ReqZero) {
-  co_sub_up_ind_t* const req_up_ind = [](const co_sub_t* sub, co_sdo_req* req,
-                                         co_unsigned32_t ac,
-                                         void*) -> co_unsigned32_t {
+  co_sub_up_ind_t* const req_up_ind =
+      [](const co_sub_t* const sub, co_sdo_req* const req, co_unsigned32_t ac,
+         void*) -> co_unsigned32_t {
     co_sub_on_up(sub, req, &ac);
     req->buf = nullptr;
     req->size = 0;
@@ -2630,7 +2630,7 @@ TEST(CO_Csdo, CoDevUpReq_Nominal) {
 namespace CoCsdoUpDnReq {
 static void
 SetOneSecOnNet(can_net_t* const net) {
-  timespec ts = {1u, 0u};
+  const timespec ts = {1u, 0u};
   can_net_set_time(net, &ts);
 }
 
