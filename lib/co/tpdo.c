@@ -968,8 +968,8 @@ co_tpdo_init(co_tpdo_t *pdo, can_net_t *net, co_dev_t *dev, co_unsigned16_t num)
 	}
 
 	// Find the PDO parameters in the object dictionary.
-	co_obj_t *obj_1800 = co_dev_find_obj(dev, 0x1800 + num - 1);
-	co_obj_t *obj_1a00 = co_dev_find_obj(dev, 0x1a00 + num - 1);
+	const co_obj_t *const obj_1800 = co_dev_find_obj(dev, 0x1800 + num - 1);
+	const co_obj_t *const obj_1a00 = co_dev_find_obj(dev, 0x1a00 + num - 1);
 	if (!obj_1800 || !obj_1a00) {
 		errc = errnum2c(ERRNUM_INVAL);
 		goto error_param;

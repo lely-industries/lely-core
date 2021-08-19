@@ -2601,7 +2601,7 @@ co_csdo_init(co_csdo_t *sdo, can_net_t *net, co_dev_t *dev, co_unsigned8_t num)
 	}
 
 	// Find the SDO client parameter in the object dictionary.
-	co_obj_t *obj_1280 =
+	const co_obj_t *const obj_1280 =
 			dev ? co_dev_find_obj(dev, 0x1280 + num - 1) : NULL;
 	if (dev && !obj_1280) {
 		errc = errnum2c(ERRNUM_INVAL);

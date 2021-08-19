@@ -1991,7 +1991,7 @@ co_ssdo_init(co_ssdo_t *sdo, can_net_t *net, co_dev_t *dev, co_unsigned8_t num)
 
 	// Find the SDO server parameter in the object dictionary. The default
 	// SDO (1200) is optional.
-	co_obj_t *obj_1200 = co_dev_find_obj(dev, 0x1200 + num - 1);
+	const co_obj_t *const obj_1200 = co_dev_find_obj(dev, 0x1200 + num - 1);
 	if (num != 1 && !obj_1200) {
 		errc = errnum2c(ERRNUM_INVAL);
 		goto error_param;
