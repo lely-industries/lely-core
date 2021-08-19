@@ -24,6 +24,7 @@
 #include <config.h>
 #endif
 
+#include <array>
 #include <memory>
 
 #include <CppUTest/TestHarness.h>
@@ -74,6 +75,13 @@ TEST_BASE(CO_RpdoBase) {
     can_net_get_time(net, &ts);
     timespec_add_msec(&ts, ms);
     can_net_set_time(net, &ts);
+  }
+
+  void CheckPdoMapParIsZeroed(const co_pdo_map_par* const map) const {
+    CHECK_EQUAL(0, map->n);
+    const std::array<co_unsigned32_t, CO_PDO_NUM_MAPS> expected_map = {0};
+    MEMCMP_EQUAL(expected_map.data(), map->map,
+                 expected_map.size() * sizeof(co_unsigned32_t));
   }
 
   TEST_SETUP() {
@@ -262,9 +270,7 @@ TEST(CO_RpdoCreate, CoRpdoCreate_MinimalRPDO) {
   CHECK_EQUAL(0, comm->event);
   CHECK_EQUAL(0, comm->sync);
 
-  const auto* const map_par = co_rpdo_get_map_par(rpdo);
-  CHECK_EQUAL(0, map_par->n);
-  for (size_t i = 0; i < CO_PDO_NUM_MAPS; ++i) CHECK_EQUAL(0, map_par->map[i]);
+  CheckPdoMapParIsZeroed(co_rpdo_get_map_par(rpdo));
 }
 
 /// \Given initialized device (co_dev_t) and network (can_net_t), the object
@@ -311,9 +317,7 @@ TEST(CO_RpdoCreate, CoRpdoCreate_MinimalRPDO_MaxNum) {
   CHECK_EQUAL(0, comm->event);
   CHECK_EQUAL(0, comm->sync);
 
-  const auto* const map_par = co_rpdo_get_map_par(rpdo);
-  CHECK_EQUAL(0, map_par->n);
-  for (size_t i = 0; i < CO_PDO_NUM_MAPS; ++i) CHECK_EQUAL(0, map_par->map[i]);
+  CheckPdoMapParIsZeroed(co_rpdo_get_map_par(rpdo));
 }
 
 ///@}
@@ -452,9 +456,7 @@ TEST(CO_Rpdo, CoRpdoStart_Nominal) {
   CHECK_EQUAL(0, comm->event);
   CHECK_EQUAL(0, comm->sync);
 
-  const auto* const map_par = co_rpdo_get_map_par(rpdo);
-  CHECK_EQUAL(0, map_par->n);
-  for (size_t i = 0; i < CO_PDO_NUM_MAPS; ++i) CHECK_EQUAL(0, map_par->map[i]);
+  CheckPdoMapParIsZeroed(co_rpdo_get_map_par(rpdo));
 
   co_rpdo_ind_t* pind = nullptr;
   void* pdata = nullptr;
