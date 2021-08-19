@@ -296,7 +296,8 @@ co_emcy_start(co_emcy_t *emcy)
 		co_unsigned8_t maxid = MIN(co_obj_get_val_u8(obj_1028, 0x00),
 				CO_NUM_NODES);
 		for (co_unsigned8_t id = 1; id <= maxid; id++) {
-			co_sub_t *sub = co_obj_find_sub(obj_1028, id);
+			const co_sub_t *const sub =
+					co_obj_find_sub(obj_1028, id);
 			if (sub)
 				co_emcy_set_1028(emcy, id,
 						co_sub_get_val_u32(sub));
@@ -320,7 +321,8 @@ co_emcy_stop(co_emcy_t *emcy)
 	if (obj_1028) {
 		// Stop all CAN frame receivers.
 		for (co_unsigned8_t id = 1; id <= CO_NUM_NODES; id++) {
-			co_sub_t *sub = co_obj_find_sub(obj_1028, id);
+			const co_sub_t *const sub =
+					co_obj_find_sub(obj_1028, id);
 			if (sub)
 				can_recv_stop(emcy->nodes[id - 1].recv);
 		}
@@ -869,11 +871,12 @@ co_emcy_init(co_emcy_t *emcy, can_net_t *net, co_dev_t *dev)
 		node->recv = NULL;
 	}
 
-	co_obj_t *obj_1028 = co_dev_find_obj(emcy->dev, 0x1028);
+	const co_obj_t *const obj_1028 = co_dev_find_obj(emcy->dev, 0x1028);
 	if (obj_1028) {
 		// Initialize the nodes.
 		for (co_unsigned8_t id = 1; id <= CO_NUM_NODES; id++) {
-			co_sub_t *sub = co_obj_find_sub(obj_1028, id);
+			const co_sub_t *const sub =
+					co_obj_find_sub(obj_1028, id);
 			if (!sub)
 				continue;
 			struct co_emcy_node *node = &emcy->nodes[id - 1];

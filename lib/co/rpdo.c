@@ -791,8 +791,8 @@ co_rpdo_init(co_rpdo_t *pdo, can_net_t *net, co_dev_t *dev, co_unsigned16_t num)
 	}
 
 	// Find the PDO parameters in the object dictionary.
-	co_obj_t *obj_1400 = co_dev_find_obj(dev, 0x1400 + num - 1);
-	co_obj_t *obj_1600 = co_dev_find_obj(dev, 0x1600 + num - 1);
+	const co_obj_t *const obj_1400 = co_dev_find_obj(dev, 0x1400 + num - 1);
+	const co_obj_t *const obj_1600 = co_dev_find_obj(dev, 0x1600 + num - 1);
 	if (!obj_1400 || !obj_1600) {
 		errc = errnum2c(ERRNUM_INVAL);
 		goto error_param;
