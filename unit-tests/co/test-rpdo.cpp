@@ -125,7 +125,7 @@ TEST_GROUP_BASE(CO_RpdoCreate, CO_RpdoBase) {
 ///       \Calls co_rpdo_sizeof()
 ///       \Calls errnum2c()
 ///       \Calls set_errc()
-///       \Calls co_rpdo_free()
+///       \Calls mem_free()
 TEST(CO_RpdoCreate, CoRpdoCreate_ZeroNum) {
   rpdo = co_rpdo_create(net, dev, 0);
 
@@ -146,7 +146,7 @@ TEST(CO_RpdoCreate, CoRpdoCreate_ZeroNum) {
 ///       \Calls co_rpdo_sizeof()
 ///       \Calls errnum2c()
 ///       \Calls set_errc()
-///       \Calls co_rpdo_free()
+///       \Calls mem_free()
 TEST(CO_RpdoCreate, CoRpdoCreate_NumOverMax) {
   rpdo = co_rpdo_create(net, dev, CO_NUM_PDOS + 1u);
 
@@ -169,7 +169,7 @@ TEST(CO_RpdoCreate, CoRpdoCreate_NumOverMax) {
 ///       \Calls co_dev_find_obj()
 ///       \Calls errnum2c()
 ///       \Calls set_errc()
-///       \Calls co_rpdo_free()
+///       \Calls mem_free()
 TEST(CO_RpdoCreate, CoRpdoCreate_NoRpdoParameters) {
   rpdo = co_rpdo_create(net, dev, RPDO_NUM);
 
@@ -193,7 +193,7 @@ TEST(CO_RpdoCreate, CoRpdoCreate_NoRpdoParameters) {
 ///       \Calls co_dev_find_obj()
 ///       \Calls errnum2c()
 ///       \Calls set_errc()
-///       \Calls co_rpdo_free()
+///       \Calls mem_free()
 TEST(CO_RpdoCreate, CoRpdoCreate_NoRpdoMappingParam) {
   dev_holder->CreateObj<Obj1400RpdoCommPar>(obj1400);
 
@@ -218,7 +218,7 @@ TEST(CO_RpdoCreate, CoRpdoCreate_NoRpdoMappingParam) {
 ///       \Calls co_dev_find_obj()
 ///       \Calls errnum2c()
 ///       \Calls set_errc()
-///       \Calls co_rpdo_free()
+///       \Calls mem_free()
 TEST(CO_RpdoCreate, CoRpdoCreate_NoRpdoCommParam) {
   dev_holder->CreateObj<Obj1600RpdoMapPar>(obj1600);
 
@@ -255,7 +255,7 @@ TEST(CO_RpdoCreate, CoRpdoCreate_MinimalRPDO) {
 
   rpdo = co_rpdo_create(net, dev, RPDO_NUM);
 
-  CHECK(rpdo != nullptr);
+  POINTER_NOT_NULL(rpdo);
   POINTERS_EQUAL(net, co_rpdo_get_net(rpdo));
   POINTERS_EQUAL(dev, co_rpdo_get_dev(rpdo));
   CHECK_EQUAL(RPDO_NUM, co_rpdo_get_num(rpdo));
@@ -302,7 +302,7 @@ TEST(CO_RpdoCreate, CoRpdoCreate_MinimalRPDO_MaxNum) {
 
   rpdo = co_rpdo_create(net, dev, MAX_RPDO_NUM);
 
-  CHECK(rpdo != nullptr);
+  POINTER_NOT_NULL(rpdo);
   POINTERS_EQUAL(net, co_rpdo_get_net(rpdo));
   POINTERS_EQUAL(dev, co_rpdo_get_dev(rpdo));
   CHECK_EQUAL(MAX_RPDO_NUM, co_rpdo_get_num(rpdo));
@@ -366,7 +366,7 @@ TEST_GROUP_BASE(CO_Rpdo, CO_RpdoBase) {
 
   void CreateRpdo() {
     rpdo = co_rpdo_create(net, dev, RPDO_NUM);
-    CHECK(rpdo != nullptr);
+    POINTER_NOT_NULL(rpdo);
     CHECK(co_rpdo_is_stopped(rpdo));
   }
 
@@ -482,6 +482,10 @@ TEST(CO_Rpdo, CoRpdoStart_Nominal) {
 ///       \Calls co_obj_set_dn_ind()
 ///       \Calls can_recv_start()
 TEST(CO_Rpdo, CoRpdoStart_NominalRecv) {
+  obj1400->EmplaceSub<Obj1400RpdoCommPar::Sub00HighestSubidxSupported>();
+  obj1400->EmplaceSub<Obj1400RpdoCommPar::Sub01CobId>(DEV_ID);
+  obj1400->EmplaceSub<Obj1400RpdoCommPar::Sub02TransmissionType>(
+      Obj1400RpdoCommPar::EVENT_DRIVEN_TRANSMISSION);
   CreateRpdo();
   co_rpdo_set_ind(rpdo, CoRpdoInd::Func, &ind_data);
   co_rpdo_set_err(rpdo, CoRpdoErr::Func, &err_data);
@@ -490,7 +494,8 @@ TEST(CO_Rpdo, CoRpdoStart_NominalRecv) {
 
   CHECK_FALSE(co_rpdo_is_stopped(rpdo));
 
-  const can_msg msg = CAN_MSG_INIT;
+  can_msg msg = CAN_MSG_INIT;
+  msg.id = DEV_ID;
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
   CHECK_EQUAL(0, co_rpdo_sync(rpdo, 0));
 
@@ -501,7 +506,8 @@ TEST(CO_Rpdo, CoRpdoStart_NominalRecv) {
 
 /// \Given a pointer to an initialized RPDO service (co_rpdo_t), the object
 ///        dictionary contains the RPDO communication parameter (0x1400) object
-///        with the "COB-ID" entry the CO_PDO_COBID_FRAME bit set
+///        with the "COB-ID" entry (0x01) that has the CO_PDO_COBID_FRAME bit
+///        set
 ///
 /// \When co_rpdo_start() is called
 ///
@@ -529,7 +535,6 @@ TEST(CO_Rpdo, CoRpdoStart_ExtendedFrame) {
   can_msg msg = CAN_MSG_INIT;
   msg.id = DEV_ID;
   msg.flags = CAN_FLAG_IDE;
-
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
   CHECK_EQUAL(1u, CoRpdoInd::GetNumCalled());
@@ -539,7 +544,8 @@ TEST(CO_Rpdo, CoRpdoStart_ExtendedFrame) {
 
 /// \Given a pointer to an initialized RPDO service (co_rpdo_t), the object
 ///        dictionary contains the RPDO communication parameter (0x1400) object
-///        with the "COB-ID" entry the CO_PDO_COBID_VALID bit set
+///        with the "COB-ID" entry (0x01) that has the CO_PDO_COBID_VALID bit
+///        set
 ///
 /// \When co_rpdo_start() is called
 ///
@@ -551,9 +557,10 @@ TEST(CO_Rpdo, CoRpdoStart_ExtendedFrame) {
 ///       \Calls can_recv_stop()
 TEST(CO_Rpdo, CoRpdoStart_InvalidBit) {
   obj1400->EmplaceSub<Obj1400RpdoCommPar::Sub00HighestSubidxSupported>();
-  obj1400->EmplaceSub<Obj1400RpdoCommPar::Sub01CobId>(CO_PDO_COBID_VALID |
-                                                      DEV_ID);
-  obj1400->EmplaceSub<Obj1400RpdoCommPar::Sub02TransmissionType>();
+  obj1400->EmplaceSub<Obj1400RpdoCommPar::Sub01CobId>(DEV_ID |
+                                                      CO_PDO_COBID_VALID);
+  obj1400->EmplaceSub<Obj1400RpdoCommPar::Sub02TransmissionType>(
+      Obj1400RpdoCommPar::EVENT_DRIVEN_TRANSMISSION);
   CreateRpdo();
   co_rpdo_set_ind(rpdo, CoRpdoInd::Func, &ind_data);
   co_rpdo_set_err(rpdo, CoRpdoErr::Func, &err_data);
@@ -561,6 +568,11 @@ TEST(CO_Rpdo, CoRpdoStart_InvalidBit) {
   co_rpdo_start(rpdo);
 
   CHECK_FALSE(co_rpdo_is_stopped(rpdo));
+
+  can_msg msg = CAN_MSG_INIT;
+  msg.id = DEV_ID;
+  CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
+
   CHECK_EQUAL(0, CoRpdoInd::GetNumCalled());
   CHECK_EQUAL(0, CoRpdoErr::GetNumCalled());
 }
@@ -583,7 +595,7 @@ TEST(CO_Rpdo, CoRpdoStart_FullRPDOCommParamRecord) {
   obj1400->EmplaceSub<Obj1400RpdoCommPar::Sub01CobId>(DEV_ID);
   obj1400->EmplaceSub<Obj1400RpdoCommPar::Sub02TransmissionType>(0x01u);
   obj1400->EmplaceSub<Obj1400RpdoCommPar::Sub03InhibitTime>(0x0002u);
-  obj1400->EmplaceSub<Obj1400RpdoCommPar::Sub04Reserved>(0x03u);
+  obj1400->EmplaceSub<Obj1400RpdoCommPar::Sub04Reserved>();
   obj1400->EmplaceSub<Obj1400RpdoCommPar::Sub05EventTimer>(0x0004u);
   obj1400->EmplaceSub<Obj1400RpdoCommPar::Sub06SyncStartValue>(0x05u);
   CreateRpdo();
@@ -597,7 +609,7 @@ TEST(CO_Rpdo, CoRpdoStart_FullRPDOCommParamRecord) {
   CHECK_EQUAL(DEV_ID, comm->cobid);
   CHECK_EQUAL(0x01u, comm->trans);
   CHECK_EQUAL(0x0002u, comm->inhibit);
-  CHECK_EQUAL(0x03u, comm->reserved);
+  CHECK_EQUAL(0x00u, comm->reserved);
   CHECK_EQUAL(0x0004u, comm->event);
   CHECK_EQUAL(0x05u, comm->sync);
 }
@@ -1332,11 +1344,11 @@ TEST_GROUP_BASE(CO_RpdoAllocation, CO_RpdoBase) {
   TEST_SETUP() {
     LelyUnitTest::DisableDiagnosticMessages();
     net = can_net_create(limitedAllocator.ToAllocT(), 0);
-    CHECK(net != nullptr);
+    POINTER_NOT_NULL(net);
 
     dev_holder.reset(new CoDevTHolder(DEV_ID));
     dev = dev_holder->Get();
-    CHECK(dev != nullptr);
+    POINTER_NOT_NULL(dev);
 
     dev_holder->CreateObj<Obj1400RpdoCommPar>(obj1400);
     dev_holder->CreateObj<Obj1600RpdoMapPar>(obj1600);
@@ -1498,7 +1510,7 @@ TEST(CO_RpdoAllocation, CoRpdoCreate_ExactMemory) {
 
   rpdo = co_rpdo_create(net, dev, RPDO_NUM);
 
-  CHECK(rpdo != nullptr);
+  POINTER_NOT_NULL(rpdo);
   CHECK_EQUAL(0, limitedAllocator.GetAllocationLimit());
 }
 

@@ -20,6 +20,7 @@ liblely_unit_test_src += co-rpdo-err.cpp
 liblely_unit_test_src += co-rpdo-ind.cpp
 liblely_unit_test_src += co-sub-dn-ind.cpp
 liblely_unit_test_src += co-sub-up-ind.cpp
+liblely_unit_test_src += co-tpdo-ind.cpp
 liblely_unit_test_src += co-tpdo-sample-ind.cpp
 liblely_unit_test_src += sdo-init-expected-data.cpp
 liblely_unit_test_src += sdo-create-message.cpp

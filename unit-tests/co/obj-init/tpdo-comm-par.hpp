@@ -35,7 +35,22 @@ struct Obj1800TpdoCommPar : ObjInitT<0x1800u, 0x1800u, 0x19ffu> {
   struct Sub03InhibitTime : SubT<0x03u, CO_DEFTYPE_UNSIGNED16> {};
   struct Sub04Reserved : SubT<0x04u, CO_DEFTYPE_UNSIGNED8, 0> {};
   struct Sub05EventTimer : SubT<0x05u, CO_DEFTYPE_UNSIGNED16> {};
-  struct Sub06SyncStartValue : SubT<0x04u, CO_DEFTYPE_UNSIGNED8> {};
+  struct Sub06SyncStartValue : SubT<0x06u, CO_DEFTYPE_UNSIGNED8> {};
+
+  static const Sub02TransmissionType::sub_type
+      SYNCHRONOUS_ACYCLIC_TRANSMISSION = 0x00u;
+  static Sub02TransmissionType::sub_type
+  SYNCHRONOUS_TRANSMISSION(const co_unsigned8_t cycle) {
+    assert(cycle > 0u && cycle <= 240u);
+    return cycle;
+  }
+  static const Sub02TransmissionType::sub_type RESERVED_TRANSMISSION = 0xf1u;
+  static const Sub02TransmissionType::sub_type SYNCHRONOUS_RTR_TRANSMISSION =
+      0xfcu;
+  static const Sub02TransmissionType::sub_type EVENT_DRIVEN_RTR_TRANSMISSION =
+      0xfdu;
+  static const Sub02TransmissionType::sub_type EVENT_DRIVEN_TRANSMISSION =
+      0xfeu;
 };
 
 #endif  // LELY_UNIT_TEST_TPDO_COMM_PAR_HPP_

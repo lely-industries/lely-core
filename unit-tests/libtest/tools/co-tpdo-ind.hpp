@@ -20,16 +20,21 @@
  * limitations under the License.
  */
 
-#ifndef LELY_UNIT_TEST_CO_TPDO_SAMPLE_IND_HPP_
-#define LELY_UNIT_TEST_CO_TPDO_SAMPLE_IND_HPP_
+#ifndef LELY_UNIT_TEST_CO_TPDO_IND_HPP_
+#define LELY_UNIT_TEST_CO_TPDO_IND_HPP_
 
 #include <lely/co/tpdo.h>
 
-class CoTpdoSampleInd {
+/// #co_tpdo_ind_t mock.
+class CoTpdoInd {
  public:
-  static int Func(co_tpdo_t* pdo, void* data);
+  static void Func(co_tpdo_t* pdo, co_unsigned32_t ac, const void* ptr,
+                   size_t n, void* data);
   static void Clear();
-  static void Check(const co_tpdo_t* pdo, const void* data);
+  static void Check(const co_tpdo_t* pdo, co_unsigned32_t ac, const void* ptr,
+                    size_t n, const void* data);
+  static void CheckPtrNotNull(const co_tpdo_t* pdo, co_unsigned32_t ac,
+                              size_t n, const void* data);
   static inline size_t
   GetNumCalled() {
     return num_called_;
@@ -39,7 +44,10 @@ class CoTpdoSampleInd {
   static size_t num_called_;
 
   static co_tpdo_t* pdo_;
+  static co_unsigned32_t ac_;
+  static const void* ptr_;
+  static size_t n_;
   static void* data_;
 };
 
-#endif  // LELY_UNIT_TEST_CO_TPDO_SAMPLE_IND_HPP_
+#endif  // LELY_UNIT_TEST_CO_TPDO_IND_HPP_
