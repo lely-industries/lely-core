@@ -549,7 +549,10 @@ lcov:
     - ./configure --enable-code-coverage --disable-shared $LELY_CORE_ANALYSIS_CONFIGURE_OPTIONS
     - make
     - make check-code-coverage
-    - lcov --summary coverage.info --rc lcov_branch_coverage=1
+    - lcov --summary coverage.info --rc lcov_branch_coverage=1 > coverage_summary.txt
+    - 'grep -q "lines......: 100.0%" coverage_summary.txt || { echo "Lines coverage dropped"; exit 1; }'
+    - 'grep -q "branches...: 100.0%" coverage_summary.txt || { echo "Branches coverage dropped" ; exit 1; }'
+    - cat coverage_summary.txt
   artifacts:
     paths:
       - coverage/
