@@ -4302,7 +4302,10 @@ TEST(CO_Csdo, CoCsdoBlkUpSubOnRecv_Nominal) {
 ///       server
 ///
 /// \Then an SDO abort transfer message with CO_SDO_AC_TIMEOUT abort code
-///       is sent
+///       is sent, upload confirmation function is called with the pointer
+///       to the CSDO service, the requested multiplexer, CO_SDO_AC_TIMEOUT
+///       abort code, null bytes-to-upload pointer, 0 and a user-specified data
+///       pointer
 TEST(CO_Csdo, CoCsdoBlkUpEndOnTime_TimeoutSet) {
   co_csdo_set_timeout(csdo, 999);
   StartCSDO();
@@ -4311,6 +4314,7 @@ TEST(CO_Csdo, CoCsdoBlkUpEndOnTime_TimeoutSet) {
   CoCsdoUpDnReq::SetOneSecOnNet(net);
 
   CheckSdoAbortSent(IDX, SUBIDX, CO_SDO_AC_TIMEOUT);
+  CoCsdoUpCon::Check(csdo, IDX, SUBIDX, CO_SDO_AC_TIMEOUT, nullptr, 0, &data);
 }
 
 /// \Given a pointer to the CSDO service (co_csdo_t) in the 'block upload end'
@@ -4319,7 +4323,7 @@ TEST(CO_Csdo, CoCsdoBlkUpEndOnTime_TimeoutSet) {
 /// \When an SDO message with length zero is received
 ///
 /// \Then an SDO abort transfer message with CO_SDO_AC_NO_CS abort code
-///       is sent, download confirmation function is called with the pointer
+///       is sent, upload confirmation function is called with the pointer
 ///       to the CSDO service, the requested multiplexer, CO_SDO_AC_NO_CS abort
 ///       code, null bytes-to-upload pointer, 0 and a user-specified data
 ///       pointer
@@ -4338,11 +4342,13 @@ TEST(CO_Csdo, CoCsdoBlkUpEndOnRecv_NoCs) {
 /// \Given a pointer to the CSDO service (co_csdo_t) in the 'block upload end'
 ///        state
 ///
-/// \When an SDO abort transfer message with an abort code equal to zero
+/// \When an SDO abort transfer message with an abort code equal to zero is
+///       received
 ///
-/// \Then no SDO message is sent, download confirmation function is called
+/// \Then no SDO message is sent, upload confirmation function is called
 ///       with the pointer to the CSDO service, the requested multiplexer,
-///       the CO_SDO_AC_ERROR abort code and a user-specified data pointer
+///       CO_SDO_AC_ERROR abort code, null bytes-to-upload pointer, 0 and
+///       a user-specified data pointer
 TEST(CO_Csdo, CoCsdoBlkUpEndOnRecv_CsAbort_ZeroAc) {
   StartCSDO();
   AdvanceToBlkUpEndState();
@@ -4354,7 +4360,15 @@ TEST(CO_Csdo, CoCsdoBlkUpEndOnRecv_CsAbort_ZeroAc) {
   CoCsdoUpCon::Check(csdo, IDX, SUBIDX, CO_SDO_AC_ERROR, nullptr, 0, &data);
 }
 
-// TODO(N7S): GWT
+/// \Given a pointer to the CSDO service (co_csdo_t) in the 'block upload end'
+///        state
+///
+/// \When an SDO abort transfer message with a non-zero abort code is received
+///
+/// \Then no SDO message is sent, upload confirmation function is called
+///       with the pointer to the CSDO service, the requested multiplexer,
+///       the received abort code, a null bytes-to-upload pointer, 0 as the
+///       size of the transmitted value and a user-specified data pointer
 TEST(CO_Csdo, CoCsdoBlkUpEndOnRecv_CsAbort_AcNonZero) {
   StartCSDO();
   AdvanceToBlkUpEndState();
@@ -4367,7 +4381,17 @@ TEST(CO_Csdo, CoCsdoBlkUpEndOnRecv_CsAbort_AcNonZero) {
   CoCsdoUpCon::Check(csdo, IDX, SUBIDX, CO_SDO_AC_HARDWARE, nullptr, 0, &data);
 }
 
-// TODO(N7S): GWT
+/// \Given a pointer to the CSDO service (co_csdo_t) in the 'block upload end'
+///        state
+///
+/// \When an SDO abort transfer message with an incomplete abort code is
+///       received
+///
+/// \Then no SDO message is sent, upload confirmation function is called
+///       with the pointer to the CSDO service, the requested multiplexer,
+///       CO_SDO_AC_ERROR abort code and a null bytes-to-download pointer,
+///       0 as the size of the transmitted value and a user-specified data
+///       pointer
 TEST(CO_Csdo, CoCsdoBlkUpEndOnRecv_CsAbort_IncompleteAc) {
   StartCSDO();
   AdvanceToBlkUpEndState();
@@ -4380,7 +4404,15 @@ TEST(CO_Csdo, CoCsdoBlkUpEndOnRecv_CsAbort_IncompleteAc) {
   CoCsdoUpCon::Check(csdo, IDX, SUBIDX, CO_SDO_AC_ERROR, nullptr, 0, &data);
 }
 
-// TODO(N7S): GWT
+/// \Given a pointer to the CSDO service (co_csdo_t) in the 'block upload end'
+///        state
+///
+/// \When an SDO message with an incorrect command specifier is received
+///
+/// \Then an SDO abort transfer message with CO_SDO_AC_NO_CS abort code is sent,
+///       upload confirmation function is called with the pointer to the CSDO
+///       service, the requested multiplexer, CO_SDO_AC_NO_CS abort code,
+///       null bytes-to-download pointer, 0 and a user-specified data pointer
 TEST(CO_Csdo, CoCsdoBlkUpEndOnRecv_IncorrectCs) {
   StartCSDO();
   AdvanceToBlkUpEndState();
@@ -4393,7 +4425,15 @@ TEST(CO_Csdo, CoCsdoBlkUpEndOnRecv_IncorrectCs) {
   CoCsdoUpCon::Check(csdo, IDX, SUBIDX, CO_SDO_AC_NO_CS, nullptr, 0, &data);
 }
 
-// TODO(N7S): GWT
+/// \Given a pointer to the CSDO service (co_csdo_t) in the 'block upload end'
+///        state
+///
+/// \When an SDO block upload response with an incorrect subcommand is received
+///
+/// \Then an SDO abort transfer message with CO_SDO_AC_NO_CS abort code is sent,
+///       upload confirmation function is called with the pointer to the CSDO
+///       service, the requested multiplexer, CO_SDO_AC_NO_CS abort code, null
+///       bytes-to-upload pointer and a user-specified data pointer
 TEST(CO_Csdo, CoCsdoBlkUpEndOnRecv_IncorrectSc) {
   StartCSDO();
   AdvanceToBlkUpEndState();
@@ -4406,7 +4446,17 @@ TEST(CO_Csdo, CoCsdoBlkUpEndOnRecv_IncorrectSc) {
   CoCsdoUpCon::Check(csdo, IDX, SUBIDX, CO_SDO_AC_NO_CS, nullptr, 0, &data);
 }
 
-// TODO(N7S): GWT
+/// \Given a pointer to the CSDO service (co_csdo_t) in the 'block upload end'
+///        state, server supports the CRC calculation
+///
+/// \When a block upload sub-block response with CO_SDO_SC_END_BLK subcommand
+///       and an incorrect CRC is received
+///
+/// \Then an SDO abort transfer message with CO_SDO_AC_BLK_CRC abort code is
+///       sent, upload confirmation function is called
+///       with the pointer to the CSDO service, the requested multiplexer,
+///       CO_SDO_AC_BLK_CRC abort code, null bytes-to-upload pointer, 0 and
+///       a user-specified data pointer
 TEST(CO_Csdo, CoCsdoBlkUpEndOnRecv_CheckCrcIncorrect) {
   StartCSDO();
   InitiateBlockUploadRequestWithCrc();
@@ -4422,7 +4472,18 @@ TEST(CO_Csdo, CoCsdoBlkUpEndOnRecv_CheckCrcIncorrect) {
   CoCsdoUpCon::Check(csdo, IDX, SUBIDX, CO_SDO_AC_BLK_CRC, nullptr, 0, &data);
 }
 
-// TODO(N7S): GWT
+/// \Given a pointer to the CSDO service (co_csdo_t) in the 'block upload end'
+///        state, server supports the CRC calculation
+///
+/// \When a block upload sub-block response with CO_SDO_SC_END_BLK subcommand
+///       and a correct CRC is received
+///
+/// \Then an SDO block upload request with CO_SDO_SC_END_BLK subcommand is
+///       sent, upload confirmation function is called
+///       with the pointer to the CSDO service, the requested multiplexer,
+///       0 as an abort code, a pointer to the beginning of the upload
+///       indication function memory buffer, the size of the transmitted value
+///       and a user-specified data pointer
 TEST(CO_Csdo, CoCsdoBlkUpEndOnRecv_CheckCrcCorrect) {
   StartCSDO();
   InitiateBlockUploadRequestWithCrc();
@@ -4442,13 +4503,21 @@ TEST(CO_Csdo, CoCsdoBlkUpEndOnRecv_CheckCrcCorrect) {
                      sizeof(val_u16.GetVal()), &data);
 }
 
-// TODO(N7S): GWT
+/// \Given a pointer to the CSDO service (co_csdo_t) in the 'block upload end'
+///        state, the requested data was not received
+///
+/// \When an SDO block upload response with CO_SDO_SC_END_BLK subcommand
+///       and too little number of bytes in the last segment is received
+///
+/// \Then an SDO abort transfer message with CO_SDO_AC_TYPE_LEN_LO abort code
+///       is sent, upload confirmation function is called with the pointer to
+///       the CSDO service, the requested multiplexer, CO_SDO_AC_TYPE_LEN_LO
+///       abort code, a null bytes-to-upload buffer pointer, 0 as the size of
+///       the transmitted value and a user-specified data pointer
 TEST(CO_Csdo, CoCsdoBlkUpEndOnRecv_EndBlkWithoutSegment) {
   StartCSDO();
   InitiateBlockUploadRequest();
-
-  const auto msg = SdoCreateMsg::BlkUpRes(
-      DEFAULT_COBID_RES, sizeof(co_unsigned8_t), CO_SDO_SC_END_BLK);
+  const auto msg = SdoCreateMsg::BlkUpRes(DEFAULT_COBID_RES);
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
   CanSend::Clear();
 
@@ -4461,7 +4530,18 @@ TEST(CO_Csdo, CoCsdoBlkUpEndOnRecv_EndBlkWithoutSegment) {
                      &data);
 }
 
-// TODO(N7S): GWT
+/// \Given a pointer to the CSDO service (co_csdo_t) in the 'block upload end'
+///        state (transfer of 0 bytes has been requested)
+///
+/// \When an SDO block upload response with CO_SDO_SC_END_BLK subcommand
+///       and a number of bytes in the last segment equal zero is received
+///
+/// \Then an SDO block upload request with CO_SDO_SC_END_BLK subcommand is sent,
+///       upload confirmation function is called with the pointer to the CSDO
+///       service, the requested multiplexer, 0 as an abort code,
+///       a pointer to the beginning of the upload indication function memory
+///       buffer, 0 as the size of the transmitted value and a user-specified
+///       data pointer
 TEST(CO_Csdo, CoCsdoBlkUpEndOnRecv_RequestZeroBytes) {
   StartCSDO();
   const co_unsigned32_t num_bytes_req = 0u;
@@ -4481,7 +4561,17 @@ TEST(CO_Csdo, CoCsdoBlkUpEndOnRecv_RequestZeroBytes) {
                      num_bytes_req, &data);
 }
 
-// TODO(N7S): GWT
+/// \Given a pointer to the CSDO service (co_csdo_t) in the 'block upload end'
+///        state
+///
+/// \When an SDO block upload response with CO_SDO_SC_END_BLK subcommand
+///       and a number of bytes in the last segment equal zero is received
+///
+/// \Then an SDO abort transfer message with CO_SDO_AC_NO_CS abort code is sent,
+///       upload confirmation function is called with the pointer to the CSDO
+///       service, the requested multiplexer, CO_SDO_AC_NO_CS as an abort code,
+///       a null upload indication function memory buffer pointer, 0 as the size
+///       of the transmitted value and a user-specified data pointer
 TEST(CO_Csdo, CoCsdoBlkUpEndOnRecv_NoBytesInLastSegment) {
   StartCSDO();
   AdvanceToBlkUpEndState();
@@ -4494,13 +4584,24 @@ TEST(CO_Csdo, CoCsdoBlkUpEndOnRecv_NoBytesInLastSegment) {
   CoCsdoUpCon::Check(csdo, IDX, SUBIDX, CO_SDO_AC_NO_CS, nullptr, 0, &data);
 }
 
-// TODO(N7S): GWT
+/// \Given a pointer to the CSDO service (co_csdo_t) in the 'block upload end'
+///        state
+///
+/// \When an SDO block upload response with CO_SDO_SC_END_BLK subcommand
+///       and a correct number of bytes in the last segment indicated is
+///       received
+///
+/// \Then block upload request with CO_SDO_SC_END_BLK subcommand is sent,
+///       upload confirmation function is called with the pointer to the CSDO
+///       service, the requested multiplexer, 0 as an abort code, a pointer to
+///       the beginning of the upload indication function memory buffer,
+///       the size of the transmitted value and a user-specified data pointer
 TEST(CO_Csdo, CoCsdoBlkUpEndOnRecv_Nominal) {
   StartCSDO();
   AdvanceToBlkUpEndState();
 
-  const auto msg = SdoCreateMsg::BlkUpRes(DEFAULT_COBID_RES, sizeof(sub_type),
-                                          CO_SDO_SC_END_BLK);
+  const auto msg = SdoCreateMsg::BlkUpRes(
+      DEFAULT_COBID_RES, sizeof(val_u16.GetVal()), CO_SDO_SC_END_BLK);
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
   CHECK_EQUAL(1u, CanSend::GetNumCalled());
@@ -5314,7 +5415,7 @@ TEST(CO_Csdo, CoCsdoBlkDnSubOnRecv_CsAbort_AcZero) {
 /// \When an SDO abort transfer message with a non-zero abort code is received
 ///
 /// \Then no SDO message is sent, download confirmation function is called with
-///       the requested abort code and a pointer to the user-specified data
+///       the received abort code and a pointer to the user-specified data
 ///       \Calls membuf_size()
 ///       \Calls memcpy()
 ///       \Calls can_net_send()
