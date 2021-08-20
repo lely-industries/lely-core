@@ -357,11 +357,7 @@ co_obj_set_val(co_obj_t *obj, co_unsigned8_t subidx, const void *ptr, size_t n)
 	co_##b##_t co_obj_get_val_##c( \
 			const co_obj_t *obj, co_unsigned8_t subidx) \
 	{ \
-		/* clang-format off */ \
-		co_sub_t *sub = obj \
-				? co_obj_find_sub(obj, subidx) \
-				: NULL; \
-		/* clang-format on */ \
+		co_sub_t *sub = obj ? co_obj_find_sub(obj, subidx) : NULL; \
 		return co_sub_get_val_##c(sub); \
 	} \
 \
@@ -907,10 +903,8 @@ co_sub_on_dn(co_sub_t *sub, struct co_sdo_req *req, co_unsigned32_t *pac)
 	assert(req);
 
 #if !LELY_NO_CO_OBJ_FILE
-	// clang-format off
-	if (co_sub_get_type(sub) == CO_DEFTYPE_DOMAIN && (co_sub_get_flags(sub)
-			& CO_OBJ_FLAGS_DOWNLOAD_FILE))
-		// clang-format on
+	if (co_sub_get_type(sub) == CO_DEFTYPE_DOMAIN
+			&& (co_sub_get_flags(sub) & CO_OBJ_FLAGS_DOWNLOAD_FILE))
 		return co_sdo_req_dn_file(req, co_sub_addressof_val(sub), pac);
 #endif
 

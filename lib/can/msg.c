@@ -153,10 +153,9 @@ can_msg_bits(const struct can_msg *msg, enum can_msg_bits_mode mode)
 		// Alternate between looking for a series of zeros and ones.
 		same = same ? 0 : mask;
 		// Extract 5 bits at i at look for a bit flip.
-		// clang-format off
 		uint_least8_t five = (((uint_least16_t)data[i / 8] << 8)
-				| data[i / 8 + 1]) >> (16 - 5 - i % 8);
-		// clang-format on
+						     | data[i / 8 + 1])
+				>> (16 - 5 - i % 8);
 		int n = clz8((uint_least8_t)(five & mask) ^ same) - 3;
 		i += n;
 		if (n < 5) {

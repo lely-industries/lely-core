@@ -212,7 +212,6 @@ size_t print_c99_esc(char **pbegin, char *end, char32_t c32);
  */
 size_t print_c99_str(char **pbegin, char *end, const char *s, size_t n);
 
-// clang-format off
 #define LELY_UTIL_DEFINE_PRINT(type, suffix, name) \
 	/** Prints a C99 `type` to a memory buffer. Note that the output is
 	_not_ null-terminated.
@@ -227,9 +226,7 @@ size_t print_c99_str(char **pbegin, char *end, const char *s, size_t n);
 	@returns the number of characters that would have been written had the
 	buffer been sufficiently large, or 0 on error. In the latter case, the
 	error code can be obtained with get_errc().*/ \
-	size_t print_c99_##suffix( \
-			char **pbegin, char *end, type name);
-// clang-format on
+	size_t print_c99_##suffix(char **pbegin, char *end, type name);
 
 LELY_UTIL_DEFINE_PRINT(long, long, l)
 LELY_UTIL_DEFINE_PRINT(unsigned long, ulong, ul)

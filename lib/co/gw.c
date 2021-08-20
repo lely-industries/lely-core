@@ -806,10 +806,8 @@ co_gw_recv(co_gw_t *gw, const struct co_gw_req *req)
 	case CO_GW_SRV_EMCY_START:
 	case CO_GW_SRV_EMCY_STOP:
 		trace("gateway: received '%s emergency consumer' request",
-				// clang-format off
-				req->srv == CO_GW_SRV_EMCY_START
-						? "Start" : "Stop");
-		// clang-format on
+				req->srv == CO_GW_SRV_EMCY_START ? "Start"
+								 : "Stop");
 		return co_gw_recv_set_emcy(gw, net, node, req);
 #endif
 	case CO_GW_SRV_SET_CMD_TIMEOUT:
