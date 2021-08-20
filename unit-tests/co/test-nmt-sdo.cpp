@@ -587,7 +587,7 @@ TEST(CO_NmtSdo1017, Co1017DnInd_TypeLenTooHigh) {
 }
 
 /// \Given a started NMT service (co_nmt_t), the object dictionary contains the
-///        Producer Heartbeat Time object (0x1017) with the sub-object at the
+///        Producer Heartbeat Time object (0x1017) with no sub-object at the
 ///        sub-index 0x02
 ///
 /// \When any value is downloaded to the sub-object
