@@ -1027,10 +1027,8 @@ co_ssdo_dn_seg_on_recv(co_ssdo_t *sdo, const struct can_msg *msg)
 		// Only report an error if the indication function has been
 		// invoked at least once for this request.
 		if (sdo->dn_ind) {
-			// clang-format off
 			ac = msg->len < 8 ? CO_SDO_AC_ERROR
-					: ldle_u32(msg->data + 4);
-			// clang-format on
+					  : ldle_u32(msg->data + 4);
 			co_ssdo_dn_ind(sdo, ac);
 		}
 		return co_ssdo_abort_ind(sdo);
@@ -1256,10 +1254,8 @@ co_ssdo_blk_dn_sub_on_recv(co_ssdo_t *sdo, const struct can_msg *msg)
 		// Only report an error if the indication function has been
 		// invoked at least once for this request.
 		if (sdo->dn_ind) {
-			// clang-format off
 			ac = msg->len < 8 ? CO_SDO_AC_ERROR
-					: ldle_u32(msg->data + 4);
-			// clang-format on
+					  : ldle_u32(msg->data + 4);
 			co_ssdo_dn_ind(sdo, ac);
 		}
 		return co_ssdo_abort_ind(sdo);

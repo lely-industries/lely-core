@@ -124,10 +124,8 @@ rbtree_insert(struct rbtree *tree, struct rbnode *node)
 	struct rbnode *next = tree->root;
 	while (next) {
 		parent = next;
-		// clang-format off
-		next = tree->cmp(node->key, next->key) < 0
-				? next->left : next->right;
-		// clang-format on
+		next = tree->cmp(node->key, next->key) < 0 ? next->left
+							   : next->right;
 	}
 	// Attach the node to its parent.
 	if (!parent)

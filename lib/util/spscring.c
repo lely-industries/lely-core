@@ -188,10 +188,8 @@ spscring_p_submit_wait(struct spscring *ring, size_t size,
 	// condition.
 	if (size <= spscring_p_capacity(ring)) {
 		// Try to stop the signal function from being invoked.
-		// clang-format off
 		if (spscring_atomic_compare_exchange_strong(
-				&sig->size, &size, 0))
-			// clang-format on
+				    &sig->size, &size, 0))
 			return 0;
 		// The consumer has already begun invoking the signal function.
 		assert(size == 0 || size == SIZE_MAX);

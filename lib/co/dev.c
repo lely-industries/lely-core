@@ -575,11 +575,8 @@ co_dev_set_val(co_dev_t *dev, co_unsigned16_t idx, co_unsigned8_t subidx,
 	co_##b##_t co_dev_get_val_##c(const co_dev_t *dev, \
 			co_unsigned16_t idx, co_unsigned8_t subidx) \
 	{ \
-		/* clang-format off */ \
-		co_sub_t *sub = dev \
-				? co_dev_find_sub(dev, idx, subidx) \
-				: NULL; \
-		/* clang-format on */ \
+		co_sub_t *sub = dev ? co_dev_find_sub(dev, idx, subidx) \
+				    : NULL; \
 		return co_sub_get_val_##c(sub); \
 	} \
 \

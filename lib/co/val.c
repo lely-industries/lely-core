@@ -289,11 +289,8 @@ co_val_sizeof(co_unsigned16_t type, const void *val)
 	if (!val)
 		return 0;
 
-	// clang-format off
-	return co_type_is_array(type)
-			? co_array_sizeof(val)
-			: co_type_sizeof(type);
-	// clang-format on
+	return co_type_is_array(type) ? co_array_sizeof(val)
+				      : co_type_sizeof(type);
 }
 
 size_t
@@ -495,13 +492,11 @@ co_val_read(co_unsigned16_t type, void *val, const uint_least8_t *begin,
 	if (co_type_is_array(type)) {
 		if (val) {
 			switch (type) { // LCOV_EXCL_BR_LINE
-			case CO_DEFTYPE_VISIBLE_STRING:
-				// clang-format off
-				if (co_val_init_vs_n(val, (const char *)begin,
-						n) == -1)
-					// clang-format on
+			case CO_DEFTYPE_VISIBLE_STRING: {
+				const char *const str = (const char *)begin;
+				if (co_val_init_vs_n(val, str, n) == -1)
 					return 0;
-				break;
+			} break;
 			case CO_DEFTYPE_OCTET_STRING:
 				if (co_val_init_os(val, begin, n) == -1)
 					return 0;

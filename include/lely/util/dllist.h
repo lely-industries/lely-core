@@ -110,13 +110,11 @@ LELY_UTIL_DLLIST_INLINE void dlnode_remove(struct dlnode *node);
 #define dlnode_foreach(first, node) dlnode_foreach_(__LINE__, first, node)
 #endif
 #define dlnode_foreach_(n, first, node) dlnode_foreach__(n, first, node)
-// clang-format off
 #define dlnode_foreach__(n, first, node) \
 	for (struct dlnode *node = (first), \
-			*_dlnode_next_##n = (node) ? (node)->next : NULL; \
+			   *_dlnode_next_##n = (node) ? (node)->next : NULL; \
 			(node); (node) = _dlnode_next_##n, \
-			_dlnode_next_##n = (node) ? (node)->next : NULL)
-// clang-format on
+			   _dlnode_next_##n = (node) ? (node)->next : NULL)
 
 /// Initializes a doubly-linked list.
 LELY_UTIL_DLLIST_INLINE void dllist_init(struct dllist *list);

@@ -126,12 +126,10 @@
 #ifndef __STDC_NO_ATOMICS__
 // GCC versions older than 4.9 do not properly advertise the absence of
 // <stdatomic.h>.
-// clang-format off
 #if defined(_MSC_VER) \
 		|| (defined(__GNUC__) && !GNUC_PREREQ(4, 9) \
 				&& !defined(__clang__)) \
 		|| (defined(__clang__) && !__has_extension(c_atomic))
-// clang-format on
 #define __STDC_NO_ATOMICS__ 1
 #endif
 #endif // !__STDC_NO_ATOMICS__
@@ -173,10 +171,10 @@
 #endif // __cplusplus
 
 /// Specifies the alignment requirement of the declared object or member.
-// clang-format off
-#if !defined(_Alignas) && !(__STDC_VERSION__ >= 201112L \
-		&& (GNUC_PREREQ(4, 7) || __has_feature(c_alignas)))
-// clang-format on
+#if !defined(_Alignas) \
+		&& !(__STDC_VERSION__ >= 201112L \
+				&& (GNUC_PREREQ(4, 7) \
+						|| __has_feature(c_alignas)))
 #if __cplusplus >= 201103L && (GNUC_PREREQ(4, 8) || __has_feature(cxx_alignas))
 #define _Alignas alignas
 #elif defined(__GNUC__) || __has_attribute(__aligned__)
@@ -190,10 +188,10 @@
 #endif
 
 /// Yields the alignment requirement of its operand type.
-// clang-format off
-#if !defined(_Alignof) && !(__STDC_VERSION__ >= 201112L \
-		&& (GNUC_PREREQ(4, 7) || __has_feature(c_alignof)))
-// clang-format on
+#if !defined(_Alignof) \
+		&& !(__STDC_VERSION__ >= 201112L \
+				&& (GNUC_PREREQ(4, 7) \
+						|| __has_feature(c_alignof)))
 #if __cplusplus >= 201103L && (GNUC_PREREQ(4, 8) || __has_feature(cxx_alignof))
 #define _Alignof alignof
 #elif defined(__GNUC__)
@@ -216,10 +214,9 @@
  * A function declared with a `_Noreturn` function specifier SHALL not return to
  * its caller.
  */
-// clang-format off
-#if !defined(_Noreturn) && !(__STDC_VERSION__ >= 201112L \
-		&& (GNUC_PREREQ(4, 7) || CLANG_PREREQ(3, 3)))
-// clang-format on
+#if !defined(_Noreturn) \
+		&& !(__STDC_VERSION__ >= 201112L \
+				&& (GNUC_PREREQ(4, 7) || CLANG_PREREQ(3, 3)))
 #if defined(__GNUC__) || __has_attribute(__noreturn__)
 #define _Noreturn __attribute__((__noreturn__))
 #elif defined(_MSC_VER) || defined(__declspec) \
@@ -270,12 +267,12 @@
 
 #ifndef __WORDSIZE
 /// The native word size (in bits).
-// clang-format off
-#if !defined(__ILP32__) && (defined(__LP64__) || _WIN64 || defined(_M_AMD64) \
-		|| defined(__amd64__) || defined(_M_IA64) || defined(__ia64__) \
-		|| defined(_M_X64) || defined(__x86_64__) \
-		|| defined(__aarch64__))
-// clang-format on
+#if !defined(__ILP32__) \
+		&& (defined(__LP64__) || _WIN64 || defined(_M_AMD64) \
+				|| defined(__amd64__) || defined(_M_IA64) \
+				|| defined(__ia64__) || defined(_M_X64) \
+				|| defined(__x86_64__) \
+				|| defined(__aarch64__))
 #define __WORDSIZE 64
 #else
 #define __WORDSIZE 32

@@ -130,13 +130,11 @@ LELY_UTIL_PHEAP_INLINE struct pnode *pnode_next(const struct pnode *node);
 #define pnode_foreach(first, node) pnode_foreach_(__LINE__, first, node)
 #endif
 #define pnode_foreach_(n, first, node) pnode_foreach__(n, first, node)
-// clang-format off
 #define pnode_foreach__(n, first, node) \
 	for (struct pnode *node = (first), \
-			*_pnode_next_##n = (node) ? pnode_next(node) : NULL; \
+			  *_pnode_next_##n = (node) ? pnode_next(node) : NULL; \
 			(node); (node) = _pnode_next_##n, \
-			_pnode_next_##n = (node) ? pnode_next(node) : NULL)
-// clang-format on
+			  _pnode_next_##n = (node) ? pnode_next(node) : NULL)
 
 /**
  * Initializes a pairing heap.
