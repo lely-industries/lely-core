@@ -1,3 +1,8 @@
+// This file is included multiple times in the project with various
+// definitions of the LELY_CO_DEFINE_TYPE macro which causes gcov/lcov
+// to loose track of the code coverage. The code is covered in place
+// where it is included, but to ensure correct LCOV reports this whole
+// file must be excluded.
 // LCOV_EXCL_START
 // A boolean truth value.
 #ifdef __cplusplus
