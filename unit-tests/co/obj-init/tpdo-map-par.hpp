@@ -28,8 +28,8 @@
 
 // 0x1a00-0x1bff: TPDO mapping parameter
 struct Obj1a00TpdoMapPar : ObjInitT<0x1a00u, 0x1a00u, 0x1bffu> {
-  struct Sub00NumOfMappedObjs : SubT<0x00, CO_DEFTYPE_UNSIGNED8> {};
-  struct SubNthAppObject : SubT<0x01, CO_DEFTYPE_UNSIGNED32, 0, 0x01> {};
+  struct Sub00NumOfMappedObjs : SubT<0x00u, CO_DEFTYPE_UNSIGNED8> {};
+  struct SubNthAppObject : SubT<0x01u, CO_DEFTYPE_UNSIGNED32, 0, 0x01u> {};
 };
 
 #endif  // LELY_UNIT_TEST_TPDO_MAP_PAR_HPP_
