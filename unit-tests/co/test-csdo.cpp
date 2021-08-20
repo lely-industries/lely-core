@@ -5922,7 +5922,15 @@ TEST_GROUP_BASE(CO_CsdoUpload, CO_CsdoBase) {
 /// @name CSDO initiate segmented upload
 ///@{
 
-/// TODO(N7S): GWT
+/// \Given a pointer to the started CSDO service (co_csdo_t) with a segmented
+///        upload request sent to the server
+///
+/// \When an SDO upload initiate response with length zero is received
+///
+/// \Then an SDO abort transfer message with CO_SDO_AC_NO_CS abort code is sent
+///       \Calls stle_u16()
+///       \Calls stle_u32()
+///       \Calls can_net_send()
 TEST(CO_CsdoUpload, IniOnRecv_NoCs) {
   can_msg msg = SdoCreateMsg::UpIniRes(IDX, SUBIDX, DEFAULT_COBID_RES);
   msg.len = 0u;
@@ -5931,7 +5939,16 @@ TEST(CO_CsdoUpload, IniOnRecv_NoCs) {
   CheckSdoAbortSent(CO_SDO_AC_NO_CS);
 }
 
-/// TODO(N7S): GWT
+/// \Given a pointer to the started CSDO service (co_csdo_t) with a segmented
+///        upload request sent to the server
+///
+/// \When an SDO abort transfer message with an incomplete abort code
+///
+/// \Then no SDO message is sent, upload confirmation function is called once
+///       with a pointer to the service, the multiplexer, CO_SDO_AC_ERROR abort
+///       code, a null uploaded bytes pointer, zero uploaded bytes and a pointer
+///       to the user-specified data; the service is idle
+///       \Calls can_timer_stop()
 TEST(CO_CsdoUpload, IniOnRecv_CsAbort_IncompleteAc) {
   can_msg msg =
       SdoCreateMsg::Abort(IDX, SUBIDX, DEFAULT_COBID_RES, CO_SDO_AC_TIMEOUT);
@@ -5941,7 +5958,16 @@ TEST(CO_CsdoUpload, IniOnRecv_CsAbort_IncompleteAc) {
   CheckTransferAbortedLocally(CO_SDO_AC_ERROR);
 }
 
-/// TODO(N7S): GWT
+/// \Given a pointer to the started CSDO service (co_csdo_t) with a segmented
+///        upload request sent to the server
+///
+/// \When an SDO abort transfer message with an abort code
+///
+/// \Then no SDO message is sent, upload confirmation function is called once
+///       with a pointer to the service, the multiplexer, received abort code
+///       value, a null uploaded bytes pointer, zero uploaded bytes and a
+///       pointer to the user-specified data; the service is idle
+///       \Calls can_timer_stop()
 TEST(CO_CsdoUpload, IniOnRecv_CsAbort) {
   const co_unsigned32_t ac = CO_SDO_AC_TIMEOUT;
 
@@ -5951,7 +5977,15 @@ TEST(CO_CsdoUpload, IniOnRecv_CsAbort) {
   CheckTransferAbortedLocally(ac);
 }
 
-/// TODO(N7S): GWT
+/// \Given a pointer to the started CSDO service (co_csdo_t) with a segmented
+///        upload request sent to the server
+///
+/// \When an SDO message with an incorrect command specifier is received
+///
+/// \Then an SDO abort transfer message with CO_SDO_AC_NO_CS abort code is sent
+///       \Calls stle_u16()
+///       \Calls stle_u32()
+///       \Calls can_net_send()
 TEST(CO_CsdoUpload, IniOnRecv_InvalidCs) {
   can_msg msg = SdoCreateMsg::UpIniRes(IDX, SUBIDX, DEFAULT_COBID_RES);
   msg.data[0] = CO_SDO_SCS_DN_INI_RES;
@@ -5960,7 +5994,16 @@ TEST(CO_CsdoUpload, IniOnRecv_InvalidCs) {
   CheckSdoAbortSent(CO_SDO_AC_NO_CS);
 }
 
-/// TODO(N7S): GWT
+/// \Given a pointer to the started CSDO service (co_csdo_t) with a segmented
+///        upload request sent to the server
+///
+/// \When an SDO upload initiate response with an incomplete multiplexer is
+///       received
+///
+/// \Then an SDO abort transfer message with CO_SDO_AC_ERROR abort code is sent
+///       \Calls stle_u16()
+///       \Calls stle_u32()
+///       \Calls can_net_send()
 TEST(CO_CsdoUpload, IniOnRecv_TooShortMultiplexer) {
   can_msg msg = SdoCreateMsg::UpIniRes(IDX, SUBIDX, DEFAULT_COBID_RES);
   msg.len = 3u;
@@ -5969,7 +6012,16 @@ TEST(CO_CsdoUpload, IniOnRecv_TooShortMultiplexer) {
   CheckSdoAbortSent(CO_SDO_AC_ERROR);
 }
 
-/// TODO(N7S): GWT
+/// \Given a pointer to the started CSDO service (co_csdo_t) with a segmented
+///        upload request sent to the server
+///
+/// \When an SDO upload initiate response with a different object index than the
+///       one requested is received
+///
+/// \Then an SDO abort transfer message with CO_SDO_AC_ERROR abort code is sent
+///       \Calls stle_u16()
+///       \Calls stle_u32()
+///       \Calls can_net_send()
 TEST(CO_CsdoUpload, IniOnRecv_IncorrectIdx) {
   const can_msg msg =
       SdoCreateMsg::UpIniRes(IDX + 1u, SUBIDX, DEFAULT_COBID_RES);
@@ -5978,7 +6030,16 @@ TEST(CO_CsdoUpload, IniOnRecv_IncorrectIdx) {
   CheckSdoAbortSent(CO_SDO_AC_ERROR);
 }
 
-/// TODO(N7S): GWT
+/// \Given a pointer to the started CSDO service (co_csdo_t) with a segmented
+///        upload request sent to the server
+///
+/// \When an SDO upload initiate response with a different sub-index than the
+///       one requested is received
+///
+/// \Then an SDO abort transfer message with CO_SDO_AC_ERROR abort code is sent
+///       \Calls stle_u16()
+///       \Calls stle_u32()
+///       \Calls can_net_send()
 TEST(CO_CsdoUpload, IniOnRecv_IncorrectSubidx) {
   const can_msg msg =
       SdoCreateMsg::UpIniRes(IDX, SUBIDX + 1u, DEFAULT_COBID_RES);
@@ -5988,7 +6049,16 @@ TEST(CO_CsdoUpload, IniOnRecv_IncorrectSubidx) {
 }
 
 #if LELY_NO_MALLOC
-/// TODO(N7S): GWT
+/// \Given a pointer to the started CSDO service (co_csdo_t) with a segmented
+///        upload request sent to the server
+///
+/// \When an SDO upload initiate response with size indication is received but
+///       the buffer provided for the request is too small
+///
+/// \Then an SDO abort transfer message with CO_SDO_AC_NO_MEM abort code is sent
+///       \Calls stle_u16()
+///       \Calls stle_u32()
+///       \Calls can_net_send()
 TEST(CO_CsdoUpload, IniOnRecv_Expedited_BufferTooSmall) {
   const co_unsigned8_t zeroes[POOL_SIZE] = {0};
   membuf_write(&buffer, zeroes, POOL_SIZE - 1u);
@@ -5999,7 +6069,19 @@ TEST(CO_CsdoUpload, IniOnRecv_Expedited_BufferTooSmall) {
 }
 #endif  // LELY_NO_MALLOC
 
-/// TODO(N7S): GWT
+/// \Given a pointer to the started CSDO service (co_csdo_t) with a segmented
+///        upload request sent to the server
+///
+/// \When an SDO upload initiate response with expedited bit set but no size
+///       indication is received
+///
+/// \Then no SDO message is sent, upload confirmation function is called once
+///       with a pointer to the service, the multiplexer, zero abort code, a
+///       pointer to uploaded bytes buffer, number of uploaded bytes and a
+///       pointer to the user-specified data; the buffer provided for the
+///       request contains received data; the service is idle
+///       \Calls membuf_write()
+///       \Calls can_timer_stop()
 TEST(CO_CsdoUpload, IniOnRecv_Expedited_NoSizeInd) {
   const std::vector<co_unsigned8_t> expected_value = {0x12u, 0x34u, 0x00u,
                                                       0x00u};
@@ -6009,7 +6091,19 @@ TEST(CO_CsdoUpload, IniOnRecv_Expedited_NoSizeInd) {
   CheckDoneTransfer(4u, expected_value);
 }
 
-/// TODO(N7S): GWT
+/// \Given a pointer to the started CSDO service (co_csdo_t) with a segmented
+///        upload request sent to the server
+///
+/// \When an SDO upload initiate response with expedited bit set and with size
+///       indication is received
+///
+/// \Then no SDO message is sent, upload confirmation function is called once
+///       with a pointer to the service, the multiplexer, zero abort code, a
+///       pointer to uploaded bytes buffer, number of uploaded bytes and a
+///       pointer to the user-specified data; the buffer provided for the
+///       request contains received data; the service is idle
+///       \Calls membuf_write()
+///       \Calls can_timer_stop()
 TEST(CO_CsdoUpload, IniOnRecv_Expedited_Nominal) {
   const std::vector<co_unsigned8_t> expected_value = {0x12u, 0x34u};
 
@@ -6020,22 +6114,47 @@ TEST(CO_CsdoUpload, IniOnRecv_Expedited_Nominal) {
   CheckDoneTransfer(sizeof(small_type), expected_value);
 }
 
-/// TODO(N7S): GWT
+/// \Given a pointer to the started CSDO service (co_csdo_t) with a segmented
+///        upload request sent to the server; there is no upload progress
+///        indication function set
+///
+/// \When an SDO upload initiate response with size indication is received
+///
+/// \Then an SDO upload segment message with toggle bit not set is sent, upload
+///       confirmation function is not called, upload progress indication
+///       function is not called
+///       \Calls ldle_u32()
+///       \Calls can_net_send()
 TEST(CO_CsdoUpload, IniOnRecv_Segmented_NoInd) {
   co_csdo_set_up_ind(csdo, nullptr, nullptr);
 
   ReceiveSegmentedUpIni(sizeof(small_type));
 
   CHECK_EQUAL(0u, CoCsdoInd::GetNumCalled());
+  CHECK_FALSE(CoCsdoUpCon::Called());
+  CheckSentSegReq(false);
 }
 
-/// TODO(N7S): GWT
+/// \Given a pointer to the started CSDO service (co_csdo_t) with a segmented
+///        upload request sent to the server; the service has an upload progress
+///        indication function set
+///
+/// \When an SDO upload initiate response with size indication is received
+///
+/// \Then an SDO upload segment message with toggle bit not set is sent, upload
+///       confirmation function is not called, the upload progress indication
+///       function is called with a pointer to the service, the multiplexer,
+///       received request size, 0 bytes already uploaded and a pointer to the
+///       user-specified data
+///       \Calls ldle_u32()
+///       \Calls can_net_send()
 TEST(CO_CsdoUpload, IniOnRecv_Segmented_Nominal) {
   co_csdo_set_up_ind(csdo, CoCsdoInd::Func, nullptr);
 
   ReceiveSegmentedUpIni(sizeof(small_type));
 
   CoCsdoInd::Check(csdo, IDX, SUBIDX, sizeof(small_type), 0u, nullptr);
+  CHECK_FALSE(CoCsdoUpCon::Called());
   CheckSentSegReq(false);
 }
 
@@ -6044,7 +6163,15 @@ TEST(CO_CsdoUpload, IniOnRecv_Segmented_Nominal) {
 /// @name CSDO upload segment
 ///@{
 
-/// TODO(N7S): GWT
+/// \Given a pointer to the started CSDO service (co_csdo_t) with a segmented
+///        upload transfer initiated
+///
+/// \When co_csdo_abort_req() is called with an abort code
+///
+/// \Then an SDO abort transfer message with the abort code is sent
+///       \Calls stle_u16()
+///       \Calls stle_u32()
+///       \Calls can_net_send()
 TEST(CO_CsdoUpload, SegOnAbort_Nominal) {
   AdvanceToUpSegState(sizeof(small_type));
 
@@ -6055,7 +6182,16 @@ TEST(CO_CsdoUpload, SegOnAbort_Nominal) {
   CheckSdoAbortSent(ac);
 }
 
-/// TODO(N7S): GWT
+/// \Given a pointer to the started CSDO service (co_csdo_t) with a segmented
+///        upload transfer initiated; the service has a timeout set
+///
+/// \When the timeout expires before any SDO message is received
+///
+/// \Then an SDO abort transfer message with CO_SDO_AC_TIMEOUT abort code is
+///       sent
+///       \Calls stle_u16()
+///       \Calls stle_u32()
+///       \Calls can_net_send()
 TEST(CO_CsdoUpload, SegOnTime_Nominal) {
   co_csdo_set_timeout(csdo, 999);
   AdvanceToUpSegState(sizeof(small_type));
@@ -6065,7 +6201,15 @@ TEST(CO_CsdoUpload, SegOnTime_Nominal) {
   CheckSdoAbortSent(CO_SDO_AC_TIMEOUT);
 }
 
-/// TODO(N7S): GWT
+/// \Given a pointer to the started CSDO service (co_csdo_t) with a segmented
+///        upload transfer initiated
+///
+/// \When an SDO upload segment response with length zero is received
+///
+/// \Then an SDO abort transfer message with CO_SDO_AC_NO_CS abort code is sent
+///       \Calls stle_u16()
+///       \Calls stle_u32()
+///       \Calls can_net_send()
 TEST(CO_CsdoUpload, SegOnRecv_NoCs) {
   AdvanceToUpSegState(sizeof(small_type));
 
@@ -6076,7 +6220,16 @@ TEST(CO_CsdoUpload, SegOnRecv_NoCs) {
   CheckSdoAbortSent(CO_SDO_AC_NO_CS);
 }
 
-/// TODO(N7S): GWT
+/// \Given a pointer to the started CSDO service (co_csdo_t) with a segmented
+///        upload transfer initiated
+///
+/// \When an SDO abort transfer message with an incomplete abort code
+///
+/// \Then no SDO message is sent, upload confirmation function is called once
+///       with a pointer to the service, the multiplexer, CO_SDO_AC_ERROR abort
+///       code, a null uploaded bytes pointer, zero uploaded bytes and a pointer
+///       to the user-specified data; the service is idle
+///       \Calls can_timer_stop()
 TEST(CO_CsdoUpload, SegOnRecv_CsAbort_IncompleteAc) {
   AdvanceToUpSegState(sizeof(small_type));
 
@@ -6088,7 +6241,16 @@ TEST(CO_CsdoUpload, SegOnRecv_CsAbort_IncompleteAc) {
   CheckTransferAbortedLocally(CO_SDO_AC_ERROR);
 }
 
-/// TODO(N7S): GWT
+/// \Given a pointer to the started CSDO service (co_csdo_t) with a segmented
+///        upload transfer initiated
+///
+/// \When an SDO abort transfer message with an abort code
+///
+/// \Then no SDO message is sent, upload confirmation function is called once
+///       with a pointer to the service, the multiplexer, received abort code
+///       value, a null uploaded bytes pointer, zero uploaded bytes and a
+///       pointer to the user-specified data; the service is idle
+///       \Calls can_timer_stop()
 TEST(CO_CsdoUpload, SegOnRecv_CsAbort) {
   AdvanceToUpSegState(sizeof(small_type));
 
@@ -6100,7 +6262,15 @@ TEST(CO_CsdoUpload, SegOnRecv_CsAbort) {
   CheckTransferAbortedLocally(ac);
 }
 
-/// TODO(N7S): GWT
+/// \Given a pointer to the started CSDO service (co_csdo_t) with a segmented
+///        upload transfer initiated
+///
+/// \When an SDO message with an incorrect command specifier is received
+///
+/// \Then an SDO abort transfer message with CO_SDO_AC_NO_CS abort code is sent
+///       \Calls stle_u16()
+///       \Calls stle_u32()
+///       \Calls can_net_send()
 TEST(CO_CsdoUpload, SegOnRecv_InvalidCs) {
   AdvanceToUpSegState(sizeof(small_type));
 
@@ -6111,7 +6281,13 @@ TEST(CO_CsdoUpload, SegOnRecv_InvalidCs) {
   CheckSdoAbortSent(CO_SDO_AC_NO_CS);
 }
 
-/// TODO(N7S): GWT
+/// \Given a pointer to the started CSDO service (co_csdo_t) with a segmented
+///        upload transfer initiated
+///
+/// \When an SDO upload segment response with the value of toggle bit different
+///       than expected is received
+///
+/// \Then nothing is changed, received message is ignored
 TEST(CO_CsdoUpload, SegOnRecv_UnexpectedToggleBit) {
   AdvanceToUpSegState(sizeof(small_type));
 
@@ -6123,7 +6299,16 @@ TEST(CO_CsdoUpload, SegOnRecv_UnexpectedToggleBit) {
   CHECK_FALSE(CoCsdoUpCon::Called());
 }
 
-/// TODO(N7S): GWT
+/// \Given a pointer to the started CSDO service (co_csdo_t) with a segmented
+///        upload transfer initiated
+///
+/// \When an SDO upload segment response with length shorter than encoded
+///       segment size is received
+///
+/// \Then an SDO abort transfer message with CO_SDO_AC_NO_CS abort code is sent
+///       \Calls stle_u16()
+///       \Calls stle_u32()
+///       \Calls can_net_send()
 TEST(CO_CsdoUpload, SegOnRecv_InvalidSegmentSize) {
   AdvanceToUpSegState(sizeof(small_type));
 
@@ -6135,7 +6320,17 @@ TEST(CO_CsdoUpload, SegOnRecv_InvalidSegmentSize) {
   CheckSdoAbortSent(CO_SDO_AC_NO_CS);
 }
 
-/// TODO(N7S): GWT
+/// \Given a pointer to the started CSDO service (co_csdo_t) with a segmented
+///        upload transfer initiated
+///
+/// \When an SDO upload segment response with encoded segment size larger than
+///       number of remaining bytes to be uploaded is received
+///
+/// \Then an SDO abort transfer message with CO_SDO_AC_TYPE_LEN_HI abort code is
+///       sent
+///       \Calls stle_u16()
+///       \Calls stle_u32()
+///       \Calls can_net_send()
 TEST(CO_CsdoUpload, SegOnRecv_TooLargeSegment) {
   AdvanceToUpSegState(sizeof(small_type));
 
@@ -6146,7 +6341,18 @@ TEST(CO_CsdoUpload, SegOnRecv_TooLargeSegment) {
   CheckSdoAbortSent(CO_SDO_AC_TYPE_LEN_HI);
 }
 
-/// TODO(N7S): GWT
+/// \Given a pointer to the started CSDO service (co_csdo_t) with a segmented
+///        upload transfer initiated
+///
+/// \When an SDO upload segment response with last bit set and encoded segment
+///       size smaller than number of remaining bytes to be uploaded is received
+///
+/// \Then an SDO abort transfer message with CO_SDO_AC_TYPE_LEN_LO abort code is
+///       sent
+///       \Calls membuf_write()
+///       \Calls stle_u16()
+///       \Calls stle_u32()
+///       \Calls can_net_send()
 TEST(CO_CsdoUpload, SegOnRecv_LastSegment_TooSmall) {
   AdvanceToUpSegState(sizeof(small_type));
 
@@ -6158,7 +6364,20 @@ TEST(CO_CsdoUpload, SegOnRecv_LastSegment_TooSmall) {
   CheckSdoAbortSent(CO_SDO_AC_TYPE_LEN_LO);
 }
 
-/// TODO(N7S): GWT
+/// \Given a pointer to the started CSDO service (co_csdo_t) with a segmented
+///        upload transfer initiated; there is no upload progress indication
+///        function set
+///
+/// \When an SDO upload segment response with last bit set is received
+///
+/// \Then no SDO message is sent, upload confirmation function is called once
+///       with a pointer to the service, the multiplexer, zero abort code, a
+///       pointer to uploaded bytes buffer, number of uploaded bytes and a
+///       pointer to the user-specified data; the buffer provided for the
+///       request contains received data; the service is idle; upload progress
+///       indication function is not called
+///       \Calls membuf_write()
+///       \Calls can_timer_stop()
 TEST(CO_CsdoUpload, SegOnRecv_LastSegment_NoInd) {
   co_csdo_set_up_ind(csdo, nullptr, nullptr);
   AdvanceToUpSegState(sizeof(small_type));
@@ -6173,7 +6392,22 @@ TEST(CO_CsdoUpload, SegOnRecv_LastSegment_NoInd) {
   CheckDoneTransfer(sizeof(small_type), expected_value);
 }
 
-/// TODO(N7S): GWT
+/// \Given a pointer to the started CSDO service (co_csdo_t) with a segmented
+///        upload transfer initiated; the service has an upload progress
+///        indication function set
+///
+/// \When an SDO upload segment response with last bit set is received
+///
+/// \Then no SDO message is sent, upload confirmation function is called once
+///       with a pointer to the service, the multiplexer, zero abort code, a
+///       pointer to uploaded bytes buffer, number of uploaded bytes and a
+///       pointer to the user-specified data; the buffer provided for the
+///       request contains received data; the service is idle; upload progress
+///       indication function is called with a pointer to the service, the
+///       multiplexer, the request size twice and a pointer to the
+///       user-specified data
+///       \Calls membuf_write()
+///       \Calls can_timer_stop()
 TEST(CO_CsdoUpload, SegOnRecv_LastSegment) {
   co_csdo_set_up_ind(csdo, CoCsdoInd::Func, nullptr);
   AdvanceToUpSegState(sizeof(small_type));
@@ -6189,7 +6423,16 @@ TEST(CO_CsdoUpload, SegOnRecv_LastSegment) {
   CheckDoneTransfer(size, expected_value);
 }
 
-/// TODO(N7S): GWT
+/// \Given a pointer to the started CSDO service (co_csdo_t) with a segmented
+///        upload transfer initiated
+///
+/// \When an SDO upload segment response with last bit not set is received
+///
+/// \Then an SDO upload segment message with toggle bit set is sent, upload
+///       confirmation function is not called
+///       \Calls membuf_write()
+///       \Calls ldle_u32()
+///       \Calls can_net_send()
 TEST(CO_CsdoUpload, SegOnRecv_NotLast) {
   AdvanceToUpSegState(sizeof(large_type));
 
@@ -6200,10 +6443,22 @@ TEST(CO_CsdoUpload, SegOnRecv_NotLast) {
       SdoCreateMsg::UpSegRes(DEFAULT_COBID_RES, expected_value, seg_size);
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
+  CHECK_FALSE(CoCsdoUpCon::Called());
   CheckSentSegReq(true);
 }
 
-/// TODO(N7S): GWT
+/// \Given a pointer to the started CSDO service (co_csdo_t) with a segmented
+///        upload transfer initiated; the service has a timeout set
+///
+/// \When an SDO upload segment response with last bit not set is received
+///
+/// \Then the timeout is restarted, if no next SDO message is received before it
+///       expires then an SDO abort transfer message with CO_SDO_AC_TIMEOUT
+///       abort code is sent
+///       \Calls membuf_write()
+///       \Calls can_timer_timeout()
+///       \Calls ldle_u32()
+///       \Calls can_net_send()
 TEST(CO_CsdoUpload, SegOnRecv_TimeoutSet) {
   co_csdo_set_timeout(csdo, 999);
   AdvanceToUpSegState(sizeof(large_type));
@@ -6223,7 +6478,22 @@ TEST(CO_CsdoUpload, SegOnRecv_TimeoutSet) {
   CheckSdoAbortSent(CO_SDO_AC_TIMEOUT);
 }
 
-/// TODO(N7S): GWT
+/// \Given a pointer to the started CSDO service (co_csdo_t) with a segmented
+///        upload transfer initiated; the service has an upload progress
+///        indication function set
+///
+/// \When an SDO upload segment responses with alternating toggle bit are
+///       received; final response has the last bit set
+///
+/// \Then for each response received a corresponding request is sent apart from
+///       the response with the last bit set - in that case the segmented upload
+///       transfer is finished; the upload progress indication function is
+///       called every CO_SDO_MAX_SEQNO responses received and once when the
+///       transfer is finished
+///       \Calls membuf_write()
+///       \Calls ldle_u32()
+///       \Calls can_net_send()
+///       \Calls can_timer_stop()
 TEST(CO_CsdoUpload, SegOnRecv_LargeDataSet_PeriodicInd) {
   co_csdo_set_up_ind(csdo, CoCsdoInd::Func, nullptr);
 
@@ -6263,7 +6533,21 @@ TEST(CO_CsdoUpload, SegOnRecv_LargeDataSet_PeriodicInd) {
   }
 }
 
-/// TODO(N7S): GWT
+/// \Given a pointer to the started CSDO service (co_csdo_t) with a segmented
+///        upload transfer of size zero initiated; the service has an upload
+///        progress indication function set
+///
+/// \When an SDO upload segment response with size zero and last bit set is
+///       received
+///
+/// \Then no SDO message is sent, upload confirmation function is called once
+///       with a pointer to the service, the multiplexer, zero abort code, a
+///       pointer to empty uploaded bytes buffer, zero number of uploaded bytes
+///       and a pointer to the user-specified data; the buffer provided for the
+///       request contains received data; the service is idle; upload progress
+///       indication function is not called
+///       \Calls membuf_write()
+///       \Calls can_timer_stop()
 TEST(CO_CsdoUpload, SegOnRecv_SizeZero) {
   co_csdo_set_up_ind(csdo, CoCsdoInd::Func, nullptr);
   AdvanceToUpSegState(0u);
@@ -6354,7 +6638,6 @@ TEST_GROUP_BASE(CO_CsdoDownload, CO_CsdoBase) {
 /// @name CSDO initiate segmented download
 ///@{
 
-/// TODO(N7S): GWT
 TEST(CO_CsdoDownload, IniOnRecv_NoCs) {
   SendDownloadRequest(buffer);
 
@@ -6365,7 +6648,6 @@ TEST(CO_CsdoDownload, IniOnRecv_NoCs) {
   CheckSdoAbortSent(CO_SDO_AC_NO_CS);
 }
 
-/// TODO(N7S): GWT
 TEST(CO_CsdoDownload, IniOnRecv_CsAbort_IncompleteAc) {
   SendDownloadRequest(buffer);
 
@@ -6377,7 +6659,6 @@ TEST(CO_CsdoDownload, IniOnRecv_CsAbort_IncompleteAc) {
   CheckTransferAbortedLocally(CO_SDO_AC_ERROR);
 }
 
-/// TODO(N7S): GWT
 TEST(CO_CsdoDownload, IniOnRecv_CsAbort) {
   SendDownloadRequest(buffer);
 
@@ -6389,7 +6670,6 @@ TEST(CO_CsdoDownload, IniOnRecv_CsAbort) {
   CheckTransferAbortedLocally(ac);
 }
 
-/// TODO(N7S): GWT
 TEST(CO_CsdoDownload, IniOnRecv_InvalidCs) {
   SendDownloadRequest(buffer);
 
@@ -6400,7 +6680,6 @@ TEST(CO_CsdoDownload, IniOnRecv_InvalidCs) {
   CheckSdoAbortSent(CO_SDO_AC_NO_CS);
 }
 
-/// TODO(N7S): GWT
 TEST(CO_CsdoDownload, IniOnRecv_IncompleteMultiplexer) {
   SendDownloadRequest(buffer);
 
@@ -6411,7 +6690,6 @@ TEST(CO_CsdoDownload, IniOnRecv_IncompleteMultiplexer) {
   CheckSdoAbortSent(CO_SDO_AC_ERROR);
 }
 
-/// TODO(N7S): GWT
 TEST(CO_CsdoDownload, IniOnRecv_IncorrectIdx) {
   SendDownloadRequest(buffer);
 
@@ -6422,7 +6700,6 @@ TEST(CO_CsdoDownload, IniOnRecv_IncorrectIdx) {
   CheckSdoAbortSent(CO_SDO_AC_ERROR);
 }
 
-/// TODO(N7S): GWT
 TEST(CO_CsdoDownload, IniOnRecv_IncorrectSubidx) {
   SendDownloadRequest(buffer);
 
@@ -6433,7 +6710,6 @@ TEST(CO_CsdoDownload, IniOnRecv_IncorrectSubidx) {
   CheckSdoAbortSent(CO_SDO_AC_ERROR);
 }
 
-/// TODO(N7S): GWT
 TEST(CO_CsdoDownload, IniOnRecv_Nominal) {
   SendDownloadRequest(buffer);
 
@@ -6443,7 +6719,6 @@ TEST(CO_CsdoDownload, IniOnRecv_Nominal) {
   CHECK_FALSE(co_csdo_is_idle(csdo));
 }
 
-/// TODO(N7S): GWT
 TEST(CO_CsdoDownload, IniOnRecv_SizeZero) {
   co_csdo_set_dn_ind(csdo, &CoCsdoInd::Func, nullptr);
   SendDownloadRequest({});
@@ -6460,7 +6735,6 @@ TEST(CO_CsdoDownload, IniOnRecv_SizeZero) {
 /// @name CSDO download segment request and response handling
 ///@{
 
-/// TODO(N7S): GWT
 TEST(CO_CsdoDownload, SegOnAbort_Nominal) {
   AdvanceToDnSegState();
 
@@ -6471,7 +6745,6 @@ TEST(CO_CsdoDownload, SegOnAbort_Nominal) {
   CheckSdoAbortSent(ac);
 }
 
-/// TODO(N7S): GWT
 TEST(CO_CsdoDownload, SegOnTime_Nominal) {
   co_csdo_set_timeout(csdo, 999);
   AdvanceToDnSegState();
@@ -6481,7 +6754,6 @@ TEST(CO_CsdoDownload, SegOnTime_Nominal) {
   CheckSdoAbortSent(CO_SDO_AC_TIMEOUT);
 }
 
-/// TODO(N7S): GWT
 TEST(CO_CsdoDownload, SegOnRecv_NoCs) {
   AdvanceToDnSegState();
 
@@ -6492,7 +6764,6 @@ TEST(CO_CsdoDownload, SegOnRecv_NoCs) {
   CheckSdoAbortSent(CO_SDO_AC_NO_CS);
 }
 
-/// TODO(N7S): GWT
 TEST(CO_CsdoDownload, SegOnRecv_CsAbort_IncompleteAc) {
   AdvanceToDnSegState();
 
@@ -6504,7 +6775,6 @@ TEST(CO_CsdoDownload, SegOnRecv_CsAbort_IncompleteAc) {
   CheckTransferAbortedLocally(CO_SDO_AC_ERROR);
 }
 
-/// TODO(N7S): GWT
 TEST(CO_CsdoDownload, SegOnRecv_CsAbort) {
   AdvanceToDnSegState();
 
@@ -6516,7 +6786,6 @@ TEST(CO_CsdoDownload, SegOnRecv_CsAbort) {
   CheckTransferAbortedLocally(ac);
 }
 
-/// TODO(N7S): GWT
 TEST(CO_CsdoDownload, SegOnRecv_InvalidCs) {
   AdvanceToDnSegState();
 
@@ -6527,7 +6796,6 @@ TEST(CO_CsdoDownload, SegOnRecv_InvalidCs) {
   CheckSdoAbortSent(CO_SDO_AC_NO_CS);
 }
 
-/// TODO(N7S): GWT
 TEST(CO_CsdoDownload, SegOnRecv_UnexpectedToggleBit) {
   AdvanceToDnSegState();
 
@@ -6538,7 +6806,6 @@ TEST(CO_CsdoDownload, SegOnRecv_UnexpectedToggleBit) {
   CheckSdoAbortSent(CO_SDO_AC_TOGGLE);
 }
 
-/// TODO(N7S): GWT
 TEST(CO_CsdoDownload, SegOnRecv_LastSegment_NoInd) {
   co_csdo_set_dn_ind(csdo, nullptr, nullptr);
   AdvanceToDnSegState();
@@ -6551,7 +6818,6 @@ TEST(CO_CsdoDownload, SegOnRecv_LastSegment_NoInd) {
   CHECK_FALSE(co_csdo_is_idle(csdo));
 }
 
-/// TODO(N7S): GWT
 TEST(CO_CsdoDownload, SegOnRecv_LastSegment) {
   co_csdo_set_dn_ind(csdo, &CoCsdoInd::Func, nullptr);
   AdvanceToDnSegState();
@@ -6564,7 +6830,6 @@ TEST(CO_CsdoDownload, SegOnRecv_LastSegment) {
   CHECK_FALSE(co_csdo_is_idle(csdo));
 }
 
-/// TODO(N7S): GWT
 TEST(CO_CsdoDownload, SegOnRecv_LastSegmentConfirmed) {
   AdvanceToDnSegState();
 
@@ -6579,7 +6844,6 @@ TEST(CO_CsdoDownload, SegOnRecv_LastSegmentConfirmed) {
   CheckDoneTransfer();
 }
 
-/// TODO(N7S): GWT
 TEST(CO_CsdoDownload, SegOnRecv_SizeZeroConfirmed) {
   SendDownloadRequest({});
   ReceiveSegmentedDnIni();
@@ -6591,7 +6855,6 @@ TEST(CO_CsdoDownload, SegOnRecv_SizeZeroConfirmed) {
   CheckDoneTransfer();
 }
 
-/// TODO(N7S): GWT
 TEST(CO_CsdoDownload, SegOnRecv_LargeDataSet_PeriodicInd) {
   co_csdo_set_dn_ind(csdo, &CoCsdoInd::Func, nullptr);
 
@@ -6652,7 +6915,6 @@ TEST_GROUP_BASE(CO_CsdoIde, CO_CsdoBase) {
 /// @name SDO transfer with Extended CAN Identifier
 ///@{
 
-/// TODO(N7S): GWT
 TEST(CO_CsdoIde, InitIniReq_ExtendedId) {
   SendDnReq();
 
@@ -6669,7 +6931,6 @@ TEST(CO_CsdoIde, InitIniReq_ExtendedId) {
   CHECK_EQUAL(1u, CoCsdoDnCon::GetNumCalled());
 }
 
-/// TODO(N7S): GWT
 TEST(CO_CsdoIde, InitSegReq_ExtendedId) {
   SendDnReq();
   CanSend::Clear();
