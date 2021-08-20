@@ -71,6 +71,14 @@ TEST_GROUP_BASE(CO_Pdo, CO_PdoBase) { const co_unsigned16_t DEFAULT_NUM = 1u; };
 /// @name co_dev_chk_rpdo()
 ///@{
 
+/// \Given a pointer to the device (co_dev_t)
+///
+/// \When co_dev_chk_rpdo() is called with an index of a non-existing object
+///       and any sub-index
+///
+/// \Then CO_SDO_AC_NO_OBJ is returned
+///       \Calls co_type_is_basic()
+///       \Calls co_dev_find_obj()
 TEST(CO_Pdo, CoDevChkRpdo_NoObj) {
   const auto ret = co_dev_chk_rpdo(dev, DEFAULT_OBJ_IDX, 0x19u);
 
@@ -102,6 +110,12 @@ TEST(CO_Pdo, CoDevChkRpdo_DataTypeIsDummyEntry) {
   CHECK_EQUAL(0u, ret);
 }
 
+/// \Given a pointer to the device (co_dev_t)
+///
+/// \When co_dev_chk_rpdo() is called with an index and a sub-index of
+///       an existing entry with no write access
+///
+/// \Then CO_SDO_AC_NO_WRITE is returned
 TEST(CO_Pdo, CoDevChkRpdo_NoWriteAccess) {
   CoObjTHolder obj_default(DEFAULT_OBJ_IDX);
   CHECK(obj_default.Get() != nullptr);
@@ -116,6 +130,17 @@ TEST(CO_Pdo, CoDevChkRpdo_NoWriteAccess) {
   CHECK_EQUAL(CO_SDO_AC_NO_WRITE, ret);
 }
 
+/// \Given a pointer to the device (co_dev_t)
+///
+/// \When co_dev_chk_rpdo() is called with an index and a sub-index of
+///       an existing entry with no RPDO access
+///
+/// \Then CO_SDO_AC_NO_PDO is returned
+///       \Calls co_type_is_basic()
+///       \Calls co_dev_find_obj()
+///       \Calls co_dev_find_sub()
+///       \Calls co_sub_get_access()
+///       \Calls co_sub_get_pdo_mapping()
 TEST(CO_Pdo, CoDevChkRpdo_NoAccessRpdo) {
   CoObjTHolder obj_default(DEFAULT_OBJ_IDX);
   CHECK(obj_default.Get() != nullptr);
@@ -131,6 +156,17 @@ TEST(CO_Pdo, CoDevChkRpdo_NoAccessRpdo) {
   CHECK_EQUAL(CO_SDO_AC_NO_PDO, ret);
 }
 
+/// \Given a pointer to the device (co_dev_t)
+///
+/// \When co_dev_chk_rpdo() is called with an index and a sub-index of
+///       an existing entry with PDO mapping disabled
+///
+/// \Then CO_SDO_AC_NO_PDO is returned
+///       \Calls co_type_is_basic()
+///       \Calls co_dev_find_obj()
+///       \Calls co_dev_find_sub()
+///       \Calls co_sub_get_access()
+///       \Calls co_sub_get_pdo_mapping()
 TEST(CO_Pdo, CoDevChkRpdo_PdoMappingFalse) {
   CoObjTHolder obj_default(DEFAULT_OBJ_IDX);
   CHECK(obj_default.Get() != nullptr);
@@ -146,6 +182,15 @@ TEST(CO_Pdo, CoDevChkRpdo_PdoMappingFalse) {
   CHECK_EQUAL(CO_SDO_AC_NO_PDO, ret);
 }
 
+/// \Given a pointer to the device (co_dev_t)
+///
+/// \When co_dev_chk_rpdo() is called with an index of an existing
+///       object and a sub-index of a non-existing sub-object
+///
+/// \Then CO_SDO_AC_NO_SUB is returned
+///       \Calls co_type_is_basic()
+///       \Calls co_dev_find_obj()
+///       \Calls co_dev_find_sub()
 TEST(CO_Pdo, CoDevChkRpdo_NoSub) {
   CoObjTHolder obj_default(DEFAULT_OBJ_IDX);
   CHECK(obj_default.Get() != nullptr);
@@ -156,7 +201,18 @@ TEST(CO_Pdo, CoDevChkRpdo_NoSub) {
   CHECK_EQUAL(CO_SDO_AC_NO_SUB, ret);
 }
 
-TEST(CO_Pdo, CoDevChkRpdo) {
+/// \Given a pointer to the device (co_dev_t)
+///
+/// \When co_dev_chk_rpdo() is called with an index of an existing
+///       entry with PDO mapping enabled and RPDO access set
+///
+/// \Then 0 is returned
+///       \Calls co_type_is_basic()
+///       \Calls co_dev_find_obj()
+///       \Calls co_dev_find_sub()
+///       \Calls co_sub_get_access()
+///       \Calls co_sub_get_pdo_mapping()
+TEST(CO_Pdo, CoDevChkRpdo_Nominal) {
   CoObjTHolder obj_default(DEFAULT_OBJ_IDX);
   CHECK(obj_default.Get() != nullptr);
   obj_default.InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8,
@@ -864,12 +920,27 @@ TEST(CO_Pdo, CoDevCfgPdoMap) {
 /// @name co_dev_chk_tpdo()
 ///@{
 
+/// \Given a pointer to a device (co_dev_t)
+///
+/// \When co_dev_chk_tpdo() is called with an index of a non-existing object
+///       and any sub-index
+///
+/// \Then CO_SDO_AC_NO_OBJ is returned
+///       \Calls co_dev_find_obj()
 TEST(CO_Pdo, CoDevChkTpdo_NoObj) {
   const auto ret = co_dev_chk_tpdo(dev, DEFAULT_OBJ_IDX, 0x00u);
 
   CHECK_EQUAL(CO_SDO_AC_NO_OBJ, ret);
 }
 
+/// \Given a pointer to a device (co_dev_t)
+///
+/// \When co_dev_chk_tpdo() is called with an index of an existing object and
+///       a sub-index of a non-existing sub-object
+///
+/// \Then CO_SDO_AC_NO_OBJ is returned
+///       \Calls co_dev_find_obj()
+///       \Calls co_dev_find_sub()
 TEST(CO_Pdo, CoDevChkTpdo_NoSub) {
   CoObjTHolder obj_default(DEFAULT_OBJ_IDX);
   CHECK(obj_default.Get() != nullptr);
@@ -880,6 +951,15 @@ TEST(CO_Pdo, CoDevChkTpdo_NoSub) {
   CHECK_EQUAL(CO_SDO_AC_NO_SUB, ret);
 }
 
+/// \Given a pointer to a device (co_dev_t)
+///
+/// \When co_dev_chk_tpdo() is called with an index and a sub-index of
+///       an existing entry but with no read access
+///
+/// \Then CO_SDO_AC_NO_READ is returned
+///       \Calls co_dev_find_obj()
+///       \Calls co_dev_find_sub()
+///       \Calls co_sub_get_access()
 TEST(CO_Pdo, CoDevChkTpdo_NoReadAccess) {
   CoObjTHolder obj_default(DEFAULT_OBJ_IDX);
   CHECK(obj_default.Get() != nullptr);
@@ -894,6 +974,17 @@ TEST(CO_Pdo, CoDevChkTpdo_NoReadAccess) {
   CHECK_EQUAL(CO_SDO_AC_NO_READ, ret);
 }
 
+/// \Given a pointer to a device (co_dev_t)
+///
+/// \When co_dev_chk_tpdo() is called with an index and a sub-index of
+///       an existing entry but with a flag indicating that it is NOT possible
+///       to map the entry into a Transmit-PDO
+///
+/// \Then CO_SDO_AC_NO_READ is returned
+///       \Calls co_dev_find_obj()
+///       \Calls co_dev_find_sub()
+///       \Calls co_sub_get_access()
+///       \Calls co_sub_get_pdo_mapping()
 TEST(CO_Pdo, CoDevChkTpdo_PdoMappingFalse) {
   CoObjTHolder obj_default(DEFAULT_OBJ_IDX);
   CHECK(obj_default.Get() != nullptr);
@@ -906,7 +997,16 @@ TEST(CO_Pdo, CoDevChkTpdo_PdoMappingFalse) {
   CHECK_EQUAL(CO_SDO_AC_NO_PDO, ret);
 }
 
-TEST(CO_Pdo, CoDevChkTpdo_NoTPDOAccess) {
+/// \Given a pointer to a device (co_dev_t)
+///
+/// \When co_dev_chk_tpdo() is called with an index and a sub-index of
+///       an existing entry with no TPDO access
+///
+/// \Then CO_SDO_AC_NO_PDO is returned
+///       \Calls co_dev_find_obj()
+///       \Calls co_dev_find_sub()
+///       \Calls co_sub_get_access()
+TEST(CO_Pdo, CoDevChkTpdo_NoTpdoAccess) {
   CoObjTHolder obj_default(DEFAULT_OBJ_IDX);
   CHECK(obj_default.Get() != nullptr);
   obj_default.InsertAndSetSub(0x00u, CO_DEFTYPE_INTEGER16,
@@ -921,7 +1021,17 @@ TEST(CO_Pdo, CoDevChkTpdo_NoTPDOAccess) {
   CHECK_EQUAL(CO_SDO_AC_NO_PDO, ret);
 }
 
-TEST(CO_Pdo, CoDevChkTpdo) {
+/// \Given a pointer to a device (co_dev_t)
+///
+/// \When co_dev_chk_tpdo() is called with an index and a sub-index of
+///       an existing entry with TPDO access and PDO mapping enabled
+///
+/// \Then 0 is returned
+///       \Calls co_dev_find_obj()
+///       \Calls co_obj_find_sub()
+///       \Calls co_sub_get_access()
+///       \Calls co_sub_get_pdo_mapping()
+TEST(CO_Pdo, CoDevChkTpdo_Nominal) {
   CoObjTHolder obj_default(DEFAULT_OBJ_IDX);
   CHECK(obj_default.Get() != nullptr);
   obj_default.InsertAndSetSub(0x00u, CO_DEFTYPE_INTEGER16,
@@ -1695,7 +1805,5 @@ TEST(CoPdo_CoPdoUp, Nominal) {
   CHECK_EQUAL(0x00u, buf[4]);
   CHECK_EQUAL(0x00u, buf[5]);
 }
-
-// TODO(sdo): check if buffers have correct values after the download/upload
 
 ///@}
