@@ -26,7 +26,7 @@
 #include "obj-init/obj-init.hpp"
 #include "holder/obj.hpp"
 
-// 0x1800-0x19ff: TPDO communication parameter
+/// 0x1800-0x19ff: TPDO communication parameter
 struct Obj1800TpdoCommPar : ObjInitT<0x1800u, 0x1800u, 0x19ffu> {
   struct Sub00HighestSubidxSupported
       : SubT<0x00u, CO_DEFTYPE_UNSIGNED8, 0x02u> {};

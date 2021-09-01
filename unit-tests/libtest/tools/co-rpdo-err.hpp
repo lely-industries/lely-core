@@ -25,6 +25,7 @@
 
 #include <lely/co/rpdo.h>
 
+/// #co_rpdo_err_t mock.
 class CoRpdoErr {
  public:
   static void Func(co_rpdo_t* pdo, co_unsigned16_t eec, co_unsigned8_t er,

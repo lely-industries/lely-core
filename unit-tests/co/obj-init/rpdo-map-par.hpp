@@ -26,7 +26,7 @@
 #include "obj-init/obj-init.hpp"
 #include "holder/obj.hpp"
 
-// 0x1600-0x17ff: RPDO mapping parameter
+/// 0x1600-0x17ff: RPDO mapping parameter
 struct Obj1600RpdoMapPar : ObjInitT<0x1600u, 0x1600u, 0x17ffu> {
   struct Sub00NumOfMappedObjs : SubT<0x00, CO_DEFTYPE_UNSIGNED8> {};
   struct SubNthAppObject : SubT<0x01, CO_DEFTYPE_UNSIGNED32, 0, 0x01> {};

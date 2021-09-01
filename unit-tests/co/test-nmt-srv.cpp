@@ -442,6 +442,13 @@ TEST(CO_NmtSrv, CoNmtSrvInit_ServerSdo_Init) {
   POINTERS_EQUAL(nullptr, co_nmt_get_ssdo(nmt, SSDO_NUM + 1u));
 }
 
+/// \Given a pointer to a network (can_net_t), a pointer to a device
+///        (co_dev_t) with Server-SDO service(s) created
+///
+/// \When co_nmt_cs_ind() is called with the NMT 'reset node' command specifier
+///
+/// \Then the default and configured Server-SDO services are started
+///       \Calls co_ssdo_start()
 TEST(CO_NmtSrv, CoNmtSrvInit_ServerSdo_Started) {
   CreateObj1201Defaults();
 

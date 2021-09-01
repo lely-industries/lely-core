@@ -25,6 +25,7 @@
 
 #include <lely/co/tpdo.h>
 
+/// #co_tpdo_sample_ind_t mock.
 class CoTpdoSampleInd {
  public:
   static int Func(co_tpdo_t* pdo, void* data);

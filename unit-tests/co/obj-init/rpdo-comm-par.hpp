@@ -26,7 +26,7 @@
 #include "obj-init/obj-init.hpp"
 #include "holder/obj.hpp"
 
-// 0x1400-0x15ff: RPDO communication parameter
+/// 0x1400-0x15ff: RPDO communication parameter
 struct Obj1400RpdoCommPar : ObjInitT<0x1400u, 0x1400u, 0x15ffu> {
   struct Sub00HighestSubidxSupported
       : SubT<0x00u, CO_DEFTYPE_UNSIGNED8, 0x02u> {};
