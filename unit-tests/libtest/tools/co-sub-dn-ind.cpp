@@ -41,6 +41,7 @@ co_sub_t* CoSubDnInd::sub = nullptr;
 co_sdo_req* CoSubDnInd::req = nullptr;
 co_unsigned32_t CoSubDnInd::ac = 0u;
 void* CoSubDnInd::data = nullptr;
+co_unsigned32_t CoSubDnInd::ret = 0u;
 
 co_unsigned32_t
 CoSubDnInd::Func(co_sub_t* const sub_, co_sdo_req* const req_,
@@ -52,7 +53,27 @@ CoSubDnInd::Func(co_sub_t* const sub_, co_sdo_req* const req_,
   ac = ac_;
   data = data_;
 
-  return 0;
+  return ret;
+}
+
+co_unsigned32_t
+CoSubDnInd::FuncDn(co_sub_t* const sub_, co_sdo_req* const req_,
+                   co_unsigned32_t const ac_, void* const data_) {
+  num_called++;
+
+  sub = sub_;
+  req = req_;
+  ac = ac_;
+  data = data_;
+
+  if (ac != 0u) {
+    return ac;
+  } else if (ret != 0u) {
+    return ret;
+  } else {
+    CHECK_EQUAL(0, co_sub_on_dn(sub, req, &ac));
+    return ac;
+  }
 }
 
 void
@@ -63,6 +84,8 @@ CoSubDnInd::Clear() {
   req = nullptr;
   ac = 0;
   data = nullptr;
+
+  ret = 0u;
 }
 
 template <typename Predicate>

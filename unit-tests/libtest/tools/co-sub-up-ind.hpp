@@ -33,6 +33,8 @@ struct CoSubUpInd {
   static co_sdo_req* req;
   static co_unsigned32_t ac;
   static void* data;
+  static co_unsigned32_t ret;
+  static co_sdo_req* ret_req;
 
   static co_unsigned32_t Func(const co_sub_t* sub_, co_sdo_req* req_,
                               co_unsigned32_t ac_, void* data_);
@@ -41,6 +43,10 @@ struct CoSubUpInd {
   static inline bool
   Called() {
     return num_called > 0;
+  }
+  static inline size_t
+  GetNumCalled() {
+    return num_called;
   }
 };
 
