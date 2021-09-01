@@ -51,6 +51,8 @@ struct Obj1800TpdoCommPar : ObjInitT<0x1800u, 0x1800u, 0x19ffu> {
       0xfdu;
   static const Sub02TransmissionType::sub_type EVENT_DRIVEN_TRANSMISSION =
       0xfeu;
+  static const Sub02TransmissionType::sub_type EVENT_DRIVEN_APP_TRANSMISSION =
+      0xffu;
 };
 
 #endif  // LELY_UNIT_TEST_TPDO_COMM_PAR_HPP_

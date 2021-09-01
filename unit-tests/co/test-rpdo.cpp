@@ -53,6 +53,8 @@
 #include "obj-init/rpdo-map-par.hpp"
 #include "obj-init/sync-window-length.hpp"
 
+static const co_unsigned8_t CO_SYNC_CNT_MAX = 240u;
+
 TEST_BASE(CO_RpdoBase) {
   TEST_BASE_SUPER(CO_RpdoBase);
 
@@ -95,6 +97,7 @@ TEST_BASE(CO_RpdoBase) {
   }
 
   TEST_TEARDOWN() {
+    set_errnum(ERRNUM_SUCCESS);
     dev_holder.reset();
     can_net_destroy(net);
   }
@@ -358,6 +361,7 @@ TEST(CO_RpdoCreate, CoRpdoDestroy_Nominal) {
 TEST_GROUP_BASE(CO_Rpdo, CO_RpdoBase) {
   static const co_unsigned16_t PDO_MAPPED_IDX = 0x2020u;
   static const co_unsigned8_t PDO_MAPPED_SUBIDX = 0x00u;
+  static const co_unsigned8_t PDO_MAPPED_BITS_LEN = 0x40u;
 
   co_rpdo_t* rpdo = nullptr;
 
@@ -382,15 +386,18 @@ TEST_GROUP_BASE(CO_Rpdo, CO_RpdoBase) {
   void SetupRpdo(const co_unsigned32_t cobid,
                  const co_unsigned8_t transmission =
                      Obj1400RpdoCommPar::SYNCHRONOUS_TRANSMISSION) {
-    obj1400->EmplaceSub<Obj1400RpdoCommPar::Sub00HighestSubidxSupported>();
+    obj1400->EmplaceSub<Obj1400RpdoCommPar::Sub00HighestSubidxSupported>(0x05u);
     obj1400->EmplaceSub<Obj1400RpdoCommPar::Sub01CobId>(cobid);
     obj1400->EmplaceSub<Obj1400RpdoCommPar::Sub02TransmissionType>(
         transmission);
+    obj1400->EmplaceSub<Obj1400RpdoCommPar::Sub03InhibitTime>(0u);
+    obj1400->EmplaceSub<Obj1400RpdoCommPar::Sub04Reserved>();
+    obj1400->EmplaceSub<Obj1400RpdoCommPar::Sub05EventTimer>(0u);
 
     obj1600->EmplaceSub<Obj1600RpdoMapPar::Sub00NumOfMappedObjs>(0x01u);
     obj1600->EmplaceSub<Obj1600RpdoMapPar::SubNthAppObject>(
-        0x01u, Obj1600RpdoMapPar::MakeMappingParam(PDO_MAPPED_IDX,
-                                                   PDO_MAPPED_SUBIDX, 0x40u));
+        0x01u, Obj1600RpdoMapPar::MakeMappingParam(
+                   PDO_MAPPED_IDX, PDO_MAPPED_SUBIDX, PDO_MAPPED_BITS_LEN));
 
     dev_holder->CreateAndInsertObj(obj2020, PDO_MAPPED_IDX);
     obj2020->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED64, co_unsigned64_t{0});
@@ -403,7 +410,7 @@ TEST_GROUP_BASE(CO_Rpdo, CO_RpdoBase) {
     can_msg msg = CAN_MSG_INIT;
     msg.id = DEV_ID;
     msg.len = sizeof(val);
-    memcpy(msg.data, &val, msg.len);
+    stle_u64(msg.data, val);
 
     return msg;
   }
@@ -921,7 +928,7 @@ TEST(CO_Rpdo, CoRpdoSync_CounterOverLimit) {
   const can_msg msg = CreatePdoMsg_U64(val);
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
-  const auto ret = co_rpdo_sync(rpdo, 0xffu);
+  const auto ret = co_rpdo_sync(rpdo, CO_SYNC_CNT_MAX + 1u);
 
   CHECK_EQUAL(-1, ret);
   CHECK_EQUAL(ERRNUM_INVAL, get_errnum());
@@ -1035,8 +1042,8 @@ TEST(CO_Rpdo, CoRpdoSync_Nominal_NoCallbacks) {
 /// \When co_rpdo_sync() is called with a counter value
 ///
 /// \Then 0 is returned, the frame is processed and the object mapped into the
-///       PDO is updated; the RPDO indication function is called with zero
-///       abort code, the frame data and the user-specified data pointer, the
+///       PDO is updated; the RPDO indication function is invoked with zero
+///       abort code, the frame data and a user-specified data pointer, the
 ///       error handling function is not called
 ///       \Calls can_timer_stop()
 ///       \Calls co_dev_get_val_u32()
@@ -1068,7 +1075,7 @@ TEST(CO_Rpdo, CoRpdoSync_Nominal) {
 ///
 /// \Then -1 is returned, the waiting frame is processed, but the object mapped
 ///       into the PDO is not updated; the RPDO indication function is invoked
-///       with the CO_SDO_AC_NO_OBJ, the frame data and the user-specified data
+///       with the CO_SDO_AC_NO_OBJ, the frame data and a user-specified data
 ///       pointer, the error handling function is not called
 ///       \Calls can_timer_stop()
 ///       \Calls co_dev_get_val_u32()
@@ -1081,8 +1088,8 @@ TEST(CO_Rpdo, CoRpdoSync_NonExistingObjectMapping) {
 
   obj1600->EmplaceSub<Obj1600RpdoMapPar::Sub00NumOfMappedObjs>(0x01u);
   obj1600->EmplaceSub<Obj1600RpdoMapPar::SubNthAppObject>(
-      0x01u, Obj1600RpdoMapPar::MakeMappingParam(PDO_MAPPED_IDX,
-                                                 PDO_MAPPED_SUBIDX, 0x40u));
+      0x01u, Obj1600RpdoMapPar::MakeMappingParam(
+                 PDO_MAPPED_IDX, PDO_MAPPED_SUBIDX, PDO_MAPPED_BITS_LEN));
   CreateRpdo();
   StartRpdo();
 
@@ -1108,9 +1115,9 @@ TEST(CO_Rpdo, CoRpdoSync_NonExistingObjectMapping) {
 ///
 /// \Then -1 is returned, the waiting frame is processed, but the object mapped
 ///       into the PDO is not updated; the RPDO indication function is invoked
-///       with the CO_SDO_AC_PDO_LEN, the frame data and the user-specified
+///       with the CO_SDO_AC_PDO_LEN, the frame data and a user-specified
 ///       data pointer; the error handling function is invoked with `0x8210`
-///       emergency error code, `0x10` error register and the user-specified
+///       emergency error code, `0x10` error register and a user-specified
 ///       data pointer
 ///       \Calls can_timer_stop()
 ///       \Calls co_dev_get_val_u32()
@@ -1144,9 +1151,9 @@ TEST(CO_Rpdo, CoRpdoSync_MappedObjectExceedsPdoLength) {
 ///
 /// \Then -1 is returned, the waiting frame is processed, but the object mapped
 ///       into the PDO is not updated; the RPDO indication function is invoked
-///       with the CO_SDO_AC_PDO_LEN, the frame data and the user-specified
+///       with the CO_SDO_AC_PDO_LEN, the frame data and a user-specified
 ///       data pointer, the error handling function is invoked with `0x8220`
-///       emergency error code, `0x10` error register and the user-specified
+///       emergency error code, `0x10` error register and a user-specified
 ///       data pointer
 ///       \Calls can_timer_stop()
 ///       \Calls co_dev_get_val_u32()
@@ -1216,8 +1223,8 @@ TEST(CO_Rpdo, CoRpdoRecv_ReservedTransmission) {
 /// \When a PDO message is received by the service
 ///
 /// \Then the message is processed and the object mapped into the PDO is
-///       updated; the RPDO indication function is called with zero abort code,
-///       the message data and the user-specified data pointer
+///       updated; the RPDO indication function is invoked with zero abort code,
+///       the message data and a user-specified data pointer
 ///       \Calls can_timer_stop()
 ///       \Calls co_pdo_dn()
 TEST(CO_Rpdo, CoRpdoRecv_EventDrivenTransmission) {
@@ -1274,16 +1281,13 @@ TEST(CO_Rpdo, CoRpdoRecv_SynchronousTransmission_ExpiredSyncWindow) {
 /// \When a PDO message is received by the service
 ///
 /// \Then the event timer is started and after the timer expires the error
-///       handling function is called with `0x8250` emergency error code,
-///       `0x10` error register and the user-specified data pointer
+///       handling function is invoked with `0x8250` emergency error code,
+///       `0x10` error register and a user-specified data pointer
 ///       \Calls can_timer_stop()
 ///       \Calls can_timer_timeout()
 TEST(CO_Rpdo, CoRpdoRecv_SynchronousTransmission_EventTimer) {
   SetupRpdo(DEV_ID, Obj1400RpdoCommPar::SYNCHRONOUS_TRANSMISSION);
-  obj1400->SetSub<Obj1400RpdoCommPar::Sub00HighestSubidxSupported>(0x05u);
-  obj1400->EmplaceSub<Obj1400RpdoCommPar::Sub03InhibitTime>(0u);
-  obj1400->EmplaceSub<Obj1400RpdoCommPar::Sub04Reserved>();
-  obj1400->EmplaceSub<Obj1400RpdoCommPar::Sub05EventTimer>(1u);  // 1ms
+  obj1400->SetSub<Obj1400RpdoCommPar::Sub05EventTimer>(1u);  // 1ms
   CreateRpdo();
   StartRpdo();
 
@@ -1314,10 +1318,7 @@ TEST(CO_Rpdo, CoRpdoRecv_SynchronousTransmission_EventTimer) {
 ///       \Calls can_timer_timeout()
 TEST(CO_Rpdo, CoRpdoRecv_SynchronousTransmission_EventTimer_NoErr) {
   SetupRpdo(DEV_ID, Obj1400RpdoCommPar::SYNCHRONOUS_TRANSMISSION);
-  obj1400->SetSub<Obj1400RpdoCommPar::Sub00HighestSubidxSupported>(0x05u);
-  obj1400->EmplaceSub<Obj1400RpdoCommPar::Sub03InhibitTime>(0u);
-  obj1400->EmplaceSub<Obj1400RpdoCommPar::Sub04Reserved>();
-  obj1400->EmplaceSub<Obj1400RpdoCommPar::Sub05EventTimer>(1u);  // 1ms
+  obj1400->SetSub<Obj1400RpdoCommPar::Sub05EventTimer>(1u);  // 1ms
   CreateRpdo();
   StartRpdo();
   co_rpdo_set_err(rpdo, nullptr, nullptr);

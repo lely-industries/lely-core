@@ -53,6 +53,8 @@
 #include "obj-init/tpdo-comm-par.hpp"
 #include "obj-init/tpdo-map-par.hpp"
 
+static const co_unsigned8_t CO_SYNC_CNT_MAX = 240u;
+
 TEST_BASE(CO_TpdoBase) {
   TEST_BASE_SUPER(CO_TpdoBase);
   Allocators::Default allocator;
@@ -87,6 +89,7 @@ TEST_BASE(CO_TpdoBase) {
   }
 
   TEST_TEARDOWN() {
+    set_errnum(ERRNUM_SUCCESS);
     dev_holder.reset();
     can_net_destroy(net);
   }
@@ -350,9 +353,15 @@ TEST(CO_TpdoCreate, CoTpdoDestroy_Nominal) {
 TEST_GROUP_BASE(CO_Tpdo, CO_TpdoBase) {
   static const co_unsigned16_t PDO_MAPPED_IDX = 0x2020u;
   static const co_unsigned8_t PDO_MAPPED_SUBIDX = 0x00u;
+  static const co_unsigned8_t PDO_MAPPED_BITS_LEN = 0x40u;
+  static const co_unsigned64_t PDO_MAPPED_VAL = 0x1234567890abcdefu;
+  static const co_unsigned64_t PDO_LEN = sizeof(PDO_MAPPED_VAL);
 
   co_tpdo_t* tpdo = nullptr;
 
+  std::unique_ptr<CoObjTHolder> obj2020;
+
+  uint_least8_t pdo_data[PDO_LEN] = {0};
   int32_t ind_data = 0;
   int32_t sind_data = 0;
   int32_t can_data = 0;
@@ -365,6 +374,7 @@ TEST_GROUP_BASE(CO_Tpdo, CO_TpdoBase) {
 
   void StartTpdo() {
     co_tpdo_set_ind(tpdo, CoTpdoInd::Func, &ind_data);
+    co_tpdo_set_sample_ind(tpdo, CoTpdoSampleInd::Func, &sind_data);
 
     CHECK(co_tpdo_is_stopped(tpdo));
     co_tpdo_start(tpdo);
@@ -378,6 +388,28 @@ TEST_GROUP_BASE(CO_Tpdo, CO_TpdoBase) {
     can_net_set_time(net, &ts);
   }
 
+  void SetupTpdo(const co_unsigned32_t cobid,
+                 const co_unsigned8_t transmission =
+                     Obj1800TpdoCommPar::SYNCHRONOUS_ACYCLIC_TRANSMISSION) {
+    obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub00HighestSubidxSupported>(0x06u);
+    obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub01CobId>(cobid);
+    obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub02TransmissionType>(
+        transmission);
+    obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub03InhibitTime>(0);
+    obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub04Reserved>();
+    obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub05EventTimer>(0);
+    obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub06SyncStartValue>(0);
+
+    obj1a00->EmplaceSub<Obj1a00TpdoMapPar::Sub00NumOfMappedObjs>(0x01u);
+    obj1a00->EmplaceSub<Obj1a00TpdoMapPar::SubNthAppObject>(
+        0x01u, Obj1a00TpdoMapPar::MakeMappingParam(
+                   PDO_MAPPED_IDX, PDO_MAPPED_SUBIDX, PDO_MAPPED_BITS_LEN));
+
+    dev_holder->CreateAndInsertObj(obj2020, PDO_MAPPED_IDX);
+    obj2020->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED64, PDO_MAPPED_VAL);
+    co_sub_set_pdo_mapping(obj2020->GetLastSub(), true);
+  }
+
   TEST_SETUP() {
     TEST_BASE_SETUP();
 
@@ -385,6 +417,8 @@ TEST_GROUP_BASE(CO_Tpdo, CO_TpdoBase) {
     dev_holder->CreateObj<Obj1a00TpdoMapPar>(obj1a00);
 
     can_net_set_send_func(net, CanSend::Func, &can_data);
+
+    stle_u64(pdo_data, PDO_MAPPED_VAL);
   }
 
   TEST_TEARDOWN() {
@@ -444,8 +478,9 @@ TEST(CO_Tpdo, CoTpdoStart_Nominal) {
 
 /// \Given a pointer to an initialized TPDO service (co_tpdo_t), the object
 ///        dictionary contains the TPDO communication parameter (0x1800) object
-///        with the "Transmission type" entry (0x02) set to non-RTR
-///        transmission type
+///        with the "COB-ID used by TPDO" entry (0x01) that has the
+///        CO_PDO_COBID_RTR bit set and with the "Transmission type" entry
+///        (0x02) set to non-RTR transmission type
 ///
 /// \When co_tpdo_start() is called
 ///
@@ -456,9 +491,10 @@ TEST(CO_Tpdo, CoTpdoStart_Nominal) {
 ///       \Calls co_obj_set_dn_ind()
 ///       \Calls can_recv_stop()
 ///       \Calls can_timer_stop()
-TEST(CO_Tpdo, CoTpdoStart_NoRTRRecv) {
+TEST(CO_Tpdo, CoTpdoStart_NoRTRReceiver) {
   obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub00HighestSubidxSupported>();
-  obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub01CobId>(DEV_ID);
+  obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub01CobId>(DEV_ID |
+                                                      CO_PDO_COBID_RTR);
   obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub02TransmissionType>(
       Obj1800TpdoCommPar::EVENT_DRIVEN_TRANSMISSION);
   CreateTpdo();
@@ -480,8 +516,9 @@ TEST(CO_Tpdo, CoTpdoStart_NoRTRRecv) {
 
 /// \Given a pointer to an initialized TPDO service (co_tpdo_t), the object
 ///        dictionary contains the TPDO communication parameter (0x1800) object
-///        with the "Transmission type" entry (0x02) set to RTR-only
-///        transmission type
+///        with the "COB-ID used by TPDO" entry (0x01) that doesn't have the
+///        CO_PDO_COBID_RTR bit set and with the "Transmission type" entry
+///        (0x02) set to RTR-only transmission type
 ///
 /// \When co_tpdo_start() is called
 ///
@@ -492,7 +529,7 @@ TEST(CO_Tpdo, CoTpdoStart_NoRTRRecv) {
 ///       \Calls co_obj_set_dn_ind()
 ///       \Calls can_recv_start()
 ///       \Calls can_timer_stop()
-TEST(CO_Tpdo, CoTpdoStart_RTRRecv) {
+TEST(CO_Tpdo, CoTpdoStart_RTRReceiver) {
   obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub00HighestSubidxSupported>();
   obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub01CobId>(DEV_ID);
   obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub02TransmissionType>(
@@ -510,16 +547,18 @@ TEST(CO_Tpdo, CoTpdoStart_RTRRecv) {
   msg.flags = CAN_FLAG_RTR;
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
-  CHECK_EQUAL(0, CoTpdoInd::GetNumCalled());
   CHECK_EQUAL(1u, CoTpdoSampleInd::GetNumCalled());
   CoTpdoSampleInd::Check(tpdo, &sind_data);
+  CHECK_EQUAL(1u, CoTpdoInd::GetNumCalled());
+  CoTpdoInd::Check(tpdo, 0, nullptr, 0, &ind_data);
 }
 
 /// \Given a pointer to an initialized TPDO service (co_tpdo_t), the object
 ///        dictionary contains the TPDO communication parameter (0x1800) object
-///        with the "COB-ID" entry (0x01) that has the CO_PDO_COBID_FRAME bit
-///        set and the "Transmission type" entry (0x02) set to RTR-only
-///        transmission type
+///        with the "COB-ID used by TPDO" entry (0x01) that doesn't have the
+///        CO_PDO_COBID_RTR bit set, but has the CO_PDO_COBID_FRAME bit set and
+///        the "Transmission type" entry (0x02) set to RTR-only transmission
+///        type
 ///
 /// \When co_tpdo_start() is called
 ///
@@ -531,7 +570,7 @@ TEST(CO_Tpdo, CoTpdoStart_RTRRecv) {
 ///       \Calls co_obj_set_dn_ind()
 ///       \Calls can_recv_start()
 ///       \Calls can_timer_stop()
-TEST(CO_Tpdo, CoTpdoStart_RTRRecv_ExtendedFrame) {
+TEST(CO_Tpdo, CoTpdoStart_RTRReceiver_ExtendedId) {
   obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub00HighestSubidxSupported>();
   obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub01CobId>(DEV_ID |
                                                       CO_PDO_COBID_FRAME);
@@ -550,16 +589,17 @@ TEST(CO_Tpdo, CoTpdoStart_RTRRecv_ExtendedFrame) {
   msg.flags = CAN_FLAG_IDE | CAN_FLAG_RTR;
   CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
-  CHECK_EQUAL(0, CoTpdoInd::GetNumCalled());
   CHECK_EQUAL(1u, CoTpdoSampleInd::GetNumCalled());
   CoTpdoSampleInd::Check(tpdo, &sind_data);
+  CHECK_EQUAL(1u, CoTpdoInd::GetNumCalled());
+  CoTpdoInd::Check(tpdo, 0, nullptr, 0, &ind_data);
 }
 
 /// \Given a pointer to an initialized TPDO service (co_tpdo_t), the object
 ///        dictionary contains the TPDO communication parameter (0x1800) object
-///        with the "COB-ID" entry (0x01) that has the CO_PDO_COBID_VALID bit
-///        set and the "Transmission type" entry (0x02) set to RTR-only
-///        transmission type
+///        with the "COB-ID used by TPDO" entry (0x01) that has the
+///        CO_PDO_COBID_VALID bit set and the "Transmission type" entry (0x02)
+///        set to RTR-only transmission type
 ///
 /// \When co_tpdo_start() is called
 ///
@@ -570,7 +610,7 @@ TEST(CO_Tpdo, CoTpdoStart_RTRRecv_ExtendedFrame) {
 ///       \Calls co_obj_set_dn_ind()
 ///       \Calls can_recv_stop()
 ///       \Calls can_timer_stop()
-TEST(CO_Tpdo, CoTpdoStart_InvalidBit) {
+TEST(CO_Tpdo, CoTpdoStart_InvalidTpdo) {
   obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub00HighestSubidxSupported>();
   obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub01CobId>(DEV_ID |
                                                       CO_PDO_COBID_VALID);
@@ -937,26 +977,29 @@ TEST(CO_Tpdo, CoTpdoSetSampleInd_Null) {
 /// @name co_tpdo_event()
 ///@{
 
+/// \Given a pointer to a stopped TPDO service (co_tpdo_t)
+///
+/// \When co_tpdo_event() is called
+///
+/// \Then 0 is returned, nothing is changed
 TEST(CO_Tpdo, CoTpdoEvent_Stopped) {
-  obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub00HighestSubidxSupported>();
-  obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub01CobId>(DEV_ID);
-  obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub02TransmissionType>();
-
   CreateTpdo();
 
   const auto ret = co_tpdo_event(tpdo);
 
   CHECK_EQUAL(0, ret);
   CHECK_EQUAL(0, CoTpdoInd::GetNumCalled());
+  CHECK_EQUAL(0, CoTpdoSampleInd::GetNumCalled());
   CHECK_EQUAL(0, CanSend::GetNumCalled());
 }
 
-TEST(CO_Tpdo, CoTpdoEvent_InvalidRpdo) {
-  obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub00HighestSubidxSupported>();
-  obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub01CobId>(DEV_ID |
-                                                      CO_PDO_COBID_VALID);
-  obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub02TransmissionType>();
-
+/// \Given a pointer to a started TPDO service (co_tpdo_t), the TPDO is invalid
+///
+/// \When co_tpdo_event() is called
+///
+/// \Then 0 is returned, nothing is changed
+TEST(CO_Tpdo, CoTpdoEvent_InvalidTpdo) {
+  SetupTpdo(DEV_ID | CO_PDO_COBID_VALID);
   CreateTpdo();
   StartTpdo();
 
@@ -964,15 +1007,20 @@ TEST(CO_Tpdo, CoTpdoEvent_InvalidRpdo) {
 
   CHECK_EQUAL(0, ret);
   CHECK_EQUAL(0, CoTpdoInd::GetNumCalled());
+  CHECK_EQUAL(0, CoTpdoSampleInd::GetNumCalled());
   CHECK_EQUAL(0, CanSend::GetNumCalled());
 }
 
-TEST(CO_Tpdo, CoTpdoEvent_AcyclicSynchronousTransmission) {
-  obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub00HighestSubidxSupported>(0x02u);
-  obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub01CobId>(DEV_ID);
-  obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub02TransmissionType>(
-      Obj1800TpdoCommPar::SYNCHRONOUS_ACYCLIC_TRANSMISSION);
-
+/// \Given a pointer to a started TPDO service (co_tpdo_t) configured with
+///        a synchronous (acyclic) transmission type
+///
+/// \When co_tpdo_event() is called
+///
+/// \Then 0 is returned, the occurrence of an event is recorded - on the next
+///       call to `co_tpdo_sync()` the TPDO sampling indication function is
+///       called
+TEST(CO_Tpdo, CoTpdoEvent_SynchronousAcyclicTransmission) {
+  SetupTpdo(DEV_ID, Obj1800TpdoCommPar::SYNCHRONOUS_ACYCLIC_TRANSMISSION);
   CreateTpdo();
   StartTpdo();
 
@@ -980,15 +1028,22 @@ TEST(CO_Tpdo, CoTpdoEvent_AcyclicSynchronousTransmission) {
 
   CHECK_EQUAL(0, ret);
   CHECK_EQUAL(0, CoTpdoInd::GetNumCalled());
+  CHECK_EQUAL(0, CoTpdoSampleInd::GetNumCalled());
   CHECK_EQUAL(0, CanSend::GetNumCalled());
+
+  CHECK_EQUAL(0, co_tpdo_sync(tpdo, 0));
+  CHECK_EQUAL(1u, CoTpdoSampleInd::GetNumCalled());
+  CoTpdoSampleInd::Check(tpdo, &sind_data);
 }
 
-TEST(CO_Tpdo, CoTpdoEvent_CyclicSynchronousTransmission) {
-  obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub00HighestSubidxSupported>(0x02u);
-  obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub01CobId>(DEV_ID);
-  obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub02TransmissionType>(
-      Obj1800TpdoCommPar::SYNCHRONOUS_TRANSMISSION(1u));
-
+/// \Given a pointer to a started TPDO service (co_tpdo_t) configured with
+///        a synchronous (cyclic) transmission type
+///
+/// \When co_tpdo_event() is called
+///
+/// \Then 0 is returned, the occurrence of an event is ignored
+TEST(CO_Tpdo, CoTpdoEvent_SynchronousCyclicTransmission) {
+  SetupTpdo(DEV_ID, Obj1800TpdoCommPar::SYNCHRONOUS_TRANSMISSION(5u));
   CreateTpdo();
   StartTpdo();
 
@@ -996,16 +1051,25 @@ TEST(CO_Tpdo, CoTpdoEvent_CyclicSynchronousTransmission) {
 
   CHECK_EQUAL(0, ret);
   CHECK_EQUAL(0, CoTpdoInd::GetNumCalled());
+  CHECK_EQUAL(0, CoTpdoSampleInd::GetNumCalled());
   CHECK_EQUAL(0, CanSend::GetNumCalled());
+
+  CHECK_EQUAL(0, co_tpdo_sync(tpdo, 0));
+  CHECK_EQUAL(0, CoTpdoSampleInd::GetNumCalled());
 }
 
+/// \Given a pointer to a started TPDO service (co_tpdo_t) configured with
+///        the RTR-only (event-driven) transmission type
+///
+/// \When co_tpdo_event() is called
+///
+/// \Then 0 is returned, the occurrence of an event is recorded, a CAN frame
+///       to be sent by the TPDO is initialized - and it is sent on a receipt
+///       of an RTR PDO message
+///       \Calls co_pdo_up()
+///       \Calls can_timer_stop()
 TEST(CO_Tpdo, CoTpdoEvent_EventDrivenRTR_InitFrameSuccess) {
-  obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub00HighestSubidxSupported>(0x02u);
-  obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub01CobId>(DEV_ID |
-                                                      CO_PDO_COBID_RTR);
-  obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub02TransmissionType>(
-      Obj1800TpdoCommPar::EVENT_DRIVEN_RTR_TRANSMISSION);
-
+  SetupTpdo(DEV_ID, Obj1800TpdoCommPar::EVENT_DRIVEN_RTR_TRANSMISSION);
   CreateTpdo();
   StartTpdo();
 
@@ -1013,44 +1077,91 @@ TEST(CO_Tpdo, CoTpdoEvent_EventDrivenRTR_InitFrameSuccess) {
 
   CHECK_EQUAL(0, ret);
   CHECK_EQUAL(0, CoTpdoInd::GetNumCalled());
+  CHECK_EQUAL(0, CoTpdoSampleInd::GetNumCalled());
   CHECK_EQUAL(0, CanSend::GetNumCalled());
+
+  can_msg msg = CAN_MSG_INIT;
+  msg.id = DEV_ID;
+  msg.flags |= CAN_FLAG_RTR;
+  CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
+
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
+  CanSend::CheckMsg(DEV_ID, 0, PDO_LEN, pdo_data);
 }
 
+/// \Given a pointer to a started TPDO service (co_tpdo_t) configured with
+///        the RTR-only (event-driven) transmission type
+///
+/// \When co_tpdo_event() is called, but the service failed to initialize
+///       a CAN frame to be sent by the TPDO
+///
+/// \Then -1 is returned, the TPDO indication function is invoked with
+///       an initialization error, a null bytes sent pointer, a zero number of
+///       the bytes and a user-specified data pointer
+///       \Calls co_pdo_up()
 TEST(CO_Tpdo, CoTpdoEvent_EventDrivenRTR_InitFrameFail) {
-  obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub00HighestSubidxSupported>(0x02u);
-  obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub01CobId>(
-      DEV_ID | CO_PDO_COBID_FRAME | CO_PDO_COBID_RTR);
-  obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub02TransmissionType>(0xfdu);
-
-  obj1a00->EmplaceSub<Obj1a00TpdoMapPar::Sub00NumOfMappedObjs>(0x01u);
-  obj1a00->EmplaceSub<Obj1a00TpdoMapPar::SubNthAppObject>(0x01u, 0xffff0000u);
-
+  SetupTpdo(DEV_ID, Obj1800TpdoCommPar::EVENT_DRIVEN_RTR_TRANSMISSION);
+  obj1a00->SetSub<Obj1a00TpdoMapPar::SubNthAppObject>(
+      0x01u, Obj1a00TpdoMapPar::MakeMappingParam(0xffffu, 0x00u, 0x00u));
   CreateTpdo();
   StartTpdo();
 
   const auto ret = co_tpdo_event(tpdo);
 
   CHECK_EQUAL(-1, ret);
-  CHECK_EQUAL(0, CanSend::GetNumCalled());
-
+  CHECK_EQUAL(0, CoTpdoSampleInd::GetNumCalled());
   CHECK_EQUAL(1u, CoTpdoInd::GetNumCalled());
   CoTpdoInd::Check(tpdo, CO_SDO_AC_NO_OBJ, nullptr, 0, &ind_data);
+  CHECK_EQUAL(0, CanSend::GetNumCalled());
 }
 
-TEST(CO_Tpdo, CoTpdoEvent_EventDriven_InhibitTimeNotPassed) {
-  obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub00HighestSubidxSupported>(0x03u);
-  obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub01CobId>(DEV_ID);
-  obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub02TransmissionType>(0xfeu);
-  obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub03InhibitTime>(10u);  // 1 ms
+/// \Given a pointer to a started TPDO service (co_tpdo_t) configured with
+///        the RTR-only (event-driven) transmission type; there is no TPDO
+///        indication function set in the service
+///
+/// \When co_tpdo_event() is called, but the service failed to initialize
+///       a CAN frame to be sent by the TPDO
+///
+/// \Then -1 is returned, nothing is changed
+///       \Calls co_pdo_up()
+TEST(CO_Tpdo, CoTpdoEvent_EventDrivenRTR_InitFrameFail_NoInd) {
+  SetupTpdo(DEV_ID, Obj1800TpdoCommPar::EVENT_DRIVEN_RTR_TRANSMISSION);
+  obj1a00->SetSub<Obj1a00TpdoMapPar::SubNthAppObject>(
+      0x01u, Obj1a00TpdoMapPar::MakeMappingParam(0xffffu, 0x00u, 0x00u));
+  CreateTpdo();
+  StartTpdo();
+  co_tpdo_set_ind(tpdo, nullptr, nullptr);
 
+  const auto ret = co_tpdo_event(tpdo);
+
+  CHECK_EQUAL(-1, ret);
+  CHECK_EQUAL(0, CoTpdoSampleInd::GetNumCalled());
+  CHECK_EQUAL(0, CanSend::GetNumCalled());
+}
+
+/// \Given a pointer to a started TPDO service (co_tpdo_t) configured with
+///        an event-driven transmission type and a non-zero inhibit time
+///
+/// \When co_tpdo_event() is called, but the inhibit time have not passed
+///
+/// \Then -1 is returned, the error number is set to ERRNUM_AGAIN, nothing
+///       is changed
+///       \Calls can_net_get_time()
+///       \Calls timespec_cmp()
+///       \Calls set_errnum()
+TEST(CO_Tpdo, CoTpdoEvent_EventDriven_InhibitTimeNotPassed) {
+  const co_unsigned16_t inhibit_time = 10u;  // 1 ms
+  SetupTpdo(DEV_ID, Obj1800TpdoCommPar::EVENT_DRIVEN_TRANSMISSION);
+  obj1800->SetSub<Obj1800TpdoCommPar::Sub03InhibitTime>(inhibit_time);
   CreateTpdo();
   StartTpdo();
 
+  // send frame to store last inhibit time
   CHECK_EQUAL(0, co_tpdo_event(tpdo));
   CoTpdoInd::Clear();
   CanSend::Clear();
 
-  const timespec ts = {0, 999999u};  // 0.999999 ms
+  const timespec ts = {0, (inhibit_time * 100000u) - 1u};  // 0.999999 ms
   CHECK_EQUAL(0, can_net_set_time(net, &ts));
 
   const auto ret = co_tpdo_event(tpdo);
@@ -1058,151 +1169,271 @@ TEST(CO_Tpdo, CoTpdoEvent_EventDriven_InhibitTimeNotPassed) {
   CHECK_EQUAL(-1, ret);
   CHECK_EQUAL(ERRNUM_AGAIN, get_errnum());
   CHECK_EQUAL(0, CoTpdoInd::GetNumCalled());
+  CHECK_EQUAL(0, CoTpdoSampleInd::GetNumCalled());
   CHECK_EQUAL(0, CanSend::GetNumCalled());
 }
 
-TEST(CO_Tpdo, CoTpdoEvent_EventDriven_InhibitTimePassedNoSendFunc) {
-  can_net_set_send_func(net, nullptr, nullptr);
-
-  obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub00HighestSubidxSupported>(0x03u);
-  obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub01CobId>(DEV_ID);
-  obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub02TransmissionType>(0xfeu);
-  obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub03InhibitTime>(10u);  // 1 ms
-
+/// \Given a pointer to a started TPDO service (co_tpdo_t) configured with
+///        an event-driven transmission type and a non-zero inhibit time
+///
+/// \When co_tpdo_event() is called and the inhibit time have already passed
+///
+/// \Then 0 is returned, the PDO message with the mapped object data is sent,
+///       the TPDO indication function is invoked with zero abort code, the
+///       frame data and a user-specified data pointer
+///       \Calls can_net_get_time()
+///       \Calls timespec_cmp()
+///       \Calls co_pdo_up()
+///       \Calls can_net_send()
+///       \Calls timespec_add_usec()
+///       \Calls can_timer_stop()
+TEST(CO_Tpdo, CoTpdoEvent_EventDriven_InhibitTimePassed) {
+  const co_unsigned16_t inhibit_time = 10u;  // 1 ms
+  SetupTpdo(DEV_ID, Obj1800TpdoCommPar::EVENT_DRIVEN_TRANSMISSION);
+  obj1800->SetSub<Obj1800TpdoCommPar::Sub03InhibitTime>(inhibit_time);
   CreateTpdo();
   StartTpdo();
 
+  // send frame to store last inhibit time
+  CHECK_EQUAL(0, co_tpdo_event(tpdo));
+  CoTpdoInd::Clear();
+  CanSend::Clear();
+
+  AdvanceTimeMs(inhibit_time / 10u);
+
   const auto ret = co_tpdo_event(tpdo);
 
-  CHECK_EQUAL(-1, ret);
-  CHECK_EQUAL(ERRNUM_NOSYS, get_errnum());
-
+  CHECK_EQUAL(0, ret);
   CHECK_EQUAL(1u, CoTpdoInd::GetNumCalled());
-  CoTpdoInd::Check(tpdo, CO_SDO_AC_ERROR, nullptr, 0, &ind_data);
+  CoTpdoInd::CheckPtrNotNull(tpdo, 0, PDO_LEN, &ind_data);
+  CHECK_EQUAL(0, CoTpdoSampleInd::GetNumCalled());
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
+  CanSend::CheckMsg(DEV_ID, 0, PDO_LEN, pdo_data);
 }
 
+/// \Given a pointer to a started TPDO service (co_tpdo_t) configured with
+///        an event-driven transmission type
+///
+/// \When co_tpdo_event() is called, but the service failed to initialize
+///       a CAN frame to be sent by the TPDO
+///
+/// \Then -1 is returned, the TPDO indication function is invoked with the
+///       CO_SDO_AC_NO_OBJ abort code, no frame data and a user-specified data
+///       pointer
+///       \Calls can_net_get_time()
+///       \Calls timespec_cmp()
+///       \Calls co_pdo_up()
 TEST(CO_Tpdo, CoTpdoEvent_EventDriven_InitFrameFailed) {
-  obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub00HighestSubidxSupported>(0x02u);
-  obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub01CobId>(DEV_ID);
-  obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub02TransmissionType>(0xfeu);
-
-  obj1a00->EmplaceSub<Obj1a00TpdoMapPar::Sub00NumOfMappedObjs>(0x01u);
-  obj1a00->EmplaceSub<Obj1a00TpdoMapPar::SubNthAppObject>(0x01u, 0xffff0000u);
-
+  SetupTpdo(DEV_ID, Obj1800TpdoCommPar::EVENT_DRIVEN_TRANSMISSION);
+  obj1a00->SetSub<Obj1a00TpdoMapPar::SubNthAppObject>(
+      0x01u, Obj1a00TpdoMapPar::MakeMappingParam(0xffffu, 0x00u, 0x00u));
   CreateTpdo();
   StartTpdo();
 
   const auto ret = co_tpdo_event(tpdo);
 
   CHECK_EQUAL(-1, ret);
-  CHECK_EQUAL(0, CanSend::GetNumCalled());
-
   CHECK_EQUAL(1u, CoTpdoInd::GetNumCalled());
   CoTpdoInd::Check(tpdo, CO_SDO_AC_NO_OBJ, nullptr, 0, &ind_data);
+  CHECK_EQUAL(0, CoTpdoSampleInd::GetNumCalled());
+  CHECK_EQUAL(0, CanSend::GetNumCalled());
 }
 
-TEST(CO_Tpdo, CoTpdoEvent_EventDriven_SendFrameError) {
+/// \Given a pointer to a started TPDO service (co_tpdo_t) configured with
+///        an event-driven transmission type
+///
+/// \When co_tpdo_event() is called, but the service failed to send the PDO
+///       message
+///
+/// \Then -1 is returned, the TPDO indication function is invoked with the
+///       CO_SDO_AC_ERROR abort code, no frame data and a user-specified data
+///       pointer
+///       \Calls can_net_get_time()
+///       \Calls timespec_cmp()
+///       \Calls co_pdo_up()
+///       \Calls can_net_send()
+TEST(CO_Tpdo, CoTpdoEvent_EventDriven_SendFailed) {
   CanSend::ret = -1;
-
-  obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub00HighestSubidxSupported>(0x02u);
-  obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub01CobId>(DEV_ID);
-  obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub02TransmissionType>(0xfeu);
-
+  SetupTpdo(DEV_ID, Obj1800TpdoCommPar::EVENT_DRIVEN_TRANSMISSION);
   CreateTpdo();
   StartTpdo();
 
   const auto ret = co_tpdo_event(tpdo);
 
   CHECK_EQUAL(-1, ret);
-  CHECK_COMPARE(CanSend::GetNumCalled(), >, 0);
-
   CHECK_EQUAL(1u, CoTpdoInd::GetNumCalled());
   CoTpdoInd::Check(tpdo, CO_SDO_AC_ERROR, nullptr, 0, &ind_data);
+  CHECK_EQUAL(0, CoTpdoSampleInd::GetNumCalled());
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
+  CanSend::CheckMsg(DEV_ID, 0, PDO_LEN, pdo_data);
 }
 
-TEST(CO_Tpdo, CoTpdoEvent_EventDriven) {
-  obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub00HighestSubidxSupported>(0x05u);
-  obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub01CobId>(DEV_ID);
-  obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub02TransmissionType>(0xfeu);
-  obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub03InhibitTime>(0);
-  obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub04Reserved>();
-  obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub05EventTimer>(1);
-
+/// \Given a pointer to a started TPDO service (co_tpdo_t) configured with
+///        an event-driven transmission type
+///
+/// \When co_tpdo_event() is called
+///
+/// \Then 0 is returned, the PDO message with the mapped object data is sent,
+///       the TPDO indication function is invoked with zero abort code, the
+///       frame data and a user-specified data pointer
+///       \Calls co_pdo_up()
+///       \Calls can_net_send()
+///       \Calls can_timer_stop()
+TEST(CO_Tpdo, CoTpdoEvent_EventDriven_Nominal) {
+  SetupTpdo(DEV_ID, Obj1800TpdoCommPar::EVENT_DRIVEN_TRANSMISSION);
   CreateTpdo();
   StartTpdo();
 
   const auto ret = co_tpdo_event(tpdo);
 
   CHECK_EQUAL(0, ret);
-
-  timespec ts = {0u, 0u};
-  co_tpdo_get_next(tpdo, &ts);
-  CHECK_EQUAL(0u, ts.tv_nsec);
-  CHECK_EQUAL(0u, ts.tv_sec);
-
-  CHECK_COMPARE(CanSend::GetNumCalled(), >, 0);
-  POINTERS_EQUAL(&can_data, CanSend::user_data);
-  CHECK_EQUAL(DEV_ID, CanSend::msg.id);
-  CHECK_EQUAL(0u, CanSend::msg.flags);
-  CHECK_EQUAL(0u, CanSend::msg.len);
-
   CHECK_EQUAL(1u, CoTpdoInd::GetNumCalled());
-  CoTpdoInd::CheckPtrNotNull(tpdo, 0, 0, &ind_data);
+  CoTpdoInd::CheckPtrNotNull(tpdo, 0, PDO_LEN, &ind_data);
+  CHECK_EQUAL(0, CoTpdoSampleInd::GetNumCalled());
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
+  CanSend::CheckMsg(DEV_ID, 0, PDO_LEN, pdo_data);
 }
 
+/// \Given a pointer to a started TPDO service (co_tpdo_t) configured with
+///        the event-driven (device profile and application profile specific)
+///        transmission type
+///
+/// \When co_tpdo_event() is called
+///
+/// \Then 0 is returned, the PDO message with the mapped object data is sent,
+///       the TPDO indication function is invoked with zero abort code, the
+///       frame data and a user-specified data pointer
+///       \Calls co_pdo_up()
+///       \Calls can_net_send()
+///       \Calls can_timer_stop()
+TEST(CO_Tpdo, CoTpdoEvent_EventDriven_ApplicationSpecific) {
+  SetupTpdo(DEV_ID, Obj1800TpdoCommPar::EVENT_DRIVEN_APP_TRANSMISSION);
+  CreateTpdo();
+  StartTpdo();
+
+  const auto ret = co_tpdo_event(tpdo);
+
+  CHECK_EQUAL(0, ret);
+  CHECK_EQUAL(1u, CoTpdoInd::GetNumCalled());
+  CoTpdoInd::CheckPtrNotNull(tpdo, 0, PDO_LEN, &ind_data);
+  CHECK_EQUAL(0, CoTpdoSampleInd::GetNumCalled());
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
+  CanSend::CheckMsg(DEV_ID, 0, PDO_LEN, pdo_data);
+}
+
+/// \Given a pointer to a started TPDO service (co_tpdo_t) configured with
+///        an event-driven transmission type and a non-zero event timer value
+///
+/// \When co_tpdo_event() is called
+///
+/// \Then 0 is returned, the PDO message with the mapped object data is sent,
+///       the TPDO indication function is invoked with zero abort code, the
+///       frame data and a user-specified data pointer; the event timer is
+///       started and after it expires the next PDO message is sent
+///       \Calls co_pdo_up()
+///       \Calls can_net_send()
+///       \Calls can_timer_stop()
+///       \Calls can_timer_timeout()
 TEST(CO_Tpdo, CoTpdoEvent_EventDriven_EventTimer) {
-  obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub00HighestSubidxSupported>(0x02u);
-  obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub01CobId>(DEV_ID);
-  obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub02TransmissionType>(0xffu);
-  obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub03InhibitTime>(0);
-  obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub04Reserved>();
-  obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub05EventTimer>(1);  // 1 ms
-
+  const co_unsigned16_t event_timer_ms = 1u;
+  SetupTpdo(DEV_ID, Obj1800TpdoCommPar::EVENT_DRIVEN_TRANSMISSION);
+  obj1800->SetSub<Obj1800TpdoCommPar::Sub05EventTimer>(event_timer_ms);
   CreateTpdo();
   StartTpdo();
 
-  CHECK_EQUAL(0, co_tpdo_event(tpdo));
-  CHECK_COMPARE(CanSend::GetNumCalled(), >, 0);
+  const auto ret = co_tpdo_event(tpdo);
+
+  CHECK_EQUAL(0, ret);
   CHECK_EQUAL(1u, CoTpdoInd::GetNumCalled());
-  CoTpdoInd::CheckPtrNotNull(tpdo, 0, 0, &ind_data);
+  CoTpdoInd::CheckPtrNotNull(tpdo, 0, PDO_LEN, &ind_data);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
+  CanSend::CheckMsg(DEV_ID, 0, PDO_LEN, pdo_data);
 
-  CanSend::Clear();
-  CoTpdoInd::Clear();
+  AdvanceTimeMs(event_timer_ms);
 
-  const timespec ts = {0, 1000000u};  // 1 ms
-  CHECK_EQUAL(0, can_net_set_time(net, &ts));
-
-  CHECK_COMPARE(CanSend::GetNumCalled(), >, 0);
-  POINTERS_EQUAL(&can_data, CanSend::user_data);
-
-  CHECK_EQUAL(1u, CoTpdoInd::GetNumCalled());
-  CoTpdoInd::CheckPtrNotNull(tpdo, 0, 0, &ind_data);
+  CHECK_EQUAL(2u, CoTpdoInd::GetNumCalled());
+  CoTpdoInd::CheckPtrNotNull(tpdo, 0, PDO_LEN, &ind_data);
+  CHECK_EQUAL(0, CoTpdoSampleInd::GetNumCalled());
+  CHECK_EQUAL(2u, CanSend::GetNumCalled());
+  CanSend::CheckMsg(DEV_ID, 0, PDO_LEN, pdo_data);
 }
 
-TEST(CO_Tpdo, CoTpdoEvent_EventDriven_EventTimer_InhibitTimeNotElapsed) {
-  obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub00HighestSubidxSupported>(0x02u);
-  obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub01CobId>(DEV_ID);
-  obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub02TransmissionType>(0xffu);
-  obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub03InhibitTime>(11u);
-  obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub04Reserved>();
-  obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub05EventTimer>(1);  // 1 ms
-
+/// \Given a pointer to a started TPDO service (co_tpdo_t) configured with
+///        an event-driven transmission type and a non-zero inhibit time and
+///        event timer value
+///
+/// \When co_tpdo_event() is called, but the inhibit time have not passed
+///
+/// \Then -1 is returned, the error number is set to ERRNUM_AGAIN and no PDO
+///       messages are sent
+///       \Calls can_net_get_time()
+///       \Calls timespec_cmp()
+///       \Calls set_errnum()
+TEST(CO_Tpdo, CoTpdoEvent_EventDriven_EventTimer_InhibitTimeNotPassed) {
+  const co_unsigned16_t inhibit_time = 100u;  // 10 ms
+  const co_unsigned16_t event_timer_ms = 1u;
+  SetupTpdo(DEV_ID, Obj1800TpdoCommPar::EVENT_DRIVEN_TRANSMISSION);
+  obj1800->SetSub<Obj1800TpdoCommPar::Sub03InhibitTime>(inhibit_time);
+  obj1800->SetSub<Obj1800TpdoCommPar::Sub05EventTimer>(event_timer_ms);
   CreateTpdo();
   StartTpdo();
 
+  // send frame to store last inhibit time
   CHECK_EQUAL(0, co_tpdo_event(tpdo));
-  CHECK_COMPARE(CanSend::GetNumCalled(), >, 0);
-  CHECK_EQUAL(1u, CoTpdoInd::GetNumCalled());
-  CoTpdoInd::CheckPtrNotNull(tpdo, 0, 0, &ind_data);
-
-  CanSend::Clear();
   CoTpdoInd::Clear();
+  CanSend::Clear();
 
-  const timespec ts = {0, 1000000u};  // 1 ms
+  const timespec ts = {0, (inhibit_time * 100000u) - 1u};  // 9.999999 ms
   CHECK_EQUAL(0, can_net_set_time(net, &ts));
 
-  CHECK_EQUAL(0, CanSend::GetNumCalled());
+  const auto ret = co_tpdo_event(tpdo);
+
+  CHECK_EQUAL(-1, ret);
+  CHECK_EQUAL(ERRNUM_AGAIN, get_errnum());
   CHECK_EQUAL(0, CoTpdoInd::GetNumCalled());
+  CHECK_EQUAL(0, CoTpdoSampleInd::GetNumCalled());
+  CHECK_EQUAL(0, CanSend::GetNumCalled());
+}
+
+/// \Given a pointer to a started TPDO service (co_tpdo_t) configured with
+///        an event-driven transmission type and a non-zero event timer value
+///
+/// \When co_tpdo_event() is called, but the service failed to send the PDO
+///       message
+///
+/// \Then -1 is returned, the TPDO indication function is invoked with the
+///       CO_SDO_AC_ERROR abort code, no frame data and a user-specified data
+///       pointer; the event timer is restarted and after it expires the PDO
+///       message is sent
+///       \Calls co_pdo_up()
+///       \Calls can_net_send()
+///       \Calls can_timer_stop()
+///       \Calls can_timer_timeout()
+TEST(CO_Tpdo, CoTpdoEvent_EventDriven_EventTimer_SendFailed) {
+  const co_unsigned16_t event_timer_ms = 1u;
+  SetupTpdo(DEV_ID, Obj1800TpdoCommPar::EVENT_DRIVEN_TRANSMISSION);
+  obj1800->SetSub<Obj1800TpdoCommPar::Sub05EventTimer>(event_timer_ms);
+  CreateTpdo();
+  StartTpdo();
+
+  CanSend::ret = -1;
+  const auto ret = co_tpdo_event(tpdo);
+
+  CHECK_EQUAL(-1, ret);
+  CHECK_EQUAL(1u, CoTpdoInd::GetNumCalled());
+  CoTpdoInd::Check(tpdo, CO_SDO_AC_ERROR, nullptr, 0, &ind_data);
+  CHECK_EQUAL(0, CoTpdoSampleInd::GetNumCalled());
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
+  CanSend::CheckMsg(DEV_ID, 0, PDO_LEN, pdo_data);
+
+  CanSend::ret = 0;
+  AdvanceTimeMs(event_timer_ms);
+
+  CHECK_EQUAL(2u, CoTpdoInd::GetNumCalled());
+  CoTpdoInd::CheckPtrNotNull(tpdo, 0, PDO_LEN, &ind_data);
+  CHECK_EQUAL(0, CoTpdoSampleInd::GetNumCalled());
+  CHECK_EQUAL(2u, CanSend::GetNumCalled());
+  CanSend::CheckMsg(DEV_ID, 0, PDO_LEN, pdo_data);
 }
 
 ///@}
@@ -1210,10 +1441,42 @@ TEST(CO_Tpdo, CoTpdoEvent_EventDriven_EventTimer_InhibitTimeNotElapsed) {
 /// @name co_tpdo_get_next()
 ///@{
 
+/// \Given a pointer to an initialized TPDO service (co_tpdo_t)
+///
+/// \When co_tpdo_get_next() is called with a null time interval (timespec)
+///       pointer
+///
+/// \Then nothing is changed
 TEST(CO_Tpdo, CoTpdoGetNext_Null) {
   CreateTpdo();
 
   co_tpdo_get_next(tpdo, nullptr);
+}
+
+/// \Given a pointer to a started TPDO service (co_tpdo_t) configured with
+///        an event-driven transmission type
+///
+/// \When co_tpdo_get_next() is called with a pointer to a time interval
+///       (timespec)
+///
+/// \Then the time at which the next PDO may be sent is written to the time
+///       interval variable
+TEST(CO_Tpdo, CoTpdoGetNext_Nominal) {
+  const co_unsigned16_t inhibit_time = 12345u;  // 1.2345 sec
+  SetupTpdo(DEV_ID, Obj1800TpdoCommPar::EVENT_DRIVEN_TRANSMISSION);
+  obj1800->SetSub<Obj1800TpdoCommPar::Sub03InhibitTime>(inhibit_time);
+  CreateTpdo();
+  StartTpdo();
+
+  // send frame to store last inhibit time
+  CHECK_EQUAL(0, co_tpdo_event(tpdo));
+
+  timespec ts = {0, 0};
+
+  co_tpdo_get_next(tpdo, &ts);
+
+  CHECK_EQUAL(inhibit_time / 10000u, ts.tv_sec);
+  CHECK_EQUAL((inhibit_time - 10000u) * 100000u, ts.tv_nsec);
 }
 
 ///@}
@@ -1221,27 +1484,36 @@ TEST(CO_Tpdo, CoTpdoGetNext_Null) {
 /// @name co_tpdo_sync()
 ///@{
 
+/// \Given a pointer to a started TPDO service (co_tpdo_t)
+///
+/// \When co_tpdo_sync() is called with a counter value larger than the maximum
+///       value
+///
+/// \Then -1 is returned, the error number is set to ERRNUM_INVAL, nothing is
+///       changed
+///       \Calls set_errnum()
 TEST(CO_Tpdo, CoTpdoSync_CounterOverLimit) {
   CreateTpdo();
   StartTpdo();
-  co_tpdo_set_sample_ind(tpdo, CoTpdoSampleInd::Func, &sind_data);
 
-  const auto ret = co_tpdo_sync(tpdo, 241);
+  const auto ret = co_tpdo_sync(tpdo, CO_SYNC_CNT_MAX + 1u);
 
   CHECK_EQUAL(-1, ret);
   CHECK_EQUAL(ERRNUM_INVAL, get_errnum());
   CHECK_EQUAL(0, CoTpdoSampleInd::GetNumCalled());
 }
 
-TEST(CO_Tpdo, CoTpdoSync_InvalidCobId) {
-  obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub00HighestSubidxSupported>(0x02u);
-  obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub01CobId>(DEV_ID |
-                                                      CO_PDO_COBID_VALID);
-  obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub02TransmissionType>(0xf1u);
-
+/// \Given a pointer to a started TPDO service (co_tpdo_t), the TPDO is invalid
+///
+/// \When co_tpdo_sync() is called with a counter value larger than the maximum
+///       value
+///
+/// \Then -1 is returned, the error number is set to ERRNUM_INVAL, nothing is
+///       changed
+TEST(CO_Tpdo, CoTpdoSync_InvalidTpdo) {
+  SetupTpdo(DEV_ID | CO_PDO_COBID_VALID);
   CreateTpdo();
   StartTpdo();
-  co_tpdo_set_sample_ind(tpdo, CoTpdoSampleInd::Func, &sind_data);
 
   const auto ret = co_tpdo_sync(tpdo, 0);
 
@@ -1249,14 +1521,16 @@ TEST(CO_Tpdo, CoTpdoSync_InvalidCobId) {
   CHECK_EQUAL(0, CoTpdoSampleInd::GetNumCalled());
 }
 
+/// \Given a pointer to a started TPDO service (co_tpdo_t) configured with
+///        an event-driven transmission type
+///
+/// \When co_tpdo_sync() is called with a counter value
+///
+/// \Then 0 is returned, nothing is changed
 TEST(CO_Tpdo, CoTpdoSync_EventDrivenTransmission) {
-  obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub00HighestSubidxSupported>(0x02u);
-  obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub01CobId>(DEV_ID);
-  obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub02TransmissionType>(0xffu);
-
+  SetupTpdo(DEV_ID, Obj1800TpdoCommPar::EVENT_DRIVEN_TRANSMISSION);
   CreateTpdo();
   StartTpdo();
-  co_tpdo_set_sample_ind(tpdo, CoTpdoSampleInd::Func, &sind_data);
 
   const auto ret = co_tpdo_sync(tpdo, 0);
 
@@ -1264,109 +1538,145 @@ TEST(CO_Tpdo, CoTpdoSync_EventDrivenTransmission) {
   CHECK_EQUAL(0, CoTpdoSampleInd::GetNumCalled());
 }
 
-TEST(CO_Tpdo, CoTpdoSync_SyncStartValue_CntZero) {
-  obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub00HighestSubidxSupported>(0x06u);
-  obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub01CobId>(DEV_ID);
-  obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub02TransmissionType>(0x01u);
-  obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub03InhibitTime>(0);
-  obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub04Reserved>();
-  obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub05EventTimer>(0);
-  obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub06SyncStartValue>(2u);
-
+/// \Given a pointer to a started TPDO service (co_tpdo_t) configured with
+///        a synchronous (cyclic) transmission type and a non-zero SYNC start
+///        value
+///
+/// \When co_tpdo_sync() is called with a counter value equal to zero
+///
+/// \Then 0 is returned, nothing is changed
+///       \Calls can_timer_stop()
+TEST(CO_Tpdo, CoTpdoSync_SynchronousCyclic_SyncStartValue_CntZero) {
+  const co_unsigned8_t syncStartValue = 2u;
+  SetupTpdo(DEV_ID, Obj1800TpdoCommPar::SYNCHRONOUS_TRANSMISSION(5u));
+  obj1800->SetSub<Obj1800TpdoCommPar::Sub06SyncStartValue>(syncStartValue);
   CreateTpdo();
   StartTpdo();
-  co_tpdo_set_sample_ind(tpdo, CoTpdoSampleInd::Func, &sind_data);
 
   const auto ret = co_tpdo_sync(tpdo, 0);
-
-  CHECK_EQUAL(0, ret);
-  CHECK_EQUAL(1u, CoTpdoSampleInd::GetNumCalled());
-  CoTpdoSampleInd::Check(tpdo, &sind_data);
-}
-
-TEST(CO_Tpdo, CoTpdoSync_SyncStartValue_CntNotEquals) {
-  obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub00HighestSubidxSupported>(0x06u);
-  obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub01CobId>(DEV_ID);
-  obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub02TransmissionType>(0x01u);
-  obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub03InhibitTime>(0);
-  obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub04Reserved>();
-  obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub05EventTimer>(0);
-  obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub06SyncStartValue>(2u);
-
-  CreateTpdo();
-  StartTpdo();
-  co_tpdo_set_sample_ind(tpdo, CoTpdoSampleInd::Func, &sind_data);
-
-  const auto ret = co_tpdo_sync(tpdo, 1u);
 
   CHECK_EQUAL(0, ret);
   CHECK_EQUAL(0, CoTpdoSampleInd::GetNumCalled());
 }
 
-TEST(CO_Tpdo, CoTpdoSync_SyncStartValue_CntEquals) {
-  obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub00HighestSubidxSupported>(0x06u);
-  obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub01CobId>(DEV_ID);
-  obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub02TransmissionType>(0x01u);
-  obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub03InhibitTime>(0);
-  obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub04Reserved>();
-  obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub05EventTimer>(0);
-  obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub06SyncStartValue>(2u);
-
+/// \Given a pointer to a started TPDO service (co_tpdo_t) configured with
+///        a synchronous (cyclic) transmission type and a non-zero SYNC start
+///        value
+///
+/// \When co_tpdo_sync() is called with a counter value less than the SYNC
+///       start value
+///
+/// \Then 0 is returned, nothing is changed
+TEST(CO_Tpdo, CoTpdoSync_SychronousCyclic_SyncStartValue_CntNotEqual) {
+  const co_unsigned8_t syncStartValue = 2u;
+  SetupTpdo(DEV_ID, Obj1800TpdoCommPar::SYNCHRONOUS_TRANSMISSION(1u));
+  obj1800->SetSub<Obj1800TpdoCommPar::Sub06SyncStartValue>(syncStartValue);
   CreateTpdo();
   StartTpdo();
-  co_tpdo_set_sample_ind(tpdo, CoTpdoSampleInd::Func, &sind_data);
 
-  const auto ret = co_tpdo_sync(tpdo, 2u);
+  const auto ret = co_tpdo_sync(tpdo, syncStartValue - 1u);
+
+  CHECK_EQUAL(0, ret);
+  CHECK_EQUAL(0, CoTpdoSampleInd::GetNumCalled());
+}
+
+/// \Given a pointer to a started TPDO service (co_tpdo_t) configured with
+///        a synchronous (cyclic) transmission type and a non-zero SYNC start
+///        value
+///
+/// \When co_tpdo_sync() is called with a counter value equal to the SYNC start
+///       value
+///
+/// \Then 0 is returned, the TPDO sampling indication function is invoked with
+///       a user-specified data pointer, the PDO message with the mapped
+///       object data is sent
+///       \Calls can_timer_stop()
+TEST(CO_Tpdo, CoTpdoSync_SychronousCyclic_SyncStartValue_CntEqual) {
+  const co_unsigned8_t syncStartValue = 2u;
+  SetupTpdo(DEV_ID, Obj1800TpdoCommPar::SYNCHRONOUS_TRANSMISSION(1u));
+  obj1800->SetSub<Obj1800TpdoCommPar::Sub06SyncStartValue>(syncStartValue);
+  CreateTpdo();
+  StartTpdo();
+
+  const auto ret = co_tpdo_sync(tpdo, syncStartValue);
 
   CHECK_EQUAL(0, ret);
   CHECK_EQUAL(1u, CoTpdoSampleInd::GetNumCalled());
   CoTpdoSampleInd::Check(tpdo, &sind_data);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
+  CanSend::CheckMsg(DEV_ID, 0, PDO_LEN, pdo_data);
 }
 
-TEST(CO_Tpdo, CoTpdoSync_SyncRTR_StartSyncWindowTimer) {
-  obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub00HighestSubidxSupported>(0x02u);
-  obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub01CobId>(DEV_ID);
-  obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub02TransmissionType>(0xfcu);
-
+/// \Given a pointer to a started TPDO service (co_tpdo_t) configured with
+///        the RTR-only (synchronous) transmission type and a non-zero
+///        synchronous window time
+///
+/// \When co_tpdo_sync() is called with a counter value
+///
+/// \Then 0 is returned, the TPDO sampling indication function is invoked with
+///       a user-specified data pointer, the synchronous window timer is
+///       started - after it expires, the TPDO indication function is invoked
+///       with the CO_SDO_AC_TIMEOUT, no frame data and a user-specified data
+///       pointer
+///       \Calls can_timer_stop()
+///       \Calls co_dev_get_val_u32()
+///       \Calls can_net_get_time()
+///       \Calls timespec_add_usec()
+///       \Calls can_timer_start()
+TEST(CO_Tpdo, CoTpdoSync_SynchronousRTR_StartSyncWindowTimer) {
+  SetupTpdo(DEV_ID, Obj1800TpdoCommPar::SYNCHRONOUS_RTR_TRANSMISSION);
   dev_holder->CreateObjValue<Obj1007SyncWindowLength>(obj1007, 1000u);  // 1 ms
-
   CreateTpdo();
   StartTpdo();
-  co_tpdo_set_sample_ind(tpdo, CoTpdoSampleInd::Func, &sind_data);
-  co_tpdo_event(tpdo);
 
   const auto ret = co_tpdo_sync(tpdo, 0);
 
   CHECK_EQUAL(0, ret);
   CHECK_EQUAL(1u, CoTpdoSampleInd::GetNumCalled());
   CoTpdoSampleInd::Check(tpdo, &sind_data);
+
+  AdvanceTimeMs(1u);
+
+  CHECK_EQUAL(0, co_tpdo_sample_res(tpdo, 0));
+  CHECK_EQUAL(1u, CoTpdoInd::GetNumCalled());
+  CoTpdoInd::Check(tpdo, CO_SDO_AC_TIMEOUT, nullptr, 0, &ind_data);
 }
 
-TEST(CO_Tpdo, CoTpdoSync_SyncAcyclic_Event) {
-  obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub00HighestSubidxSupported>(0x02u);
-  obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub01CobId>(DEV_ID);
-  obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub02TransmissionType>(0x00u);
-
+/// \Given a pointer to a started TPDO service (co_tpdo_t) configured with
+///        the synchronous (acyclic) transmission type; an event has occurred
+///
+/// \When co_tpdo_sync() is called with a counter value
+///
+/// \Then 0 is returned, the TPDO sampling indication function is invoked with
+///       a user-specified data pointer, the PDO message with the mapped
+///       object data is sent
+///       \Calls can_timer_stop()
+TEST(CO_Tpdo, CoTpdoSync_SynchronousAcyclic_EventOccured) {
+  SetupTpdo(DEV_ID, Obj1800TpdoCommPar::SYNCHRONOUS_ACYCLIC_TRANSMISSION);
   CreateTpdo();
   StartTpdo();
-  co_tpdo_set_sample_ind(tpdo, CoTpdoSampleInd::Func, &sind_data);
-  co_tpdo_event(tpdo);
+  CHECK_EQUAL(0, co_tpdo_event(tpdo));
 
   const auto ret = co_tpdo_sync(tpdo, 0);
 
   CHECK_EQUAL(0, ret);
   CHECK_EQUAL(1u, CoTpdoSampleInd::GetNumCalled());
   CoTpdoSampleInd::Check(tpdo, &sind_data);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
+  CanSend::CheckMsg(DEV_ID, 0, PDO_LEN, pdo_data);
 }
 
-TEST(CO_Tpdo, CoTpdoSync_SyncAcyclic_NoEvent) {
-  obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub00HighestSubidxSupported>(0x02u);
-  obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub01CobId>(DEV_ID);
-  obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub02TransmissionType>(0x00u);
-
+/// \Given a pointer to a started TPDO service (co_tpdo_t) configured with
+///        the synchronous (acyclic) transmission type; no event has occurred
+///
+/// \When co_tpdo_sync() is called with a counter value
+///
+/// \Then 0 is returned, nothing is changed
+///       \Calls can_timer_stop()
+TEST(CO_Tpdo, CoTpdoSync_SynchronousAcyclic_NoEventOccurred) {
+  SetupTpdo(DEV_ID, Obj1800TpdoCommPar::SYNCHRONOUS_ACYCLIC_TRANSMISSION);
   CreateTpdo();
   StartTpdo();
-  co_tpdo_set_sample_ind(tpdo, CoTpdoSampleInd::Func, &sind_data);
 
   const auto ret = co_tpdo_sync(tpdo, 0);
 
@@ -1374,19 +1684,38 @@ TEST(CO_Tpdo, CoTpdoSync_SyncAcyclic_NoEvent) {
   CHECK_EQUAL(0, CoTpdoSampleInd::GetNumCalled());
 }
 
-TEST(CO_Tpdo, CoTpdoSync_SyncCyclicNoSample) {
-  obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub00HighestSubidxSupported>(0x02u);
-  obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub01CobId>(DEV_ID);
-  obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub02TransmissionType>(0x02u);
-
+/// \Given a pointer to a started TPDO service (co_tpdo_t) configured with
+///        a synchronous (cyclic) transmission type
+///
+/// \When co_tpdo_sync() is called with a sequential counter values
+///
+/// \Then 0 is returned on every call; when counter reaches the cycle value,
+///       the TPDO sampling indication function is invoked with an
+///       user-specified data pointer and the PDO message with the mapped
+///       object data is sent
+///       \Calls can_timer_stop()
+TEST(CO_Tpdo, CoTpdoSync_SynchronousCyclic) {
+  const co_unsigned8_t cycle = 2u;
+  SetupTpdo(DEV_ID, Obj1800TpdoCommPar::SYNCHRONOUS_TRANSMISSION(cycle));
   CreateTpdo();
   StartTpdo();
-  co_tpdo_set_sample_ind(tpdo, CoTpdoSampleInd::Func, &sind_data);
 
-  const auto ret = co_tpdo_sync(tpdo, 1);
+  co_unsigned8_t cnt = 1u;
 
-  CHECK_EQUAL(0, ret);
+  const auto ret1 = co_tpdo_sync(tpdo, cnt);
+  CHECK_EQUAL(0, ret1);
   CHECK_EQUAL(0, CoTpdoSampleInd::GetNumCalled());
+
+  ++cnt;
+
+  const auto ret2 = co_tpdo_sync(tpdo, cnt);
+
+  CHECK_EQUAL(0, ret2);
+  CHECK_EQUAL(1u, CoTpdoSampleInd::GetNumCalled());
+  CoTpdoSampleInd::Check(tpdo, &sind_data);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
+  CanSend::CheckMsg(DEV_ID, 0, PDO_LEN, pdo_data);
+  CHECK_EQUAL(cycle, cnt);
 }
 
 ///@}
@@ -1394,12 +1723,13 @@ TEST(CO_Tpdo, CoTpdoSync_SyncCyclicNoSample) {
 /// @name co_tpdo_sample_res()
 ///@{
 
-TEST(CO_Tpdo, CoTpdoSampleRes_InvalidPDO) {
-  obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub00HighestSubidxSupported>(0x02u);
-  obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub01CobId>(DEV_ID |
-                                                      CO_PDO_COBID_VALID);
-  obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub02TransmissionType>(0x00u);
-
+/// \Given a pointer to a started TPDO service (co_tpdo_t), the TPDO is invalid
+///
+/// \When co_tpdo_sample_res() is called with any abort code
+///
+/// \Then 0 is returned, nothing is changed
+TEST(CO_Tpdo, CoTpdoSampleRes_InvalidTpdo) {
+  SetupTpdo(DEV_ID | CO_PDO_COBID_VALID);
   CreateTpdo();
   StartTpdo();
 
@@ -1407,14 +1737,18 @@ TEST(CO_Tpdo, CoTpdoSampleRes_InvalidPDO) {
 
   CHECK_EQUAL(0, ret);
   CHECK_EQUAL(0, CoTpdoInd::GetNumCalled());
+  CHECK_EQUAL(0, CoTpdoSampleInd::GetNumCalled());
   CHECK_EQUAL(0, CanSend::GetNumCalled());
 }
 
-TEST(CO_Tpdo, CoTpdoSampleRes_EventDriven) {
-  obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub00HighestSubidxSupported>(0x02u);
-  obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub01CobId>(DEV_ID);
-  obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub02TransmissionType>(0xffu);
-
+/// \Given a pointer to a started TPDO service (co_tpdo_t) configured with
+///        an event-driven (non-RTR) transmission type
+///
+/// \When co_tpdo_sample_res() is called with any abort code
+///
+/// \Then 0 is returned, nothing is changed
+TEST(CO_Tpdo, CoTpdoSampleRes_EventDrivenTransmission) {
+  SetupTpdo(DEV_ID, Obj1800TpdoCommPar::EVENT_DRIVEN_APP_TRANSMISSION);
   CreateTpdo();
   StartTpdo();
 
@@ -1422,31 +1756,41 @@ TEST(CO_Tpdo, CoTpdoSampleRes_EventDriven) {
 
   CHECK_EQUAL(0, ret);
   CHECK_EQUAL(0, CoTpdoInd::GetNumCalled());
+  CHECK_EQUAL(0, CoTpdoSampleInd::GetNumCalled());
   CHECK_EQUAL(0, CanSend::GetNumCalled());
 }
 
-TEST(CO_Tpdo, CoTpdoSampleRes_ACErrorArg) {
-  obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub00HighestSubidxSupported>(0x02u);
-  obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub01CobId>(DEV_ID);
-  obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub02TransmissionType>(0xfcu);
-
+/// \Given a pointer to a started TPDO service (co_tpdo_t) configured with
+///        a synchronous or an RTR-only transmission type
+///
+/// \When co_tpdo_sample_res() is called with a non-zero abort code
+///
+/// \Then 0 is returned, the TPDO indication function is invoked with the
+///       passed abort code, no frame data and a user-specified data pointer,
+///       nothing is changed
+TEST(CO_Tpdo, CoTpdoSampleRes_NonZeroAC) {
+  SetupTpdo(DEV_ID, Obj1800TpdoCommPar::SYNCHRONOUS_ACYCLIC_TRANSMISSION);
   CreateTpdo();
   StartTpdo();
 
-  const auto ret = co_tpdo_sample_res(tpdo, CO_UNSIGNED32_MAX);
+  const co_unsigned32_t ac = 0x12345678u;
+  const auto ret = co_tpdo_sample_res(tpdo, ac);
 
   CHECK_EQUAL(0, ret);
   CHECK_EQUAL(0, CanSend::GetNumCalled());
-
+  CHECK_EQUAL(0, CoTpdoSampleInd::GetNumCalled());
   CHECK_EQUAL(1u, CoTpdoInd::GetNumCalled());
-  CoTpdoInd::Check(tpdo, CO_UNSIGNED32_MAX, nullptr, 0, &ind_data);
+  CoTpdoInd::Check(tpdo, ac, nullptr, 0, &ind_data);
 }
 
-TEST(CO_Tpdo, CoTpdoSampleRes_ACErrorArg_NoIndFunc) {
-  obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub00HighestSubidxSupported>(0x02u);
-  obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub01CobId>(DEV_ID);
-  obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub02TransmissionType>(0x00u);
-
+/// \Given a pointer to a started TPDO service (co_tpdo_t) configured with
+///        a synchronous or an RTR-only transmission type
+///
+/// \When co_tpdo_sample_res() is called with a non-zero abort code
+///
+/// \Then 0 is returned, nothing is changed
+TEST(CO_Tpdo, CoTpdoSampleRes_NonZeroAC_NoIndFunc) {
+  SetupTpdo(DEV_ID, Obj1800TpdoCommPar::SYNCHRONOUS_ACYCLIC_TRANSMISSION);
   CreateTpdo();
   StartTpdo();
   co_tpdo_set_ind(tpdo, nullptr, nullptr);
@@ -1455,253 +1799,378 @@ TEST(CO_Tpdo, CoTpdoSampleRes_ACErrorArg_NoIndFunc) {
 
   CHECK_EQUAL(0, ret);
   CHECK_EQUAL(0, CanSend::GetNumCalled());
+  CHECK_EQUAL(0, CoTpdoSampleInd::GetNumCalled());
 }
 
+/// \Given a pointer to a started TPDO service (co_tpdo_t) configured with
+///        a synchronous transmission type
+///
+/// \When co_tpdo_sample_res() is called with a non-zero abort code, but the
+///       synchronous window timer have already expired
+///
+/// \Then 0 is returned, the TPDO indication function is invoked with the
+///       CO_SDO_AC_TIMEOUT abort code, no frame data and a user-specified
+///       data pointer, nothing is changed
 TEST(CO_Tpdo, CoTpdoSampleRes_SyncWindowTimeout) {
-  obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub00HighestSubidxSupported>(0x02u);
-  obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub01CobId>(DEV_ID);
-  obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub02TransmissionType>(0x01u);
-
+  SetupTpdo(DEV_ID, Obj1800TpdoCommPar::SYNCHRONOUS_ACYCLIC_TRANSMISSION);
   dev_holder->CreateObjValue<Obj1007SyncWindowLength>(obj1007, 1000u);  // 1 ms
-
   CreateTpdo();
   StartTpdo();
-  co_tpdo_set_sample_ind(tpdo, CoTpdoSampleInd::Func, &sind_data);
-  co_tpdo_event(tpdo);
 
+  // start and expire the synchronous window timer
   CHECK_EQUAL(0, co_tpdo_sync(tpdo, 0));
-  CHECK_EQUAL(1u, CoTpdoSampleInd::GetNumCalled());
-  CoTpdoSampleInd::Check(tpdo, &sind_data);
-
-  const timespec ts = {0, 1000000u};  // 1 ms
-  CHECK_EQUAL(0, can_net_set_time(net, &ts));
+  AdvanceTimeMs(1u);
 
   const auto ret = co_tpdo_sample_res(tpdo, 0);
 
   CHECK_EQUAL(0, ret);
   CHECK_EQUAL(0, CanSend::GetNumCalled());
-
+  CHECK_EQUAL(0, CoTpdoSampleInd::GetNumCalled());
   CHECK_EQUAL(1u, CoTpdoInd::GetNumCalled());
   CoTpdoInd::Check(tpdo, CO_SDO_AC_TIMEOUT, nullptr, 0, &ind_data);
 }
 
+/// \Given a pointer to a started TPDO service (co_tpdo_t) configured with
+///        a synchronous transmission type
+///
+/// \When co_tpdo_sample_res() is called with a non-zero abort code, but the
+///       service failed to initialize a CAN frame to be sent by the TPDO
+///
+/// \Then -1 is returned, the TPDO indication function is invoked with an
+///       initialization error abort code, no frame data and a user-specified
+///       data pointer, nothing is changed
+///       \Calls co_pdo_up()
 TEST(CO_Tpdo, CoTpdoSampleRes_InitFrameFail) {
-  obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub00HighestSubidxSupported>(0x02u);
-  obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub01CobId>(DEV_ID);
-  obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub02TransmissionType>(0x00u);
-
-  obj1a00->EmplaceSub<Obj1a00TpdoMapPar::Sub00NumOfMappedObjs>(0x01u);
-  obj1a00->EmplaceSub<Obj1a00TpdoMapPar::SubNthAppObject>(0x01u, 0xffff0000u);
-
+  SetupTpdo(DEV_ID, Obj1800TpdoCommPar::SYNCHRONOUS_ACYCLIC_TRANSMISSION);
+  obj1a00->SetSub<Obj1a00TpdoMapPar::SubNthAppObject>(
+      0x01u, Obj1a00TpdoMapPar::MakeMappingParam(0xffffu, 0x00u, 0x00u));
   CreateTpdo();
   StartTpdo();
-  co_tpdo_set_sample_ind(tpdo, CoTpdoSampleInd::Func, nullptr);
   CHECK_EQUAL(0, co_tpdo_sync(tpdo, 0));
 
   const auto ret = co_tpdo_sample_res(tpdo, 0);
 
   CHECK_EQUAL(-1, ret);
   CHECK_EQUAL(0, CanSend::GetNumCalled());
-
+  CHECK_EQUAL(0, CoTpdoSampleInd::GetNumCalled());
   CHECK_EQUAL(1u, CoTpdoInd::GetNumCalled());
   CoTpdoInd::Check(tpdo, CO_SDO_AC_NO_OBJ, nullptr, 0, &ind_data);
 }
 
-TEST(CO_Tpdo, CoTpdoSampleRes_CanSendError) {
-  CanSend::ret = -1;
-
-  obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub00HighestSubidxSupported>(0x02u);
-  obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub01CobId>(DEV_ID);
-  obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub02TransmissionType>(0x00u);
-
+/// \Given a pointer to a started TPDO service (co_tpdo_t) configured with
+///        a synchronous transmission type
+///
+/// \When co_tpdo_sample_res() is called with a non-zero abort code, but the
+///       service failed to send the PDO message
+///
+/// \Then -1 is returned, the TPDO indication function is invoked with the
+///       CO_SDO_AC_ERROR abort code, no frame data and a user-specified data
+///       pointer
+///       \Calls co_pdo_up()
+///       \Calls can_net_send()
+TEST(CO_Tpdo, CoTpdoSampleRes_SendFailed) {
+  SetupTpdo(DEV_ID, Obj1800TpdoCommPar::SYNCHRONOUS_ACYCLIC_TRANSMISSION);
   CreateTpdo();
   StartTpdo();
-  co_tpdo_set_sample_ind(tpdo, CoTpdoSampleInd::Func, nullptr);
   CHECK_EQUAL(0, co_tpdo_sync(tpdo, 0));
+  CanSend::ret = -1;
 
   const auto ret = co_tpdo_sample_res(tpdo, 0);
 
   CHECK_EQUAL(-1, ret);
-
-  CHECK_COMPARE(CanSend::GetNumCalled(), >, 0);
-  POINTERS_EQUAL(&can_data, CanSend::user_data);
-
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
+  CanSend::CheckMsg(DEV_ID, 0, PDO_LEN, pdo_data);
   CHECK_EQUAL(1u, CoTpdoInd::GetNumCalled());
   CoTpdoInd::Check(tpdo, CO_SDO_AC_ERROR, nullptr, 0, &ind_data);
+  CHECK_EQUAL(0, CoTpdoSampleInd::GetNumCalled());
 }
 
-TEST(CO_Tpdo, CoTpdoSampleRes) {
-  obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub00HighestSubidxSupported>(0x02u);
-  obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub01CobId>(DEV_ID);
-  obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub02TransmissionType>(0x00u);
-
+/// \Given a pointer to a started TPDO service (co_tpdo_t) configured with
+///        a synchronous (non-RTR) transmission type
+///
+/// \When co_tpdo_sample_res() is called with a non-zero abort code
+///
+/// \Then 0 is returned, the PDO message with the mapped object data is sent,
+///       the TPDO indication function is invoked with a zero abort code, no
+///       frame data and a user-specified data pointer
+///       \Calls co_pdo_up()
+///       \Calls can_net_send()
+TEST(CO_Tpdo, CoTpdoSampleRes_Nominal) {
+  SetupTpdo(DEV_ID, Obj1800TpdoCommPar::SYNCHRONOUS_ACYCLIC_TRANSMISSION);
   CreateTpdo();
   StartTpdo();
-  co_tpdo_set_sample_ind(tpdo, CoTpdoSampleInd::Func, nullptr);
   CHECK_EQUAL(0, co_tpdo_sync(tpdo, 0));
 
   const auto ret = co_tpdo_sample_res(tpdo, 0);
 
   CHECK_EQUAL(0, ret);
-
-  CHECK_COMPARE(CanSend::GetNumCalled(), >, 0);
-  POINTERS_EQUAL(&can_data, CanSend::user_data);
-  CHECK_EQUAL(DEV_ID, CanSend::msg.id);
-  CHECK_EQUAL(0u, CanSend::msg.flags);
-  CHECK_EQUAL(0u, CanSend::msg.len);
-
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
+  CanSend::CheckMsg(DEV_ID, 0, PDO_LEN, pdo_data);
   CHECK_EQUAL(1u, CoTpdoInd::GetNumCalled());
-  CoTpdoInd::CheckPtrNotNull(tpdo, 0, 0, &ind_data);
+  CoTpdoInd::CheckPtrNotNull(tpdo, 0, PDO_LEN, &ind_data);
+  CHECK_EQUAL(0, CoTpdoSampleInd::GetNumCalled());
+}
+
+/// \Given a pointer to a started TPDO service (co_tpdo_t) configured with
+///        the RTR-only (synchronous) transmission type
+///
+/// \When co_tpdo_sample_res() is called with a non-zero abort code
+///
+/// \Then 0 is returned, a CAN frame to be sent by the TPDO is initialized
+///       and it is sent on a receipt of an RTR PDO message
+///       \Calls co_pdo_up()
+TEST(CO_Tpdo, CoTpdoSampleRes_SynchronousRTR) {
+  SetupTpdo(DEV_ID, Obj1800TpdoCommPar::SYNCHRONOUS_RTR_TRANSMISSION);
+  CreateTpdo();
+  StartTpdo();
+  CHECK_EQUAL(0, co_tpdo_sync(tpdo, 0));
+  CoTpdoSampleInd::Clear();
+
+  const auto ret = co_tpdo_sample_res(tpdo, 0);
+
+  CHECK_EQUAL(0, ret);
+  CHECK_EQUAL(0, CanSend::GetNumCalled());
+  CHECK_EQUAL(0, CoTpdoInd::GetNumCalled());
+  CHECK_EQUAL(0, CoTpdoSampleInd::GetNumCalled());
+
+  can_msg msg = CAN_MSG_INIT;
+  msg.id = DEV_ID;
+  msg.flags |= CAN_FLAG_RTR;
+  CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
+
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
+  CanSend::CheckMsg(DEV_ID, 0, PDO_LEN, pdo_data);
+}
+
+/// \Given a pointer to a started TPDO service (co_tpdo_t) configured with
+///        the RTR-only (event-driven) transmission type
+///
+/// \When co_tpdo_sample_res() is called with a non-zero abort code
+///
+/// \Then 0 is returned, the PDO message with the mapped object data is sent,
+///       the TPDO indication function is invoked with a zero abort code, no
+///       frame data and a user-specified data pointer
+///       \Calls co_pdo_up()
+///       \Calls can_net_send()
+TEST(CO_Tpdo, CoTpdoSampleRes_EventDrivenRTR) {
+  SetupTpdo(DEV_ID, Obj1800TpdoCommPar::EVENT_DRIVEN_RTR_TRANSMISSION);
+  CreateTpdo();
+  StartTpdo();
+
+  const auto ret = co_tpdo_sample_res(tpdo, 0);
+
+  CHECK_EQUAL(0, ret);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
+  CanSend::CheckMsg(DEV_ID, 0, PDO_LEN, pdo_data);
+  CHECK_EQUAL(1u, CoTpdoInd::GetNumCalled());
+  CoTpdoInd::CheckPtrNotNull(tpdo, 0, PDO_LEN, &ind_data);
+  CHECK_EQUAL(0, CoTpdoSampleInd::GetNumCalled());
 }
 
 ///@}
 
-/// @name TPDO received message processing
+/// @name TPDO service: received message processing
 ///@{
 
-TEST(CO_Tpdo, CoTpdoRecv_SyncRTR_NoBufferedFrame_ExtendedFrame) {
-  obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub00HighestSubidxSupported>(0x02u);
-  obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub01CobId>(DEV_ID |
-                                                      CO_PDO_COBID_FRAME);
-  obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub02TransmissionType>(0xfcu);
-
+/// \Given a pointer to a started TPDO service (co_rpdo_t) configured with
+///        the RTR-only (synchronous) transmission type; there is no buffered
+///        CAN frame to be sent
+///
+/// \When an RTR PDO message is received by the service
+///
+/// \Then the message is ignored
+TEST(CO_Tpdo, CoTpdoRecv_SynchronousRTR_NoBufferedFrame) {
+  SetupTpdo(DEV_ID, Obj1800TpdoCommPar::SYNCHRONOUS_RTR_TRANSMISSION);
   CreateTpdo();
   StartTpdo();
-  co_tpdo_set_sample_ind(tpdo, CoTpdoSampleInd::Func, nullptr);
+
+  can_msg msg = CAN_MSG_INIT;
+  msg.id = DEV_ID;
+  msg.flags |= CAN_FLAG_RTR;
+  CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
+
+  CHECK_EQUAL(0, CanSend::GetNumCalled());
+  CHECK_EQUAL(0, CoTpdoInd::GetNumCalled());
+  CHECK_EQUAL(0, CoTpdoSampleInd::GetNumCalled());
+}
+
+/// \Given a pointer to a started TPDO service (co_rpdo_t) configured with
+///        the RTR-only (synchronous) transmission type; there is a buffered
+///        CAN frame to be sent
+///
+/// \When an RTR PDO message is received by the service
+///
+/// \Then the buffered PDO message with the mapped object data is sent,
+///       the TPDO indication function is invoked with zero abort code, the
+///       frame data and a user-specified data pointer
+///       \Calls can_net_send()
+TEST(CO_Tpdo, CoTpdoRecv_SynchronousRTR_WaitingFrame) {
+  SetupTpdo(DEV_ID, Obj1800TpdoCommPar::SYNCHRONOUS_RTR_TRANSMISSION);
+  CreateTpdo();
+  StartTpdo();
+  CHECK_EQUAL(0, co_tpdo_sync(tpdo, 0u));
+  CoTpdoSampleInd::Clear();
+
+  can_msg msg = CAN_MSG_INIT;
+  msg.id = DEV_ID;
+  msg.flags |= CAN_FLAG_RTR;
+  CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
+
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
+  CanSend::CheckMsg(DEV_ID, 0, PDO_LEN, pdo_data);
+  CHECK_EQUAL(1u, CoTpdoInd::GetNumCalled());
+  CoTpdoInd::CheckPtrNotNull(tpdo, 0, PDO_LEN, &ind_data);
+  CHECK_EQUAL(0, CoTpdoSampleInd::GetNumCalled());
+}
+
+/// \Given a pointer to a started TPDO service (co_rpdo_t) configured with
+///        the 29-bit Extended Identifier and the RTR-only (synchronous)
+///        transmission type; there is a buffered CAN frame to be sent
+///
+/// \When an RTR PDO message with the 29-bit Extended Identifier is received by
+///       the service
+///
+/// \Then the buffered PDO message with the mapped object data is sent,
+///       the TPDO indication function is invoked with zero abort code, the
+///       frame data and a user-specified data pointer
+///       \Calls can_net_send()
+TEST(CO_Tpdo, CoTpdoRecv_SynchronousRTR_WaitingFrame_ExtendedId) {
+  SetupTpdo(DEV_ID | CO_PDO_COBID_FRAME,
+            Obj1800TpdoCommPar::SYNCHRONOUS_RTR_TRANSMISSION);
+  CreateTpdo();
+  StartTpdo();
+  CHECK_EQUAL(0, co_tpdo_sync(tpdo, 0u));
+  CoTpdoSampleInd::Clear();
 
   can_msg msg = CAN_MSG_INIT;
   msg.id = DEV_ID;
   msg.flags |= CAN_FLAG_RTR;
   msg.flags |= CAN_FLAG_IDE;
+  CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
-  const auto ret = can_net_recv(net, &msg, 0);
-
-  CHECK_EQUAL(1, ret);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
+  CanSend::CheckMsg(DEV_ID, CAN_FLAG_IDE, PDO_LEN, pdo_data);
+  CHECK_EQUAL(1u, CoTpdoInd::GetNumCalled());
+  CoTpdoInd::CheckPtrNotNull(tpdo, 0, PDO_LEN, &ind_data);
   CHECK_EQUAL(0, CoTpdoSampleInd::GetNumCalled());
 }
 
-TEST(CO_Tpdo, CoTpdoRecv_SynchRTR_NoInd) {
-  obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub00HighestSubidxSupported>(0x02u);
-  obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub01CobId>(DEV_ID);
-  obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub02TransmissionType>(0xfcu);
-
+/// \Given a pointer to a started TPDO service (co_rpdo_t) configured with
+///        the RTR-only (synchronous) transmission type; there is a buffered
+///        CAN frame to be sent; there is no TPDO indication function set in
+///        the service
+///
+/// \When an RTR PDO message is received by the service
+///
+/// \Then the buffered PDO message with the mapped object data is sent
+///       \Calls can_net_send()
+TEST(CO_Tpdo, CoTpdoRecv_SynchronousRTR_WaitingFrame_NoInd) {
+  SetupTpdo(DEV_ID, Obj1800TpdoCommPar::SYNCHRONOUS_RTR_TRANSMISSION);
   CreateTpdo();
   StartTpdo();
   co_tpdo_set_ind(tpdo, nullptr, nullptr);
-
-  CHECK_EQUAL(0, co_tpdo_sync(tpdo, 0x00u));
+  CHECK_EQUAL(0, co_tpdo_sync(tpdo, 0u));
+  CoTpdoSampleInd::Clear();
 
   can_msg msg = CAN_MSG_INIT;
   msg.id = DEV_ID;
   msg.flags |= CAN_FLAG_RTR;
+  CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
-  const auto ret = can_net_recv(net, &msg, 0);
-
-  CHECK_EQUAL(1, ret);
-
-  CHECK_COMPARE(CanSend::GetNumCalled(), >, 0);
-  POINTERS_EQUAL(&can_data, CanSend::user_data);
-  CHECK_EQUAL(DEV_ID, CanSend::msg.id);
-  CHECK_EQUAL(0u, CanSend::msg.flags);
-  CHECK_EQUAL(0u, CanSend::msg.len);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
+  CanSend::CheckMsg(DEV_ID, 0, PDO_LEN, pdo_data);
+  CHECK_EQUAL(0, CoTpdoSampleInd::GetNumCalled());
 }
 
+/// \Given a pointer to a started TPDO service (co_rpdo_t) configured with
+///        the RTR-only (event-driven) transmission type
+///
+/// \When an RTR PDO message is received by the service
+///
+/// \Then the TPDO sampling indication function is invoked with an
+///       user-specified pointer
 TEST(CO_Tpdo, CoTpdoRecv_EventDrivenRTR) {
-  obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub00HighestSubidxSupported>(0x02u);
-  obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub01CobId>(DEV_ID);
-  obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub02TransmissionType>(0xfdu);
-
-  obj1a00->EmplaceSub<Obj1a00TpdoMapPar::Sub00NumOfMappedObjs>(0u);
-  obj1a00->EmplaceSub<Obj1a00TpdoMapPar::SubNthAppObject>(0x01u, 0u);
-
+  SetupTpdo(DEV_ID, Obj1800TpdoCommPar::EVENT_DRIVEN_RTR_TRANSMISSION);
   CreateTpdo();
   StartTpdo();
+  CoTpdoSampleInd::SetSkipSampleResCall(true);
 
   can_msg msg = CAN_MSG_INIT;
   msg.id = DEV_ID;
   msg.flags |= CAN_FLAG_RTR;
+  CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
-  const auto ret = can_net_recv(net, &msg, 0);
-
-  CHECK_EQUAL(1, ret);
-
-  CHECK_COMPARE(CanSend::GetNumCalled(), >, 0);
-  POINTERS_EQUAL(&can_data, CanSend::user_data);
-  CHECK_EQUAL(DEV_ID, CanSend::msg.id);
-  CHECK_EQUAL(0u, CanSend::msg.flags);
-  CHECK_EQUAL(0u, CanSend::msg.len);
-  CHECK_EQUAL(0u, CanSend::msg.data[0]);
-
-  CHECK_EQUAL(1u, CoTpdoInd::GetNumCalled());
-  CoTpdoInd::CheckPtrNotNull(tpdo, 0, 0, &ind_data);
+  CHECK_EQUAL(0, CanSend::GetNumCalled());
+  CHECK_EQUAL(0, CoTpdoInd::GetNumCalled());
+  CHECK_EQUAL(1u, CoTpdoSampleInd::GetNumCalled());
+  CoTpdoSampleInd::Check(tpdo, &sind_data);
 }
 
-TEST(CO_Tpdo, CoTpdoRecv_EventDrivenRTR_InitFrameFail_NoInd) {
-  obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub00HighestSubidxSupported>(0x02u);
-  obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub01CobId>(DEV_ID);
-  obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub02TransmissionType>(0xfdu);
-
-  obj1a00->EmplaceSub<Obj1a00TpdoMapPar::Sub00NumOfMappedObjs>(0x01u);
-  obj1a00->EmplaceSub<Obj1a00TpdoMapPar::SubNthAppObject>(0x01u, 0xffff0000u);
-
+/// \Given a pointer to a started TPDO service (co_rpdo_t) configured with
+///        the RTR-only (event-driven) transmission type; the default TPDO
+///        sampling indication function is set in the service
+///
+/// \When an RTR PDO message is received by the service
+///
+/// \Then the PDO message with the mapped object data is sent, the TPDO
+///       indication function is invoked with zero abort code, the frame data
+///       and a user-specified data pointer
+TEST(CO_Tpdo, CoTpdoRecv_EventDrivenRTR_DefaultSampleInd) {
+  SetupTpdo(DEV_ID, Obj1800TpdoCommPar::EVENT_DRIVEN_RTR_TRANSMISSION);
   CreateTpdo();
   StartTpdo();
-  co_tpdo_set_ind(tpdo, nullptr, nullptr);
+  co_tpdo_set_sample_ind(tpdo, nullptr, nullptr);
 
   can_msg msg = CAN_MSG_INIT;
   msg.id = DEV_ID;
   msg.flags |= CAN_FLAG_RTR;
+  CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
-  const auto ret = can_net_recv(net, &msg, 0);
+  CHECK_EQUAL(1u, CoTpdoInd::GetNumCalled());
+  CoTpdoInd::CheckPtrNotNull(tpdo, 0, PDO_LEN, &ind_data);
+  CHECK_EQUAL(1u, CanSend::GetNumCalled());
+  CanSend::CheckMsg(DEV_ID, 0, PDO_LEN, pdo_data);
+}
 
-  CHECK_EQUAL(1, ret);
+/// \Given a pointer to a started TPDO service (co_rpdo_t) configured with
+///        the non-RTR transmission type, but the RTR is allowed in COB-ID
+///
+/// \When an RTR PDO message is received by the service
+///
+/// \Then nothing is changed
+TEST(CO_Tpdo, CoTpdoRecv_NonRTRTransmission_ButRTRAllowed) {
+  SetupTpdo(DEV_ID);
+  CreateTpdo();
+  StartTpdo();
+
+  can_msg msg = CAN_MSG_INIT;
+  msg.id = DEV_ID;
+  msg.flags |= CAN_FLAG_RTR;
+  CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
+
   CHECK_EQUAL(0, CoTpdoInd::GetNumCalled());
+  CHECK_EQUAL(0, CoTpdoSampleInd::GetNumCalled());
   CHECK_EQUAL(0, CanSend::GetNumCalled());
 }
 
-TEST(CO_Tpdo, CoTpdoRecv_EventDrivenRTR_InitFrameFail) {
-  obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub00HighestSubidxSupported>(0x02u);
-  obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub01CobId>(DEV_ID);
-  obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub02TransmissionType>(0xfdu);
-
-  obj1a00->EmplaceSub<Obj1a00TpdoMapPar::Sub00NumOfMappedObjs>(0x01u);
-  obj1a00->EmplaceSub<Obj1a00TpdoMapPar::SubNthAppObject>(0x01u, 0x200000ffu);
-
+/// \Given a pointer to a started TPDO service (co_rpdo_t) configured with
+///        the non-RTR transmission type
+///
+/// \When an RTR PDO message is received by the service
+///
+/// \Then nothing is changed
+TEST(CO_Tpdo, CoTpdoRecv_NonRTRTransmission) {
+  SetupTpdo(DEV_ID | CO_PDO_COBID_RTR);
   CreateTpdo();
   StartTpdo();
 
   can_msg msg = CAN_MSG_INIT;
   msg.id = DEV_ID;
   msg.flags |= CAN_FLAG_RTR;
+  CHECK_EQUAL(1, can_net_recv(net, &msg, 0));
 
-  const auto ret = can_net_recv(net, &msg, 0);
-
-  CHECK_EQUAL(1, ret);
-  CHECK_EQUAL(0, CanSend::GetNumCalled());
-
-  CHECK_EQUAL(1u, CoTpdoInd::GetNumCalled());
-  CoTpdoInd::Check(tpdo, CO_SDO_AC_PDO_LEN, nullptr, 0, &ind_data);
-}
-
-TEST(CO_Tpdo, CoTpdoRecv_NoRTRTransmission) {
-  obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub00HighestSubidxSupported>(0x02u);
-  obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub01CobId>(DEV_ID);
-  obj1800->EmplaceSub<Obj1800TpdoCommPar::Sub02TransmissionType>(0x00u);
-
-  obj1a00->EmplaceSub<Obj1a00TpdoMapPar::Sub00NumOfMappedObjs>(0u);
-  obj1a00->EmplaceSub<Obj1a00TpdoMapPar::SubNthAppObject>(0x01u, 0u);
-
-  CreateTpdo();
-  StartTpdo();
-
-  can_msg msg = CAN_MSG_INIT;
-  msg.id = DEV_ID;
-  msg.flags |= CAN_FLAG_RTR;
-
-  const auto ret = can_net_recv(net, &msg, 0);
-
-  CHECK_EQUAL(1, ret);
   CHECK_EQUAL(0, CoTpdoInd::GetNumCalled());
+  CHECK_EQUAL(0, CoTpdoSampleInd::GetNumCalled());
   CHECK_EQUAL(0, CanSend::GetNumCalled());
 }
 

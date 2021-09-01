@@ -34,12 +34,18 @@ class CoTpdoSampleInd {
   GetNumCalled() {
     return num_called_;
   }
+  static void
+  SetSkipSampleResCall(const bool skip) {
+    skipSampleResCall_ = skip;
+  }
 
  private:
   static size_t num_called_;
 
   static co_tpdo_t* pdo_;
   static void* data_;
+
+  static bool skipSampleResCall_;
 };
 
 #endif  // LELY_UNIT_TEST_CO_TPDO_SAMPLE_IND_HPP_
