@@ -5942,7 +5942,8 @@ TEST(CO_CsdoUpload, IniOnRecv_NoCs) {
 /// \Given a pointer to the started CSDO service (co_csdo_t) with a segmented
 ///        upload request sent to the server
 ///
-/// \When an SDO abort transfer message with an incomplete abort code
+/// \When an SDO abort transfer message with an incomplete abort code is
+///       received
 ///
 /// \Then no SDO message is sent, upload confirmation function is called once
 ///       with a pointer to the service, the multiplexer, CO_SDO_AC_ERROR abort
@@ -5961,11 +5962,11 @@ TEST(CO_CsdoUpload, IniOnRecv_CsAbort_IncompleteAc) {
 /// \Given a pointer to the started CSDO service (co_csdo_t) with a segmented
 ///        upload request sent to the server
 ///
-/// \When an SDO abort transfer message with an abort code
+/// \When an SDO abort transfer message with an abort code is received
 ///
 /// \Then no SDO message is sent, upload confirmation function is called once
-///       with a pointer to the service, the multiplexer, received abort code
-///       value, a null uploaded bytes pointer, zero uploaded bytes and a
+///       with a pointer to the service, the multiplexer, the received abort
+///       code value, a null uploaded bytes pointer, zero uploaded bytes and a
 ///       pointer to the user-specified data; the service is idle
 ///       \Calls can_timer_stop()
 TEST(CO_CsdoUpload, IniOnRecv_CsAbort) {
@@ -6223,7 +6224,8 @@ TEST(CO_CsdoUpload, SegOnRecv_NoCs) {
 /// \Given a pointer to the started CSDO service (co_csdo_t) with a segmented
 ///        upload transfer initiated
 ///
-/// \When an SDO abort transfer message with an incomplete abort code
+/// \When an SDO abort transfer message with an incomplete abort code is
+///       received
 ///
 /// \Then no SDO message is sent, upload confirmation function is called once
 ///       with a pointer to the service, the multiplexer, CO_SDO_AC_ERROR abort
@@ -6244,11 +6246,11 @@ TEST(CO_CsdoUpload, SegOnRecv_CsAbort_IncompleteAc) {
 /// \Given a pointer to the started CSDO service (co_csdo_t) with a segmented
 ///        upload transfer initiated
 ///
-/// \When an SDO abort transfer message with an abort code
+/// \When an SDO abort transfer message with an abort code is received
 ///
 /// \Then no SDO message is sent, upload confirmation function is called once
-///       with a pointer to the service, the multiplexer, received abort code
-///       value, a null uploaded bytes pointer, zero uploaded bytes and a
+///       with a pointer to the service, the multiplexer, the received abort
+///       code value, a null uploaded bytes pointer, zero uploaded bytes and a
 ///       pointer to the user-specified data; the service is idle
 ///       \Calls can_timer_stop()
 TEST(CO_CsdoUpload, SegOnRecv_CsAbort) {
@@ -6404,8 +6406,8 @@ TEST(CO_CsdoUpload, SegOnRecv_LastSegment_NoInd) {
 ///       pointer to the user-specified data; the buffer provided for the
 ///       request contains received data; the service is idle; upload progress
 ///       indication function is called with a pointer to the service, the
-///       multiplexer, the request size twice and a pointer to the
-///       user-specified data
+///       multiplexer, the request size as total size and as number of bytes
+///       transferred, a pointer to the user-specified data
 ///       \Calls membuf_write()
 ///       \Calls can_timer_stop()
 TEST(CO_CsdoUpload, SegOnRecv_LastSegment) {
@@ -6638,6 +6640,15 @@ TEST_GROUP_BASE(CO_CsdoDownload, CO_CsdoBase) {
 /// @name CSDO initiate segmented download
 ///@{
 
+/// \Given a pointer to the started CSDO service (co_csdo_t) with a segmented
+///        download request sent to the server
+///
+/// \When an SDO download initiate response with length zero is received
+///
+/// \Then an SDO abort transfer message with CO_SDO_AC_NO_CS abort code is sent
+///       \Calls stle_u16()
+///       \Calls stle_u32()
+///       \Calls can_net_send()
 TEST(CO_CsdoDownload, IniOnRecv_NoCs) {
   SendDownloadRequest(buffer);
 
@@ -6648,6 +6659,17 @@ TEST(CO_CsdoDownload, IniOnRecv_NoCs) {
   CheckSdoAbortSent(CO_SDO_AC_NO_CS);
 }
 
+/// \Given a pointer to the started CSDO service (co_csdo_t) with a segmented
+///        download request sent to the server
+///
+/// \When an SDO abort transfer message with an incomplete abort code is
+///       received
+///
+/// \Then no SDO message is sent, the download confirmation function is called
+///       once with a pointer to the service, the multiplexer, CO_SDO_AC_ERROR
+///       abort code and a pointer to the user-specified data; the service is
+///       idle
+///       \Calls can_timer_stop()
 TEST(CO_CsdoDownload, IniOnRecv_CsAbort_IncompleteAc) {
   SendDownloadRequest(buffer);
 
@@ -6659,6 +6681,16 @@ TEST(CO_CsdoDownload, IniOnRecv_CsAbort_IncompleteAc) {
   CheckTransferAbortedLocally(CO_SDO_AC_ERROR);
 }
 
+/// \Given a pointer to the started CSDO service (co_csdo_t) with a segmented
+///        download request sent to the server
+///
+/// \When an SDO abort transfer message with an abort code is received
+///
+/// \Then no SDO message is sent, the download confirmation function is called
+///       once with a pointer to the service, the multiplexer, the received
+///       abort code and a pointer to the user-specified data; the service is
+///       idle
+///       \Calls can_timer_stop()
 TEST(CO_CsdoDownload, IniOnRecv_CsAbort) {
   SendDownloadRequest(buffer);
 
@@ -6670,6 +6702,15 @@ TEST(CO_CsdoDownload, IniOnRecv_CsAbort) {
   CheckTransferAbortedLocally(ac);
 }
 
+/// \Given a pointer to the started CSDO service (co_csdo_t) with a segmented
+///        download request sent to the server
+///
+/// \When an SDO message with an incorrect command specifier is received
+///
+/// \Then an SDO abort transfer message with CO_SDO_AC_NO_CS abort code is sent
+///       \Calls stle_u16()
+///       \Calls stle_u32()
+///       \Calls can_net_send()
 TEST(CO_CsdoDownload, IniOnRecv_InvalidCs) {
   SendDownloadRequest(buffer);
 
@@ -6680,6 +6721,16 @@ TEST(CO_CsdoDownload, IniOnRecv_InvalidCs) {
   CheckSdoAbortSent(CO_SDO_AC_NO_CS);
 }
 
+/// \Given a pointer to the started CSDO service (co_csdo_t) with a segmented
+///        download request sent to the server
+///
+/// \When an SDO download initiate response with an incomplete multiplexer is
+///       received
+///
+/// \Then an SDO abort transfer message with CO_SDO_AC_ERROR abort code is sent
+///       \Calls stle_u16()
+///       \Calls stle_u32()
+///       \Calls can_net_send()
 TEST(CO_CsdoDownload, IniOnRecv_IncompleteMultiplexer) {
   SendDownloadRequest(buffer);
 
@@ -6690,6 +6741,16 @@ TEST(CO_CsdoDownload, IniOnRecv_IncompleteMultiplexer) {
   CheckSdoAbortSent(CO_SDO_AC_ERROR);
 }
 
+/// \Given a pointer to the started CSDO service (co_csdo_t) with a segmented
+///        download request sent to the server
+///
+/// \When an SDO download initiate response with a different object index than
+///       the one requested is received
+///
+/// \Then an SDO abort transfer message with CO_SDO_AC_ERROR abort code is sent
+///       \Calls stle_u16()
+///       \Calls stle_u32()
+///       \Calls can_net_send()
 TEST(CO_CsdoDownload, IniOnRecv_IncorrectIdx) {
   SendDownloadRequest(buffer);
 
@@ -6700,6 +6761,16 @@ TEST(CO_CsdoDownload, IniOnRecv_IncorrectIdx) {
   CheckSdoAbortSent(CO_SDO_AC_ERROR);
 }
 
+/// \Given a pointer to the started CSDO service (co_csdo_t) with a segmented
+///        download request sent to the server
+///
+/// \When an SDO download initiate response with a different sub-index than
+///       the one requested is received
+///
+/// \Then an SDO abort transfer message with CO_SDO_AC_ERROR abort code is sent
+///       \Calls stle_u16()
+///       \Calls stle_u32()
+///       \Calls can_net_send()
 TEST(CO_CsdoDownload, IniOnRecv_IncorrectSubidx) {
   SendDownloadRequest(buffer);
 
@@ -6710,6 +6781,14 @@ TEST(CO_CsdoDownload, IniOnRecv_IncorrectSubidx) {
   CheckSdoAbortSent(CO_SDO_AC_ERROR);
 }
 
+/// \Given a pointer to the started CSDO service (co_csdo_t) with a segmented
+///        download request sent to the server
+///
+/// \When a correct SDO download initiate response is received
+///
+/// \Then an SDO download segment request with segment size and data is sent,
+///       the service is not idle
+///       \Calls can_net_send()
 TEST(CO_CsdoDownload, IniOnRecv_Nominal) {
   SendDownloadRequest(buffer);
 
@@ -6719,6 +6798,16 @@ TEST(CO_CsdoDownload, IniOnRecv_Nominal) {
   CHECK_FALSE(co_csdo_is_idle(csdo));
 }
 
+/// \Given a pointer to the started CSDO service (co_csdo_t) with a segmented
+///        download request of size zero sent to the server; the service has a
+///        download progress indication function set
+///
+/// \When a correct SDO download initiate response is received
+///
+/// \Then an SDO download segment request with zero size and last bit set is
+///       sent, the download progress indication function and the download
+///       confirmation function are not called, the service is not idle
+///       \Calls can_net_send()
 TEST(CO_CsdoDownload, IniOnRecv_SizeZero) {
   co_csdo_set_dn_ind(csdo, &CoCsdoInd::Func, nullptr);
   SendDownloadRequest({});
@@ -6727,6 +6816,7 @@ TEST(CO_CsdoDownload, IniOnRecv_SizeZero) {
 
   CheckSentSegReq({}, CO_SDO_SEG_LAST);
   CHECK_EQUAL(0u, CoCsdoInd::GetNumCalled());
+  CHECK_EQUAL(0u, CoCsdoDnCon::GetNumCalled());
   CHECK_FALSE(co_csdo_is_idle(csdo));
 }
 
@@ -6735,6 +6825,15 @@ TEST(CO_CsdoDownload, IniOnRecv_SizeZero) {
 /// @name CSDO download segment request and response handling
 ///@{
 
+/// \Given a pointer to the started CSDO service (co_csdo_t) with a segmented
+///        download transfer initiated
+///
+/// \When co_csdo_abort_req() is called with an abort code
+///
+/// \Then an SDO abort transfer message with the abort code is sent
+///       \Calls stle_u16()
+///       \Calls stle_u32()
+///       \Calls can_net_send()
 TEST(CO_CsdoDownload, SegOnAbort_Nominal) {
   AdvanceToDnSegState();
 
@@ -6745,6 +6844,16 @@ TEST(CO_CsdoDownload, SegOnAbort_Nominal) {
   CheckSdoAbortSent(ac);
 }
 
+/// \Given a pointer to the started CSDO service (co_csdo_t) with a segmented
+///        download transfer initiated; the service has a timeout set
+///
+/// \When the timeout expires before any SDO message is received
+///
+/// \Then an SDO abort transfer message with CO_SDO_AC_TIMEOUT abort code is
+///       sent
+///       \Calls stle_u16()
+///       \Calls stle_u32()
+///       \Calls can_net_send()
 TEST(CO_CsdoDownload, SegOnTime_Nominal) {
   co_csdo_set_timeout(csdo, 999);
   AdvanceToDnSegState();
@@ -6754,6 +6863,15 @@ TEST(CO_CsdoDownload, SegOnTime_Nominal) {
   CheckSdoAbortSent(CO_SDO_AC_TIMEOUT);
 }
 
+/// \Given a pointer to the started CSDO service (co_csdo_t) with a segmented
+///        download transfer initiated
+///
+/// \When an SDO download segment response with length zero is received
+///
+/// \Then an SDO abort transfer message with CO_SDO_AC_NO_CS abort code is sent
+///       \Calls stle_u16()
+///       \Calls stle_u32()
+///       \Calls can_net_send()
 TEST(CO_CsdoDownload, SegOnRecv_NoCs) {
   AdvanceToDnSegState();
 
@@ -6764,6 +6882,17 @@ TEST(CO_CsdoDownload, SegOnRecv_NoCs) {
   CheckSdoAbortSent(CO_SDO_AC_NO_CS);
 }
 
+/// \Given a pointer to the started CSDO service (co_csdo_t) with a segmented
+///        download transfer initiated
+///
+/// \When an SDO abort transfer message with an incomplete abort code is
+///       received
+///
+/// \Then no SDO message is sent, the download confirmation function is called
+///       once with a pointer to the service, the multiplexer, CO_SDO_AC_ERROR
+///       abort code and a pointer to the user-specified data; the service is
+///       idle
+///       \Calls can_timer_stop()
 TEST(CO_CsdoDownload, SegOnRecv_CsAbort_IncompleteAc) {
   AdvanceToDnSegState();
 
@@ -6775,6 +6904,16 @@ TEST(CO_CsdoDownload, SegOnRecv_CsAbort_IncompleteAc) {
   CheckTransferAbortedLocally(CO_SDO_AC_ERROR);
 }
 
+/// \Given a pointer to the started CSDO service (co_csdo_t) with a segmented
+///        download transfer initiated
+///
+/// \When an SDO abort transfer message with an abort code is received
+///
+/// \Then no SDO message is sent, the download confirmation function is called
+///       once with a pointer to the service, the multiplexer, the received
+///       abort code and a pointer to the user-specified data; the service is
+///       idle
+///       \Calls can_timer_stop()
 TEST(CO_CsdoDownload, SegOnRecv_CsAbort) {
   AdvanceToDnSegState();
 
@@ -6786,6 +6925,15 @@ TEST(CO_CsdoDownload, SegOnRecv_CsAbort) {
   CheckTransferAbortedLocally(ac);
 }
 
+/// \Given a pointer to the started CSDO service (co_csdo_t) with a segmented
+///        download transfer initiated
+///
+/// \When an SDO message with an incorrect command specifier is received
+///
+/// \Then an SDO abort transfer message with CO_SDO_AC_NO_CS abort code is sent
+///       \Calls stle_u16()
+///       \Calls stle_u32()
+///       \Calls can_net_send()
 TEST(CO_CsdoDownload, SegOnRecv_InvalidCs) {
   AdvanceToDnSegState();
 
@@ -6796,6 +6944,16 @@ TEST(CO_CsdoDownload, SegOnRecv_InvalidCs) {
   CheckSdoAbortSent(CO_SDO_AC_NO_CS);
 }
 
+/// \Given a pointer to the started CSDO service (co_csdo_t) with a segmented
+///        download transfer initiated
+///
+/// \When an SDO download segment response with value of the toggle bit
+///       different than expected is received
+///
+/// \Then an SDO abort transfer message with CO_SDO_AC_TOGGLE abort code is sent
+///       \Calls stle_u16()
+///       \Calls stle_u32()
+///       \Calls can_net_send()
 TEST(CO_CsdoDownload, SegOnRecv_UnexpectedToggleBit) {
   AdvanceToDnSegState();
 
@@ -6806,6 +6964,16 @@ TEST(CO_CsdoDownload, SegOnRecv_UnexpectedToggleBit) {
   CheckSdoAbortSent(CO_SDO_AC_TOGGLE);
 }
 
+/// \Given a pointer to the started CSDO service (co_csdo_t) with a segmented
+///        download transfer in progress, only last segment remains to be sent;
+///        there is no download progress indication function set
+///
+/// \When an SDO download segment response is received
+///
+/// \Then an SDO download segment request with segment size, data, the last bit
+///       set and appropriate value for the toggle bit is sent; the service is
+///       not idle
+///       \Calls can_net_send()
 TEST(CO_CsdoDownload, SegOnRecv_LastSegment_NoInd) {
   co_csdo_set_dn_ind(csdo, nullptr, nullptr);
   AdvanceToDnSegState();
@@ -6818,6 +6986,19 @@ TEST(CO_CsdoDownload, SegOnRecv_LastSegment_NoInd) {
   CHECK_FALSE(co_csdo_is_idle(csdo));
 }
 
+/// \Given a pointer to the started CSDO service (co_csdo_t) with a segmented
+///        download transfer in progress, only last segment remains to be sent;
+///        the service has a download progress indication function set
+///
+/// \When an SDO download segment response is received
+///
+/// \Then an SDO download segment request with segment size, data, the last bit
+///       set and appropriate value for the toggle bit is sent; the download
+///       progress indication function is called with a pointer to the service,
+///       the multiplexer, the request size as total size and as number of bytes
+///       transferred, a pointer to the user-specified data; the service is not
+///       idle
+///       \Calls can_net_send()
 TEST(CO_CsdoDownload, SegOnRecv_LastSegment) {
   co_csdo_set_dn_ind(csdo, &CoCsdoInd::Func, nullptr);
   AdvanceToDnSegState();
@@ -6830,6 +7011,15 @@ TEST(CO_CsdoDownload, SegOnRecv_LastSegment) {
   CHECK_FALSE(co_csdo_is_idle(csdo));
 }
 
+/// \Given a pointer to the started CSDO service (co_csdo_t) with a segmented
+///        download transfer in progress, last segment was sent
+///
+/// \When an SDO download segment response is received
+///
+/// \Then no SDO message is sent; the download confirmation function is called
+///       once with a pointer to the service, the multiplexer, zero abort code
+///       and a pointer to the user-specified data; the service is idle
+///       \Calls can_timer_stop()
 TEST(CO_CsdoDownload, SegOnRecv_LastSegmentConfirmed) {
   AdvanceToDnSegState();
 
@@ -6844,6 +7034,15 @@ TEST(CO_CsdoDownload, SegOnRecv_LastSegmentConfirmed) {
   CheckDoneTransfer();
 }
 
+/// \Given a pointer to the started CSDO service (co_csdo_t) with a segmented
+///        download transfer of size zero initiated
+///
+/// \When an SDO download segment response is received
+///
+/// \Then no SDO message is sent; the download confirmation function is called
+///       once with a pointer to the service, the multiplexer, zero abort code
+///       and a pointer to the user-specified data; the service is idle
+///       \Calls can_timer_stop()
 TEST(CO_CsdoDownload, SegOnRecv_SizeZeroConfirmed) {
   SendDownloadRequest({});
   ReceiveSegmentedDnIni();
@@ -6855,6 +7054,24 @@ TEST(CO_CsdoDownload, SegOnRecv_SizeZeroConfirmed) {
   CheckDoneTransfer();
 }
 
+/// \Given a pointer to the started CSDO service (co_csdo_t) with a segmented
+///        download transfer initiated; the service has a download progress
+///        indication function set
+///
+/// \When SDO download segment responses with alternating toggle bit are
+///       received
+///
+/// \Then for each response received apart from the last one a corresponding
+///       request is sent with segment data and alternating toggle bit value,
+///       last sent request has the last bit set; when last response is received
+///       the segmented download transfer is finished; the download progress
+///       indication function is called every CO_SDO_MAX_SEQNO responses and
+///       once when the transfer is finished; the download confirmation function
+///       is called once with a pointer to the service, the multiplexer, zero
+///       abort code and a pointer to the user-specified data; the service is
+///       idle
+///       \Calls can_net_send()
+///       \Calls can_timer_stop()
 TEST(CO_CsdoDownload, SegOnRecv_LargeDataSet_PeriodicInd) {
   co_csdo_set_dn_ind(csdo, &CoCsdoInd::Func, nullptr);
 
@@ -6915,6 +7132,20 @@ TEST_GROUP_BASE(CO_CsdoIde, CO_CsdoBase) {
 /// @name SDO transfer with Extended CAN Identifier
 ///@{
 
+/// \Given a pointer to the started CSDO service (co_csdo_t) with both "COB-ID
+///        client -> server (rx)" and "COB-ID server -> client (tx)" entries
+///        using Extended CAN-IDs and having the frame bit set
+///
+/// \When an SDO download request is submitted
+///
+/// \Then an SDO download segment initiate request with Extended CAN-ID and
+///       Identifier Extension flag set is sent
+///       \Calls co_csdo_is_valid()
+///       \Calls co_csdo_is_idle()
+///       \Calls membuf_init()
+///       \Calls stle_u16()
+///       \Calls stle_u32()
+///       \Calls can_net_send()
 TEST(CO_CsdoIde, InitIniReq_ExtendedId) {
   SendDnReq();
 
@@ -6931,6 +7162,19 @@ TEST(CO_CsdoIde, InitIniReq_ExtendedId) {
   CHECK_EQUAL(1u, CoCsdoDnCon::GetNumCalled());
 }
 
+/// \Given a pointer to the started CSDO service (co_csdo_t) with both "COB-ID
+///        client -> server (rx)" and "COB-ID server -> client (tx)" entries
+///        using Extended CAN-IDs and having the frame bit set; a
+///        segmented download request was sent, the request buffer is too large
+///        for expedited transfer but small enough to fit in a single segment
+///
+/// \When an SDO download initiate response is received
+///
+/// \Then an SDO download segment request with Identifier CAN-ID, the
+///       Identifier Extension flag set, last bit set, segment size and data is
+///       sent; once an SDO download segment response is received the transfer
+///       is finished and the service is idle
+///       \Calls can_net_send()
 TEST(CO_CsdoIde, InitSegReq_ExtendedId) {
   SendDnReq();
   CanSend::Clear();
@@ -6952,7 +7196,7 @@ TEST(CO_CsdoIde, InitSegReq_ExtendedId) {
   seg_res.flags = CAN_FLAG_IDE;
   CHECK_EQUAL(1, can_net_recv(net, &seg_res, 0));
 
-  CHECK_EQUAL(1u, CoCsdoDnCon::GetNumCalled());
+  CHECK(co_csdo_is_idle(csdo));
 }
 
 ///@}
