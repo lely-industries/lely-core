@@ -1812,7 +1812,7 @@ TEST(CO_Pdo, CoPdoMap_NBufNull) {
   const auto ret = co_pdo_map(&par, val, n_val, buf, nullptr);
 
   CHECK_EQUAL(0u, ret);
-  for (size_t i = 0u; i < pdo_size; ++i) CHECK_EQUAL(0x00u, buf[i]);
+  MEMORY_IS_ZEROED(buf, sizeof(buf));
 }
 
 /// \Given a PDO mapping parameters (co_pdo_map_par), an array of values to map
@@ -2043,7 +2043,7 @@ TEST(CO_Pdo, CoPdoUnmap_NValNull) {
   const auto ret = co_pdo_unmap(&par, buf, n_buf, val, nullptr);
 
   CHECK_EQUAL(0u, ret);
-  for (size_t i = 0u; i < val_num; ++i) CHECK_EQUAL(0x00u, val[i]);
+  MEMORY_IS_ZEROED(val, sizeof(val));
 }
 
 /// \Given a PDO mapping parameters (co_pdo_map_par), a buffer with the mapped
@@ -2439,7 +2439,7 @@ TEST(CO_Pdo, CoPdoUp_ReqNotFirst) {
 
   CHECK_EQUAL(CO_SDO_AC_PDO_LEN, ret);
   CHECK_EQUAL(SUB_LEN, n);
-  for (size_t i = 0; i < SUB_LEN; ++i) CHECK_EQUAL(0x00u, buf[i]);
+  MEMORY_IS_ZEROED(buf, sizeof(buf));
 }
 
 /// \Given a CANopen device (co_dev_t), a PDO mapping parameters
@@ -2477,7 +2477,7 @@ TEST(CO_Pdo, CoPdoUp_ReqFirstButNotLast) {
 
   CHECK_EQUAL(CO_SDO_AC_PDO_LEN, ret);
   CHECK_EQUAL(SUB_LEN, n);
-  for (size_t i = 0; i < SUB_LEN; ++i) CHECK_EQUAL(0x00u, buf[i]);
+  MEMORY_IS_ZEROED(buf, sizeof(buf));
 }
 
 /// \Given a CANopen device (co_dev_t), a PDO mapping parameters
@@ -2509,7 +2509,7 @@ TEST(CO_Pdo, CoPdoUp_UpIndError) {
 
   CHECK_EQUAL(CO_SDO_AC_ERROR, ret);
   CHECK_EQUAL(SUB_LEN, n);
-  for (size_t i = 0; i < SUB_LEN; ++i) CHECK_EQUAL(0x00u, buf[i]);
+  MEMORY_IS_ZEROED(buf, sizeof(buf));
 }
 
 /// \Given a CANopen device (co_dev_t), a PDO mapping parameters
@@ -2569,7 +2569,7 @@ TEST(CO_Pdo, CoPdoUp_PnNull) {
   const auto ret = co_pdo_up(&par, dev, &req, buf, nullptr);
 
   CHECK_EQUAL(0u, ret);
-  for (size_t i = 0; i < SUB_LEN; ++i) CHECK_EQUAL(0x00u, buf[i]);
+  MEMORY_IS_ZEROED(buf, sizeof(buf));
 }
 
 /// \Given a CANopen device (co_dev_t), a PDO mapping parameters

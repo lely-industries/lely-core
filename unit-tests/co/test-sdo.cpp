@@ -31,8 +31,9 @@
 #include <lely/util/endian.h>
 #include <lely/util/ustring.h>
 
-#include <libtest/tools/lely-unit-test.hpp>
 #include <libtest/override/lelyco-val.hpp>
+#include <libtest/tools/lely-cpputest-ext.hpp>
+#include <libtest/tools/lely-unit-test.hpp>
 
 #include "holder/array-init.hpp"
 
@@ -906,8 +907,7 @@ TEST(CO_Sdo, CoSdoReqDnVal_ArrayDataType_ReadValueFailed) {
   CHECK_EQUAL(-1, ret);
   CHECK_EQUAL(CO_SDO_AC_NO_MEM, ac);
 #if LELY_NO_MALLOC
-  const uint_least8_t EXPECTED[VAL_SIZE] = {0x00u, 0x00u, 0x00u, 0x00u};
-  MEMCMP_EQUAL(EXPECTED, str, sizeof(EXPECTED));
+  MEMORY_IS_ZEROED(str, VAL_SIZE);
   CheckArrayIsZeroed(membuf_begin(req.membuf), CO_SDO_REQ_MEMBUF_SIZE);
 #else
   POINTERS_EQUAL(nullptr, str);

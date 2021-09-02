@@ -72,9 +72,7 @@ TEST_BASE(CO_TpdoBase) {
 
   void CheckPdoMapParIsZeroed(const co_pdo_map_par* const map) const {
     CHECK_EQUAL(0, map->n);
-    const std::array<co_unsigned32_t, CO_PDO_NUM_MAPS> expected_map = {0};
-    MEMCMP_EQUAL(expected_map.data(), map->map,
-                 expected_map.size() * sizeof(co_unsigned32_t));
+    MEMORY_IS_ZEROED(map->map, CO_PDO_NUM_MAPS * sizeof(co_unsigned32_t));
   }
 
   TEST_SETUP() {
