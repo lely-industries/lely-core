@@ -26,10 +26,17 @@
 #include "obj-init/obj-init.hpp"
 #include "holder/obj.hpp"
 
-// 0x1a00-0x1bff: TPDO mapping parameter
+/// 0x1a00-0x1bff: TPDO mapping parameter
 struct Obj1a00TpdoMapPar : ObjInitT<0x1a00u, 0x1a00u, 0x1bffu> {
   struct Sub00NumOfMappedObjs : SubT<0x00u, CO_DEFTYPE_UNSIGNED8> {};
   struct SubNthAppObject : SubT<0x01u, CO_DEFTYPE_UNSIGNED32, 0, 0x01u> {};
+
+  static SubNthAppObject::sub_type
+  MakeMappingParam(const co_unsigned16_t idx, const co_unsigned8_t subidx,
+                   const co_unsigned8_t bits_len) {
+    return (co_unsigned32_t{idx} << 16u) | (co_unsigned32_t{subidx} << 8u) |
+           bits_len;
+  }
 };
 
 #endif  // LELY_UNIT_TEST_TPDO_MAP_PAR_HPP_

@@ -92,6 +92,7 @@ TEST(CAN_NetAllocation, CanNetCreate_Nominal) {
   CHECK_EQUAL(0, can_net_get_active_bus(net));
 }
 
+/// Test group for #can_net_t tests.
 TEST_GROUP(CAN_Net) {
   Allocators::Default allocator;
   can_net_t* net = nullptr;

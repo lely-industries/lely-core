@@ -32,15 +32,19 @@ size_t CoTpdoSampleInd::num_called_ = 0;
 
 co_tpdo_t* CoTpdoSampleInd::pdo_ = nullptr;
 void* CoTpdoSampleInd::data_ = nullptr;
+bool CoTpdoSampleInd::skipSampleResCall_ = false;
 
 int
 CoTpdoSampleInd::Func(co_tpdo_t* const pdo, void* const data) {
-  num_called_++;
+  ++num_called_;
 
   pdo_ = pdo;
   data_ = data;
 
-  return 0;
+  if (skipSampleResCall_)
+    return 0;
+  else
+    return co_tpdo_sample_res(pdo, 0);
 }
 
 void
@@ -49,6 +53,8 @@ CoTpdoSampleInd::Clear() {
 
   pdo_ = nullptr;
   data_ = nullptr;
+
+  skipSampleResCall_ = false;
 }
 
 void

@@ -164,3 +164,8 @@ PREDEFINED             += LELY_NO_CO_GW=1
 PREDEFINED             += LELY_NO_CO_GW_TXT=1
 PREDEFINED             += LELY_NO_COAPP_MASTER=0
 PREDEFINED             += LELY_NO_COAPP_SLAVE=0
+
+# ----------------------------------------------------------
+# Warnings
+# ----------------------------------------------------------
+WARN_AS_ERROR          = FAIL_ON_WARNINGS

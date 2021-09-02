@@ -28,6 +28,7 @@
 
 /// #co_sub_dn_ind_t spy.
 struct CoSubDnInd {
+  static co_unsigned32_t ret;
   static size_t num_called;
   static co_sub_t* sub;
   static co_sdo_req* req;
@@ -36,11 +37,18 @@ struct CoSubDnInd {
 
   static co_unsigned32_t Func(co_sub_t* sub_, co_sdo_req* req_,
                               co_unsigned32_t ac_, void* data_);
+  static co_unsigned32_t FuncDn(co_sub_t* sub_, co_sdo_req* req_,
+                                co_unsigned32_t ac_, void* data_);
   static void Clear();
 
   static inline bool
   Called() {
     return num_called > 0;
+  }
+
+  static inline size_t
+  GetNumCalled() {
+    return num_called;
   }
 };
 

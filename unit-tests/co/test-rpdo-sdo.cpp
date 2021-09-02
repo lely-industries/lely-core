@@ -59,15 +59,12 @@ TEST_BASE(CO_SdoRpdoBase) {
   std::unique_ptr<CoObjTHolder> obj1400;
   std::unique_ptr<CoObjTHolder> obj1600;
 
-  void CreateRpdo() {
+  void CreateRpdoAndStart() {
     rpdo = co_rpdo_create(net, dev, RPDO_NUM);
     CHECK(rpdo != nullptr);
 
     co_rpdo_set_err(rpdo, &CoRpdoErr::Func, nullptr);
-  }
 
-  void CreateRpdoAndStart() {
-    CreateRpdo();
     co_rpdo_start(rpdo);
   }
 
@@ -95,8 +92,6 @@ TEST_BASE(CO_SdoRpdoBase) {
 };
 
 TEST_GROUP_BASE(CO_SdoRpdo1400, CO_SdoRpdoBase) {
-  const int32_t clang_format_fix = 0;  // dummy for workaround
-
   using Sub00HighestSubidxSupported =
       Obj1400RpdoCommPar::Sub00HighestSubidxSupported;
   using Sub01CobId = Obj1400RpdoCommPar::Sub01CobId;
@@ -220,14 +215,13 @@ TEST(CO_SdoRpdo1400, Co1400DnInd_NoSub) {
 ///       \Calls co_sub_get_type()
 ///       \Calls co_sdo_req_dn_val()
 ///       \Calls co_sub_get_subidx()
-TEST(CO_SdoRpdo1400, Co1400DnInd_Sub00MaxSubidxSupported_NoWrite) {
+TEST(CO_SdoRpdo1400, Co1400DnInd_Sub00HighestSubidxSupported_NoWrite) {
   CreateRpdoAndStart();
   const auto val = obj1400->GetSub<Sub00HighestSubidxSupported>();
 
-  const co_unsigned8_t num_of_elems = 0x7fu;
-  const auto ret =
-      co_dev_dn_val_req(dev, 0x1400u, 0x00u, CO_DEFTYPE_UNSIGNED8,
-                        &num_of_elems, nullptr, CoCsdoDnCon::Func, nullptr);
+  const co_unsigned8_t num = 0x7fu;
+  const auto ret = co_dev_dn_val_req(dev, 0x1400u, 0x00u, CO_DEFTYPE_UNSIGNED8,
+                                     &num, nullptr, CoCsdoDnCon::Func, nullptr);
 
   CHECK_EQUAL(0, ret);
   CoCsdoDnCon::Check(nullptr, 0x1400u, 0x00u, CO_SDO_AC_NO_WRITE, nullptr);
@@ -247,18 +241,17 @@ TEST(CO_SdoRpdo1400, Co1400DnInd_Sub00MaxSubidxSupported_NoWrite) {
 ///       \Calls co_sdo_req_dn_val()
 ///       \Calls co_sub_get_subidx()
 ///       \Calls co_sub_get_val_u32()
-TEST(CO_SdoRpdo1400, Co1400DnInd_Sub01Cobid_SameAsPrevious) {
+TEST(CO_SdoRpdo1400, Co1400DnInd_Sub01Cobid_SameValue) {
   CreateRpdoAndStart();
   const auto val = obj1400->GetSub<Sub01CobId>();
 
-  const co_unsigned32_t cobid = DEV_ID;
-  const auto ret =
-      co_dev_dn_val_req(dev, 0x1400u, 0x01u, CO_DEFTYPE_UNSIGNED32, &cobid,
-                        nullptr, CoCsdoDnCon::Func, nullptr);
+  const auto ret = co_dev_dn_val_req(dev, 0x1400u, 0x01u, CO_DEFTYPE_UNSIGNED32,
+                                     &val, nullptr, CoCsdoDnCon::Func, nullptr);
 
   CHECK_EQUAL(0, ret);
   CoCsdoDnCon::Check(nullptr, 0x1400u, 0x01u, 0, nullptr);
   CHECK_EQUAL(val, obj1400->GetSub<Sub01CobId>());
+  CHECK_EQUAL(val, co_rpdo_get_comm_par(rpdo)->cobid);
 }
 
 /// \Given a started RPDO service (co_rpdo_t), the object dictionary
@@ -275,7 +268,6 @@ TEST(CO_SdoRpdo1400, Co1400DnInd_Sub01Cobid_SameAsPrevious) {
 ///       \Calls co_sub_get_subidx()
 ///       \Calls co_sub_get_val_u32()
 TEST(CO_SdoRpdo1400, Co1400DnInd_Sub01Cobid_ValidToValid_NewCanId) {
-  obj1400->SetSub<Sub01CobId>(DEV_ID);
   CreateRpdoAndStart();
   const auto val = obj1400->GetSub<Sub01CobId>();
 
@@ -287,6 +279,7 @@ TEST(CO_SdoRpdo1400, Co1400DnInd_Sub01Cobid_ValidToValid_NewCanId) {
   CHECK_EQUAL(0, ret);
   CoCsdoDnCon::Check(nullptr, 0x1400u, 0x01u, CO_SDO_AC_PARAM_VAL, nullptr);
   CHECK_EQUAL(val, obj1400->GetSub<Sub01CobId>());
+  CHECK_EQUAL(val, co_rpdo_get_comm_par(rpdo)->cobid);
 }
 
 /// \Given a started RPDO service (co_rpdo_t), the object dictionary
@@ -297,13 +290,15 @@ TEST(CO_SdoRpdo1400, Co1400DnInd_Sub01Cobid_ValidToValid_NewCanId) {
 ///       sub-object
 ///
 /// \Then a zero abort code is passed to the download confirmation function,
-///       the sub-object is set to the requested value
+///       the sub-object is set to the requested value and the value is updated
+///       in the service
 ///       \Calls co_sub_get_type()
 ///       \Calls co_sdo_req_dn_val()
 ///       \Calls co_sub_get_subidx()
 ///       \Calls co_sub_get_val_u32()
 ///       \Calls can_recv_start()
 ///       \Calls can_timer_stop()
+///       \Calls co_sub_dn()
 TEST(CO_SdoRpdo1400, Co1400DnInd_Sub01Cobid_InvalidToValid_NewCanId) {
   obj1400->SetSub<Sub01CobId>(DEV_ID | CO_PDO_COBID_VALID);
   CreateRpdoAndStart();
@@ -316,6 +311,7 @@ TEST(CO_SdoRpdo1400, Co1400DnInd_Sub01Cobid_InvalidToValid_NewCanId) {
   CHECK_EQUAL(0, ret);
   CoCsdoDnCon::Check(nullptr, 0x1400u, 0x01u, 0, nullptr);
   CHECK_EQUAL(cobid, obj1400->GetSub<Sub01CobId>());
+  CHECK_EQUAL(cobid, co_rpdo_get_comm_par(rpdo)->cobid);
 }
 
 /// \Given a started RPDO service (co_rpdo_t), the object dictionary
@@ -326,13 +322,15 @@ TEST(CO_SdoRpdo1400, Co1400DnInd_Sub01Cobid_InvalidToValid_NewCanId) {
 ///       sub-object
 ///
 /// \Then a zero abort code is passed to the download confirmation function,
-///       the sub-object is set to the requested value
+///       the sub-object is set to the requested value and the value is updated
+///       in the service
 ///       \Calls co_sub_get_type()
 ///       \Calls co_sdo_req_dn_val()
 ///       \Calls co_sub_get_subidx()
 ///       \Calls co_sub_get_val_u32()
 ///       \Calls can_recv_stop()
 ///       \Calls can_timer_stop()
+///       \Calls co_sub_dn()
 TEST(CO_SdoRpdo1400, Co1400DnInd_Sub01Cobid_ValidToInvalid_SameCanId) {
   CreateRpdoAndStart();
 
@@ -345,6 +343,7 @@ TEST(CO_SdoRpdo1400, Co1400DnInd_Sub01Cobid_ValidToInvalid_SameCanId) {
   CHECK_EQUAL(0, ret);
   CoCsdoDnCon::Check(nullptr, 0x1400u, 0x01u, 0, nullptr);
   CHECK_EQUAL(cobid, obj1400->GetSub<Sub01CobId>());
+  CHECK_EQUAL(cobid, co_rpdo_get_comm_par(rpdo)->cobid);
 }
 
 /// \Given a started RPDO service (co_rpdo_t), the object dictionary
@@ -355,13 +354,15 @@ TEST(CO_SdoRpdo1400, Co1400DnInd_Sub01Cobid_ValidToInvalid_SameCanId) {
 ///       downloaded to the sub-object
 ///
 /// \Then a zero abort code is passed to the download confirmation function,
-///       the sub-object is set to the requested value
+///       the sub-object is set to the requested value and the value is updated
+///       in the service
 ///       \Calls co_sub_get_type()
 ///       \Calls co_sdo_req_dn_val()
 ///       \Calls co_sub_get_subidx()
 ///       \Calls co_sub_get_val_u32()
 ///       \Calls can_recv_start()
 ///       \Calls can_timer_stop()
+///       \Calls co_sub_dn()
 TEST(CO_SdoRpdo1400, Co1400DnInd_Sub01Cobid_ValidToValidWithFrameBit) {
   CreateRpdoAndStart();
 
@@ -374,13 +375,14 @@ TEST(CO_SdoRpdo1400, Co1400DnInd_Sub01Cobid_ValidToValidWithFrameBit) {
   CHECK_EQUAL(0, ret);
   CoCsdoDnCon::Check(nullptr, 0x1400u, 0x01u, 0, nullptr);
   CHECK_EQUAL(cobid, obj1400->GetSub<Sub01CobId>());
+  CHECK_EQUAL(cobid, co_rpdo_get_comm_par(rpdo)->cobid);
 }
 
 /// \Given a started RPDO service (co_rpdo_t), the object dictionary
 ///        contains the RPDO Communication Parameter object (0x1400) with the
 ///        "COB-ID used by RPDO" sub-object (0x01)
 ///
-/// \When a valid COB-ID with the Extended Identifier, but with no
+/// \When an invalid COB-ID with the 29-bit Extended Identifier, but with no
 ///       `CO_PDO_COBID_FRAME` bit set is downloaded to the sub-object
 ///
 /// \Then CO_SDO_AC_PARAM_VAL abort code is passed to the download
@@ -389,7 +391,8 @@ TEST(CO_SdoRpdo1400, Co1400DnInd_Sub01Cobid_ValidToValidWithFrameBit) {
 ///       \Calls co_sdo_req_dn_val()
 ///       \Calls co_sub_get_subidx()
 ///       \Calls co_sub_get_val_u32()
-TEST(CO_SdoRpdo1400, Co1400DnInd_Sub01Cobid_ExtendedIdButNoFrameBit) {
+TEST(CO_SdoRpdo1400,
+     Co1400DnInd_Sub01Cobid_ValidToInvalidWithExtendedIdButNoFrameBit) {
   CreateRpdoAndStart();
   const auto val = obj1400->GetSub<Sub01CobId>();
 
@@ -401,6 +404,7 @@ TEST(CO_SdoRpdo1400, Co1400DnInd_Sub01Cobid_ExtendedIdButNoFrameBit) {
   CHECK_EQUAL(0, ret);
   CoCsdoDnCon::Check(nullptr, 0x1400u, 0x01u, CO_SDO_AC_PARAM_VAL, nullptr);
   CHECK_EQUAL(val, obj1400->GetSub<Sub01CobId>());
+  CHECK_EQUAL(val, co_rpdo_get_comm_par(rpdo)->cobid);
 }
 
 /// \Given a started RPDO service (co_rpdo_t), the object dictionary
@@ -411,14 +415,15 @@ TEST(CO_SdoRpdo1400, Co1400DnInd_Sub01Cobid_ExtendedIdButNoFrameBit) {
 /// \When an invalid COB-ID is downloaded to the sub-object
 ///
 /// \Then a zero abort code is passed to the download confirmation function,
-///       the sub-object is set to the requested value; the event timer is
-///       stopped
+///       the sub-object is set to the requested value and the value is updated
+///       in the service; the event timer is stopped
 ///       \Calls co_sub_get_type()
 ///       \Calls co_sdo_req_dn_val()
 ///       \Calls co_sub_get_subidx()
 ///       \Calls co_sub_get_val_u32()
 ///       \Calls can_recv_stop()
 ///       \Calls can_timer_stop()
+///       \Calls co_sub_dn()
 TEST(CO_SdoRpdo1400, Co1400DnInd_Sub01Cobid_ValidToInvalid_StopEventTimer) {
   const co_unsigned16_t event_timer_ms = 1u;
   obj1400->SetSub<Sub05EventTimer>(event_timer_ms);
@@ -445,8 +450,8 @@ TEST(CO_SdoRpdo1400, Co1400DnInd_Sub01Cobid_ValidToInvalid_StopEventTimer) {
 /// \When a valid COB-ID is downloaded to the sub-object
 ///
 /// \Then a zero abort code is passed to the download confirmation function,
-///       the sub-object is set to the requested value; the event timer is
-///       started
+///       the sub-object is set to the requested value and the value is updated
+///       in the service; the event timer is started
 ///       \Calls co_sub_get_type()
 ///       \Calls co_sdo_req_dn_val()
 ///       \Calls co_sub_get_subidx()
@@ -454,6 +459,7 @@ TEST(CO_SdoRpdo1400, Co1400DnInd_Sub01Cobid_ValidToInvalid_StopEventTimer) {
 ///       \Calls can_recv_start()
 ///       \Calls can_timer_stop()
 ///       \Calls can_timer_timeout()
+///       \Calls co_sub_dn()
 TEST(CO_SdoRpdo1400, Co1400DnInd_Sub01Cobid_InvalidToValid_StartEventTimer) {
   const co_unsigned16_t event_timer_ms = 10u;
   obj1400->SetSub<Sub01CobId>(DEV_ID | CO_PDO_COBID_VALID);
@@ -489,14 +495,13 @@ TEST(CO_SdoRpdo1400, Co1400DnInd_Sub02TransmissionType_SameValue) {
   CreateRpdoAndStart();
   const auto val = obj1400->GetSub<Sub02TransmissionType>();
 
-  const co_unsigned8_t ttype = obj1400->GetSub<Sub02TransmissionType>();
-  const auto ret =
-      co_dev_dn_val_req(dev, 0x1400u, 0x02u, CO_DEFTYPE_UNSIGNED8, &ttype,
-                        nullptr, CoCsdoDnCon::Func, nullptr);
+  const auto ret = co_dev_dn_val_req(dev, 0x1400u, 0x02u, CO_DEFTYPE_UNSIGNED8,
+                                     &val, nullptr, CoCsdoDnCon::Func, nullptr);
 
   CHECK_EQUAL(0, ret);
   CoCsdoDnCon::Check(nullptr, 0x1400u, 0x02u, 0, nullptr);
   CHECK_EQUAL(val, obj1400->GetSub<Sub02TransmissionType>());
+  CHECK_EQUAL(val, co_rpdo_get_comm_par(rpdo)->trans);
 }
 
 /// \Given a started RPDO service (co_rpdo_t), the object dictionary
@@ -515,14 +520,15 @@ TEST(CO_SdoRpdo1400, Co1400DnInd_Sub02TransmissionType_Reserved) {
   CreateRpdoAndStart();
   const auto val = obj1400->GetSub<Sub02TransmissionType>();
 
-  for (co_unsigned8_t ttype = 0xf1u; ttype < 0xfeu; ttype++) {
+  for (co_unsigned8_t trans = 0xf1u; trans < 0xfeu; trans++) {
     const auto ret =
-        co_dev_dn_val_req(dev, 0x1400u, 0x02u, CO_DEFTYPE_UNSIGNED8, &ttype,
+        co_dev_dn_val_req(dev, 0x1400u, 0x02u, CO_DEFTYPE_UNSIGNED8, &trans,
                           nullptr, CoCsdoDnCon::Func, nullptr);
 
     CHECK_EQUAL(0, ret);
     CoCsdoDnCon::Check(nullptr, 0x1400u, 0x02u, CO_SDO_AC_PARAM_VAL, nullptr);
     CHECK_EQUAL(val, obj1400->GetSub<Sub02TransmissionType>());
+    CHECK_EQUAL(val, co_rpdo_get_comm_par(rpdo)->trans);
 
     CoCsdoDnCon::Clear();
   }
@@ -535,22 +541,25 @@ TEST(CO_SdoRpdo1400, Co1400DnInd_Sub02TransmissionType_Reserved) {
 /// \When a transmission type value is downloaded to the sub-object
 ///
 /// \Then a zero abort code is passed to the download confirmation function,
-///       the sub-object is set to the requested value
+///       the sub-object is set to the requested value and the value is updated
+///       in the service
 ///       \Calls co_sub_get_type()
 ///       \Calls co_sdo_req_dn_val()
 ///       \Calls co_sub_get_subidx()
 ///       \Calls co_sub_get_val_u8()
+///       \Calls co_sub_dn()
 TEST(CO_SdoRpdo1400, Co1400DnInd_Sub02TransmissionType_NewValue) {
   CreateRpdoAndStart();
 
-  const co_unsigned8_t ttype = 0x35u;
+  const co_unsigned8_t trans = 0x35u;
   const auto ret =
-      co_dev_dn_val_req(dev, 0x1400u, 0x02u, CO_DEFTYPE_UNSIGNED8, &ttype,
+      co_dev_dn_val_req(dev, 0x1400u, 0x02u, CO_DEFTYPE_UNSIGNED8, &trans,
                         nullptr, CoCsdoDnCon::Func, nullptr);
 
   CHECK_EQUAL(0, ret);
   CoCsdoDnCon::Check(nullptr, 0x1400u, 0x02u, 0, nullptr);
-  CHECK_EQUAL(ttype, obj1400->GetSub<Sub02TransmissionType>());
+  CHECK_EQUAL(trans, obj1400->GetSub<Sub02TransmissionType>());
+  CHECK_EQUAL(trans, co_rpdo_get_comm_par(rpdo)->trans);
 }
 
 /// \Given a started RPDO service (co_rpdo_t), the object dictionary
@@ -560,22 +569,25 @@ TEST(CO_SdoRpdo1400, Co1400DnInd_Sub02TransmissionType_NewValue) {
 /// \When the maximum transmission type value is downloaded to the sub-object
 ///
 /// \Then a zero abort code is passed to the download confirmation function,
-///       the sub-object is set to the requested value
+///       the sub-object is set to the requested value and the value is updated
+///       in the service
 ///       \Calls co_sub_get_type()
 ///       \Calls co_sdo_req_dn_val()
 ///       \Calls co_sub_get_subidx()
 ///       \Calls co_sub_get_val_u8()
+///       \Calls co_sub_dn()
 TEST(CO_SdoRpdo1400, Co1400DnInd_Sub02TransmissionType_MaxValue) {
   CreateRpdoAndStart();
 
-  const co_unsigned8_t ttype = CO_UNSIGNED8_MAX;
+  const co_unsigned8_t trans = CO_UNSIGNED8_MAX;
   const auto ret =
-      co_dev_dn_val_req(dev, 0x1400u, 0x02u, CO_DEFTYPE_UNSIGNED8, &ttype,
+      co_dev_dn_val_req(dev, 0x1400u, 0x02u, CO_DEFTYPE_UNSIGNED8, &trans,
                         nullptr, CoCsdoDnCon::Func, nullptr);
 
   CHECK_EQUAL(0, ret);
   CoCsdoDnCon::Check(nullptr, 0x1400u, 0x02u, 0, nullptr);
-  CHECK_EQUAL(ttype, obj1400->GetSub<Sub02TransmissionType>());
+  CHECK_EQUAL(trans, obj1400->GetSub<Sub02TransmissionType>());
+  CHECK_EQUAL(trans, co_rpdo_get_comm_par(rpdo)->trans);
 }
 
 /// \Given a started RPDO service (co_rpdo_t), the object dictionary
@@ -604,6 +616,7 @@ TEST(CO_SdoRpdo1400, Co1400DnInd_Sub03InhibitTime_SameValue) {
   CHECK_EQUAL(0, ret);
   CoCsdoDnCon::Check(nullptr, 0x1400u, 0x03u, 0, nullptr);
   CHECK_EQUAL(val, obj1400->GetSub<Sub03InhibitTime>());
+  CHECK_EQUAL(val, co_rpdo_get_comm_par(rpdo)->inhibit);
 }
 
 /// \Given a started RPDO service (co_rpdo_t), the object dictionary
@@ -620,6 +633,7 @@ TEST(CO_SdoRpdo1400, Co1400DnInd_Sub03InhibitTime_SameValue) {
 ///       \Calls co_sub_get_val_u16()
 TEST(CO_SdoRpdo1400, Co1400DnInd_Sub03InhibitTime_ValidRpdo) {
   CreateRpdoAndStart();
+  const auto val = obj1400->GetSub<Sub03InhibitTime>();
 
   const co_unsigned16_t inhibit_time = 0x0012u;
   const auto ret =
@@ -627,8 +641,9 @@ TEST(CO_SdoRpdo1400, Co1400DnInd_Sub03InhibitTime_ValidRpdo) {
                         &inhibit_time, nullptr, CoCsdoDnCon::Func, nullptr);
 
   CHECK_EQUAL(0, ret);
-  CHECK_EQUAL(1u, CoCsdoDnCon::GetNumCalled());
-  CHECK_EQUAL(CO_SDO_AC_PARAM_VAL, CoCsdoDnCon::ac);
+  CoCsdoDnCon::Check(nullptr, 0x1400u, 0x03u, CO_SDO_AC_PARAM_VAL, nullptr);
+  CHECK_EQUAL(val, obj1400->GetSub<Sub03InhibitTime>());
+  CHECK_EQUAL(val, co_rpdo_get_comm_par(rpdo)->inhibit);
 }
 
 /// \Given a started RPDO service (co_rpdo_t), the object dictionary
@@ -638,11 +653,13 @@ TEST(CO_SdoRpdo1400, Co1400DnInd_Sub03InhibitTime_ValidRpdo) {
 /// \When a time value is downloaded to the sub-object
 ///
 /// \Then a zero abort code is passed to the download confirmation function,
-///       the sub-object is set to the requested value
+///       the sub-object is set to the requested value and the value is updated
+///       in the service
 ///       \Calls co_sub_get_type()
 ///       \Calls co_sdo_req_dn_val()
 ///       \Calls co_sub_get_subidx()
 ///       \Calls co_sub_get_val_u16()
+///       \Calls co_sub_dn()
 TEST(CO_SdoRpdo1400, Co1400DnInd_Sub03InhibitTime) {
   obj1400->SetSub<Sub01CobId>(DEV_ID | CO_PDO_COBID_VALID);
   CreateRpdoAndStart();
@@ -655,6 +672,7 @@ TEST(CO_SdoRpdo1400, Co1400DnInd_Sub03InhibitTime) {
   CHECK_EQUAL(0, ret);
   CoCsdoDnCon::Check(nullptr, 0x1400u, 0x03u, 0, nullptr);
   CHECK_EQUAL(inhibit_time, obj1400->GetSub<Sub03InhibitTime>());
+  CHECK_EQUAL(inhibit_time, co_rpdo_get_comm_par(rpdo)->inhibit);
 }
 
 /// \Given a started RPDO service (co_rpdo_t), the object dictionary
@@ -670,6 +688,7 @@ TEST(CO_SdoRpdo1400, Co1400DnInd_Sub03InhibitTime) {
 ///       \Calls co_sub_get_subidx()
 TEST(CO_SdoRpdo1400, Co1400DnInd_Sub04CompatibilityEntry_NoSub) {
   CreateRpdoAndStart();
+  const auto val = obj1400->GetSub<Sub04Reserved>();
 
   const co_unsigned8_t compat = CO_UNSIGNED8_MAX;
 
@@ -679,7 +698,8 @@ TEST(CO_SdoRpdo1400, Co1400DnInd_Sub04CompatibilityEntry_NoSub) {
 
   CHECK_EQUAL(0, ret);
   CoCsdoDnCon::Check(nullptr, 0x1400u, 0x04u, CO_SDO_AC_NO_SUB, nullptr);
-  CHECK_EQUAL(0, co_dev_get_val_u16(dev, 0x1400u, 0x04u));
+  CHECK_EQUAL(val, obj1400->GetSub<Sub04Reserved>());
+  CHECK_EQUAL(val, co_rpdo_get_comm_par(rpdo)->reserved);
 }
 
 /// \Given a started RPDO service (co_rpdo_t), the object dictionary
@@ -707,6 +727,7 @@ TEST(CO_SdoRpdo1400, Co1400DnInd_Sub05EventTimer_SameValue) {
   CHECK_EQUAL(0, ret);
   CoCsdoDnCon::Check(nullptr, 0x1400u, 0x05u, 0, nullptr);
   CHECK_EQUAL(val, obj1400->GetSub<Sub05EventTimer>());
+  CHECK_EQUAL(val, co_rpdo_get_comm_par(rpdo)->event);
 }
 
 /// \Given a started RPDO service (co_rpdo_t), the object dictionary
@@ -724,6 +745,7 @@ TEST(CO_SdoRpdo1400, Co1400DnInd_Sub05EventTimer_SameValue) {
 ///       \Calls co_sub_get_val_u16()
 ///       \Calls can_timer_stop()
 ///       \Calls can_timer_timeout()
+///       \Calls co_sub_dn()
 TEST(CO_SdoRpdo1400, Co1400DnInd_Sub05EventTimer_NewTimerValue) {
   const co_unsigned16_t old_event_timer_ms = 20u;
   obj1400->SetSub<Sub05EventTimer>(old_event_timer_ms);
@@ -740,6 +762,7 @@ TEST(CO_SdoRpdo1400, Co1400DnInd_Sub05EventTimer_NewTimerValue) {
   CHECK_EQUAL(0, ret);
   CoCsdoDnCon::Check(nullptr, 0x1400u, 0x05u, 0, nullptr);
   CHECK_EQUAL(event_timer_ms, obj1400->GetSub<Sub05EventTimer>());
+  CHECK_EQUAL(event_timer_ms, co_rpdo_get_comm_par(rpdo)->event);
 
   AdvanceTimeMs(event_timer_ms);
 
@@ -755,12 +778,13 @@ TEST(CO_SdoRpdo1400, Co1400DnInd_Sub05EventTimer_NewTimerValue) {
 ///
 /// \Then a zero abort code is passed to the download confirmation function,
 ///       the sub-object is set to the requested value; the event timer is
-///       disabled and stopped
+///       stopped and disabled
 ///       \Calls co_sub_get_type()
 ///       \Calls co_sdo_req_dn_val()
 ///       \Calls co_sub_get_subidx()
 ///       \Calls co_sub_get_val_u16()
 ///       \Calls can_timer_stop()
+///       \Calls co_sub_dn()
 TEST(CO_SdoRpdo1400, Co1400DnInd_Sub05EventTimer_DisableTimer) {
   const co_unsigned16_t old_event_timer_ms = 10u;
   obj1400->SetSub<Sub05EventTimer>(old_event_timer_ms);
@@ -777,6 +801,7 @@ TEST(CO_SdoRpdo1400, Co1400DnInd_Sub05EventTimer_DisableTimer) {
   CHECK_EQUAL(0, ret);
   CoCsdoDnCon::Check(nullptr, 0x1400u, 0x05u, 0, nullptr);
   CHECK_EQUAL(event_timer_ms, obj1400->GetSub<Sub05EventTimer>());
+  CHECK_EQUAL(event_timer_ms, co_rpdo_get_comm_par(rpdo)->event);
 
   AdvanceTimeMs(old_event_timer_ms);
   CHECK_EQUAL(0, CoRpdoErr::GetNumCalled());
@@ -858,12 +883,124 @@ TEST(CO_SdoRpdo1600, Co1600DnInd_TypeLenTooHigh) {
 
   const co_unsigned32_t value = CO_UNSIGNED32_MAX;
   const auto ret =
-      co_dev_dn_val_req(dev, 0x1600, 0x00u, CO_DEFTYPE_UNSIGNED32, &value,
+      co_dev_dn_val_req(dev, 0x1600u, 0x00u, CO_DEFTYPE_UNSIGNED32, &value,
                         nullptr, CoCsdoDnCon::Func, nullptr);
 
   CHECK_EQUAL(0, ret);
   CoCsdoDnCon::Check(nullptr, 0x1600u, 0x00u, CO_SDO_AC_TYPE_LEN_HI, nullptr);
   CHECK_EQUAL(val, obj1600->GetSub<Sub00NumOfMappedObjs>());
+  CHECK_EQUAL(val, co_rpdo_get_map_par(rpdo)->n);
+}
+
+/// \Given a started RPDO service (co_rpdo_t), the object dictionary contains
+///        the RPDO Mapping Parameter object (0x1600) with the "Number of
+///        mapped objects" sub-object (0x00)
+///
+/// \When the same value as the current sub-object's value is downloaded to the
+///       sub-object
+///
+/// \Then a zero abort code is passed to the download confirmation function,
+///       the sub-object remains unchanged
+///       \Calls co_sub_get_type()
+///       \Calls co_sdo_req_dn_val()
+///       \Calls co_sub_get_subidx()
+///       \Calls co_sub_get_val_u8()
+TEST(CO_SdoRpdo1600, Co1600DnInd_Sub00NumOfMappedObjs_SameValue) {
+  obj1400->SetSub<Obj1400RpdoCommPar::Sub01CobId>(DEV_ID | CO_PDO_COBID_VALID);
+  CreateRpdoAndStart();
+
+  const co_unsigned8_t num = obj1600->GetSub<Sub00NumOfMappedObjs>();
+  const auto ret = co_dev_dn_val_req(dev, 0x1600u, 0x00u, CO_DEFTYPE_UNSIGNED8,
+                                     &num, nullptr, CoCsdoDnCon::Func, nullptr);
+
+  CHECK_EQUAL(0, ret);
+  CoCsdoDnCon::Check(nullptr, 0x1600u, 0x00u, 0, nullptr);
+  CHECK_EQUAL(num, obj1600->GetSub<Sub00NumOfMappedObjs>());
+  CHECK_EQUAL(num, co_rpdo_get_map_par(rpdo)->n);
+}
+
+/// \Given a started RPDO service (co_rpdo_t), the object dictionary contains
+///        the RPDO Mapping Parameter object (0x1600) with the "Number of
+///        mapped objects" sub-object (0x00); the RPDO is valid
+///
+/// \When any value is downloaded to the sub-object
+///
+/// \Then CO_SDO_AC_PARAM_VAL abort code is passed to the download confirmation
+///       function, nothing is changed
+///       \Calls co_sub_get_type()
+///       \Calls co_sdo_req_dn_val()
+///       \Calls co_sub_get_subidx()
+///       \Calls co_sub_get_val_u8()
+TEST(CO_SdoRpdo1600, Co1600DnInd_Sub00NumOfMappedObjs_ValidRpdo) {
+  CreateRpdoAndStart();
+  const auto val = obj1600->GetSub<Sub00NumOfMappedObjs>();
+
+  const co_unsigned8_t num = 2u;
+  const auto ret = co_dev_dn_val_req(dev, 0x1600u, 0x00u, CO_DEFTYPE_UNSIGNED8,
+                                     &num, nullptr, CoCsdoDnCon::Func, nullptr);
+
+  CHECK_EQUAL(0, ret);
+  CoCsdoDnCon::Check(nullptr, 0x1600u, 0x00u, CO_SDO_AC_PARAM_VAL, nullptr);
+  CHECK_EQUAL(val, obj1600->GetSub<Sub00NumOfMappedObjs>());
+  CHECK_EQUAL(val, co_rpdo_get_map_par(rpdo)->n);
+}
+
+/// \Given a started RPDO service (co_rpdo_t), the object dictionary contains
+///        the RPDO Mapping Parameter object (0x1600) with the "Number of
+///        mapped objects" sub-object (0x00); the RPDO is invalid
+///
+/// \When a value larger than CO_PDO_NUM_MAPS is downloaded to the sub-object
+///
+/// \Then CO_SDO_AC_PARAM_VAL abort code is passed to the download confirmation
+///       function, nothing is changed
+///       \Calls co_sub_get_type()
+///       \Calls co_sdo_req_dn_val()
+///       \Calls co_sub_get_subidx()
+///       \Calls co_sub_get_val_u8()
+TEST(CO_SdoRpdo1600, Co1600DnInd_Sub00NumOfMappedObjs_NumOverMax) {
+  obj1400->SetSub<Obj1400RpdoCommPar::Sub01CobId>(DEV_ID | CO_PDO_COBID_VALID);
+  CreateRpdoAndStart();
+  const auto val = obj1600->GetSub<Sub00NumOfMappedObjs>();
+
+  const co_unsigned8_t num = CO_PDO_NUM_MAPS + 1u;
+  const auto ret = co_dev_dn_val_req(dev, 0x1600u, 0x00u, CO_DEFTYPE_UNSIGNED8,
+                                     &num, nullptr, CoCsdoDnCon::Func, nullptr);
+
+  CHECK_EQUAL(0, ret);
+  CoCsdoDnCon::Check(nullptr, 0x1600u, 0x00u, CO_SDO_AC_PARAM_VAL, nullptr);
+  CHECK_EQUAL(val, obj1600->GetSub<Sub00NumOfMappedObjs>());
+  CHECK_EQUAL(val, co_rpdo_get_map_par(rpdo)->n);
+}
+
+/// \Given a started RPDO service (co_rpdo_t), the object dictionary contains
+///        the RPDO Mapping Parameter object (0x1600) with the "Number of
+///        mapped objects" sub-object (0x00) and an "Application object" entry
+///        with an empty mapping; the RPDO is invalid
+///
+/// \When a new number of mapped objects value is downloaded to the sub-object
+///
+/// \Then a zero abort code is passed to the download confirmation function,
+///       the sub-object is set to the requested value and the value is updated
+///       in the service
+///       \Calls co_sub_get_type()
+///       \Calls co_sdo_req_dn_val()
+///       \Calls co_sub_get_subidx()
+///       \Calls co_sub_get_val_u8()
+///       \Calls co_dev_chk_rpdo()
+///       \Calls co_sub_dn()
+TEST(CO_SdoRpdo1600, Co1600DnInd_Sub00NumOfMappedObjs_EmptyMapping) {
+  obj1400->SetSub<Obj1400RpdoCommPar::Sub01CobId>(DEV_ID | CO_PDO_COBID_VALID);
+  obj1600->SetSub<SubNthAppObject>(0x01u, 0u);
+  CreateRpdoAndStart();
+
+  const co_unsigned8_t num = 1u;
+  const auto ret = co_dev_dn_val_req(dev, 0x1600u, 0x00u, CO_DEFTYPE_UNSIGNED8,
+                                     &num, nullptr, CoCsdoDnCon::Func, nullptr);
+
+  CHECK_EQUAL(0, ret);
+  CoCsdoDnCon::Check(nullptr, 0x1600u, 0x00u, 0, nullptr);
+  CHECK_EQUAL(num, obj1600->GetSub<Sub00NumOfMappedObjs>());
+  CHECK_EQUAL(num, co_rpdo_get_map_par(rpdo)->n);
 }
 
 /// \Given a started RPDO service (co_rpdo_t), the object dictionary contains
@@ -889,42 +1026,13 @@ TEST(CO_SdoRpdo1600, Co1600DnInd_Sub00NumOfMappedObjs_MappingLenOverMax) {
   const auto val = obj1600->GetSub<Sub00NumOfMappedObjs>();
 
   const co_unsigned8_t num = 1u;
-  const auto ret = co_dev_dn_val_req(dev, 0x1600, 0x00u, CO_DEFTYPE_UNSIGNED8,
+  const auto ret = co_dev_dn_val_req(dev, 0x1600u, 0x00u, CO_DEFTYPE_UNSIGNED8,
                                      &num, nullptr, CoCsdoDnCon::Func, nullptr);
 
   CHECK_EQUAL(0, ret);
   CoCsdoDnCon::Check(nullptr, 0x1600u, 0x00u, CO_SDO_AC_PDO_LEN, nullptr);
   CHECK_EQUAL(val, obj1600->GetSub<Sub00NumOfMappedObjs>());
-}
-
-/// \Given a started RPDO service (co_rpdo_t), the object dictionary contains
-///        the RPDO Mapping Parameter object (0x1600) with the "Number of
-///        mapped objects" sub-object (0x00) and an "Application object" entry
-///        with an empty mapping; the RPDO is invalid
-///
-/// \When a new number of mapped objects value is downloaded to the sub-object
-///
-/// \Then a zero abort code is passed to the download confirmation function,
-///       the sub-object is set to the requested value
-///       \Calls co_sub_get_type()
-///       \Calls co_sdo_req_dn_val()
-///       \Calls co_sub_get_subidx()
-///       \Calls co_sub_get_val_u8()
-///       \Calls co_dev_chk_rpdo()
-///       \Calls co_sub_dn()
-TEST(CO_SdoRpdo1600, Co1600DnInd_Sub00NumOfMappedObjs_EmptyMapping) {
-  obj1400->SetSub<Obj1400RpdoCommPar::Sub01CobId>(DEV_ID | CO_PDO_COBID_VALID);
-  obj1600->SetSub<SubNthAppObject>(0x01u, 0u);
-  CreateMappableObject();
-  CreateRpdoAndStart();
-
-  const co_unsigned8_t num = 1u;
-  const auto ret = co_dev_dn_val_req(dev, 0x1600, 0x00u, CO_DEFTYPE_UNSIGNED8,
-                                     &num, nullptr, CoCsdoDnCon::Func, nullptr);
-
-  CHECK_EQUAL(0, ret);
-  CoCsdoDnCon::Check(nullptr, 0x1600u, 0x00u, 0, nullptr);
-  CHECK_EQUAL(num, obj1600->GetSub<Sub00NumOfMappedObjs>());
+  CHECK_EQUAL(val, co_rpdo_get_map_par(rpdo)->n);
 }
 
 /// \Given a started RPDO service (co_rpdo_t), the object dictionary contains
@@ -949,87 +1057,13 @@ TEST(CO_SdoRpdo1600, Co1600DnInd_Sub00NumOfMappedObjs_MappingNonExistingObj) {
   const auto val = obj1600->GetSub<Sub00NumOfMappedObjs>();
 
   const co_unsigned8_t num = 1u;
-  const auto ret = co_dev_dn_val_req(dev, 0x1600, 0x00u, CO_DEFTYPE_UNSIGNED8,
+  const auto ret = co_dev_dn_val_req(dev, 0x1600u, 0x00u, CO_DEFTYPE_UNSIGNED8,
                                      &num, nullptr, CoCsdoDnCon::Func, nullptr);
 
   CHECK_EQUAL(0, ret);
   CoCsdoDnCon::Check(nullptr, 0x1600u, 0x00u, CO_SDO_AC_NO_OBJ, nullptr);
   CHECK_EQUAL(val, obj1600->GetSub<Sub00NumOfMappedObjs>());
-}
-
-/// \Given a started RPDO service (co_rpdo_t), the object dictionary contains
-///        the RPDO Mapping Parameter object (0x1600) with the "Number of
-///        mapped objects" sub-object (0x00); the RPDO is invalid
-///
-/// \When the same value as the current sub-object's value is downloaded to the
-///       sub-object
-///
-/// \Then a zero abort code is passed to the download confirmation function,
-///       the sub-object remains unchanged
-///       \Calls co_sub_get_type()
-///       \Calls co_sdo_req_dn_val()
-///       \Calls co_sub_get_subidx()
-///       \Calls co_sub_get_val_u8()
-TEST(CO_SdoRpdo1600, Co1600DnInd_Sub00NumOfMappedObjs_SameValue) {
-  obj1400->SetSub<Obj1400RpdoCommPar::Sub01CobId>(DEV_ID | CO_PDO_COBID_VALID);
-  CreateRpdoAndStart();
-
-  const co_unsigned8_t num = obj1600->GetSub<Sub00NumOfMappedObjs>();
-  const auto ret = co_dev_dn_val_req(dev, 0x1600, 0x00u, CO_DEFTYPE_UNSIGNED8,
-                                     &num, nullptr, CoCsdoDnCon::Func, nullptr);
-
-  CHECK_EQUAL(0, ret);
-  CoCsdoDnCon::Check(nullptr, 0x1600u, 0x00u, 0, nullptr);
-  CHECK_EQUAL(num, obj1600->GetSub<Sub00NumOfMappedObjs>());
-}
-
-/// \Given a started RPDO service (co_rpdo_t), the object dictionary contains
-///        the RPDO Mapping Parameter object (0x1600) with the "Number of
-///        mapped objects" sub-object (0x00); the RPDO is valid
-///
-/// \When any value is downloaded to the sub-object
-///
-/// \Then CO_SDO_AC_PARAM_VAL abort code is passed to the download confirmation
-///       function, nothing is changed
-///       \Calls co_sub_get_type()
-///       \Calls co_sdo_req_dn_val()
-///       \Calls co_sub_get_subidx()
-TEST(CO_SdoRpdo1600, Co1600DnInd_Sub00NumOfMappedObjs_ValidRpdo) {
-  CreateRpdoAndStart();
-  const auto val = obj1600->GetSub<Sub00NumOfMappedObjs>();
-
-  const co_unsigned8_t num = 2u;
-  const auto ret = co_dev_dn_val_req(dev, 0x1600, 0x00u, CO_DEFTYPE_UNSIGNED8,
-                                     &num, nullptr, CoCsdoDnCon::Func, nullptr);
-
-  CHECK_EQUAL(0, ret);
-  CoCsdoDnCon::Check(nullptr, 0x1600u, 0x00u, CO_SDO_AC_PARAM_VAL, nullptr);
-  CHECK_EQUAL(val, obj1600->GetSub<Sub00NumOfMappedObjs>());
-}
-
-/// \Given a started RPDO service (co_rpdo_t), the object dictionary contains
-///        the RPDO Mapping Parameter object (0x1600) with the "Number of
-///        mapped objects" sub-object (0x00); the RPDO is invalid
-///
-/// \When a value larger than CO_PDO_NUM_MAPS is downloaded to the sub-object
-///
-/// \Then CO_SDO_AC_PARAM_VAL abort code is passed to the download confirmation
-///       function, nothing is changed
-///       \Calls co_sub_get_type()
-///       \Calls co_sdo_req_dn_val()
-///       \Calls co_sub_get_subidx()
-TEST(CO_SdoRpdo1600, Co1600DnInd_Sub00NumOfMappedObjs_NumOverMax) {
-  obj1400->SetSub<Obj1400RpdoCommPar::Sub01CobId>(DEV_ID | CO_PDO_COBID_VALID);
-  CreateRpdoAndStart();
-  const auto val = obj1600->GetSub<Sub00NumOfMappedObjs>();
-
-  const co_unsigned8_t num = CO_PDO_NUM_MAPS + 1u;
-  const auto ret = co_dev_dn_val_req(dev, 0x1600, 0x00u, CO_DEFTYPE_UNSIGNED8,
-                                     &num, nullptr, CoCsdoDnCon::Func, nullptr);
-
-  CHECK_EQUAL(0, ret);
-  CoCsdoDnCon::Check(nullptr, 0x1600u, 0x00u, CO_SDO_AC_PARAM_VAL, nullptr);
-  CHECK_EQUAL(val, obj1600->GetSub<Sub00NumOfMappedObjs>());
+  CHECK_EQUAL(val, co_rpdo_get_map_par(rpdo)->n);
 }
 
 /// \Given a started RPDO service (co_rpdo_t), the object dictionary contains
@@ -1049,12 +1083,13 @@ TEST(CO_SdoRpdo1600, Co1600DnInd_Sub00NumOfMappedObjs_NoMappings) {
   const auto val = obj1600->GetSub<Sub00NumOfMappedObjs>();
 
   const co_unsigned8_t num = 0;
-  const auto ret = co_dev_dn_val_req(dev, 0x1600, 0x00u, CO_DEFTYPE_UNSIGNED8,
+  const auto ret = co_dev_dn_val_req(dev, 0x1600u, 0x00u, CO_DEFTYPE_UNSIGNED8,
                                      &num, nullptr, CoCsdoDnCon::Func, nullptr);
 
   CHECK_EQUAL(0, ret);
   CoCsdoDnCon::Check(nullptr, 0x1600u, 0x00u, CO_SDO_AC_PARAM_VAL, nullptr);
   CHECK_EQUAL(val, obj1600->GetSub<Sub00NumOfMappedObjs>());
+  CHECK_EQUAL(val, co_rpdo_get_map_par(rpdo)->n);
 }
 
 /// \Given a started RPDO service (co_rpdo_t), the object dictionary contains
@@ -1065,7 +1100,8 @@ TEST(CO_SdoRpdo1600, Co1600DnInd_Sub00NumOfMappedObjs_NoMappings) {
 /// \When a non-zero value is downloaded to the sub-object
 ///
 /// \Then a zero abort code is passed to the download confirmation function,
-///       the sub-object is set to the requested value
+///       the sub-object is set to the requested value and the value is updated
+///       in the service
 ///       \Calls co_sub_get_type()
 ///       \Calls co_sdo_req_dn_val()
 ///       \Calls co_sub_get_subidx()
@@ -1081,43 +1117,13 @@ TEST(CO_SdoRpdo1600, Co1600DnInd_Sub00NumOfMappedObjs_Nominal) {
   CreateRpdoAndStart();
 
   const co_unsigned8_t num = 1u;
-  const auto ret = co_dev_dn_val_req(dev, 0x1600, 0x00u, CO_DEFTYPE_UNSIGNED8,
+  const auto ret = co_dev_dn_val_req(dev, 0x1600u, 0x00u, CO_DEFTYPE_UNSIGNED8,
                                      &num, nullptr, CoCsdoDnCon::Func, nullptr);
 
   CHECK_EQUAL(0, ret);
   CoCsdoDnCon::Check(nullptr, 0x1600u, 0x00u, 0, nullptr);
   CHECK_EQUAL(num, obj1600->GetSub<Sub00NumOfMappedObjs>());
-}
-
-/// \Given a started RPDO service (co_rpdo_t), the object dictionary contains
-///        the RPDO Mapping Parameter object (0x1600) with the "Number of
-///        mapped objects" sub-object (0x00) equal to zero and with an
-///        "Application object" sub-object (0x01-0x40); the RPDO is invalid
-///
-/// \When a mapping that maps into a non-existing object is downloaded to the
-///       "Application object" sub-object
-///
-/// \Then CO_SDO_AC_NO_OBJ abort code is passed to the download confirmation
-///       function, nothing is changed
-///       \Calls co_sub_get_type()
-///       \Calls co_sdo_req_dn_val()
-///       \Calls co_sub_get_subidx()
-///       \Calls co_sub_get_val_u32()
-///       \Calls co_dev_chk_rpdo()
-TEST(CO_SdoRpdo1600, Co1600DnInd_SubNthAppObj_NonExistingObj) {
-  obj1400->SetSub<Obj1400RpdoCommPar::Sub01CobId>(DEV_ID | CO_PDO_COBID_VALID);
-  obj1600->SetSub<Sub00NumOfMappedObjs>(0x00u);
-  CreateRpdoAndStart();
-  const auto val = obj1600->GetSub<SubNthAppObject>(0x01u);
-
-  const co_unsigned32_t mapping = MakeMappingParam(0xffffu, 0x00u, 0x00u);
-  const auto ret =
-      co_dev_dn_val_req(dev, 0x1600, 0x01u, CO_DEFTYPE_UNSIGNED32, &mapping,
-                        nullptr, CoCsdoDnCon::Func, nullptr);
-
-  CHECK_EQUAL(0, ret);
-  CoCsdoDnCon::Check(nullptr, 0x1600u, 0x01u, CO_SDO_AC_NO_OBJ, nullptr);
-  CHECK_EQUAL(val, obj1600->GetSub<SubNthAppObject>(0x01u));
+  CHECK_EQUAL(num, co_rpdo_get_map_par(rpdo)->n);
 }
 
 /// \Given a started RPDO service (co_rpdo_t), the object dictionary contains
@@ -1144,44 +1150,13 @@ TEST(CO_SdoRpdo1600, Co1600DnInd_SubNthAppObj_SameValue) {
 
   const co_unsigned32_t mapping = obj1600->GetSub<SubNthAppObject>(0x01u);
   const auto ret =
-      co_dev_dn_val_req(dev, 0x1600, 0x01u, CO_DEFTYPE_UNSIGNED32, &mapping,
+      co_dev_dn_val_req(dev, 0x1600u, 0x01u, CO_DEFTYPE_UNSIGNED32, &mapping,
                         nullptr, CoCsdoDnCon::Func, nullptr);
 
   CHECK_EQUAL(0, ret);
   CoCsdoDnCon::Check(nullptr, 0x1600u, 0x01u, 0, nullptr);
   CHECK_EQUAL(mapping, obj1600->GetSub<SubNthAppObject>(0x01u));
-}
-
-/// \Given a started RPDO service (co_rpdo_t), the object dictionary contains
-///        the RPDO Mapping Parameter object (0x1600) with the "Number of
-///        mapped objects" sub-object (0x00) does not equal zero and with an
-///        "Application object" sub-object (0x01-0x40); the RPDO is invalid
-///
-/// \When a new mapping value is downloaded to the "Application object"
-///       sub-object
-///
-/// \Then CO_SDO_AC_PARAM_VAL abort code is passed to the download confirmation
-///       function, nothing is changed
-///       \Calls co_sub_get_type()
-///       \Calls co_sdo_req_dn_val()
-///       \Calls co_sub_get_subidx()
-///       \Calls co_sub_get_val_u32()
-TEST(CO_SdoRpdo1600, Co1600DnInd_SubNthAppObj_NumOfMappingsNonzero) {
-  obj1400->SetSub<Obj1400RpdoCommPar::Sub01CobId>(DEV_ID | CO_PDO_COBID_VALID);
-  obj1600->SetSub<Sub00NumOfMappedObjs>(0x01u);
-  CreateMappableObject();
-  CreateRpdoAndStart();
-  const auto val = obj1600->GetSub<SubNthAppObject>(0x01u);
-
-  const co_unsigned32_t mapping =
-      MakeMappingParam(PDO_MAPPED_IDX, PDO_MAPPED_SUBIDX, PDO_MAPPED_LEN);
-  const auto ret =
-      co_dev_dn_val_req(dev, 0x1600, 0x01u, CO_DEFTYPE_UNSIGNED32, &mapping,
-                        nullptr, CoCsdoDnCon::Func, nullptr);
-
-  CHECK_EQUAL(0, ret);
-  CoCsdoDnCon::Check(nullptr, 0x1600u, 0x01u, CO_SDO_AC_PARAM_VAL, nullptr);
-  CHECK_EQUAL(val, obj1600->GetSub<SubNthAppObject>(0x01u));
+  CHECK_EQUAL(mapping, co_rpdo_get_map_par(rpdo)->map[0]);
 }
 
 /// \Given a started RPDO service (co_rpdo_t), the object dictionary contains
@@ -1207,12 +1182,116 @@ TEST(CO_SdoRpdo1600, Co1600DnInd_SubNthAppObj_ValidRpdo) {
   const co_unsigned32_t mapping =
       MakeMappingParam(PDO_MAPPED_IDX, PDO_MAPPED_SUBIDX, PDO_MAPPED_LEN);
   const auto ret =
-      co_dev_dn_val_req(dev, 0x1600, 0x01u, CO_DEFTYPE_UNSIGNED32, &mapping,
+      co_dev_dn_val_req(dev, 0x1600u, 0x01u, CO_DEFTYPE_UNSIGNED32, &mapping,
                         nullptr, CoCsdoDnCon::Func, nullptr);
 
   CHECK_EQUAL(0, ret);
   CoCsdoDnCon::Check(nullptr, 0x1600u, 0x01u, CO_SDO_AC_PARAM_VAL, nullptr);
   CHECK_EQUAL(val, obj1600->GetSub<SubNthAppObject>(0x01u));
+  CHECK_EQUAL(val, co_rpdo_get_map_par(rpdo)->map[0]);
+}
+
+/// \Given a started RPDO service (co_rpdo_t), the object dictionary contains
+///        the RPDO Mapping Parameter object (0x1600) with the "Number of
+///        mapped objects" sub-object (0x00) does not equal zero and with an
+///        "Application object" sub-object (0x01-0x40); the RPDO is invalid
+///
+/// \When a new mapping value is downloaded to the "Application object"
+///       sub-object
+///
+/// \Then CO_SDO_AC_PARAM_VAL abort code is passed to the download confirmation
+///       function, nothing is changed
+///       \Calls co_sub_get_type()
+///       \Calls co_sdo_req_dn_val()
+///       \Calls co_sub_get_subidx()
+///       \Calls co_sub_get_val_u32()
+TEST(CO_SdoRpdo1600, Co1600DnInd_SubNthAppObj_NumOfMappedObjsNonZero) {
+  obj1400->SetSub<Obj1400RpdoCommPar::Sub01CobId>(DEV_ID | CO_PDO_COBID_VALID);
+  obj1600->SetSub<Sub00NumOfMappedObjs>(0x01u);
+  CreateMappableObject();
+  CreateRpdoAndStart();
+  const auto val = obj1600->GetSub<SubNthAppObject>(0x01u);
+
+  const co_unsigned32_t mapping =
+      MakeMappingParam(PDO_MAPPED_IDX, PDO_MAPPED_SUBIDX, PDO_MAPPED_LEN);
+  const auto ret =
+      co_dev_dn_val_req(dev, 0x1600u, 0x01u, CO_DEFTYPE_UNSIGNED32, &mapping,
+                        nullptr, CoCsdoDnCon::Func, nullptr);
+
+  CHECK_EQUAL(0, ret);
+  CoCsdoDnCon::Check(nullptr, 0x1600u, 0x01u, CO_SDO_AC_PARAM_VAL, nullptr);
+  CHECK_EQUAL(val, obj1600->GetSub<SubNthAppObject>(0x01u));
+  CHECK_EQUAL(val, co_rpdo_get_map_par(rpdo)->map[0]);
+}
+
+/// \Given a started RPDO service (co_rpdo_t), the object dictionary contains
+///        the RPDO Mapping Parameter object (0x1600) with the "Number of
+///        mapped objects" sub-object (0x00) equal to zero and with an
+///        "Application object" sub-object (0x01-0x40); the RPDO is invalid
+///
+/// \When an empty mapping value is downloaded to the "Application object"
+///       sub-object
+///
+/// \Then a zero abort code is passed to the download confirmation function,
+///       the sub-object is set to the requested value and the value is updated
+///       in the service
+///       \Calls co_sub_get_type()
+///       \Calls co_sdo_req_dn_val()
+///       \Calls co_sub_get_subidx()
+///       \Calls co_sub_get_val_u32()
+///       \Calls co_dev_chk_rpdo()
+///       \Calls co_sub_get_subidx()
+///       \Calls co_sub_dn()
+TEST(CO_SdoRpdo1600, Co1600DnInd_SubNthAppObj_EmptyMapping) {
+  obj1400->SetSub<Obj1400RpdoCommPar::Sub01CobId>(DEV_ID | CO_PDO_COBID_VALID);
+  obj1600->SetSub<Sub00NumOfMappedObjs>(0x00u);
+  obj1600->SetSub<SubNthAppObject>(
+      0x01u,
+      MakeMappingParam(PDO_MAPPED_IDX, PDO_MAPPED_SUBIDX, PDO_MAPPED_LEN));
+  CreateMappableObject();
+  CreateRpdoAndStart();
+
+  const co_unsigned32_t mapping = 0u;
+  const auto ret =
+      co_dev_dn_val_req(dev, 0x1600u, 0x01, CO_DEFTYPE_UNSIGNED32, &mapping,
+                        nullptr, CoCsdoDnCon::Func, nullptr);
+
+  CHECK_EQUAL(0, ret);
+  CoCsdoDnCon::Check(nullptr, 0x1600u, 0x01u, 0, nullptr);
+  CHECK_EQUAL(mapping, obj1600->GetSub<SubNthAppObject>(0x01u));
+  CHECK_EQUAL(mapping, co_rpdo_get_map_par(rpdo)->map[0]);
+}
+
+/// \Given a started RPDO service (co_rpdo_t), the object dictionary contains
+///        the RPDO Mapping Parameter object (0x1600) with the "Number of
+///        mapped objects" sub-object (0x00) equal to zero and with an
+///        "Application object" sub-object (0x01-0x40); the RPDO is invalid
+///
+/// \When a mapping that maps into a non-existing object is downloaded to the
+///       "Application object" sub-object
+///
+/// \Then CO_SDO_AC_NO_OBJ abort code is passed to the download confirmation
+///       function, nothing is changed
+///       \Calls co_sub_get_type()
+///       \Calls co_sdo_req_dn_val()
+///       \Calls co_sub_get_subidx()
+///       \Calls co_sub_get_val_u32()
+///       \Calls co_dev_chk_rpdo()
+TEST(CO_SdoRpdo1600, Co1600DnInd_SubNthAppObj_NonExistingObj) {
+  obj1400->SetSub<Obj1400RpdoCommPar::Sub01CobId>(DEV_ID | CO_PDO_COBID_VALID);
+  obj1600->SetSub<Sub00NumOfMappedObjs>(0x00u);
+  CreateRpdoAndStart();
+  const auto val = obj1600->GetSub<SubNthAppObject>(0x01u);
+
+  const co_unsigned32_t mapping = MakeMappingParam(0xffffu, 0x00u, 0x00u);
+  const auto ret =
+      co_dev_dn_val_req(dev, 0x1600u, 0x01u, CO_DEFTYPE_UNSIGNED32, &mapping,
+                        nullptr, CoCsdoDnCon::Func, nullptr);
+
+  CHECK_EQUAL(0, ret);
+  CoCsdoDnCon::Check(nullptr, 0x1600u, 0x01u, CO_SDO_AC_NO_OBJ, nullptr);
+  CHECK_EQUAL(val, obj1600->GetSub<SubNthAppObject>(0x01u));
+  CHECK_EQUAL(val, co_rpdo_get_map_par(rpdo)->map[0]);
 }
 
 /// \Given a started RPDO service (co_rpdo_t), the object dictionary contains
@@ -1224,7 +1303,8 @@ TEST(CO_SdoRpdo1600, Co1600DnInd_SubNthAppObj_ValidRpdo) {
 ///       sub-object
 ///
 /// \Then a zero abort code is passed to the download confirmation function,
-///       the sub-object is set to the requested value
+///       the sub-object is set to the requested value and the value is updated
+///       in the service
 ///       \Calls co_sub_get_type()
 ///       \Calls co_sdo_req_dn_val()
 ///       \Calls co_sub_get_subidx()
@@ -1234,7 +1314,7 @@ TEST(CO_SdoRpdo1600, Co1600DnInd_SubNthAppObj_ValidRpdo) {
 ///       \Calls co_sub_dn()
 TEST(CO_SdoRpdo1600, Co1600DnInd_SubNthAppObj_Nominal) {
   obj1400->SetSub<Obj1400RpdoCommPar::Sub01CobId>(DEV_ID | CO_PDO_COBID_VALID);
-  obj1600->SetSub<Sub00NumOfMappedObjs>(0x00);
+  obj1600->SetSub<Sub00NumOfMappedObjs>(0x00u);
   CreateMappableObject();
   CreateRpdoAndStart();
 
@@ -1247,42 +1327,7 @@ TEST(CO_SdoRpdo1600, Co1600DnInd_SubNthAppObj_Nominal) {
   CHECK_EQUAL(0, ret);
   CoCsdoDnCon::Check(nullptr, 0x1600u, 0x01u, 0, nullptr);
   CHECK_EQUAL(mapping, obj1600->GetSub<SubNthAppObject>(0x01u));
-}
-
-/// \Given a started RPDO service (co_rpdo_t), the object dictionary contains
-///        the RPDO Mapping Parameter object (0x1600) with the "Number of
-///        mapped objects" sub-object (0x00) equal to zero and with an
-///        "Application object" sub-object (0x01-0x40); the RPDO is invalid
-///
-/// \When an empty mapping value is downloaded to the "Application object"
-///       sub-object
-///
-/// \Then a zero abort code is passed to the download confirmation function,
-///       the sub-object is set to the requested value
-///       \Calls co_sub_get_type()
-///       \Calls co_sdo_req_dn_val()
-///       \Calls co_sub_get_subidx()
-///       \Calls co_sub_get_val_u32()
-///       \Calls co_dev_chk_rpdo()
-///       \Calls co_sub_get_subidx()
-///       \Calls co_sub_dn()
-TEST(CO_SdoRpdo1600, Co1600DnInd_SubNthAppObj_EmptyMapping) {
-  obj1400->SetSub<Obj1400RpdoCommPar::Sub01CobId>(DEV_ID | CO_PDO_COBID_VALID);
-  obj1600->SetSub<Sub00NumOfMappedObjs>(0x00);
-  obj1600->SetSub<SubNthAppObject>(
-      0x01u,
-      MakeMappingParam(PDO_MAPPED_IDX, PDO_MAPPED_SUBIDX, PDO_MAPPED_LEN));
-  CreateMappableObject();
-  CreateRpdoAndStart();
-
-  const co_unsigned32_t mapping = 0u;
-  const auto ret =
-      co_dev_dn_val_req(dev, 0x1600, 0x01, CO_DEFTYPE_UNSIGNED32, &mapping,
-                        nullptr, CoCsdoDnCon::Func, nullptr);
-
-  CHECK_EQUAL(0, ret);
-  CoCsdoDnCon::Check(nullptr, 0x1600u, 0x01u, 0, nullptr);
-  CHECK_EQUAL(mapping, obj1600->GetSub<SubNthAppObject>(0x01u));
+  CHECK_EQUAL(mapping, co_rpdo_get_map_par(rpdo)->map[0]);
 }
 
 ///@}

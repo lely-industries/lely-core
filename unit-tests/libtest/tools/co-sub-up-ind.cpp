@@ -37,6 +37,8 @@ const co_sub_t* CoSubUpInd::sub = nullptr;
 co_sdo_req* CoSubUpInd::req = nullptr;
 co_unsigned32_t CoSubUpInd::ac = 0u;
 void* CoSubUpInd::data = nullptr;
+co_unsigned32_t CoSubUpInd::ret = 0u;
+co_sdo_req* CoSubUpInd::ret_req = nullptr;
 
 co_unsigned32_t
 CoSubUpInd::Func(const co_sub_t* const sub_, co_sdo_req* const req_,
@@ -48,9 +50,21 @@ CoSubUpInd::Func(const co_sub_t* const sub_, co_sdo_req* const req_,
   ac = ac_;
   data = data_;
 
-  co_sub_on_up(sub, req, &ac);
+  if (ac != 0) {
+    return ac;
+  } else if (ret != 0u) {
+    return ret;
+  } else {
+    CHECK_EQUAL(0, co_sub_on_up(sub, req, &ac));
 
-  return ac;
+    if (ret_req != nullptr) {
+      req->offset = ret_req->offset;
+      req->nbyte = ret_req->nbyte;
+      req->size = ret_req->size;
+    }
+
+    return ac;
+  }
 }
 
 void
@@ -61,4 +75,7 @@ CoSubUpInd::Clear() {
   req = nullptr;
   ac = 0;
   data = nullptr;
+
+  ret = 0;
+  ret_req = nullptr;
 }

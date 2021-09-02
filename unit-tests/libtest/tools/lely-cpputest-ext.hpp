@@ -58,4 +58,11 @@
     assert(ptr_val); \
   } while (false)
 
+// utility macro to quickly check if given memory area contains only zeroes
+#define MEMORY_IS_ZEROED(ptr, size) \
+  do { \
+    const uint_least8_t zeroes[(size)] = {0}; \
+    MEMCMP_EQUAL(zeroes, (ptr), (size)); \
+  } while (false)
+
 #endif  // LELY_UNIT_TESTS_CPPUTEST_EXT_HPP_
