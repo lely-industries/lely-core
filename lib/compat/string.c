@@ -150,7 +150,7 @@ size_t
 lely_compat_strnlen(const char *s, size_t maxlen)
 {
 	size_t size = 0;
-	while (size < maxlen && *s++)
+	for (; size < maxlen && *s != '\0'; s++)
 		size++;
 	return size;
 }
