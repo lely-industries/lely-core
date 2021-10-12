@@ -27,7 +27,8 @@
 #include <lely/co/sdo.h>
 
 /// #co_sub_up_ind_t spy.
-struct CoSubUpInd {
+class CoSubUpInd {
+ public:
   static size_t num_called;
   static const co_sub_t* sub;
   static co_sdo_req* req;

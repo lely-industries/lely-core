@@ -26,7 +26,8 @@
 #include "obj-init/obj-init.hpp"
 
 /// 0x1016: Consumer heartbeat time
-struct Obj1016ConsumerHb : ObjInitT<0x1016u> {
+class Obj1016ConsumerHb : public ObjInitT<0x1016u> {
+ public:
   struct Sub00HighestSubidxSupported : SubT<0x00u, CO_DEFTYPE_UNSIGNED8> {};
   struct SubNthConsumerHbTime : SubT<0x01u, CO_DEFTYPE_UNSIGNED32, 0, 0x01> {};
 
