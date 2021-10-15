@@ -27,7 +27,8 @@
 #include <lely/co/sdo.h>
 
 /// #co_sub_dn_ind_t spy.
-struct CoSubDnInd {
+class CoSubDnInd {
+ public:
   static co_unsigned32_t ret;
   static size_t num_called;
   static co_sub_t* sub;

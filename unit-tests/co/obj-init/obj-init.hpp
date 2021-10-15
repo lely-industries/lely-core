@@ -55,7 +55,7 @@ struct ObjInitT {
 template <co_unsigned16_t Idx, co_unsigned16_t Deftype,
           typename CoType<Deftype>::type Default_val = 0>
 struct ObjValueInitT
-    : public ObjInitT<Idx>,
+    : ObjInitT<Idx>,
       ObjInitT<Idx>::template SubT<0x00, Deftype, Default_val> {
   static const co_unsigned16_t min_idx = Idx;
   static const co_unsigned16_t max_idx = Idx;
