@@ -74,10 +74,16 @@ struct BasicSlave::Impl_ {
 };
 
 BasicSlave::BasicSlave(ev_exec_t* exec, io::TimerBase& timer,
+                       io::CanChannelBase& chan, __co_dev* dev, uint8_t id)
+    : Node(exec, timer, chan, dev, id), impl_(new Impl_(this, Node::nmt())) {}
+
+#if !LELY_NO_CO_DCF
+BasicSlave::BasicSlave(ev_exec_t* exec, io::TimerBase& timer,
                        io::CanChannelBase& chan, const ::std::string& dcf_txt,
                        const ::std::string& dcf_bin, uint8_t id)
     : Node(exec, timer, chan, dcf_txt, dcf_bin, id),
       impl_(new Impl_(this, Node::nmt())) {}
+#endif
 
 BasicSlave::~BasicSlave() = default;
 

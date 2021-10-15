@@ -42,6 +42,35 @@ class BasicSlave : public Node {
    * 'Initialisation' state and does not yet create any services or perform any
    * communication. Call #Reset() to start the boot-up process.
    *
+   * @param exec  the executor used to process I/O and CANopen events. If
+   *              <b>exec</b> is a null pointer, the CAN channel executor is
+   *              used.
+   * @param timer the timer used for CANopen events. This timer MUST NOT be used
+   *              for any other purpose.
+   * @param chan  a CAN channel. This channel MUST NOT be used for any other
+   *              purpose.
+   * @param dev   a pointer to an internal device desciption. Ownership of
+   *              <b>dev</b> is transfered to the new class instance and the
+   *              internal device description will be destroyed when the class
+   *              instance is destroyed.
+   * @param id    the node-ID (in the range [1..127, 255]). If <b>id</b> is 255
+   *              (unconfigured), the node-ID is obtained from the device
+   *              description.
+   */
+  explicit BasicSlave(ev_exec_t* exec, io::TimerBase& timer,
+                      io::CanChannelBase& chan, __co_dev* dev,
+                      uint8_t id = 0xff);
+
+  /// Creates a new CANopen slave.
+  explicit BasicSlave(io::TimerBase& timer, io::CanChannelBase& chan,
+                      __co_dev* dev, uint8_t id = 0xff)
+      : BasicSlave(nullptr, timer, chan, dev, id) {}
+
+  /**
+   * Creates a new CANopen slave. After creation, the slave is in the NMT
+   * 'Initialisation' state and does not yet create any services or perform any
+   * communication. Call #Reset() to start the boot-up process.
+   *
    * @param exec    the executor used to process I/O and CANopen events. If
    *                <b>exec</b> is a null pointer, the CAN channel executor is
    *                used.

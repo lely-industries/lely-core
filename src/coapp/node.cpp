@@ -143,6 +143,17 @@ struct Node::Impl_ {
 };
 
 Node::Node(ev_exec_t* exec, io::TimerBase& timer, io::CanChannelBase& chan,
+           __co_dev* dev, uint8_t id)
+    : io::CanNet(exec, timer, chan, 0, 0),
+      Device(dev, id, this),
+      tpdo_event_mutex(*this),
+      impl_(new Impl_(this, net(), Device::dev())) {
+  // Start processing CAN frames.
+  start();
+}
+
+#if !LELY_NO_CO_DCF
+Node::Node(ev_exec_t* exec, io::TimerBase& timer, io::CanChannelBase& chan,
            const ::std::string& dcf_txt, const ::std::string& dcf_bin,
            uint8_t id)
     : io::CanNet(exec, timer, chan, 0, 0),
@@ -152,6 +163,7 @@ Node::Node(ev_exec_t* exec, io::TimerBase& timer, io::CanChannelBase& chan,
   // Start processing CAN frames.
   start();
 }
+#endif
 
 Node::~Node() = default;
 
