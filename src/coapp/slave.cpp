@@ -85,6 +85,13 @@ BasicSlave::BasicSlave(ev_exec_t* exec, io::TimerBase& timer,
       impl_(new Impl_(this, Node::nmt())) {}
 #endif
 
+#if !LELY_NO_CO_SDEV
+BasicSlave::BasicSlave(ev_exec_t* exec, io::TimerBase& timer,
+                       io::CanChannelBase& chan, const co_sdev* sdev,
+                       uint8_t id)
+    : Node(exec, timer, chan, sdev, id), impl_(new Impl_(this, Node::nmt())) {}
+#endif
+
 BasicSlave::~BasicSlave() = default;
 
 template <class T>

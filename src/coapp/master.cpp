@@ -93,6 +93,15 @@ BasicMaster::BasicMaster(ev_exec_t* exec, io::TimerBase& timer,
       impl_(new Impl_(this, Node::nmt())) {}
 #endif
 
+#if !LELY_NO_CO_SDEV
+BasicMaster::BasicMaster(ev_exec_t* exec, io::TimerBase& timer,
+                         io::CanChannelBase& chan, const co_sdev* sdev,
+                         uint8_t id)
+    : Node(exec, timer, chan, sdev, id),
+      tpdo_event_mutex(*this),
+      impl_(new Impl_(this, Node::nmt())) {}
+#endif
+
 BasicMaster::~BasicMaster() = default;
 
 bool

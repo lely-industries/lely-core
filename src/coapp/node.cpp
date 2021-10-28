@@ -165,6 +165,18 @@ Node::Node(ev_exec_t* exec, io::TimerBase& timer, io::CanChannelBase& chan,
 }
 #endif
 
+#if !LELY_NO_CO_SDEV
+Node::Node(ev_exec_t* exec, io::TimerBase& timer, io::CanChannelBase& chan,
+           const co_sdev* sdev, uint8_t id)
+    : io::CanNet(exec, timer, chan, 0, 0),
+      Device(sdev, id, this),
+      tpdo_event_mutex(*this),
+      impl_(new Impl_(this, net(), Device::dev())) {
+  // Start processing CAN frames.
+  start();
+}
+#endif
+
 Node::~Node() = default;
 
 ev::Executor

@@ -34,6 +34,9 @@
 // The CANopen device from <lely/co/dev.h>.
 struct __co_dev;
 
+// The static sCANopen device from <lely/co/sdev.h>.
+struct co_sdev;
+
 namespace lely {
 
 namespace canopen {
@@ -78,6 +81,20 @@ class Device {
    */
   Device(const ::std::string& dcf_txt, const ::std::string& dcf_bin = "",
          uint8_t id = 0xff, util::BasicLockable* mutex = nullptr);
+
+  /**
+   * Creates a new CANopen device description from a static device description.
+   *
+   * @param sdev  a pointer to a static device desciption.
+   * @param id    the node-ID (in the range [1..127, 255]). If <b>id</b> is 255
+   *              (unconfigured), the node-ID is obtained from the device
+   *              description.
+   * @param mutex an (optional) pointer to the mutex to be locked while the
+   *              internal device description is accessed. The mutex MUST be
+   *              unlocked when any member function is invoked.
+   */
+  Device(const co_sdev* sdev, uint8_t id = 0xff,
+         util::BasicLockable* mutex = nullptr);
 
   Device(const Device&) = delete;
   Device& operator=(const Device&) = delete;

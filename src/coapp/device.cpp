@@ -29,6 +29,9 @@
 #include <lely/co/dev.h>
 #include <lely/co/obj.h>
 #include <lely/co/pdo.h>
+#if !LELY_NO_CO_SDEV
+#include <lely/co/sdev.h>
+#endif
 #include <lely/co/val.h>
 #include <lely/coapp/device.hpp>
 #if !LELY_NO_CO_RPDO && !LELY_NO_CO_MPDO
@@ -65,6 +68,10 @@ struct Device::Impl_ : util::BasicLockable {
 #if !LELY_NO_CO_DCF
   Impl_(Device* self, const ::std::string& dcf_txt,
         const ::std::string& dcf_bin, uint8_t id, util::BasicLockable* mutex);
+#endif
+#if !LELY_NO_CO_SDEV
+  Impl_(Device* self, const co_sdev* sdev, uint8_t id,
+        util::BasicLockable* mutex);
 #endif
   virtual ~Impl_() = default;
 
@@ -160,6 +167,9 @@ struct Device::Impl_ : util::BasicLockable {
   static co_dev_t* make_device(const ::std::string& dcf_txt,
                                const ::std::string& dcf_bin);
 #endif
+#if !LELY_NO_CO_SDEV
+  static co_dev_t* make_device(const co_sdev* sdev);
+#endif
 
   Device* self;
 
@@ -187,6 +197,11 @@ Device::Device(co_dev_t* dev, uint8_t id, util::BasicLockable* mutex)
 Device::Device(const ::std::string& dcf_txt, const ::std::string& dcf_bin,
                uint8_t id, util::BasicLockable* mutex)
     : impl_(new Impl_(this, dcf_txt, dcf_bin, id, mutex)) {}
+#endif
+
+#if !LELY_NO_CO_SDEV
+Device::Device(const co_sdev* sdev, uint8_t id, util::BasicLockable* mutex)
+    : impl_(new Impl_(this, sdev, id, mutex)) {}
 #endif
 
 Device::~Device() = default;
@@ -1830,6 +1845,12 @@ Device::Impl_::Impl_(Device* self, const ::std::string& dcf_txt,
     : Impl_(self, make_device(dcf_txt, dcf_bin), id, mutex) {}
 #endif
 
+#if !LELY_NO_CO_SDEV
+Device::Impl_::Impl_(Device* self, const co_sdev* sdev, uint8_t id,
+                     util::BasicLockable* mutex)
+    : Impl_(self, make_device(sdev), id, mutex) {}
+#endif
+
 void
 Device::Impl_::OnWrite(uint16_t idx, uint8_t subidx) {
   self->OnWrite(idx, subidx);
@@ -1862,6 +1883,15 @@ Device::Impl_::make_device(const ::std::string& dcf_txt,
   return dev;
 }
 #endif  // !LELY_NO_CO_DCF
+
+#if !LELY_NO_CO_SDEV
+co_dev_t*
+Device::Impl_::make_device(const co_sdev* sdev) {
+  co_dev_t* dev = co_dev_create_from_sdev(sdev);
+  if (!dev) util::throw_errc("Device");
+  return dev;
+}
+#endif  // !LELY_NO_CO_SDEV
 
 }  // namespace canopen
 
