@@ -562,7 +562,6 @@ lcov:
       - unit-tests/*/unit-test-*.log
     reports:
       junit: unit-tests/*/cpputest_*.xml
-    expose_as: "LCOV report"
     expire_in: 1 week
 
 docker:scan-build:
