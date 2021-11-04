@@ -554,8 +554,14 @@ lcov:
     - 'grep -q "branches...: 100.0%" coverage_summary.txt || { echo "Branches coverage dropped" ; exit 1; }'
     - cat coverage_summary.txt
   artifacts:
+    when: always
     paths:
       - coverage/
+      - test/test-*.log
+      - unit-tests/*/test-*.log
+      - unit-tests/*/unit-test-*.log
+    reports:
+      junit: unit-tests/*/cpputest_*.xml
     expire_in: 1 week
 
 docker:scan-build:
@@ -583,6 +589,9 @@ scan-build:
     when: always
     paths:
       - scan-build/
+      - test/test-*.log
+      - unit-tests/*/test-*.log
+      - unit-tests/*/unit-test-*.log
     expire_in: 1 week
 
 docker:cppcheck-unix64:
