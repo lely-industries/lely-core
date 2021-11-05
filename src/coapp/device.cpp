@@ -29,6 +29,9 @@
 #include <lely/co/dev.h>
 #include <lely/co/obj.h>
 #include <lely/co/pdo.h>
+#if !LELY_NO_CO_SDEV
+#include <lely/co/sdev.h>
+#endif
 #include <lely/co/val.h>
 #include <lely/coapp/device.hpp>
 #if !LELY_NO_CO_RPDO && !LELY_NO_CO_MPDO
@@ -61,9 +64,14 @@ struct Device::Impl_ : util::BasicLockable {
     }
   };
 
+  Impl_(Device* self, co_dev_t* dev, uint8_t id, util::BasicLockable* mutex);
 #if !LELY_NO_CO_DCF
   Impl_(Device* self, const ::std::string& dcf_txt,
         const ::std::string& dcf_bin, uint8_t id, util::BasicLockable* mutex);
+#endif
+#if !LELY_NO_CO_SDEV
+  Impl_(Device* self, const co_sdev* sdev, uint8_t id,
+        util::BasicLockable* mutex);
 #endif
   virtual ~Impl_() = default;
 
@@ -155,6 +163,14 @@ struct Device::Impl_ : util::BasicLockable {
     return ::std::make_tuple(idx, subidx);
   }
 
+#if !LELY_NO_CO_DCF
+  static co_dev_t* make_device(const ::std::string& dcf_txt,
+                               const ::std::string& dcf_bin);
+#endif
+#if !LELY_NO_CO_SDEV
+  static co_dev_t* make_device(const co_sdev* sdev);
+#endif
+
   Device* self;
 
   BasicLockable* mutex{nullptr};
@@ -174,10 +190,18 @@ struct Device::Impl_ : util::BasicLockable {
 #endif
 };
 
+Device::Device(co_dev_t* dev, uint8_t id, util::BasicLockable* mutex)
+    : impl_(new Impl_(this, dev, id, mutex)) {}
+
 #if !LELY_NO_CO_DCF
 Device::Device(const ::std::string& dcf_txt, const ::std::string& dcf_bin,
                uint8_t id, util::BasicLockable* mutex)
     : impl_(new Impl_(this, dcf_txt, dcf_bin, id, mutex)) {}
+#endif
+
+#if !LELY_NO_CO_SDEV
+Device::Device(const co_sdev* sdev, uint8_t id, util::BasicLockable* mutex)
+    : impl_(new Impl_(this, sdev, id, mutex)) {}
 #endif
 
 Device::~Device() = default;
@@ -1783,16 +1807,10 @@ Device::RpdoWrite(uint8_t id, uint16_t idx, uint8_t subidx) {
 #endif
 }
 
-#if !LELY_NO_CO_DCF
-Device::Impl_::Impl_(Device* self_, const ::std::string& dcf_txt,
-                     const ::std::string& dcf_bin, uint8_t id,
+Device::Impl_::Impl_(Device* self_, co_dev_t* dev_, uint8_t id,
                      util::BasicLockable* mutex_)
-    : self(self_),
-      mutex(mutex_),
-      dev(co_dev_create_from_dcf_file(dcf_txt.c_str())) {
-  if (!dcf_bin.empty() &&
-      co_dev_read_dcf_file(dev.get(), nullptr, nullptr, dcf_bin.c_str()) == -1)
-    util::throw_errc("Device");
+    : self(self_), mutex(mutex_), dev(dev_) {
+  if (!dev) util::throw_error_code("Device", ::std::errc::invalid_argument);
 
   if (id != 0xff && co_dev_set_id(dev.get(), id) == -1)
     util::throw_errc("Device");
@@ -1819,7 +1837,19 @@ Device::Impl_::Impl_(Device* self_, const ::std::string& dcf_txt,
         static_cast<void*>(this));
   }
 }
-#endif  // !LELY_NO_CO_DCF
+
+#if !LELY_NO_CO_DCF
+Device::Impl_::Impl_(Device* self, const ::std::string& dcf_txt,
+                     const ::std::string& dcf_bin, uint8_t id,
+                     util::BasicLockable* mutex)
+    : Impl_(self, make_device(dcf_txt, dcf_bin), id, mutex) {}
+#endif
+
+#if !LELY_NO_CO_SDEV
+Device::Impl_::Impl_(Device* self, const co_sdev* sdev, uint8_t id,
+                     util::BasicLockable* mutex)
+    : Impl_(self, make_device(sdev), id, mutex) {}
+#endif
 
 void
 Device::Impl_::OnWrite(uint16_t idx, uint8_t subidx) {
@@ -1838,6 +1868,30 @@ Device::Impl_::OnWrite(uint16_t idx, uint8_t subidx) {
   if (!ec) self->RpdoWrite(id, idx, subidx);
 #endif
 }
+
+#if !LELY_NO_CO_DCF
+co_dev_t*
+Device::Impl_::make_device(const ::std::string& dcf_txt,
+                           const ::std::string& dcf_bin) {
+  co_dev_t* dev = co_dev_create_from_dcf_file(dcf_txt.c_str());
+  if (!dev) util::throw_errc("Device");
+  if (!dcf_bin.empty() &&
+      co_dev_read_dcf_file(dev, nullptr, nullptr, dcf_bin.c_str()) == -1) {
+    co_dev_destroy(dev);
+    util::throw_errc("Device");
+  }
+  return dev;
+}
+#endif  // !LELY_NO_CO_DCF
+
+#if !LELY_NO_CO_SDEV
+co_dev_t*
+Device::Impl_::make_device(const co_sdev* sdev) {
+  co_dev_t* dev = co_dev_create_from_sdev(sdev);
+  if (!dev) util::throw_errc("Device");
+  return dev;
+}
+#endif  // !LELY_NO_CO_SDEV
 
 }  // namespace canopen
 

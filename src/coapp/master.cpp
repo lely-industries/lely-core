@@ -79,11 +79,28 @@ BasicMaster::TpdoEventMutex::unlock() {
 }
 
 BasicMaster::BasicMaster(ev_exec_t* exec, io::TimerBase& timer,
+                         io::CanChannelBase& chan, __co_dev* dev, uint8_t id)
+    : Node(exec, timer, chan, dev, id),
+      tpdo_event_mutex(*this),
+      impl_(new Impl_(this, Node::nmt())) {}
+
+#if !LELY_NO_CO_DCF
+BasicMaster::BasicMaster(ev_exec_t* exec, io::TimerBase& timer,
                          io::CanChannelBase& chan, const ::std::string& dcf_txt,
                          const ::std::string& dcf_bin, uint8_t id)
     : Node(exec, timer, chan, dcf_txt, dcf_bin, id),
       tpdo_event_mutex(*this),
       impl_(new Impl_(this, Node::nmt())) {}
+#endif
+
+#if !LELY_NO_CO_SDEV
+BasicMaster::BasicMaster(ev_exec_t* exec, io::TimerBase& timer,
+                         io::CanChannelBase& chan, const co_sdev* sdev,
+                         uint8_t id)
+    : Node(exec, timer, chan, sdev, id),
+      tpdo_event_mutex(*this),
+      impl_(new Impl_(this, Node::nmt())) {}
+#endif
 
 BasicMaster::~BasicMaster() = default;
 
