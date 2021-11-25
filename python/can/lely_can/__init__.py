@@ -2,7 +2,7 @@
 
 __copyright__ = '2021 Lely Industries N.V.'
 __author__ = 'J. S. Seldenthuis <jseldenthuis@lely.com>'
-__version__ = '3.1.4'
+__version__ = '3.2.0'
 __license__ = 'Apache-2.0'
 
 from lely_can.err import *

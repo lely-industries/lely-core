@@ -88,6 +88,19 @@ you can check the `docker/` folder for all images used by the Continuous
 Integration system [configuration](./.gitlab-ci.yml).
 See [docker/README.md](docker/README.md) more for details.
 
+## ECSS Compliance
+
+The project is compliant with [ECSS](https://ecss.nl/) requirements
+for space flight software criticality B.
+
+To enable compliance add `--enable-ecss-compliance` to build configuration.
+
+Only liblely-compat, liblely-util and liblely-co are included in
+the ECSS compliance mode.
+
+For criticality B validation Test Suite visit
+[Test Suite](https://gitlab.com/n7space/canopen/test-suite).
+
 ## Documentation
 
 The doxygen-generated API documentation of the latest development version can be
