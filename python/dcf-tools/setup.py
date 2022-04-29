@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="dcf-tools",
-    version="2.2.5",
+    version="2.2.7",
     packages=find_packages(),
     entry_points={
         "console_scripts": ["dcfchk = dcf.cli:main", "dcfgen = dcfgen.cli:main"]
