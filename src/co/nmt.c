@@ -2772,8 +2772,12 @@ co_nmt_recv_700(const struct can_msg *msg, void *data)
 {
 	assert(msg);
 	assert(msg->id > 0x700 && msg->id <= 0x77f);
+#if !LELY_NO_CO_NG
 	co_nmt_t *nmt = data;
 	assert(nmt);
+#else
+	(void) data; //suppress unused-parameter warning
+#endif
 
 	if (msg->flags & CAN_FLAG_RTR) {
 #if !LELY_NO_CO_NG
