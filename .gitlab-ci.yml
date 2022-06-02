@@ -149,7 +149,7 @@ test:gcc:12:
 
 build:configure:
   extends: .build
-  image: $REGISTRY/gcc:11
+  image: $REGISTRY/gcc:12
   parallel:
     matrix:
       - CONFIGURE_OPTIONS:
@@ -162,32 +162,32 @@ build:configure:
 
 test:configure:disable-canfd:
   extends: .test
-  image: $REGISTRY/gcc:11
+  image: $REGISTRY/gcc:12
   needs: ["build:configure: [--disable-canfd]"]
 
 test:configure:disable-errno:
   extends: .test
-  image: $REGISTRY/gcc:11
+  image: $REGISTRY/gcc:12
   needs: ["build:configure: [--disable-errno]"]
 
 test:configure:disable-malloc:
   extends: .test
-  image: $REGISTRY/gcc:11
+  image: $REGISTRY/gcc:12
   needs: ["build:configure: [--disable-malloc]"]
 
 test:configure:disable-master:
   extends: .test
-  image: $REGISTRY/gcc:11
+  image: $REGISTRY/gcc:12
   needs: ["build:configure: [--disable-master]"]
 
 test:configure:disable-stdio:
   extends: .test
-  image: $REGISTRY/gcc:11
+  image: $REGISTRY/gcc:12
   needs: ["build:configure: [--disable-stdio]"]
 
 test:configure:enable-ecss-compliance:
   extends: .test
-  image: $REGISTRY/gcc:11
+  image: $REGISTRY/gcc:12
   needs: ["build:configure: [--enable-ecss-compliance]"]
 
 docker:mingw-w64:
