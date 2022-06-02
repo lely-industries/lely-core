@@ -4,7 +4,7 @@
  *
  * @see lely/co/time.h
  *
- * @copyright 2016-2020 Lely Industries N.V.
+ * @copyright 2016-2022 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -100,7 +100,8 @@ co_time_of_day_get(const co_time_of_day_t *tod, struct timespec *tp)
 	// Convert the CANopen time (seconds since January 1, 1984) to the Unix
 	// epoch (seconds since January 1, 1970). This is a difference of 14
 	// years and 3 leap days.
-	co_time_diff_get((const co_time_diff_t *)tod, tp);
+	co_time_diff_t td = { .ms = tod->ms, .days = tod->days };
+	co_time_diff_get(&td, tp);
 	tp->tv_sec += (14 * 365 + 3) * 24 * 60 * 60;
 }
 
@@ -113,8 +114,9 @@ co_time_of_day_set(co_time_of_day_t *tod, const struct timespec *tp)
 	// Convert the Unix epoch (seconds since January 1, 1970) to the CANopen
 	// time (seconds since January 1, 1984). This is a difference of 14
 	// years and 3 leap days.
+	co_time_diff_t td = { .ms = tod->ms, .days = tod->days };
 	// clang-format off
-	co_time_diff_set((co_time_diff_t *)tod, &(struct timespec){
+	co_time_diff_set(&td, &(struct timespec){
 			tp->tv_sec - (14 * 365 + 3) * 24 * 60 * 60,
 			tp->tv_nsec });
 	// clang-format on
