@@ -4,7 +4,7 @@
  *
  * @see lely/io/addr.h
  *
- * @copyright 2016-2020 Lely Industries N.V.
+ * @copyright 2016-2022 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -518,7 +518,7 @@ io_addr_set_unix(io_addr_t *addr, const char *path)
 	addr_un->sun_family = AF_UNIX;
 
 	size_t n = MIN(strlen(path), sizeof(addr_un->sun_path) - 1);
-	strncpy(addr_un->sun_path, path, n);
+	memcpy(addr_un->sun_path, path, n);
 	addr_un->sun_path[n] = '\0';
 }
 
