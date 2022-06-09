@@ -13,7 +13,7 @@
  *
  * @see lely/co/tpdo.h
  *
- * @copyright 2016-2021 Lely Industries N.V.
+ * @copyright 2016-2022 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -1156,7 +1156,7 @@ co_tpdo_init_frame(co_tpdo_t *pdo, struct can_msg *msg)
 
 	size_t n = CAN_MAX_LEN;
 	co_unsigned32_t ac = co_pdo_up(
-			&pdo->map, pdo->dev, &pdo->req, msg->data, &n);
+			&pdo->map, pdo->dev, &pdo->req, msg->data, &n, 1);
 	if (ac) {
 		if (pdo->ind)
 			pdo->ind(pdo, ac, NULL, 0, pdo->data);

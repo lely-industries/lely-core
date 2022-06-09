@@ -2,7 +2,7 @@
  * This header file is part of the CANopen library; it contains the Process Data
  * Object (PDO) declarations.
  *
- * @copyright 2016-2021 Lely Industries N.V.
+ * @copyright 2016-2022 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -326,13 +326,16 @@ co_unsigned32_t co_pdo_unmap(const struct co_pdo_map_par *par,
  *            the object dictionary.
  * @param buf a pointer to the mapped values.
  * @param n   the number of bytes at <b>buf</b>.
+ * @param chk a flag indicating whether co_dev_chk_rpdo() should be invoked
+ *            before writing values to the object dictionary.
  *
  * @returns 0 on success, or an SDO abort code on error.
  *
  * @see co_dev_chk_rpdo(), co_dev_map_sam_mpdo()
  */
 co_unsigned32_t co_pdo_dn(const struct co_pdo_map_par *par, co_dev_t *dev,
-		struct co_sdo_req *req, const uint_least8_t *buf, size_t n);
+		struct co_sdo_req *req, const uint_least8_t *buf, size_t n,
+		int chk);
 
 /**
  * Reads mapped PDO values from the object dictionary through a local SDO upload
@@ -348,13 +351,16 @@ co_unsigned32_t co_pdo_dn(const struct co_pdo_map_par *par, co_dev_t *dev,
  *            buffer at <b>buf</b>. On exit, if <b>pn</b> is not NULL,
  *            *<b>pn</b> contains the number of bytes that would have been
  *            written had the buffer at <b>buf</b> been sufficiently large.
+ * @param chk a flag indicating whether co_dev_chk_tpdo() should be invoked
+ *            before reading values from the object dictionary.
  *
  * @returns 0 on success, or an SDO abort code on error.
  *
  * @see co_dev_chk_tpdo()
  */
 co_unsigned32_t co_pdo_up(const struct co_pdo_map_par *par, const co_dev_t *dev,
-		struct co_sdo_req *req, uint_least8_t *buf, size_t *pn);
+		struct co_sdo_req *req, uint_least8_t *buf, size_t *pn,
+		int chk);
 
 /**
  * Reads the value of the specified SAM-MPDO-mapped object from the local object

@@ -4,7 +4,7 @@
  *
  * @see lely/co/rpdo.h
  *
- * @copyright 2016-2021 Lely Industries N.V.
+ * @copyright 2016-2022 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -808,8 +808,8 @@ co_rpdo_read_frame(co_rpdo_t *pdo, const struct can_msg *msg)
 	assert(msg);
 
 	size_t n = MIN(msg->len, CAN_MAX_LEN);
-	co_unsigned32_t ac =
-			co_pdo_dn(&pdo->map, pdo->dev, &pdo->req, msg->data, n);
+	co_unsigned32_t ac = co_pdo_dn(
+			&pdo->map, pdo->dev, &pdo->req, msg->data, n, 1);
 
 #if !defined(NDEBUG) && !LELY_NO_STDIO && !LELY_NO_DIAG
 	if (ac)
