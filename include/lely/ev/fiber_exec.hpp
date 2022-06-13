@@ -4,7 +4,7 @@
  *
  * @see lely/ev/fiber_exec.h
  *
- * @copyright 2019-2020 Lely Industries N.V.
+ * @copyright 2019-2022 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -218,6 +218,7 @@ class FiberMutexBase {
         return false;
       default:
         detail::throw_fiber_error("try_lock", ev);
+        return false;
     }
   }
 

@@ -4,7 +4,7 @@
  *
  * @see lely/coapp/node.hpp
  *
- * @copyright 2018-2021 Lely Industries N.V.
+ * @copyright 2018-2022 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -257,13 +257,12 @@ Node::AsyncSwitchBitrate(io::CanControllerBase& ctrl, int bitrate,
               // transmission.
               return AsyncWait(GetExecutor(), delay);
             })
-      .then(GetExecutor(),
-            [this, &ctrl](ev::Future<void, ::std::exception_ptr> f) {
-              // Propagate the exception, if any.
-              f.get().value();
-              // Resume CAN frame transmission.
-              ctrl.restart();
-            });
+      .then(GetExecutor(), [&ctrl](ev::Future<void, ::std::exception_ptr> f) {
+        // Propagate the exception, if any.
+        f.get().value();
+        // Resume CAN frame transmission.
+        ctrl.restart();
+      });
 }
 
 void

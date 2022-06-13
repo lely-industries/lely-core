@@ -4,7 +4,7 @@
  *
  * @see lely/co/pdo.h
  *
- * @copyright 2016-2021 Lely Industries N.V.
+ * @copyright 2016-2022 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *

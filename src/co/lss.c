@@ -4,7 +4,7 @@
  *
  * @see lely/co/lss.h
  *
- * @copyright 2017-2020 Lely Industries N.V.
+ * @copyright 2017-2022 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -194,7 +194,7 @@ struct __co_lss_state {
 	static co_lss_state_t *const name = &(co_lss_state_t){ __VA_ARGS__ };
 
 /// The 'stopped' state of an LSS master or slave.
-LELY_CO_DEFINE_STATE(co_lss_stopped_state, NULL)
+LELY_CO_DEFINE_STATE(co_lss_stopped_state, .on_recv = NULL)
 
 /// The entry function of the 'waiting' state an LSS master or slave.
 static co_lss_state_t *co_lss_wait_on_enter(co_lss_t *lss);

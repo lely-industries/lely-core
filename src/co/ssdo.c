@@ -4,7 +4,7 @@
  *
  * @see lely/co/ssdo.h, src/sdo.h
  *
- * @copyright 2016-2020 Lely Industries N.V.
+ * @copyright 2016-2022 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -206,7 +206,7 @@ struct __co_ssdo_state {
 	static co_ssdo_state_t *const name = &(co_ssdo_state_t){ __VA_ARGS__ };
 
 /// The 'stopped' state.
-LELY_CO_DEFINE_STATE(co_ssdo_stopped_state, NULL)
+LELY_CO_DEFINE_STATE(co_ssdo_stopped_state, .on_recv = NULL)
 
 /// The 'abort' transition function of the 'waiting' state.
 static co_ssdo_state_t *co_ssdo_wait_on_abort(
@@ -1535,8 +1535,8 @@ co_ssdo_blk_up_sub_on_recv(co_ssdo_t *sdo, const struct can_msg *msg)
 		co_unsigned32_t ac = co_ssdo_up_buf(sdo, n);
 		if (ac)
 			return co_ssdo_abort_res(sdo, ac);
-		sdo->blksize = (co_unsigned8_t)(
-				(membuf_size(&sdo->buf) + 6) / 7);
+		sdo->blksize = (co_unsigned8_t)((membuf_size(&sdo->buf) + 6)
+				/ 7);
 	}
 	int last = co_sdo_req_last(&sdo->req) && sdo->nbyte == sdo->req.nbyte;
 

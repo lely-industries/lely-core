@@ -4,7 +4,7 @@
  *
  * @see lely/util/fiber.h
  *
- * @copyright 2018-2020 Lely Industries N.V.
+ * @copyright 2018-2022 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -109,21 +109,19 @@ static void guard_munmap(void *addr, size_t len);
 #endif // !_WIN32 && _POSIX_MAPPED_FILES && defined(MAP_ANONYMOUS)
 
 #if !_WIN32
-
-/**
- * Saves the <b>from</b> calling environment with `setjmp(from)` and restores
- * the <b>to</b> calling environment with `longjmp(to, 1)`.
- */
-static inline void jmpto(jmp_buf from, jmp_buf to);
-
 #if _POSIX_C_SOURCE >= 200112L && (!defined(__NEWLIB__) || defined(__CYGWIN__))
 /**
  * Saves the <b>from</b> calling environment with `sigsetjmp(from, savemask)`
  * and restores the <b>to</b> calling environment with `siglongjmp(to, 1)`.
  */
 static inline void sigjmpto(sigjmp_buf from, sigjmp_buf to, int savemask);
+#else
+/**
+ * Saves the <b>from</b> calling environment with `setjmp(from)` and restores
+ * the <b>to</b> calling environment with `longjmp(to, 1)`.
+ */
+static inline void jmpto(jmp_buf from, jmp_buf to);
 #endif
-
 #endif // !_WIN32
 
 struct fiber_thrd;
@@ -589,14 +587,6 @@ guard_munmap(void *addr, size_t len)
 #endif // _POSIX_MAPPED_FILES && MAP_ANONYMOUS
 
 #if !_WIN32
-
-static inline void
-jmpto(jmp_buf from, jmp_buf to)
-{
-	if (!setjmp(from))
-		longjmp(to, 1);
-}
-
 #if _POSIX_C_SOURCE >= 200112L && (!defined(__NEWLIB__) || defined(__CYGWIN__))
 static inline void
 sigjmpto(sigjmp_buf from, sigjmp_buf to, int savemask)
@@ -604,8 +594,14 @@ sigjmpto(sigjmp_buf from, sigjmp_buf to, int savemask)
 	if (!sigsetjmp(from, savemask))
 		siglongjmp(to, 1);
 }
+#else
+static inline void
+jmpto(jmp_buf from, jmp_buf to)
+{
+	if (!setjmp(from))
+		longjmp(to, 1);
+}
 #endif
-
 #endif // !_WIN32
 
 #if _WIN32

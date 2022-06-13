@@ -4,7 +4,7 @@
  *
  * @see lely/coapp/logical_driver.hpp
  *
- * @copyright 2019-2019 Lely Industries N.V.
+ * @copyright 2019-2022 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -75,7 +75,7 @@ BasicLogicalDriver<BasicDriver>::AsyncConfig() {
       // If the expected device type is not available, read the device type from
       // the remote object dictionary (object 1000:00).
       f = AsyncRead<uint32_t>(0x1000, 0).then(
-          GetExecutor(), [this, check_1000](SdoFuture<uint32_t> f) {
+          GetExecutor(), [check_1000](SdoFuture<uint32_t> f) {
             return check_1000(f.get().value());
           });
     }

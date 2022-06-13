@@ -4,7 +4,7 @@
  *
  * @see lely/coapp/device.hpp
  *
- * @copyright 2018-2021 Lely Industries N.V.
+ * @copyright 2018-2022 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -402,9 +402,9 @@ template ::std::string Device::Read<::std::string>(uint16_t, uint8_t,
                                                    ::std::error_code&) const;
 template void Device::Write<::std::string>(uint16_t, uint8_t,
                                            const ::std::string&);
-template void Device::Write<::std::string>(uint16_t, uint8_t,
-                                           const ::std::string&,
-                                           ::std::error_code&);
+// template void Device::Write<::std::string>(uint16_t, uint8_t,
+//                                            const ::std::string&,
+//                                            ::std::error_code&);
 
 // OCTET_STRING
 template ::std::vector<uint8_t> Device::Read<::std::vector<uint8_t>>(
@@ -413,8 +413,8 @@ template ::std::vector<uint8_t> Device::Read<::std::vector<uint8_t>>(
     uint16_t, uint8_t, ::std::error_code&) const;
 template void Device::Write<::std::vector<uint8_t>>(
     uint16_t, uint8_t, const ::std::vector<uint8_t>&);
-template void Device::Write<::std::vector<uint8_t>>(
-    uint16_t, uint8_t, const ::std::vector<uint8_t>&, ::std::error_code&);
+// template void Device::Write<::std::vector<uint8_t>>(
+//     uint16_t, uint8_t, const ::std::vector<uint8_t>&, ::std::error_code&);
 
 // UNICODE_STRING
 template ::std::basic_string<char16_t>
@@ -1095,9 +1095,9 @@ template ::std::string Device::Get<::std::string>(
     uint16_t, uint8_t, ::std::error_code&) const noexcept;
 template void Device::Set<::std::string>(uint16_t, uint8_t,
                                          const ::std::string&);
-template void Device::Set<::std::string>(uint16_t, uint8_t,
-                                         const ::std::string&,
-                                         ::std::error_code&) noexcept;
+// template void Device::Set<::std::string>(uint16_t, uint8_t,
+//                                          const ::std::string&,
+//                                          ::std::error_code&) noexcept;
 
 // OCTET_STRING
 template ::std::vector<uint8_t> Device::Get<::std::vector<uint8_t>>(
@@ -1106,9 +1106,9 @@ template ::std::vector<uint8_t> Device::Get<::std::vector<uint8_t>>(
     uint16_t, uint8_t, ::std::error_code&) const noexcept;
 template void Device::Set<::std::vector<uint8_t>>(
     uint16_t, uint8_t, const ::std::vector<uint8_t>&);
-template void Device::Set<::std::vector<uint8_t>>(uint16_t, uint8_t,
-                                                  const ::std::vector<uint8_t>&,
-                                                  ::std::error_code&) noexcept;
+// template void Device::Set<::std::vector<uint8_t>>(uint16_t, uint8_t,
+//                                                   const ::std::vector<uint8_t>&,
+//                                                   ::std::error_code&) noexcept;
 
 // UNICODE_STRING
 template ::std::basic_string<char16_t>
