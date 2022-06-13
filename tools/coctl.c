@@ -1,7 +1,7 @@
 /**@file
  * This file contains the CANopen control tool (a CiA 309-3 gateway).
  *
- * @copyright 2017-2020 Lely Industries N.V.
+ * @copyright 2017-2022 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -541,12 +541,25 @@ void
 gw_rate(co_unsigned16_t id, co_unsigned16_t rate, void *data)
 {
 	assert(id && id <= CO_GW_NUM_NET);
-	uint32_t bitrate = rate * 1000;
 	(void)data;
 
-	if (!net[id - 1].handle || !bitrate)
+	if (!net[id - 1].handle || !rate)
 		return;
 
+	// Check if the bitrate is already correct before changing it.
+	uint32_t bitrate = 0;
+	if (io_can_get_bitrate(net[id - 1].handle, &bitrate) == -1) {
+		// Abort on error. If getting the bitrate fails, setting it will
+		// most likely fail as well, which could leave the network
+		// interface down.
+		diag(DIAG_ERROR, 0, "unable to get bitrate of %s",
+				net[id - 1].can_path);
+		return;
+	}
+	// Only set the bitrate if the current bitrate is different.
+	if (bitrate == rate * 1000)
+		return;
+	bitrate = rate * 1000;
 	if (io_can_set_bitrate(net[id - 1].handle, bitrate) == -1)
 		diag(DIAG_ERROR, 0, "unable to set bitrate of %s to %u bit/s",
 				net[id - 1].can_path, bitrate);
