@@ -1107,8 +1107,10 @@ template ::std::vector<uint8_t> Device::Get<::std::vector<uint8_t>>(
 template void Device::Set<::std::vector<uint8_t>>(
     uint16_t, uint8_t, const ::std::vector<uint8_t>&);
 // template void Device::Set<::std::vector<uint8_t>>(uint16_t, uint8_t,
-//                                                   const ::std::vector<uint8_t>&,
-//                                                   ::std::error_code&) noexcept;
+//                                                   const
+//                                                   ::std::vector<uint8_t>&,
+//                                                   ::std::error_code&)
+//                                                   noexcept;
 
 // UNICODE_STRING
 template ::std::basic_string<char16_t>

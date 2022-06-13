@@ -1535,8 +1535,8 @@ co_ssdo_blk_up_sub_on_recv(co_ssdo_t *sdo, const struct can_msg *msg)
 		co_unsigned32_t ac = co_ssdo_up_buf(sdo, n);
 		if (ac)
 			return co_ssdo_abort_res(sdo, ac);
-		sdo->blksize = (co_unsigned8_t)((membuf_size(&sdo->buf) + 6)
-				/ 7);
+		sdo->blksize = (co_unsigned8_t)(
+				(membuf_size(&sdo->buf) + 6) / 7);
 	}
 	int last = co_sdo_req_last(&sdo->req) && sdo->nbyte == sdo->req.nbyte;
 
