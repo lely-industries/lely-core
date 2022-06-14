@@ -4,7 +4,7 @@
  *
  * @see lely/util/daemon.h
  *
- * @copyright 2017-2020 Lely Industries N.V.
+ * @copyright 2017-2022 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -130,6 +130,7 @@ ServiceMain(DWORD dwArgc, LPSTR *lpszArgv)
 		goto error_RegisterServiceCtrlHandlerA;
 	ReportStatus(SERVICE_START_PENDING);
 
+#if !LELY_NO_DIAG
 	diag_handler_t *diag_handler;
 	void *diag_handle;
 	diag_get_handler(&diag_handler, &diag_handle);
@@ -139,6 +140,7 @@ ServiceMain(DWORD dwArgc, LPSTR *lpszArgv)
 	void *diag_at_handle;
 	diag_at_get_handler(&diag_at_handler, &diag_at_handle);
 	diag_at_set_handler(&daemon_diag_at_handler, (void *)daemon_name);
+#endif
 
 	if (daemon_init) {
 		// Make sure the argument list is NULL-terminated.
@@ -163,8 +165,10 @@ ServiceMain(DWORD dwArgc, LPSTR *lpszArgv)
 	if (daemon_fini)
 		daemon_fini();
 
+#if !LELY_NO_DIAG
 	diag_at_set_handler(diag_at_handler, diag_at_handle);
 	diag_set_handler(diag_handler, diag_handle);
+#endif
 
 error_init:
 	ReportStatus(SERVICE_STOPPED);
@@ -247,6 +251,9 @@ int
 daemon_start(const char *name, int (*init)(int, char **), void (*main)(void),
 		void (*fini)(void), int argc, char *argv[])
 {
+#if LELY_NO_DIAG
+	(void)name;
+#endif
 	assert(main);
 	assert(argc >= 0);
 	assert(argv);
@@ -344,6 +351,7 @@ daemon_start(const char *name, int (*init)(int, char **), void (*main)(void),
 	}
 #endif
 
+#if !LELY_NO_DIAG
 	diag_handler_t *diag_handler;
 	void *diag_handle;
 	diag_get_handler(&diag_handler, &diag_handle);
@@ -353,6 +361,7 @@ daemon_start(const char *name, int (*init)(int, char **), void (*main)(void),
 	void *diag_at_handle;
 	diag_at_get_handler(&diag_at_handler, &diag_at_handle);
 	diag_at_set_handler(&daemon_diag_at_handler, (void *)name);
+#endif
 
 	main();
 
@@ -361,8 +370,10 @@ daemon_start(const char *name, int (*init)(int, char **), void (*main)(void),
 	thrd_join(thr, NULL);
 #endif
 
+#if !LELY_NO_DIAG
 	diag_at_set_handler(diag_at_handler, diag_at_handle);
 	diag_set_handler(diag_handler, diag_handle);
+#endif
 
 #if !LELY_NO_THREADS
 error_thrd_create:
