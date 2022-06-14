@@ -2,7 +2,7 @@
  * This header file is part of the C++ CANopen application library; it contains
  * the CANopen node declarations.
  *
- * @copyright 2018-2020 Lely Industries N.V.
+ * @copyright 2018-2022 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -381,6 +381,24 @@ class Node : public io::CanNet, public Device {
    * function.
    */
   void Reset();
+
+  /**
+   * Starts the TIME producer, if it exists. The first time stamp will be sent
+   * immediately. The rest will be sent after the specified interval, if
+   * non-zero.
+   */
+  void StartTime(const duration& interval = duration::zero());
+
+  /**
+   * Starts the TIME producer, if it exists. The first time stamp will be sent
+   * at the specified time. The rest will be sent after the specified interval,
+   * if non-zero.
+   */
+  void StartTime(const time_point& start,
+                 const duration& interval = duration::zero());
+
+  /// Stops the TIME producer, if it exists.
+  void StopTime();
 
   /**
    * Configures heartbeat consumption for the specified node by updating CANopen
