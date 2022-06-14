@@ -15,6 +15,7 @@ class Slave(dcf.Device):
 
         self.name = ""
         self.dcf_path = ""
+        self.time_cob_id = 0x100
         self.emcy_cob_id = 0x80000000
         self.heartbeat_multiplier = 1
         self.heartbeat_consumer = False
@@ -219,6 +220,19 @@ class Slave(dcf.Device):
                 )
             slave.serial_number = serial_number
 
+        if 0x1012 in slave:
+            slave.time_cobid = slave[0x1012][0].parse_value()
+
+        if "time_cob_id" in cfg:
+            time_cob_id = int(cfg["time_cob_id"])
+            if slave.time_cob_id != time_cob_id:
+                if 0x1012 in slave:
+                    sdo = slave.concise_value(0x1012, 0, time_cob_id)
+                    slave.sdo.append(sdo)
+                else:
+                    warnings.warn(name + ": object 0x1012 does not exist", stacklevel=2)
+            slave.time_cobid = time_cob_id
+
         if 0x1014 in slave:
             slave.emcy_cob_id = slave[0x1014][0].parse_value()
 
@@ -380,13 +394,14 @@ class Master:
         self.product_code = 0
         self.revision_number = 0
         self.serial_number = 0
-        self.heartbeat_multiplier = 1
-        self.heartbeat_consumer = True
-        self.heartbeat_producer = 0
-        self.emcy_inhibit_time = 0
         self.sync_period = 0
         self.sync_window = 0
         self.sync_overflow = 0
+        self.time_cob_id = 0x100
+        self.emcy_inhibit_time = 0
+        self.heartbeat_multiplier = 1
+        self.heartbeat_consumer = True
+        self.heartbeat_producer = 0
         self.error_behavior = {1: 0x00}
         self.nmt_inhibit_time = 0
         self.start = True
@@ -439,6 +454,19 @@ class Master:
             sdo = dcf.UNSIGNED32.concise_value(0x1018, 0x04, master.serial_number)
             master.sdo.append(sdo)
 
+        if "sync_period" in cfg:
+            master.sync_period = int(cfg["sync_period"])
+        if "sync_window" in cfg:
+            master.sync_window = int(cfg["sync_window"])
+        if "sync_overflow" in cfg:
+            master.sync_overflow = int(cfg["sync_overflow"])
+
+        if "time_cob_id" in cfg:
+            master.time_cob_id = int(cfg["time_cob_id"])
+
+        if "emcy_inhibit_time" in cfg:
+            master.emcy_inhibit_time = int(cfg["emcy_inhibit_time"])
+
         master.heartbeat_multiplier = options["heartbeat_multiplier"]
         if "heartbeat_multiplier" in cfg:
             master.heartbeat_multiplier = float(cfg["heartbeat_multiplier"])
@@ -446,16 +474,6 @@ class Master:
             master.heartbeat_consumer = bool(cfg["heartbeat_consumer"])
         if "heartbeat_producer" in cfg:
             master.heartbeat_producer = int(cfg["heartbeat_producer"])
-
-        if "emcy_inhibit_time" in cfg:
-            master.emcy_inhibit_time = int(cfg["emcy_inhibit_time"])
-
-        if "sync_period" in cfg:
-            master.sync_period = int(cfg["sync_period"])
-        if "sync_window" in cfg:
-            master.sync_window = int(cfg["sync_window"])
-        if "sync_overflow" in cfg:
-            master.sync_overflow = int(cfg["sync_overflow"])
 
         if "error_behavior" in cfg:
             for sub_index, value in cfg["error_behavior"].items():

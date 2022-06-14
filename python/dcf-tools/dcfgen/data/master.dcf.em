@@ -71,14 +71,16 @@ SupportedObjects=3
 3=0x1018
 
 [OptionalObjects]
-SupportedObjects=@(6 + master.heartbeat_consumer + 5 + 2 * nrpdo + 2 * ntpdo + configuration_update + 2 + software_update + 10)
+SupportedObjects=@(8 + master.heartbeat_consumer + 5 + 2 * nrpdo + 2 * ntpdo + configuration_update + 2 + software_update + 10)
 1=0x1003
 2=0x1005
 3=0x1006
 4=0x1007
-5=0x1014
-6=0x1015
-@{n = 6}@
+5=0x1012
+6=0x1013
+7=0x1014
+8=0x1015
+@{n = 8}@
 @[if master.heartbeat_consumer]@
 @{n += 1}@
 @n=0x1016
@@ -220,6 +222,18 @@ ParameterName=Synchronous window length
 DataType=0x0007
 AccessType=rw
 DefaultValue=@master.sync_window
+
+[1012]
+ParameterName=COB-ID time stamp object
+DataType=0x0007
+AccessType=rw
+DefaultValue=@("0x{:08X}".format(master.time_cob_id))
+
+[1013]
+ParameterName=High resolution time stamp
+DataType=0x0007
+AccessType=rw
+PDOMapping=1
 
 [1014]
 ParameterName=COB-ID EMCY
