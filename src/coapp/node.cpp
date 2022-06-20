@@ -290,6 +290,34 @@ Node::Reset() {
     util::throw_errc("Reset");
 }
 
+#if !LELY_NO_CO_TIME
+
+void
+Node::StartTime(const duration& interval) {
+  auto interval_ = util::to_timespec(interval);
+  ::std::lock_guard<util::BasicLockable> lock(*this);
+  auto* time = co_nmt_get_time(nmt());
+  if (time) co_time_start_prod(time, nullptr, &interval_);
+}
+
+void
+Node::StartTime(const time_point& start, const duration& interval) {
+  auto start_ = util::to_timespec(start);
+  auto interval_ = util::to_timespec(interval);
+  ::std::lock_guard<util::BasicLockable> lock(*this);
+  auto* time = co_nmt_get_time(nmt());
+  if (time) co_time_start_prod(time, &start_, &interval_);
+}
+
+void
+Node::StopTime() {
+  ::std::lock_guard<util::BasicLockable> lock(*this);
+  auto* time = co_nmt_get_time(nmt());
+  if (time) co_time_stop_prod(time);
+}
+
+#endif  // !LELY_NO_CO_TIME
+
 void
 Node::ConfigHeartbeat(uint8_t id, const ::std::chrono::milliseconds& ms,
                       ::std::error_code& ec) {
