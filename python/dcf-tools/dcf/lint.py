@@ -16,6 +16,7 @@ __sections = {
         "ModificationTime".lower(),
         "ModificationDate".lower(),
         "ModifiedBy".lower(),
+        "LastEDS".lower(),
     ],
     "DeviceComissioning".lower(): [
         "NodeID".lower(),
