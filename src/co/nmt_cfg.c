@@ -4,7 +4,7 @@
  *
  * @see src/nmt_cfg.h
  *
- * @copyright 2017-2021 Lely Industries N.V.
+ * @copyright 2017-2022 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -481,7 +481,8 @@ co_nmt_cfg_recv(const struct can_msg *msg, void *data)
 
 	co_nmt_cfg_emit_recv(cfg, msg);
 
-	return 0;
+	// No other CAN frame receiver should process this frame.
+	return 1;
 }
 
 static int

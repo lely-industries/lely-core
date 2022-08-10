@@ -4,7 +4,7 @@
  *
  * @see src/nmt_boot.h
  *
- * @copyright 2021 Lely Industries N.V.
+ * @copyright 2022 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -956,7 +956,8 @@ co_nmt_boot_recv(const struct can_msg *msg, void *data)
 
 	co_nmt_boot_emit_recv(boot, msg);
 
-	return 0;
+	// No other CAN frame receiver should process this frame.
+	return 1;
 }
 
 static int
