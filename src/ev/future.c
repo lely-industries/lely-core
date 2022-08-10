@@ -4,7 +4,7 @@
  *
  * @see lely/ev/future.h
  *
- * @copyright 2018-2020 Lely Industries N.V.
+ * @copyright 2018-2021 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -340,6 +340,8 @@ ev_future_is_unique(const ev_future_t *future)
 int
 ev_future_is_ready(const ev_future_t *future)
 {
+	assert(future);
+
 #if LELY_NO_THREADS || LELY_NO_ATOMICS
 	return future->state == EV_FUTURE_READY;
 #else
@@ -353,7 +355,6 @@ ev_future_is_ready(const ev_future_t *future)
 void *
 ev_future_get(const ev_future_t *future)
 {
-	assert(future);
 	assert(ev_future_is_ready(future));
 
 	return future->value;
@@ -633,10 +634,10 @@ ev_promise_fini(ev_promise_t *promise)
 {
 	assert(promise);
 
-	ev_future_fini(&promise->future);
-
 	if (promise->dtor)
 		promise->dtor(ev_promise_data(promise));
+
+	ev_future_fini(&promise->future);
 }
 
 static ev_future_t *
