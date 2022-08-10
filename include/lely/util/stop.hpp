@@ -4,7 +4,7 @@
  *
  * @see lely/util/stop.h
  *
- * @copyright 2020 Lely Industries N.V.
+ * @copyright 2020-2021 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -137,7 +137,7 @@ class StopToken {
     return *this && stop_token_stop_possible(*this) != 0;
   }
 
-  /// Echanges the stop-state of `*this` and <b>other</b>/
+  /// Exchanges the stop-state of `*this` and <b>other</b>/
   void
   swap(StopToken& other) noexcept {
     ::std::swap(token_, other.token_);
@@ -296,7 +296,7 @@ class StopSource {
     return *this;
   }
 
-  /// Echanges the stop-state of `*this` and <b>other</b>/
+  /// Exchanges the stop-state of `*this` and <b>other</b>/
   void
   swap(StopSource& other) noexcept {
     ::std::swap(source_, other.source_);

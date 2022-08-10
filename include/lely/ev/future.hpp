@@ -4,7 +4,7 @@
  *
  * @see lely/ev/future.h
  *
- * @copyright 2018-2020 Lely Industries N.V.
+ * @copyright 2018-2021 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -663,7 +663,7 @@ make_empty_future() {
  * `std::forward<T>(value)`, then returns a future associated with that shared
  * state.
  *
- * @see make_ready_future(), make_error_future()
+ * @see make_empty_future(), make_error_future()
  */
 template <class T, class E = ::std::error_code,
           class V = typename ::std::decay<T>::type>
@@ -680,7 +680,7 @@ make_ready_future(T&& value) {
  * `std::forward<E>(error)`, then returns a future associated with that shared
  * state.
  *
- * @see make_ready_future(), make_error_future()
+ * @see make_empty_future(), make_ready_future()
  */
 template <class T, class E, class V = typename ::std::decay<E>::type>
 inline Future<T, V>
