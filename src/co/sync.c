@@ -4,7 +4,7 @@
  *
  * @see lely/co/sync.h
  *
- * @copyright 2017-2020 Lely Industries N.V.
+ * @copyright 2017-2022 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -560,7 +560,8 @@ co_sync_recv(const struct can_msg *msg, void *data)
 	if (sync->ind)
 		sync->ind(sync, cnt, sync->ind_data);
 
-	return 0;
+	// No other CAN frame receiver should process this frame.
+	return 1;
 }
 
 static int

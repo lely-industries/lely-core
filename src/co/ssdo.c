@@ -930,7 +930,8 @@ co_ssdo_recv(const struct can_msg *msg, void *data)
 
 	co_ssdo_emit_recv(sdo, msg);
 
-	return 0;
+	// No other CAN frame receiver should process this frame.
+	return 1;
 }
 
 static int

@@ -483,7 +483,8 @@ co_time_recv(const struct can_msg *msg, void *data)
 	if (time->ind)
 		time->ind(time, &tv, time->data);
 
-	return 0;
+	// No other CAN frame receiver should process this frame.
+	return 1;
 }
 
 static int

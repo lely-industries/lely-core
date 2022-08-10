@@ -767,6 +767,8 @@ co_rpdo_recv(const struct can_msg *msg, void *data)
 	} else if (pdo->comm.trans >= 0xfe) {
 		// In case of an event-driven RPDO, process the frame directly.
 		co_rpdo_read_frame(pdo, msg);
+		// No other CAN frame receiver should process this frame.
+		return 1;
 	}
 
 	return 0;
