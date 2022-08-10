@@ -4,7 +4,7 @@
  *
  * @see lely/can/net.h
  *
- * @copyright 2015-2020 Lely Industries N.V.
+ * @copyright 2015-2022 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -290,11 +290,20 @@ can_net_recv(can_net_t *net, const struct can_msg *msg)
 	if (node) {
 		// Loop over all matching receivers.
 		can_recv_t *recv = structof(node, can_recv_t, node);
+		// This loop will iterate at least once, since the list is
+		// removed from the tree if it is empty.
 		dlnode_foreach (&recv->list, node) {
 			recv = structof(node, can_recv_t, list);
+			if (!recv->func)
+				continue;
 			// Invoke the callback function and check the result.
-			if (recv->func && recv->func(msg, recv->data)
-					&& !result) {
+			int r = recv->func(msg, recv->data);
+			if (r > 0) {
+				// If the result is positive, the callback
+				// function may have modified the receiver list,
+				// which means it is not safe to continue.
+				break;
+			} else if (r < 0 && !result) {
 				// Store the first error that occurs.
 				errc = get_errc();
 				result = -1;
