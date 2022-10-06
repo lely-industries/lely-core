@@ -191,7 +191,9 @@ static inline io_can_net_t *io_can_net_from_svc(const struct io_svc *svc);
 static int io_can_net_do_wait(io_can_net_t *net);
 static void io_can_net_do_write(io_can_net_t *net);
 
+#if !LELY_NO_THREADS
 static size_t io_can_net_do_abort_tasks(io_can_net_t *net);
+#endif
 
 static void default_on_read_error_func(int errc, size_t errcnt, void *arg);
 static void default_on_queue_error_func(int errc, size_t errcnt, void *arg);
@@ -1017,6 +1019,7 @@ io_can_net_do_write(io_can_net_t *net)
 	}
 }
 
+#if !LELY_NO_THREADS
 static size_t
 io_can_net_do_abort_tasks(io_can_net_t *net)
 {
@@ -1050,6 +1053,7 @@ io_can_net_do_abort_tasks(io_can_net_t *net)
 
 	return 0;
 }
+#endif // !LELY_NO_THREADS
 
 static void
 default_on_read_error_func(int errc, size_t errcnt, void *arg)
