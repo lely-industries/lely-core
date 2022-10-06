@@ -4,7 +4,7 @@
  *
  * @see lely/io2/can_net.h
  *
- * @copyright 2018-2029 Lely Industries N.V.
+ * @copyright 2018-2022 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -188,10 +188,10 @@ static void io_can_net_c_wait_func(struct spscring *ring, void *arg);
 
 static inline io_can_net_t *io_can_net_from_svc(const struct io_svc *svc);
 
-int io_can_net_do_wait(io_can_net_t *net);
-void io_can_net_do_write(io_can_net_t *net);
+static int io_can_net_do_wait(io_can_net_t *net);
+static void io_can_net_do_write(io_can_net_t *net);
 
-size_t io_can_net_do_abort_tasks(io_can_net_t *net);
+static size_t io_can_net_do_abort_tasks(io_can_net_t *net);
 
 static void default_on_read_error_func(int errc, size_t errcnt, void *arg);
 static void default_on_queue_error_func(int errc, size_t errcnt, void *arg);
@@ -972,7 +972,7 @@ io_can_net_from_svc(const struct io_svc *svc)
 	return structof(svc, io_can_net_t, svc);
 }
 
-int
+static int
 io_can_net_do_wait(io_can_net_t *net)
 {
 	assert(net);
@@ -993,7 +993,7 @@ io_can_net_do_wait(io_can_net_t *net)
 	return 0;
 }
 
-void
+static void
 io_can_net_do_write(io_can_net_t *net)
 {
 	assert(net);
@@ -1017,7 +1017,7 @@ io_can_net_do_write(io_can_net_t *net)
 	}
 }
 
-size_t
+static size_t
 io_can_net_do_abort_tasks(io_can_net_t *net)
 {
 	assert(net);
