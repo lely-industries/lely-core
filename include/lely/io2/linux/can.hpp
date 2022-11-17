@@ -4,7 +4,7 @@
  *
  * @see lely/io2/linux/can.h
  *
- * @copyright 2018-2019 Lely Industries N.V.
+ * @copyright 2018-2022 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -89,8 +89,9 @@ class CanController : public CanControllerBase {
 class CanChannel : public CanChannelBase {
  public:
   /// @see io_can_chan_create()
-  CanChannel(io_poll_t* poll, ev_exec_t* exec, ::std::size_t rxlen = 0)
-      : CanChannelBase(io_can_chan_create(poll, exec, rxlen)) {
+  CanChannel(io_poll_t* poll, ev_exec_t* exec, ::std::size_t rxlen = 0,
+             bool txwait = true)
+      : CanChannelBase(io_can_chan_create(poll, exec, rxlen, txwait)) {
     if (!chan) util::throw_errc("CanChannel");
   }
 

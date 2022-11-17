@@ -4,7 +4,7 @@
  *
  * @see lely/io2/linux/can.h
  *
- * @copyright 2015-2021 Lely Industries N.V.
+ * @copyright 2015-2022 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -67,7 +67,7 @@ struct io_can_frame {
 	struct timespec ts;
 };
 
-static int io_can_fd_set_default(int fd);
+static int io_can_fd_set_default(int fd, int txwait);
 #if LELY_NO_CANFD
 static int io_can_fd_read(int fd, struct can_frame *frame, size_t *pnbytes,
 		int *pflags, struct timespec *tp, int timeout);
@@ -147,6 +147,8 @@ struct io_can_chan_impl {
 	io_ctx_t *ctx;
 	/// A pointer to the executor used to execute all I/O tasks.
 	ev_exec_t *exec;
+	/// A flag indicating whether write confirmations are enabled.
+	unsigned int txwait : 1;
 	/// The object used to monitor the file descriptor for I/O events.
 	struct io_poll_watch watch;
 	/// The task responsible for filling the receive queue.
@@ -244,7 +246,7 @@ io_can_chan_free(void *ptr)
 
 io_can_chan_t *
 io_can_chan_init(io_can_chan_t *chan, io_poll_t *poll, ev_exec_t *exec,
-		size_t rxlen)
+		size_t rxlen, int txwait)
 {
 	struct io_can_chan_impl *impl = io_can_chan_impl_from_chan(chan);
 	io_ctx_t *ctx = poll ? io_poll_get_ctx(poll) : NULL;
@@ -263,6 +265,8 @@ io_can_chan_init(io_can_chan_t *chan, io_poll_t *poll, ev_exec_t *exec,
 	impl->ctx = ctx;
 
 	impl->exec = exec;
+
+	impl->txwait = !!txwait;
 
 	impl->watch = (struct io_poll_watch)IO_POLL_WATCH_INIT(
 			&io_can_chan_impl_watch_func);
@@ -379,7 +383,7 @@ io_can_chan_fini(io_can_chan_t *chan)
 }
 
 io_can_chan_t *
-io_can_chan_create(io_poll_t *poll, ev_exec_t *exec, size_t rxlen)
+io_can_chan_create(io_poll_t *poll, ev_exec_t *exec, size_t rxlen, int txwait)
 {
 	int errsv = 0;
 
@@ -389,7 +393,7 @@ io_can_chan_create(io_poll_t *poll, ev_exec_t *exec, size_t rxlen)
 		goto error_alloc;
 	}
 
-	io_can_chan_t *tmp = io_can_chan_init(chan, poll, exec, rxlen);
+	io_can_chan_t *tmp = io_can_chan_init(chan, poll, exec, rxlen, txwait);
 	if (!tmp) {
 		errsv = errno;
 		goto error_init;
@@ -479,7 +483,7 @@ io_can_chan_open(io_can_chan_t *chan, const io_can_ctrl_t *ctrl, int flags)
 	}
 #endif
 
-	if (io_can_fd_set_default(fd) == -1) {
+	if (io_can_fd_set_default(fd, impl->txwait) == -1) {
 		errsv = errno;
 		goto error_set_default;
 	}
@@ -547,7 +551,7 @@ io_can_chan_assign(io_can_chan_t *chan, int fd)
 	}
 #endif
 
-	if (io_can_fd_set_default(fd) == -1)
+	if (io_can_fd_set_default(fd, impl->txwait) == -1)
 		return -1;
 
 	fd = io_can_chan_impl_set_fd(impl, fd, flags);
@@ -579,26 +583,30 @@ io_can_chan_close(io_can_chan_t *chan)
 }
 
 static int
-io_can_fd_set_default(int fd)
+io_can_fd_set_default(int fd, int txwait)
 {
 	int optval;
 
-	// Enable local loopback.
-	optval = 1;
-	// clang-format off
-	if (setsockopt(fd, SOL_CAN_RAW, CAN_RAW_LOOPBACK, &optval,
-			sizeof(optval)) == -1)
-		// clang-format on
-		return -1;
+	// The CAN_RAW_LOOPBACK and CAN_RAW_RECV_OWN_MSGS options are necessary
+	// to receive write confirmations.
+	if (txwait) {
+		// Enable local loopback.
+		optval = 1;
+		// clang-format off
+		if (setsockopt(fd, SOL_CAN_RAW, CAN_RAW_LOOPBACK, &optval,
+				sizeof(optval)) == -1)
+			// clang-format on
+			return -1;
 
-	// Enable the reception of CAN frames sent by this socket so we can
-	// check for successful transmission.
-	optval = 1;
-	// clang-format off
-	if (setsockopt(fd, SOL_CAN_RAW, CAN_RAW_RECV_OWN_MSGS, &optval,
-			sizeof(optval)) == -1)
-		// clang-format on
-		return -1;
+		// Enable the reception of CAN frames sent by this socket so we
+		// can check for successful transmission.
+		optval = 1;
+		// clang-format off
+		if (setsockopt(fd, SOL_CAN_RAW, CAN_RAW_RECV_OWN_MSGS, &optval,
+				sizeof(optval)) == -1)
+			// clang-format on
+			return -1;
+	}
 
 	// Set the size of the send buffer to its minimum value. This causes
 	// write operations to block (or return EAGAIN) instead of returning
@@ -839,26 +847,28 @@ io_can_chan_impl_read(io_can_chan_t *chan, struct can_msg *msg,
 		// Process the frame unless it is a write confirmation.
 		if (!(flags & MSG_CONFIRM))
 			break;
-		// Convert the frame from the SocketCAN format.
-		void *src = &frame->frame;
-		struct can_msg msg;
+		if (impl->txwait) {
+			// Convert the frame from the SocketCAN format.
+			void *src = &frame->frame;
+			struct can_msg msg;
 #if !LELY_NO_CANFD
-		if (frame->nbytes == CANFD_MTU)
-			canfd_frame2can_msg(src, &msg);
-		else
+			if (frame->nbytes == CANFD_MTU)
+				canfd_frame2can_msg(src, &msg);
+			else
 #endif
-			can_frame2can_msg(src, &msg);
-		// Process the write confirmation.
-		struct sllist queue;
-		sllist_init(&queue);
+				can_frame2can_msg(src, &msg);
+			// Process the write confirmation.
+			struct sllist queue;
+			sllist_init(&queue);
 #if !LELY_NO_THREADS
-		pthread_mutex_lock(&impl->mtx);
+			pthread_mutex_lock(&impl->mtx);
 #endif
-		io_can_chan_impl_do_confirm(impl, &queue, &msg);
+			io_can_chan_impl_do_confirm(impl, &queue, &msg);
 #if !LELY_NO_THREADS
-		pthread_mutex_unlock(&impl->mtx);
+			pthread_mutex_unlock(&impl->mtx);
 #endif
-		ev_task_queue_post(&queue);
+			ev_task_queue_post(&queue);
+		}
 		// Since the timeout is relative, we can only use a positive
 		// value once.
 		if (timeout > 0)
@@ -1163,7 +1173,7 @@ io_can_chan_impl_rxbuf_task_func(struct ev_task *task)
 		pthread_mutex_lock(&impl->mtx);
 #endif
 		// Process the write confirmation, if any.
-		if (!result && flags & MSG_CONFIRM)
+		if (!result && (flags & MSG_CONFIRM) && impl->txwait)
 			io_can_chan_impl_do_confirm(impl, &queue, &msg);
 
 		// Stop if the operation did or would block, or if an error
@@ -1299,15 +1309,18 @@ io_can_chan_impl_write_task_func(struct ev_task *task)
 				impl->poll ? 0 : LELY_IO_TX_TIMEOUT);
 		int errc = !result ? 0 : errno;
 		wouldblock = errc == EAGAIN || errc == EWOULDBLOCK;
-		if (!wouldblock && errc)
-			// The operation failed immediately.
+		// Submit the completion task if the operation succeeded and we
+		// don't need to wait for a write confirmation, or if it failed
+		// immediately.
+		if ((!errc && !impl->txwait) || (!wouldblock && errc))
 			io_can_chan_write_post(write, errc);
 #if !LELY_NO_THREADS
 		pthread_mutex_lock(&impl->mtx);
 #endif
-		if (!errc)
+		if (!errc && impl->txwait) {
 			// Wait for the write confirmation.
 			sllist_push_back(&impl->confirm_queue, &task->_node);
+		}
 		if (task == impl->current_write) {
 			// Put the write operation back on the queue if it would
 			// block, unless it was canceled.
@@ -1507,6 +1520,7 @@ io_can_chan_impl_do_confirm(struct io_can_chan_impl *impl, struct sllist *queue,
 		const struct can_msg *msg)
 {
 	assert(impl);
+	assert(impl->txwait);
 	assert(queue);
 	assert(msg);
 
