@@ -112,7 +112,10 @@ struct co_nmt_slave {
 	 */
 	unsigned configuring : 1;
 #endif
-	/// A flag specifying whether NMT boot-up message was received from a slave.
+	/**
+	 * A flag specifying whether the NMT boot-up message was received from a
+	 * slave.
+	 */
 	unsigned bootup : 1;
 #if !LELY_NO_CO_NMT_BOOT
 	/// A flag specifying whether the 'boot slave' process has ended.
@@ -166,8 +169,15 @@ struct __co_nmt {
 	co_unsigned32_t startup;
 #if !LELY_NO_CO_MASTER
 	/// A flag specifying whether the NMT service is a master or a slave.
-	int master;
+	unsigned master : 1;
 #endif
+	/**
+	 * A flag specifying whether the 'NMT startup' process is active due to
+	 * the reception of a 'reset communication' message. In combination with
+	 * object 1F80, this determines whether the NMT service switches to the
+	 * operational state automatically.
+	 */
+	unsigned reset : 1;
 	/// A pointer to the CAN frame receiver for NMT messages.
 	can_recv_t *recv_000;
 	/// A pointer to the NMT command indication function.
@@ -870,6 +880,7 @@ __co_nmt_init(struct __co_nmt *nmt, can_net_t *net, co_dev_t *dev)
 #if !LELY_NO_CO_MASTER
 	nmt->master = 0;
 #endif
+	nmt->reset = 0;
 
 	// Create the CAN frame receiver for NMT messages.
 	nmt->recv_000 = can_recv_create();
@@ -3295,6 +3306,9 @@ co_nmt_reset_comm_on_enter(co_nmt_t *nmt)
 #endif
 	diag(DIAG_INFO, 0, "NMT: running as %s",
 			co_nmt_is_master(nmt) ? "master" : "slave");
+	// Store the occurrence of the reset, so other states can determine if
+	// the 'NMT startup' process is active.
+	nmt->reset = 1;
 
 	nmt->st = CO_NMT_ST_RESET_COMM;
 	co_nmt_st_ind(nmt, co_dev_get_id(nmt->dev), 0);
@@ -3618,9 +3632,15 @@ co_nmt_startup_slave(co_nmt_t *nmt)
 {
 	assert(nmt);
 
-	// Enter the operational state automatically if bit 2 of the NMT startup
-	// value is 0.
-	return (nmt->startup & 0x04) ? NULL : co_nmt_start_state;
+	// Enter the operational state automatically if the 'NMT startup'
+	// process is active and bit 2 of the NMT startup value is 0.
+	if (nmt->reset) {
+		nmt->reset = 0;
+		if (!(nmt->startup & 0x04))
+			return co_nmt_start_state;
+	}
+
+	return NULL;
 }
 
 static void
