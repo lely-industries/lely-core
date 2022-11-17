@@ -533,6 +533,21 @@ class Master:
                     warnings.warn(
                         slave.name + ": object 0x1016 does not exist", stacklevel=2
                     )
+            else:
+                if 0x1016 in slave:
+                    for subobj in slave[0x1016].values():
+                        if subobj.sub_index == 0:
+                            continue
+                        value = subobj.parse_value()
+                        heartbeat_time = value & 0xFFFF
+                        node_id = (value >> 16) & 0xFF
+                        if heartbeat_time != 0 and node_id == master.node_id:
+                            slave.sdo.insert(
+                                0,
+                                slave.concise_value(
+                                    0x1016, subobj.sub_index, node_id << 16
+                                ),
+                            )
 
         for slave in slaves.values():
             if slave.software_version != 0:
