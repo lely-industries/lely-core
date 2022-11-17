@@ -365,9 +365,10 @@ ev_future_submit(ev_future_t *future, struct ev_task *task)
 {
 	assert(future);
 	assert(task);
-	assert(task->exec);
+	ev_exec_t *exec = task->exec;
+	assert(exec);
 
-	ev_exec_on_task_init(task->exec);
+	ev_exec_on_task_init(exec);
 
 #if !LELY_NO_THREADS
 	mtx_lock(&future->mtx);
@@ -376,8 +377,8 @@ ev_future_submit(ev_future_t *future, struct ev_task *task)
 #if !LELY_NO_THREADS
 		mtx_unlock(&future->mtx);
 #endif
-		ev_exec_post(task->exec, task);
-		ev_exec_on_task_fini(task->exec);
+		ev_exec_post(exec, task);
+		ev_exec_on_task_fini(exec);
 	} else {
 		sllist_push_back(&future->queue, &task->_node);
 #if !LELY_NO_THREADS
@@ -451,21 +452,24 @@ ev_future_when_all_n(ev_exec_t *exec, size_t n, ev_future_t *const *futures)
 
 	struct ev_future_when_all *when = ev_promise_data(promise);
 	when->idx = 0;
-	when->promise = promise;
+	when->promise = ev_promise_acquire(promise);
 	when->task = (struct ev_task)EV_TASK_INIT(
 			exec, &ev_future_when_all_func);
 
-	if ((when->n = n)) {
+	if ((when->n = n) != 0) {
 		for (size_t i = 0; i < n; i++) {
 			assert(futures[i]);
 			when->futures[i] = ev_future_acquire(futures[i]);
 		}
-		ev_future_submit(when->futures[when->idx], &when->task);
+		ev_future_submit(when->futures[0], &when->task);
 	} else {
 		ev_promise_set(promise, NULL);
+		ev_promise_release(promise);
 	}
 
-	return ev_promise_get_future(promise);
+	ev_future_t *future = ev_promise_get_future(promise);
+	ev_promise_release(promise);
+	return future;
 }
 
 ev_future_t *

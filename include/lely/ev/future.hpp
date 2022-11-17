@@ -4,7 +4,7 @@
  *
  * @see lely/ev/future.h
  *
- * @copyright 2018-2021 Lely Industries N.V.
+ * @copyright 2018-2022 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -593,7 +593,7 @@ when_all(ev_exec_t* exec, InputIt first, InputIt last) {
   return when_all(exec, ::std::vector<ev_future_t*>(first, last));
 }
 
-/// @see ev_future_when_all_n()
+/// @see ev_future_when_all()
 template <class... Futures>
 inline typename ::std::enable_if<
     compat::conjunction<::std::is_convertible<Futures, ev_future_t*>...>::value,
@@ -630,7 +630,7 @@ when_any(ev_exec_t* exec, InputIt first, InputIt last) {
   return when_any(exec, ::std::vector<ev_future_t*>(first, last));
 }
 
-/// @see ev_future_when_any_n()
+/// @see ev_future_when_any()
 template <class... Futures>
 inline typename ::std::enable_if<
     compat::conjunction<::std::is_convertible<Futures, ev_future_t*>...>::value,
