@@ -437,6 +437,7 @@ lcov:
     - make
     - make check-code-coverage
     - lcov --summary coverage.info --rc lcov_branch_coverage=1
+  coverage: '/lines[\.]*\:\s*(\d+\.\d+)%/'
   artifacts:
     paths:
       - coverage/
