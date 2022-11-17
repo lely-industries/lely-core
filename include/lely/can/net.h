@@ -2,7 +2,7 @@
  * This header file is part of the CAN library; it contains the CAN network
  * interface declarations.
  *
- * @copyright 2015-2020 Lely Industries N.V.
+ * @copyright 2015-2022 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -67,8 +67,11 @@ typedef int can_timer_func_t(const struct timespec *tp, void *data);
  * @param msg  a pointer to the received CAN frame.
  * @param data a pointer to user-specified data.
  *
- * @returns 0 on success, or -1 on error. In the latter case, implementations
- * SHOULD set the error number with `set_errnum()`.
+ * @returns a non-negative value on success, or -1 on error. In the latter case,
+ * implementations SHOULD set the error number with `set_errnum()`.
+ * Implementations MUST return a positive value if the callback MAY have
+ * modified the CAN frame receiver list, for example by unregistering itself
+ * with can_recv_stop().
  */
 typedef int can_recv_func_t(const struct can_msg *msg, void *data);
 

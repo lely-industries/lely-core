@@ -4,7 +4,7 @@
  *
  * @see lely/co/csdo.h, src/sdo.h
  *
- * @copyright 2021 Lely Industries N.V.
+ * @copyright 2016-2022 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -1500,7 +1500,8 @@ co_csdo_recv(const struct can_msg *msg, void *data)
 
 	co_csdo_emit_recv(sdo, msg);
 
-	return 0;
+	// No other CAN frame receiver should process this frame.
+	return 1;
 }
 
 static int
@@ -1512,7 +1513,7 @@ co_csdo_timer(const struct timespec *tp, void *data)
 
 	co_csdo_emit_time(sdo, tp);
 
-	return 0;
+	return 1;
 }
 
 static inline void

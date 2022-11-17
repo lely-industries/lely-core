@@ -4,7 +4,7 @@
  *
  * @see src/nmt_boot.h
  *
- * @copyright 2021 Lely Industries N.V.
+ * @copyright 2022 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -956,7 +956,8 @@ co_nmt_boot_recv(const struct can_msg *msg, void *data)
 
 	co_nmt_boot_emit_recv(boot, msg);
 
-	return 0;
+	// No other CAN frame receiver should process this frame.
+	return 1;
 }
 
 static int
@@ -1079,7 +1080,7 @@ co_nmt_boot_emit_cfg_con(co_nmt_boot_t *boot, co_unsigned32_t ac)
 static co_nmt_boot_state_t *
 co_nmt_boot_wait_on_time(co_nmt_boot_t *boot, const struct timespec *tp)
 {
-	(void)boot;
+	assert(boot);
 	(void)tp;
 
 	boot->st = 0;
@@ -1111,6 +1112,9 @@ co_nmt_boot_wait_on_time(co_nmt_boot_t *boot, const struct timespec *tp)
 	if (!(boot->assignment & 0x04))
 		// Skip booting and start the error control service.
 		return co_nmt_boot_ec_state;
+
+	// Make sure the Client-SDO is started before booting the slave.
+	co_csdo_start(boot->sdo);
 
 	return co_nmt_boot_chk_device_type_state;
 }
@@ -2102,6 +2106,10 @@ co_nmt_boot_up_cfg_on_enter(co_nmt_boot_t *boot)
 	assert(boot);
 
 	boot->es = 'J';
+
+	// Stop the Client-SDO to avoid conflicts with the Client-SDO used by
+	// the NMT 'configuration request' service.
+	co_csdo_stop(boot->sdo);
 
 	// clang-format off
 	if (co_nmt_cfg_req(boot->nmt, boot->id, boot->timeout,

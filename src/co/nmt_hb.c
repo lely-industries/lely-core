@@ -4,7 +4,7 @@
  *
  * @see src/nmt_ec.h
  *
- * @copyright 2016-2020 Lely Industries N.V.
+ * @copyright 2016-2022 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -218,6 +218,11 @@ co_nmt_hb_recv(const struct can_msg *msg, void *data)
 	if (st & CO_NMT_ST_TOGGLE)
 		return 0;
 
+	// Ignore boot-up messages if we are the master, since they are already
+	// handled elsewhere.
+	if (st == CO_NMT_ST_BOOTUP && co_nmt_is_master(hb->nmt))
+		return 0;
+
 	// This might happen upon receipt of a boot-up message. The 'boot slave'
 	// process has disabled the heartbeat consumer, but the event has
 	// already been scheduled.
@@ -247,7 +252,8 @@ co_nmt_hb_recv(const struct can_msg *msg, void *data)
 				CO_NMT_EC_STATE, st);
 	}
 
-	return 0;
+	// No other CAN frame receiver should process this frame.
+	return 1;
 }
 
 static int

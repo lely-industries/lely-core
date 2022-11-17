@@ -4,7 +4,7 @@
  *
  * @see lely/co/nmt.h
  *
- * @copyright 2017-2021 Lely Industries N.V.
+ * @copyright 2017-2022 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -2764,7 +2764,8 @@ co_nmt_recv_000(const struct can_msg *msg, void *data)
 
 	co_nmt_emit_cs(nmt, cs);
 
-	return 0;
+	// No other CAN frame receiver should process this frame.
+	return 1;
 }
 
 static int
@@ -2797,6 +2798,10 @@ co_nmt_recv_700(const struct can_msg *msg, void *data)
 			// error.
 			nmt->lg_state = CO_NMT_EC_RESOLVED;
 			nmt->lg_ind(nmt, nmt->lg_state, nmt->lg_data);
+
+			// No other CAN frame receiver should process this
+			// frame.
+			return 1;
 		}
 #endif
 #if !LELY_NO_CO_MASTER
@@ -2824,7 +2829,10 @@ co_nmt_recv_700(const struct can_msg *msg, void *data)
 
 			// Inform the application of the boot-up event.
 			co_nmt_st_ind(nmt, id, st);
-			return 0;
+
+			// No other CAN frame receiver should process this
+			// frame.
+			return 1;
 		}
 
 		// Ignore messages from booting slaves or slaves that are being
@@ -2883,6 +2891,9 @@ co_nmt_recv_700(const struct can_msg *msg, void *data)
 		// Notify the application of the occurrence of a state change.
 		if (st != slave->rst)
 			co_nmt_st_ind(nmt, id, st);
+
+		// No other CAN frame receiver should process this frame.
+		return 1;
 #endif // !LELY_NO_CO_NG
 #endif // !LELY_NO_CO_MASTER
 	}

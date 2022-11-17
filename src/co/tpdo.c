@@ -1085,19 +1085,19 @@ co_tpdo_recv(const struct can_msg *msg, void *data)
 				: CAN_MASK_BID;
 		// Ignore the RTR if no buffered CAN frame is available.
 		if (pdo->msg.id != (pdo->comm.cobid & mask))
-			break;
+			return 0;
 		co_tpdo_send_frame(pdo, &pdo->msg);
-		break;
+		// No other CAN frame receiver should process this frame.
+		return 1;
 	}
 	case 0xfd:
 		// Start sampling.
 		assert(pdo->sample_ind);
 		pdo->sample_ind(pdo, pdo->sample_data);
-		break;
-	default: break;
+		// No other CAN frame receiver should process this frame.
+		return 1;
+	default: return 0;
 	}
-
-	return 0;
 }
 
 static int

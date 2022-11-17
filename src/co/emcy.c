@@ -4,7 +4,7 @@
  *
  * @see lely/co/emcy.h
  *
- * @copyright 2017-2020 Lely Industries N.V.
+ * @copyright 2017-2022 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -637,7 +637,8 @@ co_emcy_node_recv(const struct can_msg *msg, void *data)
 	if (emcy->ind)
 		emcy->ind(emcy, node->id, eec, er, msef, emcy->data);
 
-	return 0;
+	// No other CAN frame receiver should process this frame.
+	return 1;
 }
 
 static int

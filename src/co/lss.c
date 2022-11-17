@@ -1417,7 +1417,8 @@ co_lss_recv(const struct can_msg *msg, void *data)
 
 	co_lss_emit_recv(lss, msg);
 
-	return 0;
+	// No other CAN frame receiver should process this frame.
+	return 1;
 }
 
 #if !LELY_NO_CO_MASTER
