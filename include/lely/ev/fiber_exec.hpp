@@ -21,8 +21,8 @@
  * limitations under the License.
  */
 
-#ifndef LELY_EV_CO_FIBER_HPP_
-#define LELY_EV_CO_FIBER_HPP_
+#ifndef LELY_EV_FIBER_EXEC_HPP_
+#define LELY_EV_FIBER_EXEC_HPP_
 
 #include <lely/ev/exec.hpp>
 #include <lely/ev/fiber_exec.h>
@@ -305,4 +305,4 @@ class FiberConditionVariable {
 }  // namespace ev
 }  // namespace lely
 
-#endif  // !LELY_EV_CO_FIBER_HPP_
+#endif  // !LELY_EV_FIBER_EXEC_HPP_
