@@ -299,7 +299,7 @@ TEST(CO_RpdoInit, CoRpdoInit_FullRPDOCommParamRecord) {
   CHECK_EQUAL(DEV_ID, comm->cobid);
   CHECK_EQUAL(0x01u, comm->trans);
   CHECK_EQUAL(0x0002u, comm->inhibit);
-  CHECK_EQUAL(0x03u, comm->reserved);
+  CHECK_EQUAL(0x00u, comm->reserved);
   CHECK_EQUAL(0x0004u, comm->event);
   CHECK_EQUAL(0x05u, comm->sync);
 
@@ -368,7 +368,7 @@ TEST(CO_RpdoInit, CoRpdoInit_OversizedRPDOCommParamRecord) {
   CHECK_EQUAL(DEV_ID, comm->cobid);
   CHECK_EQUAL(0x01u, comm->trans);
   CHECK_EQUAL(0x0002u, comm->inhibit);
-  CHECK_EQUAL(0x03u, comm->reserved);
+  CHECK_EQUAL(0x00u, comm->reserved);
   CHECK_EQUAL(0x0004u, comm->event);
   CHECK_EQUAL(0x05u, comm->sync);
 

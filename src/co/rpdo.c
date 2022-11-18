@@ -38,6 +38,7 @@
 #include <inttypes.h>
 #endif
 #include <stdlib.h>
+#include <string.h>
 
 /// A CANopen Receive-PDO.
 struct __co_rpdo {
@@ -311,11 +312,17 @@ co_rpdo_start(co_rpdo_t *pdo)
 	if (!pdo->stopped)
 		return 0;
 
-	co_obj_t *obj_1400 = co_dev_find_obj(pdo->dev, 0x1400 + pdo->num - 1);
+	co_unsigned16_t idx_1400 = 0x1400 + pdo->num - 1;
+	co_obj_t *obj_1400 = co_dev_find_obj(pdo->dev, idx_1400);
 	assert(obj_1400);
-	// Copy the PDO communication parameter record.
-	memcpy(&pdo->comm, co_obj_addressof_val(obj_1400),
-			MIN(co_obj_sizeof_val(obj_1400), sizeof(pdo->comm)));
+	// Copy the PDO communication parameters.
+	memset(&pdo->comm, 0, sizeof(pdo->comm));
+	pdo->comm.n = co_dev_get_val_u8(pdo->dev, idx_1400, 0);
+	pdo->comm.cobid = co_dev_get_val_u32(pdo->dev, idx_1400, 1);
+	pdo->comm.trans = co_dev_get_val_u8(pdo->dev, idx_1400, 2);
+	pdo->comm.inhibit = co_dev_get_val_u16(pdo->dev, idx_1400, 3);
+	pdo->comm.event = co_dev_get_val_u16(pdo->dev, idx_1400, 5);
+	pdo->comm.sync = co_dev_get_val_u8(pdo->dev, idx_1400, 6);
 	// Set the download indication functions PDO communication parameter
 	// record.
 	co_obj_set_dn_ind(obj_1400, &co_1400_dn_ind, pdo);

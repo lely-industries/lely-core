@@ -36,6 +36,7 @@
 
 #include <assert.h>
 #include <stdlib.h>
+#include <string.h>
 
 #if LELY_NO_MALLOC
 #ifndef CO_CSDO_MEMBUF_SIZE
@@ -1036,12 +1037,15 @@ co_csdo_start(co_csdo_t *sdo)
 		return 0;
 
 	if (sdo->dev) {
-		co_obj_t *obj_1280 = co_dev_find_obj(
-				sdo->dev, 0x1280 + sdo->num - 1);
-		// Copy the SDO parameter record.
-		size_t size = co_obj_sizeof_val(obj_1280);
-		memcpy(&sdo->par, co_obj_addressof_val(obj_1280),
-				MIN(size, sizeof(sdo->par)));
+		co_unsigned16_t idx_1280 = 0x1280 + sdo->num - 1;
+		co_obj_t *obj_1280 = co_dev_find_obj(sdo->dev, idx_1280);
+		assert(obj_1280);
+		// Copy the SDO parameters.
+		memset(&sdo->par, 0, sizeof(sdo->par));
+		sdo->par.n = co_dev_get_val_u8(sdo->dev, idx_1280, 0);
+		sdo->par.cobid_req = co_dev_get_val_u32(sdo->dev, idx_1280, 1);
+		sdo->par.cobid_res = co_dev_get_val_u32(sdo->dev, idx_1280, 2);
+		sdo->par.id = co_dev_get_val_u8(sdo->dev, idx_1280, 3);
 		// Set the download indication function for the SDO parameter
 		// record.
 		co_obj_set_dn_ind(obj_1280, &co_1280_dn_ind, sdo);
