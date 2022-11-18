@@ -2,7 +2,7 @@
  * This header file is part of the CANopen library; it contains the object
  * dictionary declarations.
  *
- * @copyright 2020 Lely Industries N.V.
+ * @copyright 2022 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -129,7 +129,9 @@ extern "C" {
 /**
  * The type of a CANopen sub-object download indication function, invoked by an
  * SDO download request or Receive-PDO indication. In case of an SDO request,
- * this function is invoked for each segment.
+ * this function is invoked for each segment. And once before sending the first
+ * response to a non-expedited request or before sending a block confirmation,
+ * in which case the <b>nbyte</b> member of *<b>req</b> is 0.
  *
  * @param sub  a pointer to a CANopen sub-object.
  * @param req  a pointer to a CANopen SDO download request. The <b>size</b>,
