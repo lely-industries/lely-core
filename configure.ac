@@ -232,6 +232,14 @@ AS_IF([test "$enable_sdev" == "no"], [
 	AC_DEFINE([LELY_NO_CO_SDEV], [1], [Define to 1 if static device description support is disabled.])
 ])
 
+AM_CONDITIONAL([NO_CO_SSDO_BLK], [false])
+AC_ARG_ENABLE([ssdo-blk],
+	AS_HELP_STRING([--disable-ssdo-blk], [disable Server-SDO block transfer support]))
+AS_IF([test "$enable_ssdo_blk" == "no"], [
+	AM_CONDITIONAL([NO_CO_SSDO_BLK], [true])
+	AC_DEFINE([LELY_NO_CO_SSDO_BLK], [1], [Define to 1 if Server-SDO block transfer support is disabled.])
+])
+
 AM_CONDITIONAL([NO_CO_CSDO], [false])
 AC_ARG_ENABLE([csdo],
 	AS_HELP_STRING([--disable-csdo], [disable Client-SDO support]))
