@@ -359,11 +359,18 @@ co_tpdo_start(co_tpdo_t *pdo)
 	// record.
 	co_obj_set_dn_ind(obj_1800, &co_1800_dn_ind, pdo);
 
-	co_obj_t *obj_1a00 = co_dev_find_obj(pdo->dev, 0x1a00 + pdo->num - 1);
+	co_unsigned16_t idx_1a00 = 0x1a00 + pdo->num - 1;
+	co_obj_t *obj_1a00 = co_dev_find_obj(pdo->dev, idx_1a00);
 	assert(obj_1a00);
 	// Copy the PDO mapping parameter record.
-	memcpy(&pdo->map, co_obj_addressof_val(obj_1a00),
-			MIN(co_obj_sizeof_val(obj_1a00), sizeof(pdo->map)));
+	memset(&pdo->map, 0, sizeof(pdo->map));
+	pdo->map.n = co_dev_get_val_u8(pdo->dev, idx_1a00, 0);
+	for (co_sub_t *sub = co_obj_first_sub(obj_1a00); sub;
+			sub = co_sub_next(sub)) {
+		co_unsigned8_t subidx = co_sub_get_subidx(sub);
+		if (subidx > 0 && subidx <= CO_PDO_NUM_MAPS)
+			pdo->map.map[subidx - 1] = co_sub_get_val_u32(sub);
+	}
 	// Set the download indication functions PDO mapping parameter record.
 	co_obj_set_dn_ind(obj_1a00, &co_1a00_dn_ind, pdo);
 
