@@ -56,11 +56,13 @@
 #endif // LELY_NO_MALLOC
 
 #if !LELY_NO_CO_SSDO_BLK
+#ifndef CO_SSDO_MAX_SEQNO
 #if LELY_NO_MALLOC
 #define CO_SSDO_MAX_SEQNO MIN(CO_SDO_MAX_SEQNO, (CO_SSDO_MEMBUF_SIZE / 7))
 #else // !LELY_NO_MALLOC
 #define CO_SSDO_MAX_SEQNO CO_SDO_MAX_SEQNO
 #endif // !LELY_NO_MALLOC
+#endif // !CO_SSDO_MAX_SEQNO
 #endif // !LELY_NO_CO_SSDO_BLK
 
 struct __co_ssdo_state;
