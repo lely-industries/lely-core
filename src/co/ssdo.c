@@ -47,15 +47,23 @@
  * dynamic memory allocation. The default size is large enough to accomodate the
  * maximum block size used by SDO block transfer.
  */
+#if LELY_NO_CO_SSDO_BLK
+#define CO_SSDO_MEMBUF_SIZE 7
+#else // !LELY_NO_CO_SSDO_BLK
 #define CO_SSDO_MEMBUF_SIZE (CO_SDO_MAX_SEQNO * 7)
-#endif
-#endif
+#endif // !LELY_NO_CO_SSDO_BLK
+#endif // !CO_SSDO_MEMBUF_SIZE
+#endif // LELY_NO_MALLOC
 
+#if !LELY_NO_CO_SSDO_BLK
+#ifndef CO_SSDO_MAX_SEQNO
 #if LELY_NO_MALLOC
 #define CO_SSDO_MAX_SEQNO MIN(CO_SDO_MAX_SEQNO, (CO_SSDO_MEMBUF_SIZE / 7))
-#else
+#else // !LELY_NO_MALLOC
 #define CO_SSDO_MAX_SEQNO CO_SDO_MAX_SEQNO
-#endif
+#endif // !LELY_NO_MALLOC
+#endif // !CO_SSDO_MAX_SEQNO
+#endif // !LELY_NO_CO_SSDO_BLK
 
 struct __co_ssdo_state;
 /// An opaque CANopen Server-SDO state type.
@@ -85,6 +93,7 @@ struct __co_ssdo {
 	co_unsigned8_t subidx;
 	/// The current value of the toggle bit.
 	co_unsigned8_t toggle;
+#if !LELY_NO_CO_SSDO_BLK
 	/// The number of segments per block.
 	co_unsigned8_t blksize;
 	/// The sequence number of the last successfully received segment.
@@ -93,6 +102,7 @@ struct __co_ssdo {
 	unsigned gencrc : 1;
 	/// The generated CRC.
 	co_unsigned16_t crc;
+#endif
 	/// The SDO request.
 	struct co_sdo_req req;
 	/// The buffer.
@@ -289,6 +299,8 @@ LELY_CO_DEFINE_STATE(co_ssdo_up_seg_state,
 )
 // clang-format on
 
+#if !LELY_NO_CO_SSDO_BLK
+
 /**
  * The 'CAN frame received' transition function of the 'block download initiate'
  * state.
@@ -408,6 +420,8 @@ LELY_CO_DEFINE_STATE(co_ssdo_blk_up_end_state,
 )
 // clang-format on
 
+#endif // !LELY_NO_CO_SSDO_BLK
+
 #undef LELY_CO_DEFINE_STATE
 
 /**
@@ -483,6 +497,8 @@ static void co_ssdo_send_up_ini_res(co_ssdo_t *sdo);
  */
 static void co_ssdo_send_up_seg_res(co_ssdo_t *sdo, int last);
 
+#if !LELY_NO_CO_SSDO_BLK
+
 /// Sends a Server-SDO 'block download initiate' response.
 static void co_ssdo_send_blk_dn_ini_res(co_ssdo_t *sdo);
 
@@ -505,6 +521,8 @@ static void co_ssdo_send_blk_up_sub_res(co_ssdo_t *sdo, int last);
 
 /// Sends a Server-SDO 'block upload end' response.
 static void co_ssdo_send_blk_up_end_res(co_ssdo_t *sdo);
+
+#endif // !LELY_NO_CO_SSDO_BLK
 
 /**
  * Initializes a Server-SDO download/upload initiate response CAN frame.
@@ -598,10 +616,12 @@ __co_ssdo_init(struct __co_ssdo *sdo, can_net_t *net, co_dev_t *dev,
 	sdo->subidx = 0;
 
 	sdo->toggle = 0;
+#if !LELY_NO_CO_SSDO_BLK
 	sdo->blksize = 0;
 	sdo->ackseq = 0;
 	sdo->gencrc = 0;
 	sdo->crc = 0;
+#endif
 
 	co_sdo_req_init(&sdo->req);
 #if LELY_NO_MALLOC
@@ -1007,8 +1027,10 @@ co_ssdo_wait_on_recv(co_ssdo_t *sdo, const struct can_msg *msg)
 	switch (cs & CO_SDO_CS_MASK) {
 	case CO_SDO_CCS_DN_INI_REQ: return co_ssdo_dn_ini_on_recv(sdo, msg);
 	case CO_SDO_CCS_UP_INI_REQ: return co_ssdo_up_ini_on_recv(sdo, msg);
+#if !LELY_NO_CO_SSDO_BLK
 	case CO_SDO_CCS_BLK_DN_REQ: return co_ssdo_blk_dn_ini_on_recv(sdo, msg);
 	case CO_SDO_CCS_BLK_UP_REQ: return co_ssdo_blk_up_ini_on_recv(sdo, msg);
+#endif
 	case CO_SDO_CS_ABORT: return NULL;
 	default: return co_ssdo_abort_res(sdo, CO_SDO_AC_NO_CS);
 	}
@@ -1223,6 +1245,8 @@ co_ssdo_up_seg_on_recv(co_ssdo_t *sdo, const struct can_msg *msg)
 		return co_ssdo_up_seg_state;
 	}
 }
+
+#if !LELY_NO_CO_SSDO_BLK
 
 static co_ssdo_state_t *
 co_ssdo_blk_dn_ini_on_recv(co_ssdo_t *sdo, const struct can_msg *msg)
@@ -1592,6 +1616,8 @@ co_ssdo_blk_up_end_on_recv(co_ssdo_t *sdo, const struct can_msg *msg)
 	return co_ssdo_abort_ind(sdo);
 }
 
+#endif // !LELY_NO_CO_SSDO_BLK
+
 static co_ssdo_state_t *
 co_ssdo_abort_ind(co_ssdo_t *sdo)
 {
@@ -1604,10 +1630,12 @@ co_ssdo_abort_ind(co_ssdo_t *sdo)
 	sdo->subidx = 0;
 
 	sdo->toggle = 0;
+#if !LELY_NO_CO_SSDO_BLK
 	sdo->blksize = 0;
 	sdo->ackseq = 0;
 	sdo->gencrc = 0;
 	sdo->crc = 0;
+#endif
 
 	co_sdo_req_clear(&sdo->req);
 	membuf_clear(&sdo->buf);
@@ -1687,8 +1715,10 @@ co_ssdo_up_buf(co_ssdo_t *sdo, size_t nbyte)
 				+ sdo->nbyte;
 		size_t n = MIN(nbyte, sdo->req.nbyte - sdo->nbyte);
 
+#if !LELY_NO_CO_SSDO_BLK
 		if (sdo->gencrc)
 			sdo->crc = co_crc(sdo->crc, src, n);
+#endif
 
 		membuf_write(&sdo->buf, src, n);
 		nbyte -= n;
@@ -1789,6 +1819,8 @@ co_ssdo_send_up_seg_res(co_ssdo_t *sdo, int last)
 	can_net_send(sdo->net, &msg);
 }
 
+#if !LELY_NO_CO_SSDO_BLK
+
 static void
 co_ssdo_send_blk_dn_ini_res(co_ssdo_t *sdo)
 {
@@ -1880,6 +1912,8 @@ co_ssdo_send_blk_up_end_res(co_ssdo_t *sdo)
 	stle_u16(msg.data + 1, sdo->crc);
 	can_net_send(sdo->net, &msg);
 }
+
+#endif // !LELY_NO_CO_SSDO_BLK
 
 static void
 co_ssdo_init_ini_res(co_ssdo_t *sdo, struct can_msg *msg, co_unsigned8_t cs)

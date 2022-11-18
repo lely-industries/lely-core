@@ -10,6 +10,7 @@
 // A value too large for a single CAN frame.
 #define SEG_VALUE "Hello, world!"
 
+#if !LELY_NO_CO_SSDO_BLK
 // A value too large for a single (127 * 7 bytes) block.
 #define BLK_VALUE \
 	"0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef\n" \
@@ -28,6 +29,7 @@
 	"0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef\n" \
 	"0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef\n" \
 	"0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+#endif
 
 void dn_con(co_csdo_t *sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
 		co_unsigned32_t ac, void *data);
@@ -37,7 +39,11 @@ void up_con(co_csdo_t *sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
 int
 main(void)
 {
+#if LELY_NO_CO_SSDO_BLK
+	tap_plan(8);
+#else
 	tap_plan(12);
+#endif
 
 #if !LELY_NO_STDIO && !LELY_NO_DIAG
 	diag_set_handler(&co_test_diag_handler, NULL);
@@ -83,6 +89,8 @@ main(void)
 			"segmented SDO upload");
 	co_test_wait(&test);
 
+#if !LELY_NO_CO_SSDO_BLK
+
 	// clang-format off
 	tap_test(!co_csdo_blk_dn_req(csdo, 0x2000, 0x00, BLK_VALUE,
 			strlen(BLK_VALUE), &dn_con, &test),
@@ -93,6 +101,8 @@ main(void)
 	tap_test(!co_csdo_blk_up_req(csdo, 0x2000, 0x00, 0, &up_con, &test),
 			"SDO block upload");
 	co_test_wait(&test);
+
+#endif // !LELY_NO_CO_SSDO_BLK
 
 	co_csdo_destroy(csdo);
 	co_dev_destroy(cdev);
