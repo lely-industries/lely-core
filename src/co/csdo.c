@@ -96,6 +96,8 @@ struct __co_csdo {
 	co_unsigned8_t toggle;
 	/// The number of segments per block.
 	co_unsigned8_t blksize;
+	/// The protocol switch threshold.
+	co_unsigned8_t pst;
 	/// The sequence number of the last successfully received segment.
 	co_unsigned8_t ackseq;
 	/// A flag indicating whether a CRC should be generated.
@@ -613,13 +615,8 @@ static void co_csdo_send_blk_dn_sub_req(co_csdo_t *sdo, co_unsigned8_t seqno);
 /// Sends a Client-SDO 'block download end' request.
 static void co_csdo_send_blk_dn_end_req(co_csdo_t *sdo);
 
-/**
- * Sends a Client-SDO 'block upload initiate' request.
- *
- * @param sdo a pointer to a Client-SDO service.
- * @param pst the protocol switch threshold.
- */
-static void co_csdo_send_blk_up_ini_req(co_csdo_t *sdo, co_unsigned8_t pst);
+/// Sends a Client-SDO 'block upload initiate' request.
+static void co_csdo_send_blk_up_ini_req(co_csdo_t *sdo);
 
 /// Sends a Client-SDO 'start upload' request.
 static void co_csdo_send_start_up_req(co_csdo_t *sdo);
@@ -934,6 +931,7 @@ __co_csdo_init(struct __co_csdo *sdo, can_net_t *net, co_dev_t *dev,
 
 	sdo->toggle = 0;
 	sdo->blksize = 0;
+	sdo->pst = 0;
 	sdo->ackseq = 0;
 	sdo->crc = 0;
 
@@ -1359,12 +1357,13 @@ co_csdo_blk_up_req(co_csdo_t *sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
 
 	trace("CSDO: %04X:%02X: initiate block upload", idx, subidx);
 
+	sdo->pst = pst;
 	// Use the maximum block size by default.
 	sdo->blksize = CO_SDO_MAX_SEQNO;
 
 	if (sdo->timeout)
 		can_timer_timeout(sdo->timer, sdo->net, sdo->timeout);
-	co_csdo_send_blk_up_ini_req(sdo, pst);
+	co_csdo_send_blk_up_ini_req(sdo);
 	co_csdo_enter(sdo, co_csdo_blk_up_ini_state);
 
 	return 0;
@@ -2114,6 +2113,17 @@ co_csdo_blk_up_ini_on_recv(co_csdo_t *sdo, const struct can_msg *msg)
 	case CO_SDO_SCS_BLK_UP_RES: break;
 	case CO_SDO_CS_ABORT:
 		ac = msg->len < 8 ? 0 : ldle_u32(msg->data + 4);
+		// If the block size is not supported, try again with half the
+		// block size.
+		if (ac == CO_SDO_AC_BLK_SIZE && sdo->blksize > 1) {
+			// The first block size is 127, the second should be 64.
+			sdo->blksize = (sdo->blksize + 1) / 2;
+			if (sdo->timeout)
+				can_timer_timeout(sdo->timer, sdo->net,
+						sdo->timeout);
+			co_csdo_send_blk_up_ini_req(sdo);
+			return NULL;
+		}
 		return co_csdo_abort_ind(sdo, ac ? ac : CO_SDO_AC_ERROR);
 	default: return co_csdo_abort_res(sdo, CO_SDO_AC_NO_CS);
 	}
@@ -2311,6 +2321,7 @@ co_csdo_dn_ind(co_csdo_t *sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
 
 	sdo->toggle = 0;
 	sdo->blksize = 0;
+	sdo->pst = 0;
 	sdo->ackseq = 0;
 	sdo->crc = 0;
 
@@ -2346,6 +2357,7 @@ co_csdo_up_ind(co_csdo_t *sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
 
 	sdo->toggle = 0;
 	sdo->blksize = 0;
+	sdo->pst = 0;
 	sdo->ackseq = 0;
 	sdo->crc = 0;
 
@@ -2516,7 +2528,7 @@ co_csdo_send_blk_dn_end_req(co_csdo_t *sdo)
 }
 
 static void
-co_csdo_send_blk_up_ini_req(co_csdo_t *sdo, co_unsigned8_t pst)
+co_csdo_send_blk_up_ini_req(co_csdo_t *sdo)
 {
 	assert(sdo);
 
@@ -2526,7 +2538,7 @@ co_csdo_send_blk_up_ini_req(co_csdo_t *sdo, co_unsigned8_t pst)
 	struct can_msg msg;
 	co_csdo_init_ini_req(sdo, &msg, cs);
 	msg.data[4] = sdo->blksize;
-	msg.data[5] = pst;
+	msg.data[5] = sdo->pst;
 	can_net_send(sdo->net, &msg);
 }
 
