@@ -784,13 +784,14 @@ io_can_net_read_func(struct ev_task *task)
 			net->read_errc = read->r.errc;
 			// Only invoke the callback for unique read errors.
 			assert(net->on_read_error_func);
-			net->on_read_error_func(net->read_errc, net->read_errc,
+			net->on_read_error_func(net->read_errc,
+					net->read_errcnt,
 					net->on_read_error_arg);
 		}
 	} else if (!read->r.errc && net->read_errc) {
 		assert(net->on_read_error_func);
 		net->on_read_error_func(
-				0, net->read_errc, net->on_read_error_arg);
+				0, net->read_errcnt, net->on_read_error_arg);
 		net->read_errc = 0;
 		net->read_errcnt = 0;
 	}
@@ -851,13 +852,13 @@ io_can_net_write_func(struct ev_task *task)
 			net->write_errc = write->errc;
 			// Only invoke the callback for unique write errors.
 			net->on_write_error_func(net->write_errc,
-					net->write_errc,
+					net->write_errcnt,
 					net->on_write_error_arg);
 		}
 	} else if (net->write_errc) {
 		assert(net->on_write_error_func);
 		net->on_write_error_func(
-				0, net->write_errc, net->on_write_error_arg);
+				0, net->write_errcnt, net->on_write_error_arg);
 		net->write_errc = 0;
 		net->write_errcnt = 0;
 	}
