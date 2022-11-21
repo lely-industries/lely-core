@@ -2,7 +2,7 @@
  * This header file is part of the C++ CANopen application library; it contains
  * the CANopen type traits.
  *
- * @copyright 2018-2019 Lely Industries N.V.
+ * @copyright 2018-2022 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -174,7 +174,7 @@ struct canopen_traits<::std::string>
 
   static ::std::string
   from_c_type(const char* val) {
-    return {val};
+    return val ? ::std::string{val} : ::std::string{};
   }
 
   static char*
@@ -256,7 +256,8 @@ struct canopen_traits<::std::basic_string<char16_t>>
 
   static ::std::basic_string<char16_t>
   from_c_type(const char16_t* val) {
-    return {val};
+    return val ? ::std::basic_string<char16_t>{val}
+               : ::std::basic_string<char16_t>{};
   }
 
   static char16_t*
