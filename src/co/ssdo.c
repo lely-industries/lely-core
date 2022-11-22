@@ -1826,8 +1826,9 @@ co_ssdo_send_blk_dn_ini_res(co_ssdo_t *sdo)
 {
 	assert(sdo);
 
-	co_unsigned8_t cs = CO_SDO_SCS_BLK_DN_RES | CO_SDO_BLK_CRC
-			| CO_SDO_SC_INI_BLK;
+	co_unsigned8_t cs = CO_SDO_SCS_BLK_DN_RES | CO_SDO_SC_INI_BLK;
+	if (sdo->gencrc)
+		cs |= CO_SDO_BLK_CRC;
 
 	struct can_msg msg;
 	co_ssdo_init_ini_res(sdo, &msg, cs);
@@ -1866,8 +1867,10 @@ co_ssdo_send_blk_up_ini_res(co_ssdo_t *sdo)
 {
 	assert(sdo);
 
-	co_unsigned8_t cs = CO_SDO_SCS_BLK_UP_RES | CO_SDO_BLK_CRC
-			| CO_SDO_BLK_SIZE_IND | CO_SDO_SC_INI_BLK;
+	co_unsigned8_t cs = CO_SDO_SCS_BLK_UP_RES | CO_SDO_BLK_SIZE_IND
+			| CO_SDO_SC_INI_BLK;
+	if (sdo->gencrc)
+		cs |= CO_SDO_BLK_CRC;
 
 	struct can_msg msg;
 	co_ssdo_init_ini_res(sdo, &msg, cs);
