@@ -1084,6 +1084,11 @@ co_ssdo_dn_ini_on_recv(co_ssdo_t *sdo, const struct can_msg *msg)
 		co_ssdo_send_dn_ini_res(sdo);
 		return co_ssdo_abort_ind(sdo);
 	} else {
+		// Allow the download indication function to verify the size
+		// before sending a response.
+		co_unsigned32_t ac = co_ssdo_dn_ind(sdo);
+		if (ac)
+			return co_ssdo_abort_res(sdo, ac);
 		co_ssdo_send_dn_ini_res(sdo);
 		if (sdo->timeout)
 			can_timer_timeout(sdo->timer, sdo->net, sdo->timeout);
@@ -1290,6 +1295,12 @@ co_ssdo_blk_dn_ini_on_recv(co_ssdo_t *sdo, const struct can_msg *msg)
 	sdo->blksize = CO_SSDO_MAX_SEQNO;
 	sdo->ackseq = 0;
 
+	// Allow the download indication function to verify the size before
+	// sending a response.
+	co_unsigned32_t ac = co_ssdo_dn_ind(sdo);
+	if (ac)
+		return co_ssdo_abort_res(sdo, ac);
+
 	co_ssdo_send_blk_dn_ini_res(sdo);
 
 	if (sdo->timeout)
@@ -1334,14 +1345,6 @@ co_ssdo_blk_dn_sub_on_recv(co_ssdo_t *sdo, const struct can_msg *msg)
 	// after the confirmation message.
 	if (seqno == sdo->ackseq + 1) {
 		sdo->ackseq++;
-		// Update the CRC.
-		if (sdo->gencrc)
-			sdo->crc = co_crc(
-					sdo->crc, sdo->req.buf, sdo->req.nbyte);
-		// Pass the previous frame to the download indication function.
-		co_unsigned32_t ac = co_ssdo_dn_ind(sdo);
-		if (ac)
-			return co_ssdo_abort_res(sdo, ac);
 		// Determine the number of bytes to copy.
 		assert(sdo->req.size >= sdo->req.offset + sdo->req.nbyte);
 		size_t n = MIN(sdo->req.size - sdo->req.offset - sdo->req.nbyte,
@@ -1356,10 +1359,29 @@ co_ssdo_blk_dn_sub_on_recv(co_ssdo_t *sdo, const struct can_msg *msg)
 		sdo->req.buf = membuf_begin(&sdo->buf);
 		sdo->req.offset += sdo->req.nbyte;
 		sdo->req.nbyte = membuf_size(&sdo->buf);
+		// Process the frame, unless it is the last frame, in which case
+		// it is processed in co_ssdo_blk_dn_end_on_recv().
+		if (!last) {
+			// Update the CRC.
+			if (sdo->gencrc)
+				sdo->crc = co_crc(sdo->crc, sdo->req.buf,
+						sdo->req.nbyte);
+			// Pass the frame to the download indication function.
+			co_unsigned32_t ac = co_ssdo_dn_ind(sdo);
+			if (ac)
+				return co_ssdo_abort_res(sdo, ac);
+		}
 	}
 
 	// If this is the last segment in the block, send a confirmation.
 	if (seqno == sdo->blksize || last) {
+		if (!last) {
+			// Allow the download indication function to verify
+			// and/or process the block before sending a response.
+			co_unsigned32_t ac = co_ssdo_dn_ind(sdo);
+			if (ac)
+				return co_ssdo_abort_res(sdo, ac);
+		}
 		co_ssdo_send_blk_dn_sub_res(sdo);
 		sdo->ackseq = 0;
 	}
@@ -1421,6 +1443,7 @@ co_ssdo_blk_dn_end_on_recv(co_ssdo_t *sdo, const struct can_msg *msg)
 			return co_ssdo_abort_res(sdo, CO_SDO_AC_BLK_CRC);
 	}
 
+	// Pass the last frame to the download indication function.
 	co_unsigned32_t ac = co_ssdo_dn_ind(sdo);
 	if (ac)
 		return co_ssdo_abort_res(sdo, ac);
