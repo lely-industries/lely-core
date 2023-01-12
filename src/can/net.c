@@ -78,22 +78,9 @@ struct __can_timer {
 	void *data;
 };
 
-/**
- * The type of the key used to match CAN frame receivers to CAN frames. The key
- * is a combination of the CAN identifier and the flags.
- */
-#if LELY_NO_CANFD
-typedef uint_least32_t can_recv_key_t;
-#else
-typedef uint_least64_t can_recv_key_t;
-#endif
-
 /// Computes a CAN receiver key from a CAN identifier and flags.
-static inline can_recv_key_t can_recv_key(
+static inline uint_least64_t can_recv_key(
 		uint_least32_t id, uint_least8_t flags);
-
-/// The function used to compare to CAN receiver keys.
-static int can_recv_key_cmp(const void *p1, const void *p2);
 
 /// A CAN frame receiver.
 struct __can_recv {
@@ -106,8 +93,11 @@ struct __can_recv {
 	 * registered.
 	 */
 	can_net_t *net;
-	/// The key used in #node.
-	can_recv_key_t key;
+	/**
+	 * The key used in #node. This is a combination of the CAN identifier
+	 * and the flag.s
+	 */
+	uint_least64_t key;
 	/// A pointer to the callback function invoked by can_net_recv().
 	can_recv_func_t *func;
 	/// A pointer to the user-specified data for #func.
@@ -144,7 +134,7 @@ __can_net_init(struct __can_net *net)
 	net->next_func = NULL;
 	net->next_data = NULL;
 
-	rbtree_init(&net->recv_tree, &can_recv_key_cmp);
+	rbtree_init(&net->recv_tree, &uint64_cmp);
 
 	net->send_func = NULL;
 	net->send_data = NULL;
@@ -285,7 +275,7 @@ can_net_recv(can_net_t *net, const struct can_msg *msg)
 	int errc = get_errc();
 	int result = 0;
 
-	can_recv_key_t key = can_recv_key(msg->id, msg->flags);
+	uint_least64_t key = can_recv_key(msg->id, msg->flags);
 	struct rbnode *node = rbtree_find(&net->recv_tree, &key);
 	if (node) {
 		// Loop over all matching receivers.
@@ -663,19 +653,8 @@ can_net_set_next(can_net_t *net)
 		net->next_func(&net->next, net->next_data);
 }
 
-static inline can_recv_key_t
+static inline uint_least64_t
 can_recv_key(uint_least32_t id, uint_least8_t flags)
 {
-	id &= (flags & CAN_FLAG_IDE) ? CAN_MASK_EID : CAN_MASK_BID;
-	return (can_recv_key_t)id | ((can_recv_key_t)flags << 29);
-}
-
-static int
-can_recv_key_cmp(const void *p1, const void *p2)
-{
-#if LELY_NO_CANFD
-	return uint32_cmp(p1, p2);
-#else
-	return uint64_cmp(p1, p2);
-#endif
+	return (uint_least64_t)id | ((uint_least64_t)flags << 32);
 }
