@@ -14,7 +14,7 @@
  * descriptors referring to the same network interface, see section 3.4 in
  * https://rtime.felk.cvut.cz/can/socketcan-qdisc-final.pdf).
  *
- * @copyright 2018-2020 Lely Industries N.V.
+ * @copyright 2018-2022 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -107,25 +107,27 @@ int io_can_ctrl_get_flags(const io_can_ctrl_t *ctrl);
 void *io_can_chan_alloc(void);
 void io_can_chan_free(void *ptr);
 io_can_chan_t *io_can_chan_init(io_can_chan_t *chan, io_poll_t *poll,
-		ev_exec_t *exec, size_t rxlen);
+		ev_exec_t *exec, size_t rxlen, int wait_confirm);
 void io_can_chan_fini(io_can_chan_t *chan);
 
 /**
  * Creates a new CAN channel.
  *
- * @param poll  a pointer to the I/O polling instance used to monitor CAN bus
- *              events. If NULL, I/O operations MAY cause the event loop to
- *              block.
- * @param exec  a pointer to the executor used to execute asynchronous tasks.
- * @param rxlen the receive queue length (in number of frames) of the CAN
- *              channel. If <b>rxlen</b> is 0, the default value
- *              #LELY_IO_CAN_RXLEN is used.
+ * @param poll   a pointer to the I/O polling instance used to monitor CAN bus
+ *               events. If NULL, I/O operations MAY cause the event loop to
+ *               block.
+ * @param exec   a pointer to the executor used to execute asynchronous tasks.
+ * @param rxlen  the receive queue length (in number of frames) of the CAN
+ *               channel. If <b>rxlen</b> is 0, the default value
+ *               #LELY_IO_CAN_RXLEN is used.
+ * @param twxait a flag indicating whether the channel should wait for a write
+ *               confirmation before sending the next CAN frame.
  *
  * @returns a pointer to a new CAN channel, or NULL on error. In the latter
  * case, the error number can be obtained with get_errc().
  */
 io_can_chan_t *io_can_chan_create(
-		io_poll_t *poll, ev_exec_t *exec, size_t rxlen);
+		io_poll_t *poll, ev_exec_t *exec, size_t rxlen, int txwait);
 
 /// Destroys a CAN channel. @see io_can_chan_create()
 void io_can_chan_destroy(io_can_chan_t *chan);
@@ -157,7 +159,8 @@ int io_can_chan_open(io_can_chan_t *chan, const io_can_ctrl_t *ctrl, int flags);
 /**
  * Assigns an existing SocketCAN file descriptor to a CAN channel. Before being
  * assigned, the file descriptor will be modified in the following way:
- * - reception of CAN frames sent by the socket is enabled with the
+ * - if the channel was created with the use of write confirmations enabled,
+ *   reception of CAN frames sent by the socket is enabled with the
  *   `CAN_RAW_LOOPBACK` and `CAN_RAW_RECV_OWN_MSGS` socket options, and
  * - the size of the kernel send buffer is set to its minimum value.
  *
