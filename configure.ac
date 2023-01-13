@@ -93,7 +93,7 @@ AS_IF([test "$enable_threads" == "no"], [
 	AC_DEFINE([LELY_NO_THREADS], [1], [Define to 1 if multithreading support is disabled.])
 ])
 
-CFLAGS="$CFLAGS -Wall -Wextra -pedantic -Werror -Wno-static-in-inline"
+CFLAGS="-Wall -Wextra -pedantic -Werror -Wno-static-in-inline $CFLAGS"
 
 AM_CONDITIONAL([ECSS_COMPLIANCE], [false])
 AC_ARG_ENABLE([ecss-compliance],
