@@ -20,7 +20,7 @@ AC_USE_SYSTEM_EXTENSIONS
 AC_LANG([C++])
 AC_PROG_CXX
 AX_CXX_COMPILE_STDCXX([11], [ext], [mandatory])
-CXXFLAGS="$CXXFLAGS -Wall -Wextra -pedantic -Werror"
+CXXFLAGS="-Wall -Wextra -pedantic -Werror $CXXFLAGS"
 
 LT_INIT([win32-dll])
 LT_PROG_RC
@@ -93,7 +93,7 @@ AS_IF([test "$enable_threads" == "no"], [
 	AC_DEFINE([LELY_NO_THREADS], [1], [Define to 1 if multithreading support is disabled.])
 ])
 
-CFLAGS="$CFLAGS -Wall -Wextra -pedantic -Werror -Wno-static-in-inline"
+CFLAGS="-Wall -Wextra -pedantic -Werror -Wno-static-in-inline $CFLAGS"
 
 AM_CONDITIONAL([ECSS_COMPLIANCE], [false])
 AC_ARG_ENABLE([ecss-compliance],
