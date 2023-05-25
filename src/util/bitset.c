@@ -4,7 +4,7 @@
  *
  * @see lely/util/bitset.h
  *
- * @copyright 2017-2019 Lely Industries N.V.
+ * @copyright 2017-2023 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -96,12 +96,6 @@ bitset_resize(struct bitset *set, int size)
 	set->bits = bits;
 
 	return bitset_size(set);
-}
-
-int
-bitset_get_size(const struct bitset *set)
-{
-	return set->size * INT_BIT;
 }
 
 int
