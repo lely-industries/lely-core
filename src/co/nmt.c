@@ -4,7 +4,7 @@
  *
  * @see lely/co/nmt.h
  *
- * @copyright 2017-2022 Lely Industries N.V.
+ * @copyright 2017-2023 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -2770,10 +2770,8 @@ co_nmt_recv_000(const struct can_msg *msg, void *data)
 	co_unsigned8_t id = msg->data[1];
 
 	// Ignore NMT commands to other nodes.
-	if (id && id != co_dev_get_id(nmt->dev))
-		return 0;
-
-	co_nmt_emit_cs(nmt, cs);
+	if (!id || id == co_dev_get_id(nmt->dev))
+		co_nmt_emit_cs(nmt, cs);
 
 	// No other CAN frame receiver should process this frame.
 	return 1;
