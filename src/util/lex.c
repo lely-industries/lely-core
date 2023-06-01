@@ -4,7 +4,7 @@
  *
  * @see lely/util/lex.h
  *
- * @copyright 2017-2020 Lely Industries N.V.
+ * @copyright 2017-2023 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -431,13 +431,13 @@ lex_c99_i8(const char *begin, const char *end, struct floc *at,
 	long i8;
 	size_t chars = lex_c99_long(begin, end, at, &i8);
 	if (chars) {
-		if (i8 < INT8_MIN) {
-			i8 = INT8_MIN;
+		if (i8 < INT_LEAST8_MIN) {
+			i8 = INT_LEAST8_MIN;
 			set_errnum(ERRNUM_RANGE);
 			diag_if(DIAG_WARNING, get_errc(), at,
 					"int8_t underflow");
-		} else if (i8 > INT8_MAX) {
-			i8 = INT8_MAX;
+		} else if (i8 > INT_LEAST8_MAX) {
+			i8 = INT_LEAST8_MAX;
 			set_errnum(ERRNUM_RANGE);
 			diag_if(DIAG_WARNING, get_errc(), at,
 					"int8_t overflow");
@@ -455,13 +455,13 @@ lex_c99_i16(const char *begin, const char *end, struct floc *at,
 	long i16;
 	size_t chars = lex_c99_long(begin, end, at, &i16);
 	if (chars) {
-		if (i16 < INT16_MIN) {
-			i16 = INT16_MIN;
+		if (i16 < INT_LEAST16_MIN) {
+			i16 = INT_LEAST16_MIN;
 			set_errnum(ERRNUM_RANGE);
 			diag_if(DIAG_WARNING, get_errc(), at,
 					"int16_t underflow");
-		} else if (i16 > INT16_MAX) {
-			i16 = INT16_MAX;
+		} else if (i16 > INT_LEAST16_MAX) {
+			i16 = INT_LEAST16_MAX;
 			set_errnum(ERRNUM_RANGE);
 			diag_if(DIAG_WARNING, get_errc(), at,
 					"int16_t overflow");
@@ -482,8 +482,8 @@ lex_c99_i32(const char *begin, const char *end, struct floc *at,
 #if LONG_BIT == 32
 		if (get_errnum() == ERRNUM_RANGE && i32 == LONG_MIN) {
 #else
-		if (i32 < INT32_MIN) {
-			i32 = INT32_MIN;
+		if (i32 < INT_LEAST32_MIN) {
+			i32 = INT_LEAST32_MIN;
 			set_errnum(ERRNUM_RANGE);
 #endif
 			diag_if(DIAG_WARNING, get_errc(), at,
@@ -491,8 +491,8 @@ lex_c99_i32(const char *begin, const char *end, struct floc *at,
 #if LONG_BIT == 32
 		} else if (get_errnum() == ERRNUM_RANGE && i32 == LONG_MAX) {
 #else
-		} else if (i32 > INT32_MAX) {
-			i32 = INT32_MAX;
+		} else if (i32 > INT_LEAST32_MAX) {
+			i32 = INT_LEAST32_MAX;
 			set_errnum(ERRNUM_RANGE);
 #endif
 			diag_if(DIAG_WARNING, get_errc(), at,
@@ -520,8 +520,8 @@ lex_c99_i64(const char *begin, const char *end, struct floc *at,
 		if (get_errnum() == ERRNUM_RANGE && i64 == LONG_MIN) {
 #else
 		if ((get_errnum() == ERRNUM_RANGE && i64 == LLONG_MIN)
-				|| i64 < INT64_MIN) {
-			i64 = INT64_MIN;
+				|| i64 < INT_LEAST64_MIN) {
+			i64 = INT_LEAST64_MIN;
 			set_errnum(ERRNUM_RANGE);
 #endif
 			diag_if(DIAG_WARNING, get_errc(), at,
@@ -530,8 +530,8 @@ lex_c99_i64(const char *begin, const char *end, struct floc *at,
 		} else if (get_errnum() == ERRNUM_RANGE && i64 == LONG_MAX) {
 #else
 		} else if ((get_errnum() == ERRNUM_RANGE && i64 == LLONG_MAX)
-				|| i64 > INT64_MAX) {
-			i64 = INT64_MAX;
+				|| i64 > INT_LEAST64_MAX) {
+			i64 = INT_LEAST64_MAX;
 			set_errnum(ERRNUM_RANGE);
 #endif
 			diag_if(DIAG_WARNING, get_errc(), at,
@@ -550,8 +550,8 @@ lex_c99_u8(const char *begin, const char *end, struct floc *at,
 	unsigned long u8;
 	size_t chars = lex_c99_ulong(begin, end, at, &u8);
 	if (chars) {
-		if (u8 > UINT8_MAX) {
-			u8 = UINT8_MAX;
+		if (u8 > UINT_LEAST8_MAX) {
+			u8 = UINT_LEAST8_MAX;
 			set_errnum(ERRNUM_RANGE);
 			diag_if(DIAG_WARNING, get_errc(), at,
 					"uint8_t overflow");
@@ -569,8 +569,8 @@ lex_c99_u16(const char *begin, const char *end, struct floc *at,
 	unsigned long u16;
 	size_t chars = lex_c99_ulong(begin, end, at, &u16);
 	if (chars) {
-		if (u16 > UINT16_MAX) {
-			u16 = UINT16_MAX;
+		if (u16 > UINT_LEAST16_MAX) {
+			u16 = UINT_LEAST16_MAX;
 			set_errnum(ERRNUM_RANGE);
 			diag_if(DIAG_WARNING, get_errc(), at,
 					"uint16_t overflow");
@@ -591,8 +591,8 @@ lex_c99_u32(const char *begin, const char *end, struct floc *at,
 #if LONG_BIT == 32
 		if (get_errnum() == ERRNUM_RANGE && u32 == ULONG_MAX) {
 #else
-		if (u32 > UINT32_MAX) {
-			u32 = UINT32_MAX;
+		if (u32 > UINT_LEAST32_MAX) {
+			u32 = UINT_LEAST32_MAX;
 			set_errnum(ERRNUM_RANGE);
 #endif
 			diag_if(DIAG_WARNING, get_errc(), at,
@@ -620,8 +620,8 @@ lex_c99_u64(const char *begin, const char *end, struct floc *at,
 		if (get_errnum() == ERRNUM_RANGE && u64 == ULONG_MAX) {
 #else
 		if ((get_errnum() == ERRNUM_RANGE && u64 == ULONG_MAX)
-				|| u64 > UINT64_MAX) {
-			u64 = UINT64_MAX;
+				|| u64 > UINT_LEAST64_MAX) {
+			u64 = UINT_LEAST64_MAX;
 			set_errnum(ERRNUM_RANGE);
 #endif
 			diag_if(DIAG_WARNING, get_errc(), at,
