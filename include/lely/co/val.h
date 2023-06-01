@@ -2,7 +2,7 @@
  * This header file is part of the CANopen library; it contains the CANopen
  * value declarations.
  *
- * @copyright 2016-2021 Lely Industries N.V.
+ * @copyright 2016-2023 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -48,28 +48,28 @@ struct __fwbuf;
 #define CO_INTEGER8_INIT 0
 
 /// The minimum value of an 8-bit signed integer.
-#define CO_INTEGER8_MIN INT8_MIN
+#define CO_INTEGER8_MIN (-INT8_C(0x7f) - 1)
 
 /// The maximum value of an 8-bit signed integer.
-#define CO_INTEGER8_MAX INT8_MAX
+#define CO_INTEGER8_MAX INT8_C(0x7f)
 
 /// The default value of a 16-bit signed integer.
 #define CO_INTEGER16_INIT 0
 
 /// The minimum value of a 16-bit signed integer.
-#define CO_INTEGER16_MIN INT16_MIN
+#define CO_INTEGER16_MIN (-INT16_C(0x7fff) - 1)
 
 /// The maximum value of a 16-bit signed integer.
-#define CO_INTEGER16_MAX INT16_MAX
+#define CO_INTEGER16_MAX INT16_C(0x7fff)
 
 /// The default value of a 32-bit signed integer.
 #define CO_INTEGER32_INIT 0
 
 /// The minimum value of a 32-bit signed integer.
-#define CO_INTEGER32_MIN INT32_MIN
+#define CO_INTEGER32_MIN (-INT32_C(0x7fffffff) - 1)
 
 /// The maximum value of a 32-bit signed integer.
-#define CO_INTEGER32_MAX INT32_MAX
+#define CO_INTEGER32_MAX INT32_C(0x7fffffff)
 
 /// The default value of an 8-bit unsigned integer.
 #define CO_UNSIGNED8_INIT 0
@@ -78,7 +78,7 @@ struct __fwbuf;
 #define CO_UNSIGNED8_MIN 0
 
 /// The maximum value of an 8-bit unsigned integer.
-#define CO_UNSIGNED8_MAX UINT8_MAX
+#define CO_UNSIGNED8_MAX UINT8_C(0xff)
 
 /// The default value of a 16-bit unsigned integer.
 #define CO_UNSIGNED16_INIT 0
@@ -87,7 +87,7 @@ struct __fwbuf;
 #define CO_UNSIGNED16_MIN 0
 
 /// The maximum value of a 16-bit unsigned integer.
-#define CO_UNSIGNED16_MAX UINT16_MAX
+#define CO_UNSIGNED16_MAX UINT16_C(0xffff)
 
 /// The default value of a 32-bit unsigned integer.
 #define CO_UNSIGNED32_INIT 0
@@ -96,7 +96,7 @@ struct __fwbuf;
 #define CO_UNSIGNED32_MIN 0
 
 /// The maximum value of a 32-bit unsigned integer.
-#define CO_UNSIGNED32_MAX UINT32_MAX
+#define CO_UNSIGNED32_MAX UINT32_C(0xffffffff)
 
 /// The default value of a 32-bit IEEE-754 floating-point number.
 #define CO_REAL32_INIT 0
@@ -149,7 +149,7 @@ struct __fwbuf;
 /// The maximum value of a 48-bit structure representing the absolute time.
 #define CO_TIME_OF_DAY_MAX \
 	{ \
-		UINT32_C(0x0fffffff), UINT16_MAX \
+		UINT32_C(0x0fffffff), UINT16_C(0xffff) \
 	}
 
 /// The default value of a 48-bit structure representing a time difference.
@@ -174,7 +174,7 @@ struct __fwbuf;
 #define CO_INTEGER24_INIT 0
 
 /// The minimum value of a 24-bit signed integer (encoded as an int32_t).
-#define CO_INTEGER24_MIN (-INT32_C(0x00800000))
+#define CO_INTEGER24_MIN (-INT32_C(0x007fffff) - 1)
 
 /// The maximum value of a 24-bit signed integer (encoded as an int32_t).
 #define CO_INTEGER24_MAX INT32_C(0x007fffff)
@@ -192,7 +192,7 @@ struct __fwbuf;
 #define CO_INTEGER40_INIT 0
 
 /// The minimum value of a 40-bit signed integer (encoded as an int64_t).
-#define CO_INTEGER40_MIN (-INT64_C(0x0000008000000000))
+#define CO_INTEGER40_MIN (-INT64_C(0x0000007fffffffff) - 1)
 
 /// The maximum value of a 40-bit signed integer (encoded as an int64_t).
 #define CO_INTEGER40_MAX INT64_C(0x0000007fffffffff)
@@ -201,7 +201,7 @@ struct __fwbuf;
 #define CO_INTEGER48_INIT 0
 
 /// The minimum value of a 48-bit signed integer (encoded as an int64_t).
-#define CO_INTEGER48_MIN (-INT64_C(0x0000800000000000))
+#define CO_INTEGER48_MIN (-INT64_C(0x00007fffffffffff) - 1)
 
 /// The maximum value of a 48-bit signed integer (encoded as an int64_t).
 #define CO_INTEGER48_MAX INT64_C(0x00007fffffffffff)
@@ -210,7 +210,7 @@ struct __fwbuf;
 #define CO_INTEGER56_INIT 0
 
 /// The minimum value of a 56-bit signed integer (encoded as an int64_t).
-#define CO_INTEGER56_MIN (-INT64_C(0x0080000000000000))
+#define CO_INTEGER56_MIN (-INT64_C(0x007fffffffffffff) - 1)
 
 /// The maximum value of a 56-bit signed integer (encoded as an int64_t).
 #define CO_INTEGER56_MAX INT64_C(0x007fffffffffffff)
@@ -219,10 +219,10 @@ struct __fwbuf;
 #define CO_INTEGER64_INIT 0
 
 /// The minimum value of a 64-bit signed integer.
-#define CO_INTEGER64_MIN INT64_MIN
+#define CO_INTEGER64_MIN (-INT64_C(0x7fffffffffffffff) - 1)
 
 /// The maximum value of a 64-bit signed integer.
-#define CO_INTEGER64_MAX INT64_MAX
+#define CO_INTEGER64_MAX INT64_C(0x7fffffffffffffff)
 
 /// The default value of a 24-bit unsigned integer (encoded as a uint32_t).
 #define CO_UNSIGNED24_INIT 0
@@ -267,7 +267,7 @@ struct __fwbuf;
 #define CO_UNSIGNED64_MIN 0
 
 /// The maximum value of a 64-bit unsigned integer.
-#define CO_UNSIGNED64_MAX UINT64_MAX
+#define CO_UNSIGNED64_MAX UINT64_C(0xffffffffffffffff)
 
 /// A union of the CANopen static data types.
 union co_val {
