@@ -148,8 +148,8 @@ lss_req(co_nmt_t *nmt, co_lss_t *lss, void *data)
 	struct co_id lo = { 4, co_dev_get_val_u32(mdev, 0x1f85, 0x02),
 		co_dev_get_val_u32(mdev, 0x1f86, 0x02), 0, 0 };
 	struct co_id hi = { 4, co_dev_get_val_u32(mdev, 0x1f85, 0x02),
-		co_dev_get_val_u32(mdev, 0x1f86, 0x02), UINT32_MAX,
-		UINT32_MAX };
+		co_dev_get_val_u32(mdev, 0x1f86, 0x02), CO_UNSIGNED32_MAX,
+		CO_UNSIGNED32_MAX };
 	tap_test(!co_lss_slowscan_req(lss, &lo, &hi, &scan_ind, test),
 			"LSS slowscan");
 	co_test_wait(test);
@@ -161,7 +161,7 @@ lss_req(co_nmt_t *nmt, co_lss_t *lss, void *data)
 		co_dev_get_val_u32(mdev, 0x1f86, 0x02),
 		co_dev_get_val_u32(mdev, 0x1f87, 0x02),
 		co_dev_get_val_u32(mdev, 0x1f88, 0x02) };
-	struct co_id mask = { 4, UINT32_MAX, UINT32_MAX, 0, 0 };
+	struct co_id mask = { 4, CO_UNSIGNED32_MAX, CO_UNSIGNED32_MAX, 0, 0 };
 	tap_test(!co_lss_fastscan_req(lss, &id, &mask, &scan_ind, test),
 			"LSS fastscan");
 	co_test_wait(test);
