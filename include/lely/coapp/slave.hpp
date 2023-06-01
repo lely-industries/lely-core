@@ -894,6 +894,9 @@ class BasicSlave : public Node {
       uint16_t idx, ::std::function<OnWriteSignature<T>> ind,
       ::std::error_code& ec);
 
+ protected:
+  using Device::OnWrite;
+
  private:
   /**
    * The function invoked when a life guarding event occurs or is resolved. Note

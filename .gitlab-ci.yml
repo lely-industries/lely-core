@@ -91,14 +91,14 @@ docker-gcc:
   extends: .docker-gcc
   parallel:
     matrix:
-      - __GNUC__: [4, 5, 6, 7, 8, 9, 10, 11, 12]
+      - __GNUC__: [4, 5, 6, 7, 8, 9, 10, 11, 12, 13]
 
 build:gcc:
   extends: .build
   image: $REGISTRY/gcc:$__GNUC__
   parallel:
     matrix:
-      - __GNUC__: [4, 5, 6, 7, 8, 9, 10, 11, 12]
+      - __GNUC__: [4, 5, 6, 7, 8, 9, 10, 11, 12, 13]
   variables:
     CONFIGURE_OPTIONS: --disable-python2
 
@@ -147,9 +147,14 @@ test:gcc:12:
   image: $REGISTRY/gcc:12
   needs: ["build:gcc: [12]"]
 
+test:gcc:13:
+  extends: .test
+  image: $REGISTRY/gcc:13
+  needs: ["build:gcc: [13]"]
+
 build:configure:
   extends: .build
-  image: $REGISTRY/gcc:12
+  image: $REGISTRY/gcc:13
   parallel:
     matrix:
       - CONFIGURE_OPTIONS:
@@ -162,32 +167,32 @@ build:configure:
 
 test:configure:disable-canfd:
   extends: .test
-  image: $REGISTRY/gcc:12
+  image: $REGISTRY/gcc:13
   needs: ["build:configure: [--disable-canfd]"]
 
 test:configure:disable-errno:
   extends: .test
-  image: $REGISTRY/gcc:12
+  image: $REGISTRY/gcc:13
   needs: ["build:configure: [--disable-errno]"]
 
 test:configure:disable-malloc:
   extends: .test
-  image: $REGISTRY/gcc:12
+  image: $REGISTRY/gcc:13
   needs: ["build:configure: [--disable-malloc]"]
 
 test:configure:disable-master:
   extends: .test
-  image: $REGISTRY/gcc:12
+  image: $REGISTRY/gcc:13
   needs: ["build:configure: [--disable-master]"]
 
 test:configure:disable-stdio:
   extends: .test
-  image: $REGISTRY/gcc:12
+  image: $REGISTRY/gcc:13
   needs: ["build:configure: [--disable-stdio]"]
 
 test:configure:enable-ecss-compliance:
   extends: .test
-  image: $REGISTRY/gcc:12
+  image: $REGISTRY/gcc:13
   needs: ["build:configure: [--enable-ecss-compliance]"]
 
 docker:mingw-w64:
