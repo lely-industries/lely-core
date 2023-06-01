@@ -4,7 +4,7 @@
  *
  * @see lely/coapp/master.hpp
  *
- * @copyright 2018-2021 Lely Industries N.V.
+ * @copyright 2018-2023 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -303,7 +303,7 @@ void
 BasicMaster::OnNodeGuarding(
     ::std::function<void(uint8_t, bool)> on_node_guarding) {
   ::std::lock_guard<util::BasicLockable> lock(*this);
-  impl_->on_node_guarding = on_node_guarding;
+  impl_->on_node_guarding = ::std::move(on_node_guarding);
 }
 
 void
@@ -311,7 +311,7 @@ BasicMaster::OnBoot(
     ::std::function<void(uint8_t, NmtState, char, const ::std::string&)>
         on_boot) {
   ::std::lock_guard<util::BasicLockable> lock(*this);
-  impl_->on_boot = on_boot;
+  impl_->on_boot = ::std::move(on_boot);
 }
 
 void

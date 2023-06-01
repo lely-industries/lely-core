@@ -4,7 +4,7 @@
  *
  * @see lely/coapp/node.hpp
  *
- * @copyright 2018-2022 Lely Industries N.V.
+ * @copyright 2018-2023 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -269,13 +269,13 @@ void
 Node::OnCanState(
     ::std::function<void(io::CanState, io::CanState)> on_can_state) {
   ::std::lock_guard<util::BasicLockable> lock(*this);
-  impl_->on_can_state = on_can_state;
+  impl_->on_can_state = ::std::move(on_can_state);
 }
 
 void
 Node::OnCanError(::std::function<void(io::CanError)> on_can_error) {
   ::std::lock_guard<util::BasicLockable> lock(*this);
-  impl_->on_can_error = on_can_error;
+  impl_->on_can_error = ::std::move(on_can_error);
 }
 
 void
@@ -341,19 +341,19 @@ Node::ConfigHeartbeat(uint8_t id, const ::std::chrono::milliseconds& ms) {
 void
 Node::OnCommand(::std::function<void(NmtCommand)> on_command) {
   ::std::lock_guard<util::BasicLockable> lock(*this);
-  impl_->on_command = on_command;
+  impl_->on_command = ::std::move(on_command);
 }
 
 void
 Node::OnHeartbeat(::std::function<void(uint8_t, bool)> on_heartbeat) {
   ::std::lock_guard<util::BasicLockable> lock(*this);
-  impl_->on_heartbeat = on_heartbeat;
+  impl_->on_heartbeat = ::std::move(on_heartbeat);
 }
 
 void
 Node::OnState(::std::function<void(uint8_t, NmtState)> on_state) {
   ::std::lock_guard<util::BasicLockable> lock(*this);
-  impl_->on_state = on_state;
+  impl_->on_state = ::std::move(on_state);
 }
 
 void
@@ -364,7 +364,7 @@ Node::OnRpdo(
   (void)on_rpdo;
 #else
   ::std::lock_guard<util::BasicLockable> lock(*this);
-  impl_->on_rpdo = on_rpdo;
+  impl_->on_rpdo = ::std::move(on_rpdo);
 #endif
 }
 
@@ -374,7 +374,7 @@ Node::OnRpdoError(::std::function<void(int, uint16_t, uint8_t)> on_rpdo_error) {
   (void)on_rpdo_error;
 #else
   ::std::lock_guard<util::BasicLockable> lock(*this);
-  impl_->on_rpdo_error = on_rpdo_error;
+  impl_->on_rpdo_error = ::std::move(on_rpdo_error);
 #endif
 }
 
@@ -386,7 +386,7 @@ Node::OnTpdo(
   (void)on_tpdo;
 #else
   ::std::lock_guard<util::BasicLockable> lock(*this);
-  impl_->on_tpdo = on_tpdo;
+  impl_->on_tpdo = ::std::move(on_tpdo);
 #endif
 }
 
@@ -396,7 +396,7 @@ Node::OnSync(::std::function<void(uint8_t, const time_point&)> on_sync) {
   (void)on_sync;
 #else
   ::std::lock_guard<util::BasicLockable> lock(*this);
-  impl_->on_sync = on_sync;
+  impl_->on_sync = ::std::move(on_sync);
 #endif
 }
 
@@ -406,7 +406,7 @@ Node::OnSyncError(::std::function<void(uint16_t, uint8_t)> on_sync_error) {
   (void)on_sync_error;
 #else
   ::std::lock_guard<util::BasicLockable> lock(*this);
-  impl_->on_sync_error = on_sync_error;
+  impl_->on_sync_error = ::std::move(on_sync_error);
 #endif
 }
 
@@ -418,7 +418,7 @@ Node::OnTime(
   (void)on_time;
 #else
   ::std::lock_guard<util::BasicLockable> lock(*this);
-  impl_->on_time = on_time;
+  impl_->on_time = ::std::move(on_time);
 #endif
 }
 
@@ -429,7 +429,7 @@ Node::OnEmcy(
   (void)on_emcy;
 #else
   ::std::lock_guard<util::BasicLockable> lock(*this);
-  impl_->on_emcy = on_emcy;
+  impl_->on_emcy = ::std::move(on_emcy);
 #endif
 }
 
@@ -440,7 +440,7 @@ Node::OnSwitchBitrate(
   (void)on_switch_bitrate;
 #else
   ::std::lock_guard<util::BasicLockable> lock(*this);
-  impl_->on_switch_bitrate = on_switch_bitrate;
+  impl_->on_switch_bitrate = ::std::move(on_switch_bitrate);
 #endif
 }
 

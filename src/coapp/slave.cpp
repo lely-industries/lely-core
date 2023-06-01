@@ -4,7 +4,7 @@
  *
  * @see lely/coapp/slave.hpp
  *
- * @copyright 2018-2021 Lely Industries N.V.
+ * @copyright 2018-2023 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -636,7 +636,7 @@ template void BasicSlave::OnWrite<uint64_t>(
 void
 BasicSlave::OnLifeGuarding(::std::function<void(bool)> on_life_guarding) {
   ::std::lock_guard<util::BasicLockable> lock(*this);
-  impl_->on_life_guarding = on_life_guarding;
+  impl_->on_life_guarding = ::std::move(on_life_guarding);
 }
 
 BasicSlave::Impl_::Impl_(BasicSlave* self_, co_nmt_t* nmt) : self(self_) {

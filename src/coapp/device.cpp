@@ -4,7 +4,7 @@
  *
  * @see lely/coapp/device.hpp
  *
- * @copyright 2018-2022 Lely Industries N.V.
+ * @copyright 2018-2023 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -834,7 +834,7 @@ Device::TpdoWriteEvent(uint8_t id, uint16_t idx, uint8_t subidx,
 void
 Device::OnWrite(::std::function<void(uint16_t, uint8_t)> on_write) {
   ::std::lock_guard<Impl_> lock(*impl_);
-  impl_->on_write = on_write;
+  impl_->on_write = ::std::move(on_write);
 }
 
 void
@@ -844,7 +844,7 @@ Device::OnRpdoWrite(
   (void)on_rpdo_write;
 #else
   ::std::lock_guard<Impl_> lock(*impl_);
-  impl_->on_rpdo_write = on_rpdo_write;
+  impl_->on_rpdo_write = ::std::move(on_rpdo_write);
 #endif
 }
 
