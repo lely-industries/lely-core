@@ -4,7 +4,7 @@
  *
  * @see lely/co/emcy.h
  *
- * @copyright 2017-2022 Lely Industries N.V.
+ * @copyright 2017-2023 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -609,7 +609,7 @@ co_emcy_node_recv(const struct can_msg *msg, void *data)
 	struct co_emcy_node *node = data;
 	assert(node);
 	assert(node->id > 0 && node->id <= CO_NUM_NODES);
-	co_emcy_t *emcy = structof(node, co_emcy_t, nodes[node->id - 1]);
+	co_emcy_t *emcy = structof(node - (node->id - 1), co_emcy_t, nodes[0]);
 	assert(emcy);
 
 	// Ignore remote frames.
