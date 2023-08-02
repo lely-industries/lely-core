@@ -122,7 +122,7 @@ class Slave(dcf.Device):
 
             map_idx = comm_idx + 0x200
             if "mapping" in cfg:
-                if pdo.n > 0:
+                if pdo.n > 0 or len(cfg["mapping"]) > 0:
                     pdo.n = 0
                     pdo.mapping = {}
                     sdo.append(self.concise_value(map_idx, 0, 0))
