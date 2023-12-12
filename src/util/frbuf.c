@@ -4,7 +4,7 @@
  *
  * @see lely/util/frbuf.h
  *
- * @copyright 2016-2020 Lely Industries N.V.
+ * @copyright 2016-2023 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -113,6 +113,8 @@ __frbuf_init(struct __frbuf *buf, const char *filename)
 	buf->stream = fopen(filename, "rb");
 	if (!buf->stream)
 		return NULL;
+
+	buf->map = NULL;
 #endif
 
 	return buf;
