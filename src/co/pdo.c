@@ -4,7 +4,7 @@
  *
  * @see lely/co/pdo.h
  *
- * @copyright 2016-2022 Lely Industries N.V.
+ * @copyright 2016-2023 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -661,9 +661,13 @@ co_mpdo_dn(const struct co_pdo_map_par *par, co_dev_t *dev,
 
 	co_sub_t *sub = co_dev_find_sub(dev, idx, subidx);
 	if (sub) {
+		co_unsigned16_t type = co_sub_get_type(sub);
 		// Download the value to the sub-object.
 		co_sdo_req_clear(req);
-		req->size = 4;
+		// Discard any padding bytes.
+		req->size = co_type_is_basic(type)
+				? MIN(co_type_sizeof(type), 4)
+				: 4;
 		req->buf = buf + 4;
 		req->nbyte = req->size;
 		ac = co_sub_dn_ind(sub, req);
